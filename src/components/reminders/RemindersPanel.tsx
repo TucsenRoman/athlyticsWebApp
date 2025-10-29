@@ -236,94 +236,114 @@ const RemindersPanel = () => {
     }
   };
 
-  const getTodayReminders = () => {
-    const now = toZonedTime(new Date(), TIMEZONE);
-    return reminders.filter((r) => {
-      if (!r.due_date) return false;
-      const dueDate = toZonedTime(parseISO(r.due_date), TIMEZONE);
-      return isToday(dueDate);
-    });
-  };
-
-  const getUpcomingReminders = () => {
-    const now = toZonedTime(new Date(), TIMEZONE);
-    const sevenDaysFromNow = addDays(now, 7);
-    return reminders.filter((r) => {
-      if (!r.due_date) return false;
-      const dueDate = toZonedTime(parseISO(r.due_date), TIMEZONE);
-      return !isToday(dueDate) && isWithinInterval(dueDate, { start: addDays(now, 1), end: sevenDaysFromNow });
-    });
-  };
-
-  const getOverdueReminders = () => {
+  const getMostRelevantReminders = () => {
     const now = toZonedTime(new Date(), TIMEZONE);
     const today = startOfDay(now);
-    return reminders.filter((r) => {
-      if (!r.due_date) return false;
-      const dueDate = toZonedTime(parseISO(r.due_date), TIMEZONE);
-      return isBefore(dueDate, today);
-    });
+    const sevenDaysFromNow = addDays(now, 7);
+    
+    return reminders
+      .filter((r) => {
+        if (!r.due_date) return false;
+        const dueDate = toZonedTime(parseISO(r.due_date), TIMEZONE);
+        // Include overdue, today, and upcoming within 7 days
+        return isBefore(dueDate, sevenDaysFromNow) || isWithinInterval(dueDate, { start: today, end: sevenDaysFromNow });
+      })
+      .slice(0, 5);
   };
 
-  const ReminderRow = ({ reminder, isOverdue = false, isToday = false }: { reminder: Reminder; isOverdue?: boolean; isToday?: boolean }) => (
-    <div
-      className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-        isOverdue ? "border-l-4 border-l-destructive" : ""
-      } ${isToday ? "bg-accent/50" : ""}`}
-    >
-      <Checkbox checked={false} onCheckedChange={() => handleToggleComplete(reminder)} />
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium truncate">{reminder.title}</span>
-          {reminder.recurrence && reminder.recurrence !== "None" && (
-            <Badge variant="outline" className="flex items-center gap-1 text-xs">
-              <Repeat className="w-3 h-3" />
-              {reminder.recurrence}
-            </Badge>
-          )}
+  const isReminderOverdue = (reminder: Reminder) => {
+    if (!reminder.due_date) return false;
+    const now = toZonedTime(new Date(), TIMEZONE);
+    const today = startOfDay(now);
+    const dueDate = toZonedTime(parseISO(reminder.due_date), TIMEZONE);
+    return isBefore(dueDate, today);
+  };
+
+  const isReminderToday = (reminder: Reminder) => {
+    if (!reminder.due_date) return false;
+    const dueDate = toZonedTime(parseISO(reminder.due_date), TIMEZONE);
+    return isToday(dueDate);
+  };
+
+  const ReminderCard = ({ reminder }: { reminder: Reminder }) => {
+    const isOverdue = isReminderOverdue(reminder);
+    const isTodayReminder = isReminderToday(reminder);
+
+    return (
+      <div
+        className={`group relative h-32 p-4 rounded-lg border transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${
+          isOverdue ? "border-l-4 border-l-destructive bg-destructive/5" : ""
+        } ${isTodayReminder ? "bg-accent/30" : "bg-card"}`}
+      >
+        <div className="flex flex-col h-full">
+          {/* Top row: checkbox and badges */}
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <Checkbox
+              checked={false}
+              onCheckedChange={() => handleToggleComplete(reminder)}
+              className="mt-0.5"
+            />
+            <div className="flex gap-1">
+              {reminder.recurrence && reminder.recurrence !== "None" && (
+                <Badge variant="outline" className="h-5 px-1.5 text-xs">
+                  <Repeat className="w-3 h-3" />
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Title */}
+          <h4 className="font-medium text-sm line-clamp-2 mb-2">{reminder.title}</h4>
+
+          {/* Date and time */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+            {reminder.due_date && (
+              <span className={isOverdue ? "text-destructive font-medium" : ""}>
+                {format(parseISO(reminder.due_date), "MMM d")}
+              </span>
+            )}
+            {reminder.time && (
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {reminder.time}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-          {reminder.due_date && (
-            <span className={isOverdue ? "text-destructive font-medium" : ""}>
-              {format(parseISO(reminder.due_date), "MMM d")}
-            </span>
-          )}
-          {reminder.time && (
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {reminder.time}
-            </span>
-          )}
+
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-background/95 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-4 flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground line-clamp-3 flex-1">
+            {reminder.description || "No description"}
+          </p>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="w-full">
+                Options
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="z-50">
+              <DropdownMenuItem onClick={() => handleSnooze(reminder, "hour")}>
+                Snooze +1 hour
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSnooze(reminder, "day")}>
+                Snooze +1 day
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSnooze(reminder, "week")}>
+                Snooze +1 week
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
-            <MoreVertical className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => handleSnooze(reminder, "hour")}>
-            Snooze +1 hour
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleSnooze(reminder, "day")}>
-            Snooze +1 day
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleSnooze(reminder, "week")}>
-            Snooze +1 week
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  );
+    );
+  };
+
+  const relevantReminders = getMostRelevantReminders();
 
   if (loading) {
     return <div className="text-center py-8">Loading reminders...</div>;
   }
-
-  const todayReminders = getTodayReminders();
-  const upcomingReminders = getUpcomingReminders();
-  const overdueReminders = getOverdueReminders();
 
   return (
     <Card>
@@ -331,7 +351,7 @@ const RemindersPanel = () => {
         <div className="flex items-center justify-between">
           <CardTitle>Reminders</CardTitle>
           <Button variant="link" onClick={() => navigate("/?tab=reminders")} className="text-sm">
-            View all
+            View All →
           </Button>
         </div>
       </CardHeader>
@@ -384,50 +404,16 @@ const RemindersPanel = () => {
           />
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="today" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="today">
-              Today ({todayReminders.length})
-            </TabsTrigger>
-            <TabsTrigger value="upcoming">
-              Upcoming ({upcomingReminders.length})
-            </TabsTrigger>
-            <TabsTrigger value="overdue">
-              Overdue ({overdueReminders.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="today" className="space-y-2">
-            {todayReminders.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No reminders for today</p>
-            ) : (
-              todayReminders.map((reminder) => (
-                <ReminderRow key={reminder.id} reminder={reminder} isToday />
-              ))
-            )}
-          </TabsContent>
-
-          <TabsContent value="upcoming" className="space-y-2">
-            {upcomingReminders.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No upcoming reminders</p>
-            ) : (
-              upcomingReminders.map((reminder) => (
-                <ReminderRow key={reminder.id} reminder={reminder} />
-              ))
-            )}
-          </TabsContent>
-
-          <TabsContent value="overdue" className="space-y-2">
-            {overdueReminders.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No overdue reminders</p>
-            ) : (
-              overdueReminders.map((reminder) => (
-                <ReminderRow key={reminder.id} reminder={reminder} isOverdue />
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
+        {/* Reminders Grid */}
+        {relevantReminders.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">No upcoming reminders</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {relevantReminders.map((reminder) => (
+              <ReminderCard key={reminder.id} reminder={reminder} />
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
