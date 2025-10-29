@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, Trophy } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import motivvLogo from "@/assets/motivv-logo.png";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -91,11 +92,13 @@ export default function DashboardLayout({
               onClick={() => navigate("/")}
               className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity touch-manipulation"
             >
-              <div className="bg-gradient-to-br from-primary to-secondary p-1.5 md:p-2 rounded-xl">
-                <Trophy className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />
-              </div>
+              <img 
+                src={motivvLogo} 
+                alt="Motivv Logo" 
+                className="w-8 h-8 md:w-10 md:h-10"
+              />
               <div className="text-left">
-                <h1 className="text-lg md:text-xl font-bold">Coach Corner</h1>
+                <h1 className="text-lg md:text-xl font-bold">Motivv</h1>
                 <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
                   {user.email}
                 </p>
