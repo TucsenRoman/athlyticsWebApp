@@ -12,26 +12,6 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 const Index = () => {
   const [activeTab, setActiveTab] = useState("roster");
-  const [isScrollingUp, setIsScrollingUp] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  // Handle scroll for sticky tabs
-  useState(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setIsScrollingUp(false);
-      } else {
-        setIsScrollingUp(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  });
 
   return <DashboardLayout>
       <div className="space-y-6">
@@ -65,29 +45,24 @@ const Index = () => {
         <RemindersPanel />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className={cn(
-            "transition-all duration-300 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-            isScrollingUp ? "sticky top-0 z-50 pb-4" : "relative"
-          )}>
-            <TabsList className="grid w-full max-w-3xl grid-cols-4">
-              <TabsTrigger value="roster" className="flex items-center justify-center gap-2 touch-manipulation">
-                <Users className="w-4 h-4 flex-shrink-0" />
-                <span className={cn("hidden", activeTab === "roster" && "md:inline")}>Roster</span>
-              </TabsTrigger>
-              <TabsTrigger value="uniforms" className="flex items-center justify-center gap-2 touch-manipulation">
-                <ShirtIcon className="w-4 h-4 flex-shrink-0" />
-                <span className={cn("hidden", activeTab === "uniforms" && "md:inline")}>Uniforms</span>
-              </TabsTrigger>
-              <TabsTrigger value="lockers" className="flex items-center justify-center gap-2 touch-manipulation">
-                <LockKeyhole className="w-4 h-4 flex-shrink-0" />
-                <span className={cn("hidden", activeTab === "lockers" && "md:inline")}>Lockers</span>
-              </TabsTrigger>
-              <TabsTrigger value="attendance" className="flex items-center justify-center gap-2 touch-manipulation">
-                <ClipboardCheck className="w-4 h-4 flex-shrink-0" />
-                <span className={cn("hidden", activeTab === "attendance" && "md:inline")}>Attendance</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="sticky top-0 z-10 grid w-full max-w-3xl grid-cols-4 bg-background shadow-sm">
+            <TabsTrigger value="roster" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
+              <Users className="w-4 h-4 flex-shrink-0" />
+              <span className="data-[state=inactive]:hidden">Roster</span>
+            </TabsTrigger>
+            <TabsTrigger value="uniforms" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
+              <ShirtIcon className="w-4 h-4 flex-shrink-0" />
+              <span className="data-[state=inactive]:hidden">Uniforms</span>
+            </TabsTrigger>
+            <TabsTrigger value="lockers" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
+              <LockKeyhole className="w-4 h-4 flex-shrink-0" />
+              <span className="data-[state=inactive]:hidden">Lockers</span>
+            </TabsTrigger>
+            <TabsTrigger value="attendance" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
+              <ClipboardCheck className="w-4 h-4 flex-shrink-0" />
+              <span className="data-[state=inactive]:hidden">Attendance</span>
+            </TabsTrigger>
+          </TabsList>
           
           <TabsContent value="roster" className="space-y-4 animate-fade-in">
             <AthletesList onSwitchToAttendance={() => setActiveTab("attendance")} />
