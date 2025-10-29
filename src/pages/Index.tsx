@@ -3,8 +3,9 @@ import DashboardStats from "@/components/dashboard/DashboardStats";
 import AthletesList from "@/components/athletes/AthletesList";
 import UniformsDashboard from "@/components/uniforms/UniformsDashboard";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
+import AttendanceReport from "@/components/attendance/AttendanceReport";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ShirtIcon, ClipboardCheck } from "lucide-react";
+import { Users, ShirtIcon, ClipboardCheck, Calendar } from "lucide-react";
 const Index = () => {
   return <DashboardLayout>
       <div className="space-y-8">
@@ -42,7 +43,26 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="attendance" className="space-y-4 animate-fade-in">
-            <AttendanceTracker />
+            <Tabs defaultValue="daily" className="space-y-4">
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="daily" className="flex items-center gap-2">
+                  <ClipboardCheck className="w-4 h-4" />
+                  Daily Tracker
+                </TabsTrigger>
+                <TabsTrigger value="report" className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Report
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="daily">
+                <AttendanceTracker />
+              </TabsContent>
+              
+              <TabsContent value="report">
+                <AttendanceReport />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </div>
