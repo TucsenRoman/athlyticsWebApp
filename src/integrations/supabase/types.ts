@@ -111,6 +111,33 @@ export type Database = {
           },
         ]
       }
+      meets: {
+        Row: {
+          coach_id: string
+          created_at: string | null
+          date: string
+          id: string
+          location: string | null
+          name: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string | null
+          date: string
+          id?: string
+          location?: string | null
+          name: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string | null
+          date?: string
+          id?: string
+          location?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -167,6 +194,60 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      results: {
+        Row: {
+          athlete_id: string
+          coach_id: string
+          created_at: string | null
+          event: string
+          id: string
+          is_pr: boolean | null
+          mark: string
+          meet_id: string
+          notes: string | null
+          place: number | null
+        }
+        Insert: {
+          athlete_id: string
+          coach_id: string
+          created_at?: string | null
+          event: string
+          id?: string
+          is_pr?: boolean | null
+          mark: string
+          meet_id: string
+          notes?: string | null
+          place?: number | null
+        }
+        Update: {
+          athlete_id?: string
+          coach_id?: string
+          created_at?: string | null
+          event?: string
+          id?: string
+          is_pr?: boolean | null
+          mark?: string
+          meet_id?: string
+          notes?: string | null
+          place?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "results_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "results_meet_id_fkey"
+            columns: ["meet_id"]
+            isOneToOne: false
+            referencedRelation: "meets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       uniforms: {
         Row: {

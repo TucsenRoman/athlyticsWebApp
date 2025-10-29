@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, User, Search, ChevronDown, Trophy, Award } from "lucide-react";
+import { Plus, User, Search, ChevronDown, Trophy, Award, ShirtIcon, IdCard, TrendingUp, Medal } from "lucide-react";
 import { toast } from "sonner";
 
 interface Athlete {
@@ -31,11 +31,23 @@ interface UniformAssignment {
   created_at: string;
 }
 
+interface MeetResult {
+  id: string;
+  meet_name: string;
+  meet_date: string;
+  event: string;
+  mark: string;
+  place: number | null;
+  is_pr: boolean;
+  notes: string | null;
+}
+
 interface AthleteDetails {
   uniforms: UniformAssignment[];
   attendanceRate: number;
   totalAttendance: number;
   presentCount: number;
+  recentResults: MeetResult[];
 }
 
 export default function AthletesList() {
@@ -45,6 +57,9 @@ export default function AthletesList() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [athleteDetails, setAthleteDetails] = useState<Record<string, AthleteDetails>>({});
+  const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
+  const [selectedAthleteForResults, setSelectedAthleteForResults] = useState<Athlete | null>(null);
+  const [allResults, setAllResults] = useState<MeetResult[]>([]);
   const [newAthlete, setNewAthlete] = useState({
     name: "",
     grade: "9",
@@ -75,7 +90,7 @@ export default function AthletesList() {
     if (athleteDetails[athleteId]) return;
 
     try {
-      // Fetch uniform assignments - all assignments sorted by most recent first
+      // Fetch uniform assignments
       const { data: uniforms } = await supabase
         .from("uniforms")
         .select("top_id, bottom_id, created_at")
@@ -92,6 +107,33 @@ export default function AthletesList() {
       const presentRecords = attendance?.filter(a => a.status === "Present").length || 0;
       const attendanceRate = totalRecords > 0 ? Math.round((presentRecords / totalRecords) * 100) : 0;
 
+      // Fetch recent meet results (last 3)
+      const { data: results } = await supabase
+        .from("results")
+        .select(`
+          id,
+          event,
+          mark,
+          place,
+          is_pr,
+          notes,
+          meets!inner(name, date)
+        `)
+        .eq("athlete_id", athleteId)
+        .order("meets(date)", { ascending: false })
+        .limit(3);
+
+      const recentResults: MeetResult[] = results?.map((r: any) => ({
+        id: r.id,
+        meet_name: r.meets.name,
+        meet_date: r.meets.date,
+        event: r.event,
+        mark: r.mark,
+        place: r.place,
+        is_pr: r.is_pr,
+        notes: r.notes,
+      })) || [];
+
       setAthleteDetails(prev => ({
         ...prev,
         [athleteId]: {
@@ -99,6 +141,7 @@ export default function AthletesList() {
           attendanceRate,
           totalAttendance: totalRecords,
           presentCount: presentRecords,
+          recentResults,
         }
       }));
     } catch (error) {
@@ -137,6 +180,49 @@ export default function AthletesList() {
       fetchAthletes();
     } catch (error: any) {
       toast.error(error.message || "Failed to add athlete");
+    }
+  };
+
+  const getOrdinal = (n: number) => {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+
+  const openResultsModal = async (athlete: Athlete) => {
+    setSelectedAthleteForResults(athlete);
+    setIsResultsModalOpen(true);
+    
+    try {
+      const { data: results } = await supabase
+        .from("results")
+        .select(`
+          id,
+          event,
+          mark,
+          place,
+          is_pr,
+          notes,
+          meets!inner(name, date)
+        `)
+        .eq("athlete_id", athlete.id)
+        .order("meets(date)", { ascending: false });
+
+      const allMeetResults: MeetResult[] = results?.map((r: any) => ({
+        id: r.id,
+        meet_name: r.meets.name,
+        meet_date: r.meets.date,
+        event: r.event,
+        mark: r.mark,
+        place: r.place,
+        is_pr: r.is_pr,
+        notes: r.notes,
+      })) || [];
+
+      setAllResults(allMeetResults);
+    } catch (error) {
+      console.error("Failed to fetch all results:", error);
+      toast.error("Failed to load results");
     }
   };
 
@@ -279,7 +365,7 @@ export default function AthletesList() {
                                   <Card className="shadow-sm">
                                     <CardHeader className="pb-3">
                                       <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                        <Trophy className="w-4 h-4" />
+                                        <Trophy className="w-4 h-4 text-primary" />
                                         Events & Personal Records
                                       </CardTitle>
                                     </CardHeader>
@@ -316,7 +402,10 @@ export default function AthletesList() {
                                   {/* Uniforms */}
                                   <Card className="shadow-sm">
                                     <CardHeader className="pb-3">
-                                      <CardTitle className="text-sm font-medium">Uniform Assignments</CardTitle>
+                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <ShirtIcon className="w-4 h-4 text-primary" />
+                                        Uniform Assignments
+                                      </CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                       {athleteDetails[athlete.id]?.uniforms && athleteDetails[athlete.id].uniforms.length > 0 ? (
@@ -348,52 +437,103 @@ export default function AthletesList() {
                                     </CardContent>
                                   </Card>
 
-                                  {/* Team Info & Attendance */}
-                                  <Card className="shadow-sm lg:col-span-2">
+                                  {/* Team Position & Attendance */}
+                                  <Card className="shadow-sm">
                                     <CardHeader className="pb-3">
-                                      <CardTitle className="text-sm font-medium">Team Information</CardTitle>
+                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <IdCard className="w-4 h-4 text-primary" />
+                                        Team Position
+                                      </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div className="flex flex-col gap-1 p-3 bg-background rounded-md border">
-                                          <span className="text-xs text-muted-foreground">Team Position</span>
-                                          <Badge variant={athlete.team_position !== 'None' ? 'default' : 'secondary'} className="w-fit">
-                                            {athlete.team_position || 'None'}
-                                          </Badge>
-                                        </div>
-                                        <div className="flex flex-col gap-1 p-3 bg-background rounded-md border">
-                                          <span className="text-xs text-muted-foreground">Attendance Rate</span>
-                                          <div className="flex items-baseline gap-2">
-                                            <span className="text-xl font-semibold">
-                                              {athleteDetails[athlete.id]?.attendanceRate ?? 0}%
-                                            </span>
-                                            {athleteDetails[athlete.id] && (
-                                              <span className="text-xs text-muted-foreground">
-                                                ({athleteDetails[athlete.id].presentCount}/{athleteDetails[athlete.id].totalAttendance})
-                                              </span>
-                                            )}
-                                          </div>
-                                        </div>
-                                        {(athlete.athlete_of_week || athlete.athlete_of_meet) && (
-                                          <div className="flex flex-col gap-1 p-3 bg-background rounded-md border">
-                                            <span className="text-xs text-muted-foreground">Awards</span>
-                                            <div className="flex gap-1 flex-wrap">
-                                              {athlete.athlete_of_week && (
-                                                <Badge variant="default" className="text-xs">
-                                                  <Award className="w-3 h-3 mr-1" />
-                                                  Athlete of Week
-                                                </Badge>
-                                              )}
-                                              {athlete.athlete_of_meet && (
-                                                <Badge variant="default" className="text-xs">
-                                                  <Trophy className="w-3 h-3 mr-1" />
-                                                  Athlete of Meet
-                                                </Badge>
-                                              )}
-                                            </div>
-                                          </div>
+                                      <Badge variant={athlete.team_position !== 'None' ? 'default' : 'secondary'} className="w-fit">
+                                        {athlete.team_position || 'None'}
+                                      </Badge>
+                                    </CardContent>
+                                  </Card>
+
+                                  <Card className="shadow-sm">
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <TrendingUp className="w-4 h-4 text-primary" />
+                                        Attendance Rate
+                                      </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="flex items-baseline gap-2">
+                                        <span className="text-2xl font-semibold">
+                                          {athleteDetails[athlete.id]?.attendanceRate ?? 0}%
+                                        </span>
+                                        {athleteDetails[athlete.id] && (
+                                          <span className="text-sm text-muted-foreground">
+                                            ({athleteDetails[athlete.id].presentCount}/{athleteDetails[athlete.id].totalAttendance})
+                                          </span>
                                         )}
                                       </div>
+                                    </CardContent>
+                                  </Card>
+
+                                  {/* Recent Meet Results */}
+                                  <Card className="shadow-sm lg:col-span-2">
+                                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <Medal className="w-4 h-4 text-primary" />
+                                        Recent Meet Results
+                                      </CardTitle>
+                                      {athleteDetails[athlete.id]?.recentResults && athleteDetails[athlete.id].recentResults.length > 0 && (
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          onClick={() => openResultsModal(athlete)}
+                                          className="text-xs"
+                                        >
+                                          View all results
+                                        </Button>
+                                      )}
+                                    </CardHeader>
+                                    <CardContent>
+                                      {athleteDetails[athlete.id]?.recentResults && athleteDetails[athlete.id].recentResults.length > 0 ? (
+                                        <div className="space-y-3">
+                                          {athleteDetails[athlete.id].recentResults.map((result) => (
+                                            <div key={result.id} className="p-3 bg-background rounded-md border">
+                                              <div className="flex items-start justify-between gap-2 mb-2">
+                                                <div>
+                                                  <div className="font-medium text-sm flex items-center gap-2">
+                                                    {result.meet_name}
+                                                    {result.is_pr && (
+                                                      <Badge variant="default" className="text-xs">PR</Badge>
+                                                    )}
+                                                  </div>
+                                                  <div className="text-xs text-muted-foreground">
+                                                    {new Date(result.meet_date).toLocaleDateString()}
+                                                  </div>
+                                                </div>
+                                                {result.place && result.place <= 3 && (
+                                                  <Medal className="w-5 h-5 text-amber-500" />
+                                                )}
+                                              </div>
+                                              <div className="grid grid-cols-3 gap-2 text-sm">
+                                                <div>
+                                                  <span className="text-xs text-muted-foreground">Event</span>
+                                                  <div className="font-medium">{result.event}</div>
+                                                </div>
+                                                <div>
+                                                  <span className="text-xs text-muted-foreground">Mark</span>
+                                                  <div className="font-medium">{result.mark}</div>
+                                                </div>
+                                                <div>
+                                                  <span className="text-xs text-muted-foreground">Place</span>
+                                                  <div className="font-medium">
+                                                    {result.place ? getOrdinal(result.place) : 'N/A'}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground py-2">No meet results recorded</p>
+                                      )}
                                     </CardContent>
                                   </Card>
                                 </div>
@@ -410,6 +550,65 @@ export default function AthletesList() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Results Modal */}
+      <Dialog open={isResultsModalOpen} onOpenChange={setIsResultsModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>All Meet Results - {selectedAthleteForResults?.name}</DialogTitle>
+            <DialogDescription>
+              Complete meet performance history
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-4">
+            {allResults.length > 0 ? (
+              allResults.map((result) => (
+                <div key={result.id} className="p-4 bg-muted/30 rounded-md border">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div>
+                      <div className="font-semibold flex items-center gap-2">
+                        {result.meet_name}
+                        {result.is_pr && (
+                          <Badge variant="default" className="text-xs">PR</Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(result.meet_date).toLocaleDateString()}
+                      </div>
+                    </div>
+                    {result.place && result.place <= 3 && (
+                      <Medal className="w-6 h-6 text-amber-500" />
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <span className="text-xs text-muted-foreground">Event</span>
+                      <div className="font-medium">{result.event}</div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Mark</span>
+                      <div className="font-medium">{result.mark}</div>
+                    </div>
+                    <div>
+                      <span className="text-xs text-muted-foreground">Place</span>
+                      <div className="font-medium">
+                        {result.place ? getOrdinal(result.place) : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                  {result.notes && (
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      <span className="font-medium">Notes:</span> {result.notes}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-8">No results recorded</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
