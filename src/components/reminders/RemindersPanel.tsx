@@ -321,23 +321,8 @@ const RemindersPanel = () => {
     return <div className="text-center py-8">Loading reminders...</div>;
   }
   return <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Reminders</CardTitle>
-          <Button variant="link" onClick={() => navigate("/?tab=reminders")} className="text-sm">
-            View All →
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Quick Add */}
-        
-
-        {/* Reminders Grid */}
-        {relevantReminders.length === 0 ? <p className="text-center text-muted-foreground py-8">No upcoming reminders</p> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {relevantReminders.map(reminder => <ReminderCard key={reminder.id} reminder={reminder} />)}
-          </div>}
-      </CardContent>
+      
+      
     </Card>;
 };
 export default RemindersPanel;
