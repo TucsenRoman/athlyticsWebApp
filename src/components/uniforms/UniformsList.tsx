@@ -241,14 +241,14 @@ export default function UniformsList() {
               <div className="space-y-2">
                 <Label htmlFor="athlete">Assign to Athlete (Optional)</Label>
                 <Select
-                  value={newUniform.athlete_id}
-                  onValueChange={(value) => setNewUniform({ ...newUniform, athlete_id: value })}
+                  value={newUniform.athlete_id || "NONE"}
+                  onValueChange={(value) => setNewUniform({ ...newUniform, athlete_id: value === "NONE" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select athlete" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="NONE">None</SelectItem>
                     {athletes.map((athlete) => (
                       <SelectItem key={athlete.id} value={athlete.id}>
                         {athlete.name}
@@ -320,14 +320,14 @@ export default function UniformsList() {
               <div className="space-y-2">
                 <Label htmlFor="edit_athlete">Assign to Athlete</Label>
                 <Select
-                  value={editingUniform.athlete_id || ""}
-                  onValueChange={(value) => setEditingUniform({ ...editingUniform, athlete_id: value || null })}
+                  value={editingUniform.athlete_id || "NONE"}
+                  onValueChange={(value) => setEditingUniform({ ...editingUniform, athlete_id: value === "NONE" ? null : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select athlete" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="NONE">None</SelectItem>
                     {athletes.map((athlete) => (
                       <SelectItem key={athlete.id} value={athlete.id}>
                         {athlete.name}
