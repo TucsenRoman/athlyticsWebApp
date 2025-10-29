@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import athlyticsLogo from "@/assets/athlytics-logo.png";
+import ProgramSelector from "@/components/header/ProgramSelector";
+import { useProgramContext } from "@/hooks/useProgramContext";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,6 +19,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { selectedProgramId, setSelectedProgramId } = useProgramContext();
 
   useEffect(() => {
     const {
@@ -64,20 +67,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity touch-manipulation"
-            >
-              <img
-                src={athlyticsLogo}
-                alt="Athlytics Logo"
-                className="w-8 h-8 md:w-10 md:h-10"
-              />
-              <div className="text-left">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
+              <button
+                onClick={() => navigate("/")}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity touch-manipulation"
+              >
+                <img
+                  src={athlyticsLogo}
+                  alt="Athlytics Logo"
+                  className="w-8 h-8 md:w-10 md:h-10"
+                />
                 <h1 className="text-lg md:text-xl font-bold">Athlytics</h1>
-              </div>
-            </button>
+              </button>
+              
+              <div className="hidden md:block h-8 w-px bg-border" />
+              
+              <ProgramSelector 
+                selectedProgramId={selectedProgramId}
+                onProgramChange={setSelectedProgramId}
+              />
+            </div>
+            
             <Button
               variant="outline"
               onClick={handleSignOut}
