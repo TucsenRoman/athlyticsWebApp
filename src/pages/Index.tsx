@@ -12,17 +12,13 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 const Index = () => {
   const [activeTab, setActiveTab] = useState("roster");
-
   return <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
         </div>
 
-        <DashboardStats 
-          onSwitchToAttendance={() => setActiveTab("attendance")}
-          onSwitchToLockers={() => setActiveTab("lockers")}
-        />
+        <DashboardStats onSwitchToAttendance={() => setActiveTab("attendance")} onSwitchToLockers={() => setActiveTab("lockers")} />
 
         <RemindersPanel />
 
