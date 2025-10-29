@@ -82,7 +82,11 @@ const RemindersCard = () => {
       const filtered = (data || []).slice(0, 5);
       setReminders(filtered);
 
-      const todayReminders = (data || []).filter((r) => r.due_date === today);
+      // Count reminders that are due today or overdue (completed = false is already filtered)
+      const todayReminders = (data || []).filter((r) => {
+        if (!r.due_date) return false;
+        return r.due_date <= today;
+      });
       setTodayCount(todayReminders.length);
     } catch (error) {
       console.error("Error fetching reminders:", error);
