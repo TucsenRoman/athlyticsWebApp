@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { sanitizeSelectValue } from "@/lib/utils";
 
 interface Locker {
   id: string;
@@ -37,7 +38,7 @@ export default function LockersDashboard() {
   const [formData, setFormData] = useState({
     locker_number: "",
     status: "Available",
-    athlete_id: "",
+    athlete_id: null as string | null,
     combination: "",
     location: "",
     notes: "",
@@ -86,7 +87,7 @@ export default function LockersDashboard() {
         coach_id: user.id,
         locker_number: formData.locker_number,
         status: formData.status,
-        athlete_id: formData.athlete_id || null,
+        athlete_id: formData.athlete_id,
         combination: formData.combination || null,
         location: formData.location || null,
         notes: formData.notes || null,
@@ -111,7 +112,7 @@ export default function LockersDashboard() {
       const updates: any = {
         locker_number: formData.locker_number,
         status: formData.status,
-        athlete_id: formData.status === "Available" ? null : (formData.athlete_id || null),
+        athlete_id: formData.status === "Available" ? null : formData.athlete_id,
         combination: formData.combination || null,
         location: formData.location || null,
         notes: formData.notes || null,
@@ -154,7 +155,7 @@ export default function LockersDashboard() {
     setFormData({
       locker_number: locker.locker_number,
       status: locker.status,
-      athlete_id: locker.athlete_id || "",
+      athlete_id: locker.athlete_id,
       combination: locker.combination || "",
       location: locker.location || "",
       notes: locker.notes || "",
@@ -166,7 +167,7 @@ export default function LockersDashboard() {
     setFormData({
       locker_number: "",
       status: "Available",
-      athlete_id: "",
+      athlete_id: null,
       combination: "",
       location: "",
       notes: "",
@@ -298,12 +299,15 @@ export default function LockersDashboard() {
             </div>
             <div>
               <Label htmlFor="athlete_id">Assign to Athlete</Label>
-              <Select value={formData.athlete_id} onValueChange={(value) => setFormData({ ...formData, athlete_id: value })}>
+              <Select 
+                value={sanitizeSelectValue(formData.athlete_id)} 
+                onValueChange={(value) => setFormData({ ...formData, athlete_id: value === "NONE" ? null : value })}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select athlete (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="NONE">None</SelectItem>
                   {athletes.map((athlete) => (
                     <SelectItem key={athlete.id} value={athlete.id}>
                       {athlete.name}
@@ -382,15 +386,15 @@ export default function LockersDashboard() {
             <div>
               <Label htmlFor="edit_athlete_id">Assign to Athlete</Label>
               <Select 
-                value={formData.athlete_id} 
-                onValueChange={(value) => setFormData({ ...formData, athlete_id: value })}
+                value={sanitizeSelectValue(formData.athlete_id)} 
+                onValueChange={(value) => setFormData({ ...formData, athlete_id: value === "NONE" ? null : value })}
                 disabled={formData.status === "Available"}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select athlete (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="NONE">None</SelectItem>
                   {athletes.map((athlete) => (
                     <SelectItem key={athlete.id} value={athlete.id}>
                       {athlete.name}

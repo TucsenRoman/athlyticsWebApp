@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Pencil, Trash2, ShirtIcon } from "lucide-react";
 import { toast } from "sonner";
+import { sanitizeSelectValue } from "@/lib/utils";
 
 interface Uniform {
   id: string;
@@ -43,7 +44,7 @@ export default function UniformsList() {
   const [newUniform, setNewUniform] = useState({
     top_id: "",
     bottom_id: "",
-    athlete_id: "",
+    athlete_id: null as string | null,
     status: "Checked Out",
     notes: "",
   });
@@ -82,7 +83,7 @@ export default function UniformsList() {
         coach_id: user.id,
         top_id: newUniform.top_id,
         bottom_id: newUniform.bottom_id,
-        athlete_id: newUniform.athlete_id || null,
+        athlete_id: newUniform.athlete_id,
         status: newUniform.status,
         notes: newUniform.notes || null,
       });
@@ -94,7 +95,7 @@ export default function UniformsList() {
       setNewUniform({
         top_id: "",
         bottom_id: "",
-        athlete_id: "",
+        athlete_id: null,
         status: "Checked Out",
         notes: "",
       });
@@ -114,7 +115,7 @@ export default function UniformsList() {
         .update({
           top_id: editingUniform.top_id,
           bottom_id: editingUniform.bottom_id,
-          athlete_id: editingUniform.athlete_id || null,
+          athlete_id: editingUniform.athlete_id,
           status: editingUniform.status,
           notes: editingUniform.notes || null,
         })
@@ -309,8 +310,8 @@ export default function UniformsList() {
               <div className="space-y-2">
                 <Label htmlFor="athlete">Assign to Athlete (Optional)</Label>
                 <Select
-                  value={newUniform.athlete_id || "NONE"}
-                  onValueChange={(value) => setNewUniform({ ...newUniform, athlete_id: value === "NONE" ? "" : value })}
+                  value={sanitizeSelectValue(newUniform.athlete_id)}
+                  onValueChange={(value) => setNewUniform({ ...newUniform, athlete_id: value === "NONE" ? null : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select athlete" />
@@ -388,7 +389,7 @@ export default function UniformsList() {
               <div className="space-y-2">
                 <Label htmlFor="edit_athlete">Assign to Athlete</Label>
                 <Select
-                  value={editingUniform.athlete_id || "NONE"}
+                  value={sanitizeSelectValue(editingUniform.athlete_id)}
                   onValueChange={(value) => setEditingUniform({ ...editingUniform, athlete_id: value === "NONE" ? null : value })}
                 >
                   <SelectTrigger>
