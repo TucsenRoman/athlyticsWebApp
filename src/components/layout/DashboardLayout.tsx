@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import motivvLogo from "@/assets/motivv-logo.png";
+import athlyticsLogo from "@/assets/athlytics-logo.png";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -83,7 +83,7 @@ export default function DashboardLayout({
         <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
             <button onClick={() => navigate("/")} className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity touch-manipulation">
-              <img src={motivvLogo} alt="Motivv Logo" className="w-8 h-8 md:w-10 md:h-10" />
+              <img src={athlyticsLogo} alt="Athlytics Logo" className="w-8 h-8 md:w-10 md:h-10" />
               <div className="text-left">
                 <h1 className="text-lg md:text-xl font-bold">Athlytics </h1>
                 <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
