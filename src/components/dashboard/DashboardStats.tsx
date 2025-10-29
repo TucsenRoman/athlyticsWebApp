@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ShirtIcon, Calendar, ClipboardCheck } from "lucide-react";
+import { Users, ShirtIcon, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import RemindersCard from "./RemindersCard";
 
 const TIMEZONE = "America/Chicago";
 
@@ -88,12 +89,6 @@ const DashboardStats = () => {
       icon: Calendar,
       color: "text-muted-foreground",
     },
-    {
-      title: "Lineup Due",
-      value: "Coming Soon",
-      icon: ClipboardCheck,
-      color: "text-muted-foreground",
-    },
   ];
 
   return (
@@ -111,6 +106,7 @@ const DashboardStats = () => {
           </CardContent>
         </Card>
       ))}
+      <RemindersCard />
     </div>
   );
 };
