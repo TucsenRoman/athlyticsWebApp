@@ -35,6 +35,9 @@ const AttendanceTracker = () => {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [editingNotes, setEditingNotes] = useState<{ [key: string]: string }>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(true);
+  const [showSuccess, setShowSuccess] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,6 +49,20 @@ const AttendanceTracker = () => {
       fetchAttendance();
     }
   }, [selectedDate, athletes]);
+
+  useEffect(() => {
+    // Check if attendance is submitted for the current date
+    if (attendance.length > 0 && athletes.length > 0) {
+      const hasAllRecords = athletes.every((athlete) =>
+        attendance.some((record) => record.athlete_id === athlete.id)
+      );
+      setIsSubmitted(hasAllRecords);
+      setIsEditMode(!hasAllRecords);
+    } else {
+      setIsSubmitted(false);
+      setIsEditMode(true);
+    }
+  }, [attendance, athletes]);
 
   const fetchAthletes = async () => {
     try {
@@ -177,6 +194,67 @@ const AttendanceTracker = () => {
     }
   };
 
+  const submitAttendance = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const promises = athletes.map((athlete) => {
+        const existingRecord = attendance.find((a) => a.athlete_id === athlete.id);
+        const currentNotes = editingNotes[athlete.id] || existingRecord?.notes || null;
+        
+        if (existingRecord) {
+          // Update existing record if needed
+          return supabase
+            .from("attendance")
+            .update({ 
+              status: existingRecord.status,
+              notes: currentNotes 
+            })
+            .eq("id", existingRecord.id);
+        } else {
+          // Create new record with default "Present" status
+          return supabase
+            .from("attendance")
+            .insert({
+              athlete_id: athlete.id,
+              coach_id: user.id,
+              date: dateStr,
+              status: "Present",
+              notes: currentNotes,
+            });
+        }
+      });
+
+      await Promise.all(promises);
+      await fetchAttendance();
+      setEditingNotes({});
+      setIsEditMode(false);
+      setIsSubmitted(true);
+      setShowSuccess(true);
+      
+      setTimeout(() => setShowSuccess(false), 3000);
+      
+      toast({
+        title: "Success",
+        description: "Attendance submitted successfully",
+      });
+    } catch (error) {
+      console.error("Error submitting attendance:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit attendance",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const enableEditMode = () => {
+    setIsEditMode(true);
+    setIsSubmitted(false);
+  };
+
   const markAllPresent = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -246,7 +324,14 @@ const AttendanceTracker = () => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Attendance Tracker</CardTitle>
+          <div className="flex items-center gap-4">
+            <CardTitle>Attendance Tracker</CardTitle>
+            {showSuccess && (
+              <span className="text-sm font-medium text-green-600 animate-fade-in">
+                ✓ Saved!
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-4">
             <Popover>
               <PopoverTrigger asChild>
@@ -265,10 +350,19 @@ const AttendanceTracker = () => {
                 />
               </PopoverContent>
             </Popover>
-            <Button onClick={markAllPresent} variant="default">
+            <Button onClick={markAllPresent} variant="secondary" disabled={!isEditMode}>
               <CheckCircle2 className="mr-2 h-4 w-4" />
               Mark All Present
             </Button>
+            {isSubmitted && !isEditMode ? (
+              <Button onClick={enableEditMode} variant="outline">
+                Edit
+              </Button>
+            ) : (
+              <Button onClick={submitAttendance} variant="default">
+                Submit Attendance
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -305,7 +399,10 @@ const AttendanceTracker = () => {
                 : savedNotes;
 
               return (
-                <TableRow key={athlete.id}>
+                <TableRow 
+                  key={athlete.id}
+                  className={cn(!isEditMode && "opacity-60")}
+                >
                   <TableCell className="font-medium">{athlete.name}</TableCell>
                   <TableCell>{athlete.grade || "N/A"}</TableCell>
                   <TableCell>
@@ -318,6 +415,7 @@ const AttendanceTracker = () => {
                           savedNotes
                         )
                       }
+                      disabled={!isEditMode}
                     >
                       <SelectTrigger className="w-[140px]">
                         <SelectValue />
@@ -337,6 +435,7 @@ const AttendanceTracker = () => {
                       onBlur={() => handleNotesBlur(athlete.id)}
                       onKeyDown={(e) => handleNotesKeyDown(athlete.id, e)}
                       className="max-w-[300px]"
+                      disabled={!isEditMode}
                     />
                   </TableCell>
                 </TableRow>
