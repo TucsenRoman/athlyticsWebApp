@@ -2,17 +2,27 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import AthletesList from "@/components/athletes/AthletesList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, BarChart3, ShirtIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground mt-2">
-            Manage your track and cross country team
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+            <p className="text-muted-foreground mt-2">
+              Manage your track and cross country team
+            </p>
+          </div>
+          <Button onClick={() => navigate("/uniforms")} variant="outline">
+            <ShirtIcon className="w-4 h-4 mr-2" />
+            Manage Uniforms
+          </Button>
         </div>
 
         <DashboardStats />
