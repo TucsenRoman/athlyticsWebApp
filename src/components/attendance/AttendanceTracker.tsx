@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Filter, Download, Trash2, LockKeyhole } from "lucide-react";
+import { CalendarIcon, Filter, Download, Trash2, LockKeyhole, Edit } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import AssignLockerModal from "@/components/lockers/AssignLockerModal";
@@ -35,7 +36,7 @@ const AttendanceTracker = () => {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string[]>(["all"]);
   const [editingNotes, setEditingNotes] = useState<{ [key: string]: string }>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true);
@@ -340,13 +341,33 @@ const AttendanceTracker = () => {
     return <Badge variant={variants[status]}>{status}</Badge>;
   };
 
-  const filteredAthletes = athletes.filter((athlete) => {
-    if (filterStatus === "all") return true;
-    const record = attendance.find((a) => a.athlete_id === athlete.id);
-    if (filterStatus === "Absent") {
-      return record?.status === "Absent";
+  const toggleFilter = (value: string) => {
+    if (value === "all") {
+      setFilterStatus(["all"]);
+    } else {
+      const newFilters = filterStatus.includes("all") 
+        ? [value]
+        : filterStatus.includes(value)
+          ? filterStatus.filter(f => f !== value)
+          : [...filterStatus.filter(f => f !== "all"), value];
+      
+      setFilterStatus(newFilters.length === 0 ? ["all"] : newFilters);
     }
-    return false;
+  };
+
+  const filteredAthletes = athletes.filter((athlete) => {
+    if (filterStatus.includes("all")) return true;
+    const record = attendance.find((a) => a.athlete_id === athlete.id);
+    const status = record?.status || "Present";
+    const hasNotes = !!record?.notes;
+    
+    return filterStatus.some(filter => {
+      if (filter === "Present") return status === "Present";
+      if (filter === "Absent") return status === "Absent";
+      if (filter === "Excused") return status === "Excused";
+      if (filter === "Noted Reason") return hasNotes;
+      return false;
+    });
   });
 
   const exportCSV = () => {
@@ -388,105 +409,122 @@ const AttendanceTracker = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <CardTitle>Attendance Tracker</CardTitle>
-            {showSuccess && (
-              <span className="text-sm font-medium text-green-600 animate-fade-in">
-                ✓ Saved!
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(selectedDate, "PPP")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-            <Button onClick={exportCSV} variant="outline" size="sm" className="touch-manipulation">
-              <Download className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Export CSV</span>
-            </Button>
-            {isSubmitted && !isEditMode ? (
-              <>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="touch-manipulation">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span className="hidden sm:inline">Clear All</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Clear all attendance?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will delete all attendance entries for {format(selectedDate, "MMMM d, yyyy")} and mark the day as not submitted. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={clearAllAttendance}>Clear All</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button onClick={enableEditMode} variant="outline" className="touch-manipulation">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <CardTitle>Daily Tracker</CardTitle>
+              {showSuccess && (
+                <span className="text-sm font-medium text-green-600 animate-fade-in">
+                  ✓ Saved!
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {isSubmitted && !isEditMode ? (
+                <Button onClick={enableEditMode} variant="outline" size="sm" className="touch-manipulation">
+                  <Edit className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
-              </>
-            ) : (
-              <>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="touch-manipulation">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      <span className="hidden sm:inline">Clear All</span>
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Clear all attendance?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will delete all attendance entries for {format(selectedDate, "MMMM d, yyyy")} and mark the day as not submitted. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={clearAllAttendance}>Clear All</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button onClick={submitAttendance} variant="default" className="touch-manipulation">
-                  Submit Attendance
+              ) : (
+                <Button onClick={submitAttendance} variant="default" size="sm" className="touch-manipulation">
+                  Submit
                 </Button>
-              </>
-            )}
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="text-lg font-medium">
+              {format(selectedDate, "EEEE, MMMM d, yyyy")}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    Change Date
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Button onClick={exportCSV} variant="outline" size="sm" className="touch-manipulation">
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex items-center gap-2">
-          <Filter className="h-4 w-4" />
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Athletes</SelectItem>
-              <SelectItem value="Absent">Absent Only</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="mb-6 space-y-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filters:</span>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="filter-all"
+                checked={filterStatus.includes("all")}
+                onCheckedChange={() => toggleFilter("all")}
+                disabled={!isEditMode}
+              />
+              <label htmlFor="filter-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                All
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="filter-present"
+                checked={filterStatus.includes("Present")}
+                onCheckedChange={() => toggleFilter("Present")}
+                disabled={!isEditMode}
+              />
+              <label htmlFor="filter-present" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Present
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="filter-absent"
+                checked={filterStatus.includes("Absent")}
+                onCheckedChange={() => toggleFilter("Absent")}
+                disabled={!isEditMode}
+              />
+              <label htmlFor="filter-absent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Absent
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="filter-excused"
+                checked={filterStatus.includes("Excused")}
+                onCheckedChange={() => toggleFilter("Excused")}
+                disabled={!isEditMode}
+              />
+              <label htmlFor="filter-excused" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Excused
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="filter-noted"
+                checked={filterStatus.includes("Noted Reason")}
+                onCheckedChange={() => toggleFilter("Noted Reason")}
+                disabled={!isEditMode}
+              />
+              <label htmlFor="filter-noted" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Noted Reason
+              </label>
+            </div>
+          </div>
         </div>
 
         <Table>

@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CalendarIcon, Download } from "lucide-react";
+import { CalendarIcon, Download, ArrowUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useProgramContext } from "@/hooks/useProgramContext";
 
 interface AttendanceStats {
   athlete_id: string;
@@ -24,17 +25,44 @@ type SortField = "athlete_name" | "total_days" | "present" | "absent" | "excused
 type SortDirection = "asc" | "desc";
 
 const AttendanceReport = () => {
-  const [startDate, setStartDate] = useState<Date>(new Date(new Date().getFullYear(), 0, 1)); // Jan 1st
+  const { selectedProgramId } = useProgramContext();
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [stats, setStats] = useState<AttendanceStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortField, setSortField] = useState<SortField>("athlete_name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-  const { toast } = useToast();
+  const [seasonAverage, setSeasonAverage] = useState<number>(0);
 
   useEffect(() => {
-    fetchAttendanceStats();
+    fetchProgramSeasonDates();
+  }, [selectedProgramId]);
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      fetchAttendanceStats();
+    }
   }, [startDate, endDate]);
+
+  const fetchProgramSeasonDates = async () => {
+    if (!selectedProgramId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("programs")
+        .select("season_start_date")
+        .eq("id", selectedProgramId)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data?.season_start_date) {
+        setStartDate(new Date(data.season_start_date));
+      }
+    } catch (error) {
+      console.error("Error fetching program dates:", error);
+    }
+  };
 
   const fetchAttendanceStats = async () => {
     try {
@@ -85,13 +113,14 @@ const AttendanceReport = () => {
       });
 
       setStats(statsData);
+      
+      // Calculate season average
+      const totalRate = statsData.reduce((sum, stat) => sum + stat.attendance_percentage, 0);
+      const average = statsData.length > 0 ? Math.round(totalRate / statsData.length) : 0;
+      setSeasonAverage(average);
     } catch (error) {
       console.error("Error fetching attendance stats:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load attendance report",
-        variant: "destructive",
-      });
+      toast.error("Failed to load attendance report");
     } finally {
       setLoading(false);
     }
@@ -137,14 +166,11 @@ const AttendanceReport = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `attendance-report-${format(startDate, "yyyy-MM-dd")}-to-${format(endDate, "yyyy-MM-dd")}.csv`;
+    a.download = `attendance-report-${startDate ? format(startDate, "yyyy-MM-dd") : "start"}-to-${format(endDate, "yyyy-MM-dd")}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
 
-    toast({
-      title: "Success",
-      description: "Report downloaded successfully",
-    });
+    toast.success("Report downloaded successfully");
   };
 
   if (loading) {
