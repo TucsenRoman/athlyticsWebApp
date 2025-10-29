@@ -91,6 +91,7 @@ export type Database = {
       uniforms: {
         Row: {
           assigned_to: string | null
+          athlete_id: string | null
           bottom_id: string
           coach_id: string
           created_at: string
@@ -102,6 +103,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          athlete_id?: string | null
           bottom_id: string
           coach_id: string
           created_at?: string
@@ -113,6 +115,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          athlete_id?: string | null
           bottom_id?: string
           coach_id?: string
           created_at?: string
@@ -123,6 +126,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "uniforms_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "uniforms_coach_id_fkey"
             columns: ["coach_id"]
