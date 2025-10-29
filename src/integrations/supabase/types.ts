@@ -129,6 +129,36 @@ export type Database = {
         }
         Relationships: []
       }
+      reminders: {
+        Row: {
+          coach_id: string
+          completed: boolean
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          coach_id: string
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          coach_id?: string
+          completed?: boolean
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       uniforms: {
         Row: {
           assigned_to: string | null
