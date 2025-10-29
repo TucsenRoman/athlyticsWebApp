@@ -111,6 +111,24 @@ export type Database = {
           },
         ]
       }
+      attendance_submissions: {
+        Row: {
+          coach_id: string
+          date: string
+          submitted_at: string
+        }
+        Insert: {
+          coach_id: string
+          date: string
+          submitted_at?: string
+        }
+        Update: {
+          coach_id?: string
+          date?: string
+          submitted_at?: string
+        }
+        Relationships: []
+      }
       meets: {
         Row: {
           coach_id: string

@@ -26,6 +26,9 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => {
         fetchStats();
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_submissions' }, () => {
+        fetchStats();
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'uniforms' }, () => {
         fetchStats();
       })
@@ -41,21 +44,35 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Today's attendance percentage
+      // Today's attendance - check if submitted first
       const now = toZonedTime(new Date(), TIMEZONE);
       const todayDate = format(now, "yyyy-MM-dd");
 
-      const { data: todayAttendance } = await supabase
-        .from("attendance")
-        .select("status")
+      // Check if attendance has been submitted for today
+      const { data: submissionData } = await supabase
+        .from("attendance_submissions")
+        .select("*")
         .eq("coach_id", user.id)
-        .eq("date", todayDate);
+        .eq("date", todayDate)
+        .maybeSingle();
 
-      if (todayAttendance && todayAttendance.length > 0) {
-        const presentCount = todayAttendance.filter(a => a.status === "Present").length;
-        const percentage = Math.round((presentCount / todayAttendance.length) * 100);
-        setAttendancePercent(percentage);
+      if (submissionData) {
+        // Attendance was submitted, calculate percentage
+        const { data: todayAttendance } = await supabase
+          .from("attendance")
+          .select("status")
+          .eq("coach_id", user.id)
+          .eq("date", todayDate);
+
+        if (todayAttendance && todayAttendance.length > 0) {
+          const presentCount = todayAttendance.filter(a => a.status === "Present").length;
+          const percentage = Math.round((presentCount / todayAttendance.length) * 100);
+          setAttendancePercent(percentage);
+        } else {
+          setAttendancePercent(null);
+        }
       } else {
+        // Not submitted yet
         setAttendancePercent(null);
       }
 

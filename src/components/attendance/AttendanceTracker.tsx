@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, CheckCircle2, Filter, Download } from "lucide-react";
+import { CalendarIcon, CheckCircle2, Filter, Download, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -46,35 +47,37 @@ const AttendanceTracker = () => {
 
   useEffect(() => {
     // Reset states when date changes
-    setIsSubmitted(false);
-    setIsEditMode(true);
     setShowSuccess(false);
     setEditingNotes({});
     
     if (athletes.length > 0) {
       fetchAttendance();
+      checkSubmissionStatus();
     }
-  }, [selectedDate]);
+  }, [selectedDate, athletes.length]);
 
-  useEffect(() => {
-    if (athletes.length > 0 && !selectedDate) {
-      fetchAttendance();
-    }
-  }, [athletes]);
+  const checkSubmissionStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-  useEffect(() => {
-    // Check if attendance is submitted for the current date
-    if (attendance.length > 0 && athletes.length > 0) {
-      const hasAllRecords = athletes.every((athlete) =>
-        attendance.some((record) => record.athlete_id === athlete.id)
-      );
-      setIsSubmitted(hasAllRecords);
-      setIsEditMode(!hasAllRecords);
-    } else {
-      setIsSubmitted(false);
-      setIsEditMode(true);
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const { data, error } = await supabase
+        .from("attendance_submissions")
+        .select("*")
+        .eq("coach_id", user.id)
+        .eq("date", dateStr)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      const submitted = !!data;
+      setIsSubmitted(submitted);
+      setIsEditMode(!submitted);
+    } catch (error) {
+      console.error("Error checking submission status:", error);
     }
-  }, [attendance, athletes]);
+  };
 
   const fetchAthletes = async () => {
     try {
@@ -217,7 +220,6 @@ const AttendanceTracker = () => {
         const currentNotes = editingNotes[athlete.id] || existingRecord?.notes || null;
         
         if (existingRecord) {
-          // Update existing record if needed
           return supabase
             .from("attendance")
             .update({ 
@@ -226,7 +228,6 @@ const AttendanceTracker = () => {
             })
             .eq("id", existingRecord.id);
         } else {
-          // Create new record with default "Present" status
           return supabase
             .from("attendance")
             .insert({
@@ -240,6 +241,18 @@ const AttendanceTracker = () => {
       });
 
       await Promise.all(promises);
+      
+      // Mark as submitted in attendance_submissions
+      await supabase
+        .from("attendance_submissions")
+        .upsert({
+          coach_id: user.id,
+          date: dateStr,
+          submitted_at: new Date().toISOString(),
+        }, {
+          onConflict: 'coach_id,date'
+        });
+
       await fetchAttendance();
       setEditingNotes({});
       setIsEditMode(false);
@@ -257,6 +270,52 @@ const AttendanceTracker = () => {
       toast({
         title: "Error",
         description: "Failed to submit attendance",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const clearAllAttendance = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      
+      // Delete all attendance records for this date
+      const { error: attendanceError } = await supabase
+        .from("attendance")
+        .delete()
+        .eq("coach_id", user.id)
+        .eq("date", dateStr);
+
+      if (attendanceError) throw attendanceError;
+
+      // Delete submission marker
+      const { error: submissionError } = await supabase
+        .from("attendance_submissions")
+        .delete()
+        .eq("coach_id", user.id)
+        .eq("date", dateStr);
+
+      if (submissionError) throw submissionError;
+
+      // Reset UI state
+      setAttendance([]);
+      setEditingNotes({});
+      setIsSubmitted(false);
+      setIsEditMode(true);
+      setShowSuccess(false);
+
+      toast({
+        title: "Cleared",
+        description: "All attendance for this date has been cleared",
+      });
+    } catch (error) {
+      console.error("Error clearing attendance:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear attendance",
         variant: "destructive",
       });
     }
@@ -403,13 +462,57 @@ const AttendanceTracker = () => {
               <span className="hidden sm:inline">Mark All Present</span>
             </Button>
             {isSubmitted && !isEditMode ? (
-              <Button onClick={enableEditMode} variant="outline" className="touch-manipulation">
-                Edit
-              </Button>
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="touch-manipulation">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Clear All</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Clear all attendance?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will delete all attendance entries for {format(selectedDate, "MMMM d, yyyy")} and mark the day as not submitted. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={clearAllAttendance}>Clear All</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <Button onClick={enableEditMode} variant="outline" className="touch-manipulation">
+                  Edit
+                </Button>
+              </>
             ) : (
-              <Button onClick={submitAttendance} variant="default" className="touch-manipulation">
-                Submit
-              </Button>
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="touch-manipulation">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Clear All</span>
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Clear all attendance?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will delete all attendance entries for {format(selectedDate, "MMMM d, yyyy")} and mark the day as not submitted. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={clearAllAttendance}>Clear All</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <Button onClick={submitAttendance} variant="default" className="touch-manipulation">
+                  Submit Attendance
+                </Button>
+              </>
             )}
           </div>
         </div>
