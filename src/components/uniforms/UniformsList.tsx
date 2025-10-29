@@ -11,9 +11,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Pencil, Trash2, ShirtIcon } from "lucide-react";
+import { Plus, Search, Pencil, Trash2, ShirtIcon, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import { sanitizeSelectValue } from "@/lib/utils";
+import AssignLockerModal from "@/components/lockers/AssignLockerModal";
 
 interface Uniform {
   id: string;
@@ -48,6 +49,8 @@ export default function UniformsList() {
     status: "Checked Out",
     notes: "",
   });
+  const [lockerModalOpen, setLockerModalOpen] = useState(false);
+  const [selectedUniformForLocker, setSelectedUniformForLocker] = useState<{ athleteId: string; athleteName: string } | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -499,6 +502,23 @@ export default function UniformsList() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
+                        {uniform.athlete_id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const athleteName = uniform.assigned_to || "Athlete";
+                              setSelectedUniformForLocker({
+                                athleteId: uniform.athlete_id!,
+                                athleteName,
+                              });
+                              setLockerModalOpen(true);
+                            }}
+                            title="Assign Locker"
+                          >
+                            <LockKeyhole className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -540,6 +560,21 @@ export default function UniformsList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {selectedUniformForLocker && (
+        <AssignLockerModal
+          isOpen={lockerModalOpen}
+          onClose={() => {
+            setLockerModalOpen(false);
+            setSelectedUniformForLocker(null);
+          }}
+          athleteId={selectedUniformForLocker.athleteId}
+          athleteName={selectedUniformForLocker.athleteName}
+          onSuccess={() => {
+            // No need to refresh anything specific in uniforms
+          }}
+        />
+      )}
     </div>
   );
 }

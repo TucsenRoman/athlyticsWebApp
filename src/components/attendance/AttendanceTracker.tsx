@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Filter, Download, Trash2 } from "lucide-react";
+import { CalendarIcon, Filter, Download, Trash2, LockKeyhole } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import AssignLockerModal from "@/components/lockers/AssignLockerModal";
 
 interface Athlete {
   id: string;
@@ -40,6 +41,8 @@ const AttendanceTracker = () => {
   const [isEditMode, setIsEditMode] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const { toast } = useToast();
+  const [lockerModalOpen, setLockerModalOpen] = useState(false);
+  const [selectedAthleteForLocker, setSelectedAthleteForLocker] = useState<{ athleteId: string; athleteName: string } | null>(null);
 
   useEffect(() => {
     fetchAthletes();
@@ -493,6 +496,7 @@ const AttendanceTracker = () => {
               <TableHead>Grade</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Notes</TableHead>
+              <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -544,6 +548,22 @@ const AttendanceTracker = () => {
                       disabled={!isEditMode}
                     />
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedAthleteForLocker({
+                          athleteId: athlete.id,
+                          athleteName: athlete.name,
+                        });
+                        setLockerModalOpen(true);
+                      }}
+                      title="Assign Locker"
+                    >
+                      <LockKeyhole className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               );
             })}
@@ -556,6 +576,21 @@ const AttendanceTracker = () => {
           </div>
         )}
       </CardContent>
+
+      {selectedAthleteForLocker && (
+        <AssignLockerModal
+          isOpen={lockerModalOpen}
+          onClose={() => {
+            setLockerModalOpen(false);
+            setSelectedAthleteForLocker(null);
+          }}
+          athleteId={selectedAthleteForLocker.athleteId}
+          athleteName={selectedAthleteForLocker.athleteName}
+          onSuccess={() => {
+            // No need to refresh attendance data
+          }}
+        />
+      )}
     </Card>
   );
 };

@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Plus, User, Search, ChevronDown, Trophy, Award, ShirtIcon, IdCard, TrendingUp, Medal, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
+import AssignLockerModal from "@/components/lockers/AssignLockerModal";
 
 interface Athlete {
   id: string;
@@ -83,9 +84,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   const [selectedAthleteForUniform, setSelectedAthleteForUniform] = useState<{ id: string; name: string } | null>(null);
   const [uniformForm, setUniformForm] = useState({ top_id: "", bottom_id: "" });
   const [isLockerModalOpen, setIsLockerModalOpen] = useState(false);
-  const [selectedAthleteForLocker, setSelectedAthleteForLocker] = useState<{ id: string; name: string } | null>(null);
-  const [availableLockers, setAvailableLockers] = useState<{ id: string; locker_number: string }[]>([]);
-  const [selectedLockerId, setSelectedLockerId] = useState("");
+  const [selectedAthleteForLockerAssign, setSelectedAthleteForLockerAssign] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     fetchAthletes();
@@ -323,53 +322,43 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
     }
   };
 
-  const openLockerModal = async (athlete: Athlete) => {
+  const handleUnassignLocker = async (athleteId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Fetch available lockers
-      const { data: lockers } = await supabase
+      // Find the locker for this athlete
+      const { data: locker } = await supabase
         .from("lockers")
-        .select("id, locker_number")
-        .eq("coach_id", user.id)
-        .eq("status", "Available")
-        .order("locker_number");
+        .select("id")
+        .eq("athlete_id", athleteId)
+        .maybeSingle();
 
-      setAvailableLockers(lockers || []);
-      setSelectedAthleteForLocker({ id: athlete.id, name: athlete.name });
-      setSelectedLockerId("");
-      setIsLockerModalOpen(true);
-    } catch (error: any) {
-      toast.error("Failed to load available lockers");
-    }
-  };
+      if (!locker) {
+        toast.error("No locker found for this athlete");
+        return;
+      }
 
-  const handleLockerAssignment = async () => {
-    if (!selectedAthleteForLocker || !selectedLockerId) return;
-
-    try {
       const { error } = await supabase
         .from("lockers")
         .update({
-          athlete_id: selectedAthleteForLocker.id,
-          status: "Assigned",
+          athlete_id: null,
+          status: "Available",
         })
-        .eq("id", selectedLockerId);
+        .eq("id", locker.id)
+        .eq("coach_id", user.id);
 
       if (error) throw error;
 
-      toast.success("Locker assigned successfully");
-      setIsLockerModalOpen(false);
-      setSelectedLockerId("");
+      toast.success("Locker unassigned successfully");
 
       // Refresh this athlete's details
-      if (expandedRow === selectedAthleteForLocker.id) {
-        delete athleteDetails[selectedAthleteForLocker.id];
-        await fetchAthleteDetails(selectedAthleteForLocker.id);
+      if (expandedRow === athleteId) {
+        delete athleteDetails[athleteId];
+        await fetchAthleteDetails(athleteId);
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to assign locker");
+      toast.error(error.message || "Failed to unassign locker");
     }
   };
 
@@ -700,17 +689,32 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           <LockKeyhole className="w-4 h-4 text-primary" />
                                           Locker
                                         </CardTitle>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
-                                          className="h-7 text-xs"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            openLockerModal(athlete);
-                                          }}
-                                        >
-                                          Assign Locker
-                                        </Button>
+                                        {athleteDetails[athlete.id]?.locker ? (
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-7 text-xs"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleUnassignLocker(athlete.id);
+                                            }}
+                                          >
+                                            Unassign
+                                          </Button>
+                                        ) : (
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-7 text-xs"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setSelectedAthleteForLockerAssign({ id: athlete.id, name: athlete.name });
+                                              setIsLockerModalOpen(true);
+                                            }}
+                                          >
+                                            Assign
+                                          </Button>
+                                        )}
                                       </div>
                                     </CardHeader>
                                     <CardContent>
@@ -991,48 +995,23 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
       </Dialog>
 
       {/* Locker Assignment Modal */}
-      <Dialog open={isLockerModalOpen} onOpenChange={setIsLockerModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Assign Locker</DialogTitle>
-            <DialogDescription>
-              Assign a locker to {selectedAthleteForLocker?.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="locker_select">Select Locker</Label>
-              <Select value={selectedLockerId} onValueChange={setSelectedLockerId}>
-                <SelectTrigger id="locker_select">
-                  <SelectValue placeholder="Choose an available locker" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableLockers.length === 0 ? (
-                    <SelectItem value="none" disabled>No available lockers</SelectItem>
-                  ) : (
-                    availableLockers.map((locker) => (
-                      <SelectItem key={locker.id} value={locker.id}>
-                        Locker #{locker.locker_number}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsLockerModalOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleLockerAssignment}
-                disabled={!selectedLockerId || availableLockers.length === 0}
-              >
-                Assign
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {selectedAthleteForLockerAssign && (
+        <AssignLockerModal
+          isOpen={isLockerModalOpen}
+          onClose={() => {
+            setIsLockerModalOpen(false);
+            setSelectedAthleteForLockerAssign(null);
+          }}
+          athleteId={selectedAthleteForLockerAssign.id}
+          athleteName={selectedAthleteForLockerAssign.name}
+          onSuccess={() => {
+            if (expandedRow === selectedAthleteForLockerAssign.id) {
+              delete athleteDetails[selectedAthleteForLockerAssign.id];
+              fetchAthleteDetails(selectedAthleteForLockerAssign.id);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
