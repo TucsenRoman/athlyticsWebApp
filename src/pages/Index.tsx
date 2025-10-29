@@ -18,7 +18,28 @@ const Index = () => {
           <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
         </div>
 
-        <DashboardStats onSwitchToAttendance={() => setActiveTab("attendance")} onSwitchToLockers={() => setActiveTab("lockers")} />
+        <DashboardStats onSwitchToAttendance={() => setActiveTab("attendance")} />
+
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setActiveTab("uniforms")}
+            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+          >
+            Manage Uniforms
+          </button>
+          <button
+            onClick={() => setActiveTab("lockers")}
+            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+          >
+            Lockers
+          </button>
+          <button
+            onClick={() => setActiveTab("attendance")}
+            className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+          >
+            Attendance
+          </button>
+        </div>
 
         <RemindersPanel />
 
