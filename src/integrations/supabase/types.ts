@@ -88,6 +88,50 @@ export type Database = {
         }
         Relationships: []
       }
+      uniforms: {
+        Row: {
+          assigned_to: string | null
+          bottom_id: string
+          coach_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          top_id: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          bottom_id: string
+          coach_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          top_id: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          bottom_id?: string
+          coach_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          top_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uniforms_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
