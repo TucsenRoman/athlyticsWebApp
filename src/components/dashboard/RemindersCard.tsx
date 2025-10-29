@@ -15,6 +15,7 @@ import { format, parseISO, addDays, addMonths, isAfter, isBefore, startOfDay } f
 import { toZonedTime } from "date-fns-tz";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useUndoToast } from "@/hooks/use-undo-toast";
 
 const TIMEZONE = "America/Chicago";
 
@@ -32,6 +33,7 @@ interface Reminder {
 
 const RemindersCard = () => {
   const navigate = useNavigate();
+  const { showUndoToast } = useUndoToast();
   const [todayCount, setTodayCount] = useState(0);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +111,8 @@ const RemindersCard = () => {
         .update({ completed: true })
         .eq("id", reminder.id);
 
+      let newReminderId: string | null = null;
+
       if (reminder.recurrence && reminder.recurrence !== "None") {
         let nextDueDate: Date;
         const currentDueDate = parseISO(reminder.due_date || format(new Date(), "yyyy-MM-dd"));
@@ -123,7 +127,7 @@ const RemindersCard = () => {
           nextDueDate = currentDueDate;
         }
 
-        await supabase.from("reminders").insert({
+        const { data } = await supabase.from("reminders").insert({
           title: reminder.title,
           description: reminder.description,
           due_date: format(nextDueDate, "yyyy-MM-dd"),
@@ -131,11 +135,33 @@ const RemindersCard = () => {
           recurrence: reminder.recurrence,
           coach_id: user.id,
           completed: false,
-        });
+        }).select();
+        
+        if (data && data[0]) {
+          newReminderId = data[0].id;
+        }
       }
 
-      toast.success("Reminder completed!");
       fetchReminders();
+      
+      showUndoToast({
+        message: "Reminder completed!",
+        onUndo: async () => {
+          await supabase
+            .from("reminders")
+            .update({ completed: false })
+            .eq("id", reminder.id);
+          
+          if (newReminderId) {
+            await supabase
+              .from("reminders")
+              .delete()
+              .eq("id", newReminderId);
+          }
+          
+          fetchReminders();
+        },
+      });
     } catch (error) {
       console.error("Error completing reminder:", error);
       toast.error("Failed to complete reminder");
@@ -212,16 +238,26 @@ const RemindersCard = () => {
   const handleDelete = async () => {
     if (!reminderToDelete) return;
 
+    const deletedReminder = { ...reminderToDelete };
+
     try {
       await supabase
         .from("reminders")
         .delete()
         .eq("id", reminderToDelete.id);
 
-      toast.success("Reminder deleted!");
       setReminderToDelete(null);
       setDeleteDialogOpen(false);
       fetchReminders();
+
+      showUndoToast({
+        message: "Reminder deleted!",
+        onUndo: async () => {
+          const { id, created_at, ...reminderData } = deletedReminder;
+          await supabase.from("reminders").insert(reminderData);
+          fetchReminders();
+        },
+      });
     } catch (error) {
       console.error("Error deleting reminder:", error);
       toast.error("Failed to delete reminder");
@@ -236,13 +272,20 @@ const RemindersCard = () => {
     return isBefore(dueDate, today);
   };
 
+  const hasOverdueReminders = reminders.some(r => isOverdue(r));
+
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
       <PopoverTrigger asChild>
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Reminders</CardTitle>
-            <Bell className="h-4 w-4 text-primary" />
+            <div className="relative">
+              <Bell className="h-4 w-4 text-primary" />
+              {hasOverdueReminders && (
+                <span className="absolute -top-1 -right-1 h-2 w-2 bg-destructive rounded-full animate-pulse" />
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">

@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { ShirtIcon, Package, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { ShirtIcon, Package, CheckCircle, XCircle, AlertCircle, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 interface Uniform {
   id: string;
@@ -22,6 +23,7 @@ export default function UniformsDashboard() {
   const [uniforms, setUniforms] = useState<Uniform[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const navigate = useNavigate();
   useEffect(() => {
     fetchData();
@@ -79,10 +81,64 @@ export default function UniformsDashboard() {
         return "outline";
     }
   };
+  const filteredUniforms = statusFilter === "all" 
+    ? uniforms 
+    : uniforms.filter(u => u.status === statusFilter);
+
   if (loading) {
     return <div className="text-center py-8">Loading dashboard...</div>;
   }
+  
   return <div className="space-y-6">
+      {/* Top Action Bar */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          <Button
+            variant={statusFilter === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter("all")}
+            className="touch-manipulation"
+          >
+            All
+          </Button>
+          <Button
+            variant={statusFilter === "Checked Out" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter("Checked Out")}
+            className="touch-manipulation"
+          >
+            <ShirtIcon className="w-4 h-4 mr-1" />
+            Checked Out
+          </Button>
+          <Button
+            variant={statusFilter === "Returned" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter("Returned")}
+            className="touch-manipulation"
+          >
+            <CheckCircle className="w-4 h-4 mr-1" />
+            Returned
+          </Button>
+          <Button
+            variant={statusFilter === "Lost" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatusFilter("Lost")}
+            className="touch-manipulation"
+          >
+            <AlertCircle className="w-4 h-4 mr-1" />
+            Lost
+          </Button>
+        </div>
+        <Button
+          onClick={() => navigate('/uniforms')}
+          variant="default"
+          size="sm"
+          className="gap-2 touch-manipulation"
+        >
+          <Settings className="w-4 h-4" />
+          Manage Uniforms
+        </Button>
+      </div>
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -154,11 +210,11 @@ export default function UniformsDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {uniforms.length === 0 ? <TableRow>
+              {filteredUniforms.length === 0 ? <TableRow>
                   <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                     No uniforms found
                   </TableCell>
-                </TableRow> : uniforms.map(uniform => <TableRow key={uniform.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate('/uniforms')}>
+                </TableRow> : filteredUniforms.map(uniform => <TableRow key={uniform.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate('/uniforms')}>
                     <TableCell className="font-medium">{uniform.top_id}</TableCell>
                     <TableCell className="font-medium">{uniform.bottom_id}</TableCell>
                     <TableCell>

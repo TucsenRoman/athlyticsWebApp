@@ -7,7 +7,11 @@ import AttendanceTracker from "@/components/attendance/AttendanceTracker";
 import AttendanceReport from "@/components/attendance/AttendanceReport";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, ShirtIcon, ClipboardCheck, Calendar } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 const Index = () => {
+  const [activeTab, setActiveTab] = useState("roster");
+
   return <DashboardLayout>
       <div className="space-y-6">
         <div>
@@ -18,19 +22,19 @@ const Index = () => {
 
         <RemindersPanel />
 
-        <Tabs defaultValue="roster" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full max-w-2xl grid-cols-3">
-            <TabsTrigger value="roster" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Roster
+            <TabsTrigger value="roster" className="flex items-center gap-2 touch-manipulation">
+              <Users className="w-4 h-4 flex-shrink-0" />
+              <span className={cn("hidden", activeTab === "roster" && "inline")}>Roster</span>
             </TabsTrigger>
-            <TabsTrigger value="uniforms" className="flex items-center gap-2">
-              <ShirtIcon className="w-4 h-4" />
-              Uniforms
+            <TabsTrigger value="uniforms" className="flex items-center gap-2 touch-manipulation">
+              <ShirtIcon className="w-4 h-4 flex-shrink-0" />
+              <span className={cn("hidden", activeTab === "uniforms" && "inline")}>Uniforms</span>
             </TabsTrigger>
-            <TabsTrigger value="attendance" className="flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4" />
-              Attendance
+            <TabsTrigger value="attendance" className="flex items-center gap-2 touch-manipulation">
+              <ClipboardCheck className="w-4 h-4 flex-shrink-0" />
+              <span className={cn("hidden", activeTab === "attendance" && "inline")}>Attendance</span>
             </TabsTrigger>
           </TabsList>
           

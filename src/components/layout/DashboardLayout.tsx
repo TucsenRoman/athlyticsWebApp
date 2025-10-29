@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, Trophy, Users, LayoutDashboard } from "lucide-react";
+import { LogOut, Trophy } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -14,7 +15,11 @@ export default function DashboardLayout({
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [headerVisible, setHeaderVisible] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+  const lastScrollY = useRef(0);
+  const scrollThreshold = 10;
   useEffect(() => {
     const {
       data: {
@@ -41,6 +46,27 @@ export default function DashboardLayout({
       navigate("/auth");
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      if (Math.abs(currentScrollY - lastScrollY.current) < scrollThreshold) {
+        return;
+      }
+
+      if (currentScrollY < lastScrollY.current || currentScrollY < 100) {
+        setHeaderVisible(true);
+      } else {
+        setHeaderVisible(false);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     toast.success("Signed out successfully");
@@ -55,27 +81,34 @@ export default function DashboardLayout({
     return null;
   }
   return <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+      <header className={cn(
+        "fixed top-0 left-0 right-0 z-50 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 transition-transform duration-300",
+        headerVisible ? "translate-y-0" : "-translate-y-full"
+      )}>
+        <div className="container mx-auto px-4 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-primary to-secondary p-2 rounded-xl">
-                <Trophy className="w-6 h-6 text-primary-foreground" />
+            <button 
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity touch-manipulation"
+            >
+              <div className="bg-gradient-to-br from-primary to-secondary p-1.5 md:p-2 rounded-xl">
+                <Trophy className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold">Coach Corner</h1>
-                <p className="text-sm text-muted-foreground">
+              <div className="text-left">
+                <h1 className="text-lg md:text-xl font-bold">Coach Corner</h1>
+                <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
                   {user.email}
                 </p>
               </div>
-            </div>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+            </button>
+            <Button variant="outline" onClick={handleSignOut} size="sm" className="md:h-10 touch-manipulation">
+              <LogOut className="w-4 h-4 md:mr-2" />
+              <span className="hidden md:inline">Sign Out</span>
             </Button>
           </div>
         </div>
       </header>
+      <div className="h-[60px] md:h-[76px]" />
       <main className="container mx-auto px-4 py-8">
         {children}
       </main>

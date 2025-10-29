@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, CheckCircle2, Filter } from "lucide-react";
+import { CalendarIcon, CheckCircle2, Filter, Download } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -328,6 +328,38 @@ const AttendanceTracker = () => {
     return false;
   });
 
+  const exportCSV = () => {
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const headers = ["Name", "Grade", "Status", "Notes"];
+    const rows = athletes.map((athlete) => {
+      const record = attendance.find((a) => a.athlete_id === athlete.id);
+      return [
+        athlete.name,
+        athlete.grade || "N/A",
+        record?.status || "Present",
+        record?.notes || "",
+      ];
+    });
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map(cell => `"${cell}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `attendance-${dateStr}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Success",
+      description: "Attendance exported successfully",
+    });
+  };
+
   if (loading) {
     return <div className="text-center p-8">Loading...</div>;
   }
@@ -362,17 +394,21 @@ const AttendanceTracker = () => {
                 />
               </PopoverContent>
             </Popover>
-            <Button onClick={markAllPresent} variant="secondary" disabled={!isEditMode}>
+            <Button onClick={exportCSV} variant="outline" size="sm" className="touch-manipulation">
+              <Download className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Export CSV</span>
+            </Button>
+            <Button onClick={markAllPresent} variant="secondary" disabled={!isEditMode} className="touch-manipulation">
               <CheckCircle2 className="mr-2 h-4 w-4" />
-              Mark All Present
+              <span className="hidden sm:inline">Mark All Present</span>
             </Button>
             {isSubmitted && !isEditMode ? (
-              <Button onClick={enableEditMode} variant="outline">
+              <Button onClick={enableEditMode} variant="outline" className="touch-manipulation">
                 Edit
               </Button>
             ) : (
-              <Button onClick={submitAttendance} variant="default">
-                Submit Attendance
+              <Button onClick={submitAttendance} variant="default" className="touch-manipulation">
+                Submit
               </Button>
             )}
           </div>
