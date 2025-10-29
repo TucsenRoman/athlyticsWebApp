@@ -3,7 +3,7 @@ import DashboardStats from "@/components/dashboard/DashboardStats";
 import AthletesList from "@/components/athletes/AthletesList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Users, BarChart3, ShirtIcon } from "lucide-react";
+import { Users, BarChart3, ShirtIcon, LayoutDashboard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Index = () => {
@@ -19,10 +19,16 @@ const Index = () => {
               Manage your track and cross country team
             </p>
           </div>
-          <Button onClick={() => navigate("/uniforms")} variant="outline">
-            <ShirtIcon className="w-4 h-4 mr-2" />
-            Manage Uniforms
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/uniforms-dashboard")} variant="outline">
+              <LayoutDashboard className="w-4 h-4 mr-2" />
+              Uniforms Dashboard
+            </Button>
+            <Button onClick={() => navigate("/uniforms")} variant="outline">
+              <ShirtIcon className="w-4 h-4 mr-2" />
+              Manage Uniforms
+            </Button>
+          </div>
         </div>
 
         <DashboardStats />
