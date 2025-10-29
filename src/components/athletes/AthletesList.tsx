@@ -50,7 +50,12 @@ interface AthleteDetails {
   recentResults: MeetResult[];
 }
 
-export default function AthletesList() {
+interface UniformAssignModalProps {
+  athleteId: string;
+  athleteName: string;
+}
+
+export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAttendance?: () => void }) {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,6 +73,9 @@ export default function AthletesList() {
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingAthlete, setEditingAthlete] = useState<Athlete | null>(null);
+  const [isUniformModalOpen, setIsUniformModalOpen] = useState(false);
+  const [selectedAthleteForUniform, setSelectedAthleteForUniform] = useState<{ id: string; name: string } | null>(null);
+  const [uniformForm, setUniformForm] = useState({ top_id: "", bottom_id: "" });
 
   useEffect(() => {
     fetchAthletes();
@@ -225,6 +233,76 @@ export default function AthletesList() {
   const openEditDialog = (athlete: Athlete) => {
     setEditingAthlete(athlete);
     setIsEditDialogOpen(true);
+  };
+
+  const openUniformModal = (athlete: Athlete) => {
+    setSelectedAthleteForUniform({ id: athlete.id, name: athlete.name });
+    setUniformForm({ top_id: "", bottom_id: "" });
+    setIsUniformModalOpen(true);
+  };
+
+  const handleUniformAssignment = async () => {
+    if (!selectedAthleteForUniform) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { top_id, bottom_id } = uniformForm;
+
+      // Check if a uniform exists for this athlete
+      const { data: existingUniform } = await supabase
+        .from("uniforms")
+        .select("*")
+        .eq("athlete_id", selectedAthleteForUniform.id)
+        .maybeSingle();
+
+      if (existingUniform) {
+        // Update existing uniform
+        const status = (top_id || bottom_id) ? "Checked Out" : "Returned";
+        const athlete_id = (top_id || bottom_id) ? selectedAthleteForUniform.id : null;
+
+        const { error } = await supabase
+          .from("uniforms")
+          .update({
+            top_id: top_id || existingUniform.top_id,
+            bottom_id: bottom_id || existingUniform.bottom_id,
+            status,
+            athlete_id,
+          })
+          .eq("id", existingUniform.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new uniform
+        const status = (top_id || bottom_id) ? "Checked Out" : "Returned";
+        const athlete_id = (top_id || bottom_id) ? selectedAthleteForUniform.id : null;
+
+        const { error } = await supabase
+          .from("uniforms")
+          .insert({
+            coach_id: user.id,
+            top_id: top_id || "",
+            bottom_id: bottom_id || "",
+            status,
+            athlete_id,
+          });
+
+        if (error) throw error;
+      }
+
+      toast.success("Uniform assignment updated");
+      setIsUniformModalOpen(false);
+      setUniformForm({ top_id: "", bottom_id: "" });
+      
+      // Refresh this athlete's details
+      if (expandedRow === selectedAthleteForUniform.id) {
+        delete athleteDetails[selectedAthleteForUniform.id];
+        await fetchAthleteDetails(selectedAthleteForUniform.id);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to assign uniform");
+    }
   };
 
   const openResultsModal = async (athlete: Athlete) => {
@@ -481,7 +559,7 @@ export default function AthletesList() {
                                           className="h-7 text-xs"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            toast.info("Navigate to Uniforms tab to assign");
+                                            openUniformModal(athlete);
                                           }}
                                         >
                                           Assign Uniform
@@ -560,7 +638,7 @@ export default function AthletesList() {
                                           className="h-7 text-xs"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            toast.info("Open Attendance tab to manage");
+                                            onSwitchToAttendance?.();
                                           }}
                                         >
                                           Open Attendance
@@ -755,59 +833,45 @@ export default function AthletesList() {
 
       {/* Results Modal */}
       <Dialog open={isResultsModalOpen} onOpenChange={setIsResultsModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+...
+      </Dialog>
+
+      {/* Uniform Assignment Modal */}
+      <Dialog open={isUniformModalOpen} onOpenChange={setIsUniformModalOpen}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>All Meet Results - {selectedAthleteForResults?.name}</DialogTitle>
+            <DialogTitle>Assign Uniform</DialogTitle>
             <DialogDescription>
-              Complete meet performance history
+              Assign uniform to {selectedAthleteForUniform?.name}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 mt-4">
-            {allResults.length > 0 ? (
-              allResults.map((result) => (
-                <div key={result.id} className="p-4 bg-muted/30 rounded-md border">
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div>
-                      <div className="font-semibold flex items-center gap-2">
-                        {result.meet_name}
-                        {result.is_pr && (
-                          <Badge variant="default" className="text-xs">PR</Badge>
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {new Date(result.meet_date).toLocaleDateString()}
-                      </div>
-                    </div>
-                    {result.place && result.place <= 3 && (
-                      <Medal className="w-6 h-6 text-amber-500" />
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <span className="text-xs text-muted-foreground">Event</span>
-                      <div className="font-medium">{result.event}</div>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground">Mark</span>
-                      <div className="font-medium">{result.mark}</div>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground">Place</span>
-                      <div className="font-medium">
-                        {result.place ? getOrdinal(result.place) : 'N/A'}
-                      </div>
-                    </div>
-                  </div>
-                  {result.notes && (
-                    <div className="mt-2 text-sm text-muted-foreground">
-                      <span className="font-medium">Notes:</span> {result.notes}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-muted-foreground py-8">No results recorded</p>
-            )}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="top_id">Top ID</Label>
+              <Input
+                id="top_id"
+                value={uniformForm.top_id}
+                onChange={(e) => setUniformForm({ ...uniformForm, top_id: e.target.value })}
+                placeholder="e.g., T-001"
+              />
+            </div>
+            <div>
+              <Label htmlFor="bottom_id">Bottom ID</Label>
+              <Input
+                id="bottom_id"
+                value={uniformForm.bottom_id}
+                onChange={(e) => setUniformForm({ ...uniformForm, bottom_id: e.target.value })}
+                placeholder="e.g., B-001"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsUniformModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleUniformAssignment}>
+                Save
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

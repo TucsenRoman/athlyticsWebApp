@@ -39,7 +39,7 @@ const Index = () => {
           </TabsList>
           
           <TabsContent value="roster" className="space-y-4 animate-fade-in">
-            <AthletesList />
+            <AthletesList onSwitchToAttendance={() => setActiveTab("attendance")} />
           </TabsContent>
           
           <TabsContent value="uniforms" className="space-y-4 animate-fade-in">
