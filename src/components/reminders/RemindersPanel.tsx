@@ -14,7 +14,6 @@ import { Repeat, Clock, MoreVertical, Plus } from "lucide-react";
 import { format, parseISO, addDays, addWeeks, addMonths, addHours, startOfDay, endOfDay, isToday, isBefore, isWithinInterval } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
 import { useNavigate } from "react-router-dom";
-
 interface Reminder {
   id: string;
   title: string;
@@ -24,9 +23,7 @@ interface Reminder {
   recurrence: string | null;
   completed: boolean;
 }
-
 const TIMEZONE = "America/Chicago";
-
 const RemindersPanel = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,24 +32,30 @@ const RemindersPanel = () => {
     description: "",
     due_date: format(toZonedTime(new Date(), TIMEZONE), "yyyy-MM-dd"),
     time: "",
-    recurrence: "None",
+    recurrence: "None"
   });
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
-
   const fetchReminders = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { data, error } = await supabase
-        .from("reminders")
-        .select("*")
-        .eq("coach_id", user.id)
-        .eq("completed", false)
-        .order("due_date", { ascending: true, nullsFirst: false })
-        .order("time", { ascending: true, nullsFirst: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from("reminders").select("*").eq("coach_id", user.id).eq("completed", false).order("due_date", {
+        ascending: true,
+        nullsFirst: false
+      }).order("time", {
+        ascending: true,
+        nullsFirst: false
+      });
       if (error) throw error;
       setReminders(data || []);
     } catch (error) {
@@ -61,84 +64,79 @@ const RemindersPanel = () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchReminders();
-
-    const channel = supabase
-      .channel("reminders-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "reminders",
-        },
-        () => {
-          fetchReminders();
-        }
-      )
-      .subscribe();
-
+    const channel = supabase.channel("reminders-changes").on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: "reminders"
+    }, () => {
+      fetchReminders();
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
-
   const handleQuickAdd = async () => {
     if (!quickAddData.title.trim()) {
       toast({
         title: "Error",
         description: "Title is required",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
-
-      const { error } = await supabase.from("reminders").insert({
+      const {
+        error
+      } = await supabase.from("reminders").insert({
         coach_id: user.id,
         title: quickAddData.title,
         description: quickAddData.description || null,
         due_date: quickAddData.due_date || null,
         time: quickAddData.time || null,
         recurrence: quickAddData.recurrence || "None",
-        completed: false,
+        completed: false
       });
-
       if (error) throw error;
-
-      toast({ title: "Saved!" });
+      toast({
+        title: "Saved!"
+      });
       setQuickAddData({
         title: "",
         description: "",
         due_date: format(toZonedTime(new Date(), TIMEZONE), "yyyy-MM-dd"),
         time: "",
-        recurrence: "None",
+        recurrence: "None"
       });
     } catch (error) {
       console.error("Error adding reminder:", error);
       toast({
         title: "Error",
         description: "Failed to add reminder",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleToggleComplete = async (reminder: Reminder) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: {
+          user
+        }
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       // If it's recurring, create next occurrence
       if (reminder.recurrence && reminder.recurrence !== "None" && reminder.due_date) {
         const currentDueDate = parseISO(reminder.due_date);
         let nextDueDate: Date;
-
         switch (reminder.recurrence) {
           case "Daily":
             nextDueDate = addDays(currentDueDate, 1);
@@ -152,7 +150,6 @@ const RemindersPanel = () => {
           default:
             nextDueDate = currentDueDate;
         }
-
         await supabase.from("reminders").insert({
           coach_id: user.id,
           title: reminder.title,
@@ -160,37 +157,36 @@ const RemindersPanel = () => {
           due_date: format(nextDueDate, "yyyy-MM-dd"),
           time: reminder.time,
           recurrence: reminder.recurrence,
-          completed: false,
+          completed: false
         });
       }
 
       // Mark current as complete
-      const { error } = await supabase
-        .from("reminders")
-        .update({ completed: true })
-        .eq("id", reminder.id);
-
+      const {
+        error
+      } = await supabase.from("reminders").update({
+        completed: true
+      }).eq("id", reminder.id);
       if (error) throw error;
-      toast({ title: "Saved!" });
+      toast({
+        title: "Saved!"
+      });
     } catch (error) {
       console.error("Error completing reminder:", error);
       toast({
         title: "Error",
         description: "Failed to complete reminder",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleSnooze = async (reminder: Reminder, snoozeType: "hour" | "day" | "week") => {
     try {
       let newDueDate: Date;
       const now = toZonedTime(new Date(), TIMEZONE);
-      
       if (reminder.due_date) {
         const currentDate = parseISO(reminder.due_date);
         const currentTime = reminder.time ? parseISO(`${reminder.due_date}T${reminder.time}`) : currentDate;
-        
         switch (snoozeType) {
           case "hour":
             newDueDate = addHours(currentTime, 1);
@@ -215,42 +211,39 @@ const RemindersPanel = () => {
             break;
         }
       }
-
-      const { error } = await supabase
-        .from("reminders")
-        .update({
-          due_date: format(newDueDate, "yyyy-MM-dd"),
-          time: snoozeType === "hour" && reminder.time ? format(newDueDate, "HH:mm") : reminder.time,
-        })
-        .eq("id", reminder.id);
-
+      const {
+        error
+      } = await supabase.from("reminders").update({
+        due_date: format(newDueDate, "yyyy-MM-dd"),
+        time: snoozeType === "hour" && reminder.time ? format(newDueDate, "HH:mm") : reminder.time
+      }).eq("id", reminder.id);
       if (error) throw error;
-      toast({ title: "Saved!" });
+      toast({
+        title: "Saved!"
+      });
     } catch (error) {
       console.error("Error snoozing reminder:", error);
       toast({
         title: "Error",
         description: "Failed to snooze reminder",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const getMostRelevantReminders = () => {
     const now = toZonedTime(new Date(), TIMEZONE);
     const today = startOfDay(now);
     const sevenDaysFromNow = addDays(now, 7);
-    
-    return reminders
-      .filter((r) => {
-        if (!r.due_date) return false;
-        const dueDate = toZonedTime(parseISO(r.due_date), TIMEZONE);
-        // Include overdue, today, and upcoming within 7 days
-        return isBefore(dueDate, sevenDaysFromNow) || isWithinInterval(dueDate, { start: today, end: sevenDaysFromNow });
-      })
-      .slice(0, 5);
+    return reminders.filter(r => {
+      if (!r.due_date) return false;
+      const dueDate = toZonedTime(parseISO(r.due_date), TIMEZONE);
+      // Include overdue, today, and upcoming within 7 days
+      return isBefore(dueDate, sevenDaysFromNow) || isWithinInterval(dueDate, {
+        start: today,
+        end: sevenDaysFromNow
+      });
+    }).slice(0, 5);
   };
-
   const isReminderOverdue = (reminder: Reminder) => {
     if (!reminder.due_date) return false;
     const now = toZonedTime(new Date(), TIMEZONE);
@@ -258,37 +251,27 @@ const RemindersPanel = () => {
     const dueDate = toZonedTime(parseISO(reminder.due_date), TIMEZONE);
     return isBefore(dueDate, today);
   };
-
   const isReminderToday = (reminder: Reminder) => {
     if (!reminder.due_date) return false;
     const dueDate = toZonedTime(parseISO(reminder.due_date), TIMEZONE);
     return isToday(dueDate);
   };
-
-  const ReminderCard = ({ reminder }: { reminder: Reminder }) => {
+  const ReminderCard = ({
+    reminder
+  }: {
+    reminder: Reminder;
+  }) => {
     const isOverdue = isReminderOverdue(reminder);
     const isTodayReminder = isReminderToday(reminder);
-
-    return (
-      <div
-        className={`group relative h-32 p-4 rounded-lg border transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${
-          isOverdue ? "border-l-4 border-l-destructive bg-destructive/5" : ""
-        } ${isTodayReminder ? "bg-accent/30" : "bg-card"}`}
-      >
+    return <div className={`group relative h-32 p-4 rounded-lg border transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${isOverdue ? "border-l-4 border-l-destructive bg-destructive/5" : ""} ${isTodayReminder ? "bg-accent/30" : "bg-card"}`}>
         <div className="flex flex-col h-full">
           {/* Top row: checkbox and badges */}
           <div className="flex items-start justify-between gap-2 mb-2">
-            <Checkbox
-              checked={false}
-              onCheckedChange={() => handleToggleComplete(reminder)}
-              className="mt-0.5"
-            />
+            <Checkbox checked={false} onCheckedChange={() => handleToggleComplete(reminder)} className="mt-0.5" />
             <div className="flex gap-1">
-              {reminder.recurrence && reminder.recurrence !== "None" && (
-                <Badge variant="outline" className="h-5 px-1.5 text-xs">
+              {reminder.recurrence && reminder.recurrence !== "None" && <Badge variant="outline" className="h-5 px-1.5 text-xs">
                   <Repeat className="w-3 h-3" />
-                </Badge>
-              )}
+                </Badge>}
             </div>
           </div>
 
@@ -297,17 +280,13 @@ const RemindersPanel = () => {
 
           {/* Date and time */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
-            {reminder.due_date && (
-              <span className={isOverdue ? "text-destructive font-medium" : ""}>
+            {reminder.due_date && <span className={isOverdue ? "text-destructive font-medium" : ""}>
                 {format(parseISO(reminder.due_date), "MMM d")}
-              </span>
-            )}
-            {reminder.time && (
-              <span className="flex items-center gap-1">
+              </span>}
+            {reminder.time && <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {reminder.time}
-              </span>
-            )}
+              </span>}
           </div>
         </div>
 
@@ -335,18 +314,13 @@ const RemindersPanel = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-    );
+      </div>;
   };
-
   const relevantReminders = getMostRelevantReminders();
-
   if (loading) {
     return <div className="text-center py-8">Loading reminders...</div>;
   }
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Reminders</CardTitle>
@@ -357,66 +331,13 @@ const RemindersPanel = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Quick Add */}
-        <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input
-              placeholder="Title (required)"
-              value={quickAddData.title}
-              onChange={(e) => setQuickAddData({ ...quickAddData, title: e.target.value })}
-            />
-            <Input
-              type="date"
-              value={quickAddData.due_date}
-              onChange={(e) => setQuickAddData({ ...quickAddData, due_date: e.target.value })}
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Input
-              type="time"
-              value={quickAddData.time}
-              onChange={(e) => setQuickAddData({ ...quickAddData, time: e.target.value })}
-              placeholder="Time (optional)"
-            />
-            <Select
-              value={quickAddData.recurrence}
-              onValueChange={(value) => setQuickAddData({ ...quickAddData, recurrence: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Repeats" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="None">None</SelectItem>
-                <SelectItem value="Daily">Daily</SelectItem>
-                <SelectItem value="Weekly">Weekly</SelectItem>
-                <SelectItem value="Monthly">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={handleQuickAdd} className="w-full">
-              <Plus className="w-4 h-4 mr-2" />
-              Add
-            </Button>
-          </div>
-          <Textarea
-            placeholder="Description (optional)"
-            value={quickAddData.description}
-            onChange={(e) => setQuickAddData({ ...quickAddData, description: e.target.value })}
-            rows={2}
-          />
-        </div>
+        
 
         {/* Reminders Grid */}
-        {relevantReminders.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">No upcoming reminders</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {relevantReminders.map((reminder) => (
-              <ReminderCard key={reminder.id} reminder={reminder} />
-            ))}
-          </div>
-        )}
+        {relevantReminders.length === 0 ? <p className="text-center text-muted-foreground py-8">No upcoming reminders</p> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {relevantReminders.map(reminder => <ReminderCard key={reminder.id} reminder={reminder} />)}
+          </div>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default RemindersPanel;
