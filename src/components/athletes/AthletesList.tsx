@@ -9,9 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, User, Search, ChevronDown, Trophy, Award, ShirtIcon, IdCard, TrendingUp, Medal, LockKeyhole } from "lucide-react";
+import { Plus, User, Search, ChevronDown, Trophy, ShirtIcon, IdCard, TrendingUp, Medal, LockKeyhole, Settings2 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import AssignLockerModal from "@/components/lockers/AssignLockerModal";
+import ProgramSummary from "./ProgramSummary";
+import { useProgramContext } from "@/hooks/useProgramContext";
 
 interface Athlete {
   id: string;
@@ -63,9 +66,13 @@ interface UniformAssignModalProps {
 }
 
 export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAttendance?: () => void }) {
+  const navigate = useNavigate();
+  const { selectedProgramId } = useProgramContext();
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<'name' | 'grade' | 'gender' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [athleteDetails, setAthleteDetails] = useState<Record<string, AthleteDetails>>({});
@@ -399,9 +406,31 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
     }
   };
 
-  const filteredAthletes = athletes.filter(athlete =>
-    athlete.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSort = (field: 'name' | 'grade' | 'gender') => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const filteredAthletes = athletes
+    .filter(athlete => athlete.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      if (!sortField) return 0;
+      
+      const direction = sortDirection === 'asc' ? 1 : -1;
+      
+      if (sortField === 'name') {
+        return direction * a.name.localeCompare(b.name);
+      } else if (sortField === 'grade') {
+        return direction * (a.grade - b.grade);
+      } else if (sortField === 'gender') {
+        return direction * a.gender.localeCompare(b.gender);
+      }
+      return 0;
+    });
 
   if (loading) {
     return <div className="text-center py-8">Loading athletes...</div>;
@@ -409,8 +438,10 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="relative flex-1 max-w-sm">
+      <ProgramSummary programId={selectedProgramId} athleteCount={athletes.length} />
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-sm w-full">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Search athletes..."
@@ -419,14 +450,33 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
             className="pl-10"
           />
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Athlete
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/uniforms')}
+            className="flex-1 sm:flex-none"
+          >
+            <ShirtIcon className="w-4 h-4 mr-2" />
+            Manage Uniforms
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => toast.info("Manage Lockers feature coming soon")}
+            className="flex-1 sm:flex-none"
+          >
+            <LockKeyhole className="w-4 h-4 mr-2" />
+            Manage Lockers
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Athlete
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Athlete</DialogTitle>
               <DialogDescription>
@@ -497,6 +547,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -515,9 +566,39 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12"></TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Gender</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Name
+                      {sortField === 'name' && (
+                        <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('grade')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Grade
+                      {sortField === 'grade' && (
+                        <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('gender')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Gender
+                      {sortField === 'gender' && (
+                        <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      )}
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
