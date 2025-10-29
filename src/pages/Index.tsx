@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import DashboardStats from "@/components/dashboard/DashboardStats";
 import RemindersPanel from "@/components/reminders/RemindersPanel";
 import AthletesList from "@/components/athletes/AthletesList";
 import UniformsDashboard from "@/components/uniforms/UniformsDashboard";
@@ -9,11 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, ShirtIcon, ClipboardCheck, Calendar, Bell } from "lucide-react";
 const Index = () => {
   return <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          
         </div>
+
+        <DashboardStats />
 
         <RemindersPanel />
 

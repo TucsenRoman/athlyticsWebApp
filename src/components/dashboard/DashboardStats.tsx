@@ -1,23 +1,67 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Trophy, Calendar, TrendingUp } from "lucide-react";
+import { Users, ShirtIcon, Calendar, ClipboardCheck } from "lucide-react";
+import { format } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 
-export default function DashboardStats() {
-  const [totalAthletes, setTotalAthletes] = useState(0);
+const TIMEZONE = "America/Chicago";
+
+const DashboardStats = () => {
+  const [attendancePercent, setAttendancePercent] = useState<number | null>(null);
+  const [uniformsOut, setUniformsOut] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    
+    // Realtime updates for attendance and uniforms
+    const channel = supabase
+      .channel('dashboard-stats-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance' }, () => {
+        fetchStats();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'uniforms' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchStats = async () => {
     try {
-      const { count } = await supabase
-        .from("athletes")
-        .select("*", { count: "exact", head: true });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-      setTotalAthletes(count || 0);
+      // Today's attendance percentage
+      const now = toZonedTime(new Date(), TIMEZONE);
+      const todayDate = format(now, "yyyy-MM-dd");
+
+      const { data: todayAttendance } = await supabase
+        .from("attendance")
+        .select("status")
+        .eq("coach_id", user.id)
+        .eq("date", todayDate);
+
+      if (todayAttendance && todayAttendance.length > 0) {
+        const presentCount = todayAttendance.filter(a => a.status === "Present").length;
+        const percentage = Math.round((presentCount / todayAttendance.length) * 100);
+        setAttendancePercent(percentage);
+      } else {
+        setAttendancePercent(null);
+      }
+
+      // Uniforms still out
+      const { count } = await supabase
+        .from("uniforms")
+        .select("*", { count: "exact", head: true })
+        .eq("coach_id", user.id)
+        .neq("status", "Returned");
+
+      setUniformsOut(count || 0);
     } catch (error) {
       console.error("Error fetching stats:", error);
     } finally {
@@ -27,58 +71,48 @@ export default function DashboardStats() {
 
   const stats = [
     {
-      title: "Total Athletes",
-      value: totalAthletes,
+      title: "Today's Attendance",
+      value: loading ? "..." : attendancePercent !== null ? `${attendancePercent}%` : "No data",
       icon: Users,
-      color: "from-primary to-primary/80",
+      color: "text-primary",
     },
     {
-      title: "Upcoming Meets",
-      value: 0,
+      title: "Uniforms Still Out",
+      value: loading ? "..." : uniformsOut,
+      icon: ShirtIcon,
+      color: "text-primary",
+    },
+    {
+      title: "Next Meet",
+      value: "Coming Soon",
       icon: Calendar,
-      color: "from-secondary to-secondary/80",
+      color: "text-muted-foreground",
     },
     {
-      title: "Awards This Season",
-      value: 0,
-      icon: Trophy,
-      color: "from-accent to-accent/80",
-    },
-    {
-      title: "Average PR Improvement",
-      value: "0%",
-      icon: TrendingUp,
-      color: "from-primary to-accent",
+      title: "Lineup Due",
+      value: "Coming Soon",
+      icon: ClipboardCheck,
+      color: "text-muted-foreground",
     },
   ];
 
-  if (loading) {
-    return <div className="text-center py-8">Loading stats...</div>;
-  }
-
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
       {stats.map((stat, index) => (
-        <Card key={index} className="overflow-hidden">
+        <Card key={index} className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               {stat.title}
             </CardTitle>
-            <div className={`bg-gradient-to-br ${stat.color} p-2 rounded-lg`}>
-              <stat.icon className="h-4 w-4 text-white" />
-            </div>
+            <stat.icon className={`h-4 w-4 ${stat.color}`} />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {index === 0 && "Currently registered"}
-              {index === 1 && "Next 30 days"}
-              {index === 2 && "Team recognition"}
-              {index === 3 && "Season progress"}
-            </p>
           </CardContent>
         </Card>
       ))}
     </div>
   );
-}
+};
+
+export default DashboardStats;

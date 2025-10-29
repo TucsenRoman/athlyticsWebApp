@@ -233,14 +233,14 @@ const RemindersPanel = () => {
   const getMostRelevantReminders = () => {
     const now = toZonedTime(new Date(), TIMEZONE);
     const today = startOfDay(now);
-    const sevenDaysFromNow = addDays(now, 7);
+    const threeDaysFromNow = addDays(now, 3);
     return reminders.filter(r => {
       if (!r.due_date) return false;
       const dueDate = toZonedTime(parseISO(r.due_date), TIMEZONE);
-      // Include overdue, today, and upcoming within 7 days
-      return isBefore(dueDate, sevenDaysFromNow) || isWithinInterval(dueDate, {
+      // Include overdue, today, and upcoming within 3 days
+      return isBefore(dueDate, threeDaysFromNow) || isWithinInterval(dueDate, {
         start: today,
-        end: sevenDaysFromNow
+        end: threeDaysFromNow
       });
     }).slice(0, 5);
   };
@@ -263,7 +263,7 @@ const RemindersPanel = () => {
   }) => {
     const isOverdue = isReminderOverdue(reminder);
     const isTodayReminder = isReminderToday(reminder);
-    return <div className={`group relative h-32 p-4 rounded-lg border transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${isOverdue ? "border-l-4 border-l-destructive bg-destructive/5" : ""} ${isTodayReminder ? "bg-accent/30" : "bg-card"}`}>
+    return <div className={`group relative h-32 p-4 rounded-lg border transition-all duration-200 hover:shadow-md hover:scale-[1.02] ${reminder.completed ? "opacity-50" : ""} ${isOverdue ? "border-l-4 border-l-destructive bg-destructive/5" : ""} ${isTodayReminder ? "bg-accent/30" : "bg-card"}`}>
         <div className="flex flex-col h-full">
           {/* Top row: checkbox and badges */}
           <div className="flex items-start justify-between gap-2 mb-2">
