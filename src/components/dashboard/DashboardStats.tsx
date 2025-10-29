@@ -1,10 +1,17 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ShirtIcon, Calendar, LockKeyhole } from "lucide-react";
+import { Users, ShirtIcon, LockKeyhole } from "lucide-react";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import RemindersCard from "./RemindersCard";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const TIMEZONE = "America/Chicago";
 
@@ -131,53 +138,61 @@ const DashboardStats = ({ onSwitchToAttendance, onSwitchToLockers }: DashboardSt
       color: "text-primary",
       isLockers: true,
     },
-    {
-      title: "Next Meet",
-      value: "Coming Soon",
-      icon: Calendar,
-      color: "text-muted-foreground",
-    },
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat, index) => (
-        <Card key={index} className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {stat.title}
-            </CardTitle>
-            <stat.icon className={`h-4 w-4 ${stat.color}`} />
-          </CardHeader>
-          <CardContent>
-            {stat.isAttendance && stat.value === null && !loading ? (
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Not submitted</div>
-                <button
-                  onClick={onSwitchToAttendance}
-                  className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                >
-                  Mark Attendance
-                </button>
-              </div>
-            ) : stat.isLockers && !loading ? (
-              <div 
-                className="cursor-pointer" 
-                onClick={onSwitchToLockers}
-              >
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {lockerStats.available} available, {lockerStats.outOfService} out
-                </div>
-              </div>
-            ) : (
-              <div className="text-2xl font-bold">{stat.value}</div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-      <RemindersCard />
-    </div>
+    <Carousel
+      opts={{
+        align: "start",
+        loop: false,
+      }}
+      className="w-full"
+    >
+      <CarouselContent className="-ml-2 md:-ml-4">
+        {stats.map((stat, index) => (
+          <CarouselItem key={index} className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%]">
+            <Card className="hover:shadow-md transition-shadow h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {stat.title}
+                </CardTitle>
+                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              </CardHeader>
+              <CardContent>
+                {stat.isAttendance && stat.value === null && !loading ? (
+                  <div className="space-y-2">
+                    <div className="text-sm text-muted-foreground">Not submitted</div>
+                    <button
+                      onClick={onSwitchToAttendance}
+                      className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    >
+                      Mark Attendance
+                    </button>
+                  </div>
+                ) : stat.isLockers && !loading ? (
+                  <div 
+                    className="cursor-pointer" 
+                    onClick={onSwitchToLockers}
+                  >
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {lockerStats.available} available, {lockerStats.outOfService} out
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold">{stat.value}</div>
+                )}
+              </CardContent>
+            </Card>
+          </CarouselItem>
+        ))}
+        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%]">
+          <RemindersCard />
+        </CarouselItem>
+      </CarouselContent>
+      <CarouselPrevious className="hidden md:flex" />
+      <CarouselNext className="hidden md:flex" />
+    </Carousel>
   );
 };
 
