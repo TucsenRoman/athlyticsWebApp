@@ -25,9 +25,17 @@ interface Athlete {
   team_position: string;
 }
 
+interface UniformAssignment {
+  top_id: string;
+  bottom_id: string;
+  created_at: string;
+}
+
 interface AthleteDetails {
-  uniform?: { top_id: string; bottom_id: string } | null;
+  uniforms: UniformAssignment[];
   attendanceRate: number;
+  totalAttendance: number;
+  presentCount: number;
 }
 
 export default function AthletesList() {
@@ -67,12 +75,12 @@ export default function AthletesList() {
     if (athleteDetails[athleteId]) return;
 
     try {
-      // Fetch uniform assignment
-      const { data: uniform } = await supabase
+      // Fetch uniform assignments - all assignments sorted by most recent first
+      const { data: uniforms } = await supabase
         .from("uniforms")
-        .select("top_id, bottom_id")
+        .select("top_id, bottom_id, created_at")
         .eq("athlete_id", athleteId)
-        .maybeSingle();
+        .order("created_at", { ascending: false });
 
       // Fetch attendance records
       const { data: attendance } = await supabase
@@ -87,8 +95,10 @@ export default function AthletesList() {
       setAthleteDetails(prev => ({
         ...prev,
         [athleteId]: {
-          uniform: uniform || null,
+          uniforms: uniforms || [],
           attendanceRate,
+          totalAttendance: totalRecords,
+          presentCount: presentRecords,
         }
       }));
     } catch (error) {
@@ -226,153 +236,180 @@ export default function AthletesList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12"></TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Gender</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAthletes.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    No athletes found. Add your first athlete to get started!
-                  </TableCell>
+                  <TableHead className="w-12"></TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>Gender</TableHead>
                 </TableRow>
-              ) : (
-                filteredAthletes.map((athlete) => (
-                  <Collapsible
-                    key={athlete.id}
-                    open={expandedRows.has(athlete.id)}
-                    onOpenChange={() => toggleRow(athlete.id)}
-                    asChild
-                  >
-                    <>
-                      <TableRow className="group">
-                        <TableCell>
-                          <CollapsibleTrigger asChild>
-                            <Button variant="ghost" size="sm" className="p-0 h-8 w-8">
-                              <ChevronDown className={`w-4 h-4 transition-transform ${expandedRows.has(athlete.id) ? 'rotate-180' : ''}`} />
-                            </Button>
-                          </CollapsibleTrigger>
-                        </TableCell>
-                        <TableCell className="font-medium">{athlete.name}</TableCell>
-                        <TableCell>{athlete.grade}th</TableCell>
-                        <TableCell>{athlete.gender}</TableCell>
-                        <TableCell className="text-right">
-                          <CollapsibleTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              View Details
-                            </Button>
-                          </CollapsibleTrigger>
-                        </TableCell>
-                      </TableRow>
-                      <CollapsibleContent asChild>
-                        <TableRow>
-                          <TableCell colSpan={5} className="bg-muted/30 p-0">
-                            <div className="p-6 space-y-4 animate-accordion-down">
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Events & PRs */}
-                                <Card>
-                                  <CardHeader className="pb-3">
-                                    <CardTitle className="text-sm font-medium">Events & Personal Records</CardTitle>
-                                  </CardHeader>
-                                  <CardContent className="space-y-2">
-                                    {athlete.events && athlete.events.length > 0 ? (
-                                      <div className="space-y-2">
-                                        {athlete.events.map((event, i) => {
-                                          const pr = athlete.personal_records?.[event];
-                                          return (
-                                            <div key={i} className="flex justify-between items-center p-2 bg-background rounded-md">
-                                              <span className="font-medium text-sm">{event}</span>
-                                              {pr && <Badge variant="secondary" className="text-xs">{pr}</Badge>}
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    ) : (
-                                      <p className="text-sm text-muted-foreground">No events assigned</p>
-                                    )}
-                                  </CardContent>
-                                </Card>
-
-                                {/* Team Info */}
-                                <Card>
-                                  <CardHeader className="pb-3">
-                                    <CardTitle className="text-sm font-medium">Team Information</CardTitle>
-                                  </CardHeader>
-                                  <CardContent className="space-y-3">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-sm text-muted-foreground">Team Position</span>
-                                      <Badge variant={athlete.team_position !== 'None' ? 'default' : 'secondary'}>
-                                        {athlete.team_position}
-                                      </Badge>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-sm text-muted-foreground">Attendance Rate</span>
-                                      <span className="font-semibold text-sm">
-                                        {athleteDetails[athlete.id]?.attendanceRate ?? '-'}%
-                                      </span>
-                                    </div>
-                                    {(athlete.athlete_of_week || athlete.athlete_of_meet) && (
-                                      <div className="flex justify-between items-center">
-                                        <span className="text-sm text-muted-foreground">Awards</span>
-                                        <div className="flex gap-1">
-                                          {athlete.athlete_of_week && (
-                                            <Badge variant="default" className="text-xs">
-                                              <Award className="w-3 h-3 mr-1" />
-                                              Week
-                                            </Badge>
-                                          )}
-                                          {athlete.athlete_of_meet && (
-                                            <Badge variant="default" className="text-xs">
-                                              <Trophy className="w-3 h-3 mr-1" />
-                                              Meet
-                                            </Badge>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </CardContent>
-                                </Card>
-
-                                {/* Uniform Assignment */}
-                                <Card>
-                                  <CardHeader className="pb-3">
-                                    <CardTitle className="text-sm font-medium">Uniform Assignment</CardTitle>
-                                  </CardHeader>
-                                  <CardContent>
-                                    {athleteDetails[athlete.id]?.uniform ? (
-                                      <div className="space-y-2">
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-sm text-muted-foreground">Top ID</span>
-                                          <Badge variant="outline">{athleteDetails[athlete.id]?.uniform?.top_id}</Badge>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-sm text-muted-foreground">Bottom ID</span>
-                                          <Badge variant="outline">{athleteDetails[athlete.id]?.uniform?.bottom_id}</Badge>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <p className="text-sm text-muted-foreground">No uniform assigned</p>
-                                    )}
-                                  </CardContent>
-                                </Card>
-                              </div>
-                            </div>
+              </TableHeader>
+              <TableBody>
+                {filteredAthletes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                      No athletes found. Add your first athlete to get started!
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredAthletes.map((athlete) => (
+                    <Collapsible
+                      key={athlete.id}
+                      open={expandedRows.has(athlete.id)}
+                      onOpenChange={() => toggleRow(athlete.id)}
+                      asChild
+                    >
+                      <>
+                        <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRow(athlete.id)}>
+                          <TableCell>
+                            <ChevronDown 
+                              className={`w-4 h-4 transition-transform duration-200 ${expandedRows.has(athlete.id) ? 'rotate-180' : ''}`} 
+                            />
                           </TableCell>
+                          <TableCell className="font-medium">{athlete.name}</TableCell>
+                          <TableCell>{athlete.grade}th</TableCell>
+                          <TableCell>{athlete.gender}</TableCell>
                         </TableRow>
-                      </CollapsibleContent>
-                    </>
-                  </Collapsible>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                        <CollapsibleContent asChild>
+                          <TableRow>
+                            <TableCell colSpan={4} className="bg-muted/30 p-0 border-b">
+                              <div className="p-4 md:p-6 space-y-4 animate-accordion-down">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                  {/* Events & PRs */}
+                                  <Card className="shadow-sm">
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                        <Trophy className="w-4 h-4" />
+                                        Events & Personal Records
+                                      </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      {athlete.events && athlete.events.length > 0 ? (
+                                        <div className="space-y-2">
+                                          {athlete.events.map((event, i) => {
+                                            const pr = athlete.personal_records?.[event];
+                                            return (
+                                              <div key={i} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 p-3 bg-background rounded-md border">
+                                                <span className="font-medium text-sm">{event}</span>
+                                                {pr ? (
+                                                  <div className="flex flex-col items-start sm:items-end gap-0.5">
+                                                    <Badge variant="secondary" className="text-xs font-semibold">
+                                                      {typeof pr === 'string' ? pr : pr.time}
+                                                    </Badge>
+                                                    {typeof pr === 'object' && pr.date && (
+                                                      <span className="text-xs text-muted-foreground">{pr.date}</span>
+                                                    )}
+                                                  </div>
+                                                ) : (
+                                                  <span className="text-xs text-muted-foreground">No PR</span>
+                                                )}
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground py-2">No events assigned</p>
+                                      )}
+                                    </CardContent>
+                                  </Card>
+
+                                  {/* Uniforms */}
+                                  <Card className="shadow-sm">
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-sm font-medium">Uniform Assignments</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      {athleteDetails[athlete.id]?.uniforms && athleteDetails[athlete.id].uniforms.length > 0 ? (
+                                        <div className="space-y-3">
+                                          {athleteDetails[athlete.id].uniforms.map((uniform, i) => (
+                                            <div key={i} className="p-3 bg-background rounded-md border">
+                                              {i === 0 && athleteDetails[athlete.id].uniforms.length > 1 && (
+                                                <Badge variant="default" className="text-xs mb-2">Current</Badge>
+                                              )}
+                                              <div className="grid grid-cols-2 gap-2">
+                                                <div className="space-y-1">
+                                                  <span className="text-xs text-muted-foreground">Top ID</span>
+                                                  <div className="font-medium text-sm">{uniform.top_id}</div>
+                                                </div>
+                                                <div className="space-y-1">
+                                                  <span className="text-xs text-muted-foreground">Bottom ID</span>
+                                                  <div className="font-medium text-sm">{uniform.bottom_id}</div>
+                                                </div>
+                                              </div>
+                                              <div className="text-xs text-muted-foreground mt-2">
+                                                Assigned: {new Date(uniform.created_at).toLocaleDateString()}
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground py-2">No uniform assigned</p>
+                                      )}
+                                    </CardContent>
+                                  </Card>
+
+                                  {/* Team Info & Attendance */}
+                                  <Card className="shadow-sm lg:col-span-2">
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-sm font-medium">Team Information</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div className="flex flex-col gap-1 p-3 bg-background rounded-md border">
+                                          <span className="text-xs text-muted-foreground">Team Position</span>
+                                          <Badge variant={athlete.team_position !== 'None' ? 'default' : 'secondary'} className="w-fit">
+                                            {athlete.team_position || 'None'}
+                                          </Badge>
+                                        </div>
+                                        <div className="flex flex-col gap-1 p-3 bg-background rounded-md border">
+                                          <span className="text-xs text-muted-foreground">Attendance Rate</span>
+                                          <div className="flex items-baseline gap-2">
+                                            <span className="text-xl font-semibold">
+                                              {athleteDetails[athlete.id]?.attendanceRate ?? 0}%
+                                            </span>
+                                            {athleteDetails[athlete.id] && (
+                                              <span className="text-xs text-muted-foreground">
+                                                ({athleteDetails[athlete.id].presentCount}/{athleteDetails[athlete.id].totalAttendance})
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                        {(athlete.athlete_of_week || athlete.athlete_of_meet) && (
+                                          <div className="flex flex-col gap-1 p-3 bg-background rounded-md border">
+                                            <span className="text-xs text-muted-foreground">Awards</span>
+                                            <div className="flex gap-1 flex-wrap">
+                                              {athlete.athlete_of_week && (
+                                                <Badge variant="default" className="text-xs">
+                                                  <Award className="w-3 h-3 mr-1" />
+                                                  Athlete of Week
+                                                </Badge>
+                                              )}
+                                              {athlete.athlete_of_meet && (
+                                                <Badge variant="default" className="text-xs">
+                                                  <Trophy className="w-3 h-3 mr-1" />
+                                                  Athlete of Meet
+                                                </Badge>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        </CollapsibleContent>
+                      </>
+                    </Collapsible>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
