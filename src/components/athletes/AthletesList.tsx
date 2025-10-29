@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, User, Search, ChevronDown, Trophy, Award, ShirtIcon, IdCard, TrendingUp, Medal } from "lucide-react";
+import { Plus, User, Search, ChevronDown, Trophy, Award, ShirtIcon, IdCard, TrendingUp, Medal, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 
 interface Athlete {
@@ -31,6 +31,11 @@ interface UniformAssignment {
   created_at: string;
 }
 
+interface LockerAssignment {
+  locker_number: string;
+  combination: string | null;
+}
+
 interface MeetResult {
   id: string;
   meet_name: string;
@@ -44,6 +49,7 @@ interface MeetResult {
 
 interface AthleteDetails {
   uniforms: UniformAssignment[];
+  locker: LockerAssignment | null;
   attendanceRate: number;
   totalAttendance: number;
   presentCount: number;
@@ -76,6 +82,10 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   const [isUniformModalOpen, setIsUniformModalOpen] = useState(false);
   const [selectedAthleteForUniform, setSelectedAthleteForUniform] = useState<{ id: string; name: string } | null>(null);
   const [uniformForm, setUniformForm] = useState({ top_id: "", bottom_id: "" });
+  const [isLockerModalOpen, setIsLockerModalOpen] = useState(false);
+  const [selectedAthleteForLocker, setSelectedAthleteForLocker] = useState<{ id: string; name: string } | null>(null);
+  const [availableLockers, setAvailableLockers] = useState<{ id: string; locker_number: string }[]>([]);
+  const [selectedLockerId, setSelectedLockerId] = useState("");
 
   useEffect(() => {
     fetchAthletes();
@@ -107,6 +117,13 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
         .select("top_id, bottom_id, created_at")
         .eq("athlete_id", athleteId)
         .order("created_at", { ascending: false });
+
+      // Fetch locker assignment
+      const { data: lockerData } = await supabase
+        .from("lockers")
+        .select("locker_number, combination")
+        .eq("athlete_id", athleteId)
+        .maybeSingle();
 
       // Fetch attendance records
       const { data: attendance } = await supabase
@@ -149,6 +166,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
         ...prev,
         [athleteId]: {
           uniforms: uniforms || [],
+          locker: lockerData || null,
           attendanceRate,
           totalAttendance: totalRecords,
           presentCount: presentRecords,
@@ -302,6 +320,56 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to assign uniform");
+    }
+  };
+
+  const openLockerModal = async (athlete: Athlete) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Fetch available lockers
+      const { data: lockers } = await supabase
+        .from("lockers")
+        .select("id, locker_number")
+        .eq("coach_id", user.id)
+        .eq("status", "Available")
+        .order("locker_number");
+
+      setAvailableLockers(lockers || []);
+      setSelectedAthleteForLocker({ id: athlete.id, name: athlete.name });
+      setSelectedLockerId("");
+      setIsLockerModalOpen(true);
+    } catch (error: any) {
+      toast.error("Failed to load available lockers");
+    }
+  };
+
+  const handleLockerAssignment = async () => {
+    if (!selectedAthleteForLocker || !selectedLockerId) return;
+
+    try {
+      const { error } = await supabase
+        .from("lockers")
+        .update({
+          athlete_id: selectedAthleteForLocker.id,
+          status: "Assigned",
+        })
+        .eq("id", selectedLockerId);
+
+      if (error) throw error;
+
+      toast.success("Locker assigned successfully");
+      setIsLockerModalOpen(false);
+      setSelectedLockerId("");
+
+      // Refresh this athlete's details
+      if (expandedRow === selectedAthleteForLocker.id) {
+        delete athleteDetails[selectedAthleteForLocker.id];
+        await fetchAthleteDetails(selectedAthleteForLocker.id);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to assign locker");
     }
   };
 
@@ -624,6 +692,52 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                     </CardContent>
                                   </Card>
 
+                                  {/* Locker */}
+                                  <Card className="shadow-sm">
+                                    <CardHeader className="pb-3">
+                                      <div className="flex items-center justify-between">
+                                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                          <LockKeyhole className="w-4 h-4 text-primary" />
+                                          Locker
+                                        </CardTitle>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-7 text-xs"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            openLockerModal(athlete);
+                                          }}
+                                        >
+                                          Assign Locker
+                                        </Button>
+                                      </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                      {athleteDetails[athlete.id]?.locker ? (
+                                        <div className="space-y-2">
+                                          <div className="p-3 bg-background rounded-md border">
+                                            <div className="flex justify-between items-start">
+                                              <div>
+                                                <div className="text-sm font-medium">
+                                                  Locker #{athleteDetails[athlete.id].locker.locker_number}
+                                                </div>
+                                                {athleteDetails[athlete.id].locker.combination && (
+                                                  <div className="text-xs text-muted-foreground mt-1">
+                                                    Combo: {athleteDetails[athlete.id].locker.combination}
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <Badge variant="default" className="text-xs">Assigned</Badge>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <p className="text-sm text-muted-foreground py-2">No locker assigned</p>
+                                      )}
+                                    </CardContent>
+                                  </Card>
+
                                   {/* Attendance */}
                                   <Card className="shadow-sm">
                                     <CardHeader className="pb-3">
@@ -870,6 +984,50 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
               </Button>
               <Button onClick={handleUniformAssignment}>
                 Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Locker Assignment Modal */}
+      <Dialog open={isLockerModalOpen} onOpenChange={setIsLockerModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Locker</DialogTitle>
+            <DialogDescription>
+              Assign a locker to {selectedAthleteForLocker?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="locker_select">Select Locker</Label>
+              <Select value={selectedLockerId} onValueChange={setSelectedLockerId}>
+                <SelectTrigger id="locker_select">
+                  <SelectValue placeholder="Choose an available locker" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableLockers.length === 0 ? (
+                    <SelectItem value="none" disabled>No available lockers</SelectItem>
+                  ) : (
+                    availableLockers.map((locker) => (
+                      <SelectItem key={locker.id} value={locker.id}>
+                        Locker #{locker.locker_number}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsLockerModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleLockerAssignment}
+                disabled={!selectedLockerId || availableLockers.length === 0}
+              >
+                Assign
               </Button>
             </div>
           </div>

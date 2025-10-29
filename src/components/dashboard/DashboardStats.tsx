@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ShirtIcon, Calendar } from "lucide-react";
+import { Users, ShirtIcon, Calendar, LockKeyhole } from "lucide-react";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import RemindersCard from "./RemindersCard";
@@ -10,11 +10,13 @@ const TIMEZONE = "America/Chicago";
 
 interface DashboardStatsProps {
   onSwitchToAttendance?: () => void;
+  onSwitchToLockers?: () => void;
 }
 
-const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
+const DashboardStats = ({ onSwitchToAttendance, onSwitchToLockers }: DashboardStatsProps) => {
   const [attendancePercent, setAttendancePercent] = useState<number | null>(null);
   const [uniformsOut, setUniformsOut] = useState(0);
+  const [lockerStats, setLockerStats] = useState({ total: 0, assigned: 0, available: 0, outOfService: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,6 +32,9 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
         fetchStats();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'uniforms' }, () => {
+        fetchStats();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lockers' }, () => {
         fetchStats();
       })
       .subscribe();
@@ -84,6 +89,20 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
         .neq("status", "Returned");
 
       setUniformsOut(count || 0);
+
+      // Locker stats
+      const { data: lockersData } = await supabase
+        .from("lockers")
+        .select("status")
+        .eq("coach_id", user.id);
+
+      if (lockersData) {
+        const total = lockersData.length;
+        const assigned = lockersData.filter(l => l.status === "Assigned").length;
+        const available = lockersData.filter(l => l.status === "Available").length;
+        const outOfService = lockersData.filter(l => l.status === "Out of Service").length;
+        setLockerStats({ total, assigned, available, outOfService });
+      }
     } catch (error) {
       console.error("Error fetching stats:", error);
     } finally {
@@ -104,6 +123,13 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
       value: loading ? "..." : uniformsOut,
       icon: ShirtIcon,
       color: "text-primary",
+    },
+    {
+      title: "Lockers",
+      value: loading ? "..." : `${lockerStats.assigned}/${lockerStats.total}`,
+      icon: LockKeyhole,
+      color: "text-primary",
+      isLockers: true,
     },
     {
       title: "Next Meet",
@@ -133,6 +159,16 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
                 >
                   Mark Attendance
                 </button>
+              </div>
+            ) : stat.isLockers && !loading ? (
+              <div 
+                className="cursor-pointer" 
+                onClick={onSwitchToLockers}
+              >
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {lockerStats.available} available, {lockerStats.outOfService} out
+                </div>
               </div>
             ) : (
               <div className="text-2xl font-bold">{stat.value}</div>

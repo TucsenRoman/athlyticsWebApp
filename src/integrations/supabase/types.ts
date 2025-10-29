@@ -129,6 +129,60 @@ export type Database = {
         }
         Relationships: []
       }
+      lockers: {
+        Row: {
+          athlete_id: string | null
+          coach_id: string
+          combination: string | null
+          created_at: string | null
+          id: string
+          location: string | null
+          locker_number: string
+          notes: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          athlete_id?: string | null
+          coach_id: string
+          combination?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          locker_number: string
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          athlete_id?: string | null
+          coach_id?: string
+          combination?: string | null
+          created_at?: string | null
+          id?: string
+          location?: string | null
+          locker_number?: string
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lockers_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lockers_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meets: {
         Row: {
           coach_id: string
