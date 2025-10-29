@@ -8,7 +8,11 @@ import RemindersCard from "./RemindersCard";
 
 const TIMEZONE = "America/Chicago";
 
-const DashboardStats = () => {
+interface DashboardStatsProps {
+  onSwitchToAttendance?: () => void;
+}
+
+const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
   const [attendancePercent, setAttendancePercent] = useState<number | null>(null);
   const [uniformsOut, setUniformsOut] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -73,9 +77,10 @@ const DashboardStats = () => {
   const stats = [
     {
       title: "Today's Attendance",
-      value: loading ? "..." : attendancePercent !== null ? `${attendancePercent}%` : "No data",
+      value: loading ? "..." : attendancePercent !== null ? `${attendancePercent}%` : null,
       icon: Users,
       color: "text-primary",
+      isAttendance: true,
     },
     {
       title: "Uniforms Still Out",
@@ -102,7 +107,19 @@ const DashboardStats = () => {
             <stat.icon className={`h-4 w-4 ${stat.color}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
+            {stat.isAttendance && stat.value === null && !loading ? (
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">Not submitted</div>
+                <button
+                  onClick={onSwitchToAttendance}
+                  className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                >
+                  Mark Attendance
+                </button>
+              </div>
+            ) : (
+              <div className="text-2xl font-bold">{stat.value}</div>
+            )}
           </CardContent>
         </Card>
       ))}

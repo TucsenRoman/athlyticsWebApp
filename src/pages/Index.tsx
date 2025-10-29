@@ -18,7 +18,7 @@ const Index = () => {
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         </div>
 
-        <DashboardStats />
+        <DashboardStats onSwitchToAttendance={() => setActiveTab("attendance")} />
 
         <RemindersPanel />
 
