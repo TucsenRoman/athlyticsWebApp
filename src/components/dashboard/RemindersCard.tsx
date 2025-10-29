@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Bell, Plus } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Bell, Plus, Pencil, Trash2 } from "lucide-react";
 import { format, parseISO, addDays, addMonths, isAfter, isBefore, startOfDay } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +37,9 @@ const RemindersCard = () => {
   const [loading, setLoading] = useState(true);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reminderToDelete, setReminderToDelete] = useState<Reminder | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -148,17 +152,35 @@ const RemindersCard = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      await supabase.from("reminders").insert({
-        title: formData.title,
-        description: formData.description || null,
-        due_date: formData.due_date,
-        time: formData.time || null,
-        recurrence: formData.recurrence === "None" ? null : formData.recurrence,
-        coach_id: user.id,
-        completed: false,
-      });
+      if (editingReminder) {
+        // Update existing reminder
+        await supabase
+          .from("reminders")
+          .update({
+            title: formData.title,
+            description: formData.description || null,
+            due_date: formData.due_date,
+            time: formData.time || null,
+            recurrence: formData.recurrence === "None" ? null : formData.recurrence,
+          })
+          .eq("id", editingReminder.id);
 
-      toast.success("Reminder added!");
+        toast.success("Reminder updated!");
+      } else {
+        // Insert new reminder
+        await supabase.from("reminders").insert({
+          title: formData.title,
+          description: formData.description || null,
+          due_date: formData.due_date,
+          time: formData.time || null,
+          recurrence: formData.recurrence === "None" ? null : formData.recurrence,
+          coach_id: user.id,
+          completed: false,
+        });
+
+        toast.success("Reminder added!");
+      }
+
       setFormData({
         title: "",
         description: "",
@@ -166,11 +188,43 @@ const RemindersCard = () => {
         time: "",
         recurrence: "None",
       });
+      setEditingReminder(null);
       setDialogOpen(false);
       fetchReminders();
     } catch (error) {
-      console.error("Error adding reminder:", error);
-      toast.error("Failed to add reminder");
+      console.error("Error saving reminder:", error);
+      toast.error("Failed to save reminder");
+    }
+  };
+
+  const handleEdit = (reminder: Reminder) => {
+    setEditingReminder(reminder);
+    setFormData({
+      title: reminder.title,
+      description: reminder.description || "",
+      due_date: reminder.due_date || format(toZonedTime(new Date(), TIMEZONE), "yyyy-MM-dd"),
+      time: reminder.time || "",
+      recurrence: reminder.recurrence || "None",
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!reminderToDelete) return;
+
+    try {
+      await supabase
+        .from("reminders")
+        .delete()
+        .eq("id", reminderToDelete.id);
+
+      toast.success("Reminder deleted!");
+      setReminderToDelete(null);
+      setDeleteDialogOpen(false);
+      fetchReminders();
+    } catch (error) {
+      console.error("Error deleting reminder:", error);
+      toast.error("Failed to delete reminder");
     }
   };
 
@@ -206,7 +260,7 @@ const RemindersCard = () => {
               reminders.map((reminder) => (
                 <div
                   key={reminder.id}
-                  className={`flex items-start gap-3 p-3 rounded-md border transition-opacity ${
+                  className={`group flex items-start gap-3 p-3 rounded-md border transition-opacity ${
                     isOverdue(reminder) ? "border-l-4 border-l-destructive" : ""
                   } ${reminder.completed ? "opacity-50" : ""}`}
                 >
@@ -229,6 +283,27 @@ const RemindersCard = () => {
                       )}
                     </div>
                   </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => handleEdit(reminder)}
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        setReminderToDelete(reminder);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               ))
             )}
@@ -243,7 +318,7 @@ const RemindersCard = () => {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add Reminder</DialogTitle>
+                  <DialogTitle>{editingReminder ? "Edit Reminder" : "Add Reminder"}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -302,7 +377,7 @@ const RemindersCard = () => {
                     </Select>
                   </div>
                   <Button onClick={handleSubmit} className="w-full">
-                    Add Reminder
+                    {editingReminder ? "Update Reminder" : "Add Reminder"}
                   </Button>
                 </div>
               </DialogContent>
@@ -312,7 +387,6 @@ const RemindersCard = () => {
               size="sm"
               onClick={() => {
                 setPopoverOpen(false);
-                navigate("/?tab=reminders");
               }}
             >
               View All →
@@ -320,6 +394,23 @@ const RemindersCard = () => {
           </div>
         </div>
       </PopoverContent>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this reminder?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Popover>
   );
 };
