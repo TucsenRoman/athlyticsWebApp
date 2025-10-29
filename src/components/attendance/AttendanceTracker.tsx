@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, CheckCircle2, Filter, Download, Trash2 } from "lucide-react";
+import { CalendarIcon, Filter, Download, Trash2 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -326,47 +326,6 @@ const AttendanceTracker = () => {
     setIsSubmitted(false);
   };
 
-  const markAllPresent = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      const promises = athletes.map((athlete) => {
-        const existingRecord = attendance.find((a) => a.athlete_id === athlete.id);
-        
-        if (existingRecord) {
-          return supabase
-            .from("attendance")
-            .update({ status: "Present" })
-            .eq("id", existingRecord.id);
-        } else {
-          return supabase
-            .from("attendance")
-            .insert({
-              athlete_id: athlete.id,
-              coach_id: user.id,
-              date: dateStr,
-              status: "Present",
-            });
-        }
-      });
-
-      await Promise.all(promises);
-      await fetchAttendance();
-      toast({
-        title: "Success",
-        description: "All athletes marked as present",
-      });
-    } catch (error) {
-      console.error("Error marking all present:", error);
-      toast({
-        title: "Error",
-        description: "Failed to mark all present",
-        variant: "destructive",
-      });
-    }
-  };
 
   const getStatusBadge = (status: "Present" | "Absent" | "Excused") => {
     const variants = {
@@ -456,10 +415,6 @@ const AttendanceTracker = () => {
             <Button onClick={exportCSV} variant="outline" size="sm" className="touch-manipulation">
               <Download className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Export CSV</span>
-            </Button>
-            <Button onClick={markAllPresent} variant="secondary" disabled={!isEditMode} className="touch-manipulation">
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Mark All Present</span>
             </Button>
             {isSubmitted && !isEditMode ? (
               <>
