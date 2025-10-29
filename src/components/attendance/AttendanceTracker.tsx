@@ -34,6 +34,7 @@ const AttendanceTracker = () => {
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [editingNotes, setEditingNotes] = useState<{ [key: string]: string }>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -135,6 +136,44 @@ const AttendanceTracker = () => {
         description: "Failed to update attendance",
         variant: "destructive",
       });
+    }
+  };
+
+  const saveNotes = async (athleteId: string, notes: string) => {
+    const record = attendance.find((a) => a.athlete_id === athleteId);
+    const currentStatus = record?.status || "Present";
+    
+    await updateAttendance(athleteId, currentStatus, notes);
+    
+    // Clear the editing state for this athlete
+    setEditingNotes((prev) => {
+      const newState = { ...prev };
+      delete newState[athleteId];
+      return newState;
+    });
+  };
+
+  const handleNotesChange = (athleteId: string, value: string) => {
+    setEditingNotes((prev) => ({
+      ...prev,
+      [athleteId]: value,
+    }));
+  };
+
+  const handleNotesBlur = (athleteId: string) => {
+    const notes = editingNotes[athleteId];
+    if (notes !== undefined) {
+      saveNotes(athleteId, notes);
+    }
+  };
+
+  const handleNotesKeyDown = (athleteId: string, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const notes = editingNotes[athleteId];
+      if (notes !== undefined) {
+        saveNotes(athleteId, notes);
+      }
     }
   };
 
@@ -260,7 +299,10 @@ const AttendanceTracker = () => {
             {filteredAthletes.map((athlete) => {
               const record = attendance.find((a) => a.athlete_id === athlete.id);
               const currentStatus = record?.status || "Present";
-              const currentNotes = record?.notes || "";
+              const savedNotes = record?.notes || "";
+              const displayNotes = editingNotes[athlete.id] !== undefined 
+                ? editingNotes[athlete.id] 
+                : savedNotes;
 
               return (
                 <TableRow key={athlete.id}>
@@ -273,7 +315,7 @@ const AttendanceTracker = () => {
                         updateAttendance(
                           athlete.id,
                           value as "Present" | "Absent" | "Excused",
-                          currentNotes
+                          savedNotes
                         )
                       }
                     >
@@ -290,10 +332,10 @@ const AttendanceTracker = () => {
                   <TableCell>
                     <Input
                       placeholder="Add notes..."
-                      value={currentNotes}
-                      onChange={(e) =>
-                        updateAttendance(athlete.id, currentStatus, e.target.value)
-                      }
+                      value={displayNotes}
+                      onChange={(e) => handleNotesChange(athlete.id, e.target.value)}
+                      onBlur={() => handleNotesBlur(athlete.id)}
+                      onKeyDown={(e) => handleNotesKeyDown(athlete.id, e)}
                       className="max-w-[300px]"
                     />
                   </TableCell>
