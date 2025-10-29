@@ -45,10 +45,22 @@ const AttendanceTracker = () => {
   }, []);
 
   useEffect(() => {
+    // Reset states when date changes
+    setIsSubmitted(false);
+    setIsEditMode(true);
+    setShowSuccess(false);
+    setEditingNotes({});
+    
     if (athletes.length > 0) {
       fetchAttendance();
     }
-  }, [selectedDate, athletes]);
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (athletes.length > 0 && !selectedDate) {
+      fetchAttendance();
+    }
+  }, [athletes]);
 
   useEffect(() => {
     // Check if attendance is submitted for the current date
