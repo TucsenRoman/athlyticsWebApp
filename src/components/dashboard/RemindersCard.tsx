@@ -277,7 +277,7 @@ const RemindersCard = () => {
   return (
     <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
       <PopoverTrigger asChild>
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <Card className="hover:shadow-md transition-all hover:scale-[1.02] duration-200 cursor-pointer h-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Reminders</CardTitle>
             <div className="relative">
@@ -291,10 +291,11 @@ const RemindersCard = () => {
             <div className="text-2xl font-bold">
               {loading ? "..." : todayCount > 0 ? `${todayCount} today` : "All clear ✅"}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Click to view</p>
           </CardContent>
         </Card>
       </PopoverTrigger>
-      <PopoverContent className="w-96" align="start">
+      <PopoverContent className="w-96 bg-background" align="start">
         <div className="space-y-4">
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {reminders.length === 0 ? (

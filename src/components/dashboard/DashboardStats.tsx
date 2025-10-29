@@ -97,21 +97,29 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
       className="w-full"
     >
       <CarouselContent className="-ml-2 md:-ml-4">
-        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%]">
-          <Card className="hover:shadow-md transition-shadow h-full">
+        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%] animate-fade-in">
+          <Card className="hover:shadow-md transition-all hover:scale-[1.02] duration-200 h-full flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
               <Users className="h-4 w-4 text-primary" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 flex flex-col justify-between">
               {attendancePercent !== null && !loading ? (
-                <div className="text-2xl font-bold">{attendancePercent}%</div>
+                <>
+                  <div className="text-2xl font-bold">{attendancePercent}%</div>
+                  <button
+                    onClick={onSwitchToAttendance}
+                    className="mt-4 text-xs px-3 py-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium hover-scale w-full"
+                  >
+                    View Details
+                  </button>
+                </>
               ) : !loading ? (
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground">Not submitted</div>
                   <button
                     onClick={onSwitchToAttendance}
-                    className="text-xs px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                    className="text-xs px-3 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium hover-scale w-full"
                   >
                     Mark Attendance
                   </button>
@@ -123,20 +131,20 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
           </Card>
         </CarouselItem>
 
-        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%]">
+        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%] animate-fade-in [animation-delay:100ms]">
           <RemindersCard />
         </CarouselItem>
 
-        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%]">
+        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%] animate-fade-in [animation-delay:200ms]">
           <MessagesCard />
         </CarouselItem>
 
-        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%]">
+        <CarouselItem className="pl-2 md:pl-4 basis-[85%] sm:basis-[45%] lg:basis-[30%] xl:basis-[23%] animate-fade-in [animation-delay:300ms]">
           <TodaysPlanCard />
         </CarouselItem>
       </CarouselContent>
-      <CarouselPrevious className="hidden md:flex" />
-      <CarouselNext className="hidden md:flex" />
+      <CarouselPrevious className="hidden md:flex -left-4 hover:scale-110 transition-transform" />
+      <CarouselNext className="hidden md:flex -right-4 hover:scale-110 transition-transform" />
     </Carousel>
   );
 };
