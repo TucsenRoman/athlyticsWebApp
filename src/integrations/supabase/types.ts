@@ -27,6 +27,7 @@ export type Database = {
           id: string
           name: string
           personal_records: Json | null
+          team_position: string | null
           updated_at: string
         }
         Insert: {
@@ -41,6 +42,7 @@ export type Database = {
           id?: string
           name: string
           personal_records?: Json | null
+          team_position?: string | null
           updated_at?: string
         }
         Update: {
@@ -55,6 +57,7 @@ export type Database = {
           id?: string
           name?: string
           personal_records?: Json | null
+          team_position?: string | null
           updated_at?: string
         }
         Relationships: [
