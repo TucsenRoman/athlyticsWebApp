@@ -64,7 +64,10 @@ export default function AthletesList() {
     name: "",
     grade: "9",
     gender: "Male",
+    team_position: "None",
   });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingAthlete, setEditingAthlete] = useState<Athlete | null>(null);
 
   useEffect(() => {
     fetchAthletes();
@@ -170,13 +173,14 @@ export default function AthletesList() {
         name: newAthlete.name,
         grade: parseInt(newAthlete.grade),
         gender: newAthlete.gender,
+        team_position: newAthlete.team_position,
       });
 
       if (error) throw error;
 
       toast.success("Athlete added successfully!");
       setIsAddDialogOpen(false);
-      setNewAthlete({ name: "", grade: "9", gender: "Male" });
+      setNewAthlete({ name: "", grade: "9", gender: "Male", team_position: "None" });
       fetchAthletes();
     } catch (error: any) {
       toast.error(error.message || "Failed to add athlete");
@@ -187,6 +191,40 @@ export default function AthletesList() {
     const s = ["th", "st", "nd", "rd"];
     const v = n % 100;
     return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+
+  const handleUpdateAthlete = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAthlete) return;
+    
+    try {
+      const { error } = await supabase
+        .from("athletes")
+        .update({
+          name: editingAthlete.name,
+          grade: editingAthlete.grade,
+          gender: editingAthlete.gender,
+          team_position: editingAthlete.team_position,
+        })
+        .eq("id", editingAthlete.id);
+
+      if (error) throw error;
+
+      toast.success("Athlete updated successfully!");
+      setIsEditDialogOpen(false);
+      setEditingAthlete(null);
+      fetchAthletes();
+      if (expandedRow === editingAthlete.id) {
+        fetchAthleteDetails(editingAthlete.id);
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update athlete");
+    }
+  };
+
+  const openEditDialog = (athlete: Athlete) => {
+    setEditingAthlete(athlete);
+    setIsEditDialogOpen(true);
   };
 
   const openResultsModal = async (athlete: Athlete) => {
@@ -303,6 +341,23 @@ export default function AthletesList() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="team_position">Team Position</Label>
+                <Select
+                  value={newAthlete.team_position}
+                  onValueChange={(value) => setNewAthlete({ ...newAthlete, team_position: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="Captain">Captain</SelectItem>
+                    <SelectItem value="Co-Captain">Co-Captain</SelectItem>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <Button type="submit" className="w-full">Add Athlete</Button>
             </form>
           </DialogContent>
@@ -364,10 +419,23 @@ export default function AthletesList() {
                                   {/* Events & PRs */}
                                   <Card className="shadow-sm">
                                     <CardHeader className="pb-3">
-                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                        <Trophy className="w-4 h-4 text-primary" />
-                                        Events & Personal Records
-                                      </CardTitle>
+                                      <div className="flex items-center justify-between">
+                                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                          <Trophy className="w-4 h-4 text-primary" />
+                                          Events & Personal Records
+                                        </CardTitle>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-7 text-xs"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toast.info("PR management coming soon");
+                                          }}
+                                        >
+                                          Add PR
+                                        </Button>
+                                      </div>
                                     </CardHeader>
                                     <CardContent>
                                       {athlete.events && athlete.events.length > 0 ? (
@@ -402,10 +470,23 @@ export default function AthletesList() {
                                   {/* Uniforms */}
                                   <Card className="shadow-sm">
                                     <CardHeader className="pb-3">
-                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                        <ShirtIcon className="w-4 h-4 text-primary" />
-                                        Uniform Assignments
-                                      </CardTitle>
+                                      <div className="flex items-center justify-between">
+                                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                          <ShirtIcon className="w-4 h-4 text-primary" />
+                                          Uniform Assignments
+                                        </CardTitle>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-7 text-xs"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toast.info("Navigate to Uniforms tab to assign");
+                                          }}
+                                        >
+                                          Assign Uniform
+                                        </Button>
+                                      </div>
                                     </CardHeader>
                                     <CardContent>
                                       {athleteDetails[athlete.id]?.uniforms && athleteDetails[athlete.id].uniforms.length > 0 ? (
@@ -437,13 +518,26 @@ export default function AthletesList() {
                                     </CardContent>
                                   </Card>
 
-                                  {/* Team Position & Attendance */}
+                                  {/* Team Position */}
                                   <Card className="shadow-sm">
                                     <CardHeader className="pb-3">
-                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                        <IdCard className="w-4 h-4 text-primary" />
-                                        Team Position
-                                      </CardTitle>
+                                      <div className="flex items-center justify-between">
+                                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                          <IdCard className="w-4 h-4 text-primary" />
+                                          Team Position
+                                        </CardTitle>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-7 text-xs"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            openEditDialog(athlete);
+                                          }}
+                                        >
+                                          Change
+                                        </Button>
+                                      </div>
                                     </CardHeader>
                                     <CardContent>
                                       <Badge variant={athlete.team_position !== 'None' ? 'default' : 'secondary'} className="w-fit">
@@ -452,12 +546,26 @@ export default function AthletesList() {
                                     </CardContent>
                                   </Card>
 
+                                  {/* Attendance */}
                                   <Card className="shadow-sm">
                                     <CardHeader className="pb-3">
-                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                        <TrendingUp className="w-4 h-4 text-primary" />
-                                        Attendance Rate
-                                      </CardTitle>
+                                      <div className="flex items-center justify-between">
+                                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                          <TrendingUp className="w-4 h-4 text-primary" />
+                                          Attendance Rate
+                                        </CardTitle>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-7 text-xs"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toast.info("Open Attendance tab to manage");
+                                          }}
+                                        >
+                                          Open Attendance
+                                        </Button>
+                                      </div>
                                     </CardHeader>
                                     <CardContent>
                                       <div className="flex items-baseline gap-2">
@@ -475,21 +583,39 @@ export default function AthletesList() {
 
                                   {/* Recent Meet Results */}
                                   <Card className="shadow-sm lg:col-span-2">
-                                    <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                                        <Medal className="w-4 h-4 text-primary" />
-                                        Recent Meet Results
-                                      </CardTitle>
-                                      {athleteDetails[athlete.id]?.recentResults && athleteDetails[athlete.id].recentResults.length > 0 && (
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
-                                          onClick={() => openResultsModal(athlete)}
-                                          className="text-xs"
-                                        >
-                                          View all results
-                                        </Button>
-                                      )}
+                                    <CardHeader className="pb-3">
+                                      <div className="flex items-center justify-between">
+                                        <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                          <Medal className="w-4 h-4 text-primary" />
+                                          Recent Meet Results
+                                        </CardTitle>
+                                        <div className="flex gap-2">
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-7 text-xs"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toast.info("Result management coming soon");
+                                            }}
+                                          >
+                                            Add Result
+                                          </Button>
+                                          {athleteDetails[athlete.id]?.recentResults && athleteDetails[athlete.id].recentResults.length > 0 && (
+                                            <Button 
+                                              variant="ghost" 
+                                              size="sm" 
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                openResultsModal(athlete);
+                                              }}
+                                              className="h-7 text-xs"
+                                            >
+                                              View all
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </div>
                                     </CardHeader>
                                     <CardContent>
                                       {athleteDetails[athlete.id]?.recentResults && athleteDetails[athlete.id].recentResults.length > 0 ? (
@@ -550,6 +676,82 @@ export default function AthletesList() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Athlete Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Athlete</DialogTitle>
+            <DialogDescription>
+              Update athlete information
+            </DialogDescription>
+          </DialogHeader>
+          {editingAthlete && (
+            <form onSubmit={handleUpdateAthlete} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Name</Label>
+                <Input
+                  id="edit-name"
+                  value={editingAthlete.name}
+                  onChange={(e) => setEditingAthlete({ ...editingAthlete, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-grade">Grade</Label>
+                <Select
+                  value={editingAthlete.grade.toString()}
+                  onValueChange={(value) => setEditingAthlete({ ...editingAthlete, grade: parseInt(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="9">9th Grade</SelectItem>
+                    <SelectItem value="10">10th Grade</SelectItem>
+                    <SelectItem value="11">11th Grade</SelectItem>
+                    <SelectItem value="12">12th Grade</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-gender">Gender</Label>
+                <Select
+                  value={editingAthlete.gender}
+                  onValueChange={(value) => setEditingAthlete({ ...editingAthlete, gender: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-team-position">Team Position</Label>
+                <Select
+                  value={editingAthlete.team_position}
+                  onValueChange={(value) => setEditingAthlete({ ...editingAthlete, team_position: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="Captain">Captain</SelectItem>
+                    <SelectItem value="Co-Captain">Co-Captain</SelectItem>
+                    <SelectItem value="Manager">Manager</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" className="w-full">Update Athlete</Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Results Modal */}
       <Dialog open={isResultsModalOpen} onOpenChange={setIsResultsModalOpen}>
