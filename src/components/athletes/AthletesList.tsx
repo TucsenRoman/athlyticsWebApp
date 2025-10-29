@@ -43,7 +43,7 @@ export default function AthletesList() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [athleteDetails, setAthleteDetails] = useState<Record<string, AthleteDetails>>({});
   const [newAthlete, setNewAthlete] = useState({
     name: "",
@@ -107,14 +107,12 @@ export default function AthletesList() {
   };
 
   const toggleRow = (athleteId: string) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(athleteId)) {
-      newExpanded.delete(athleteId);
+    if (expandedRow === athleteId) {
+      setExpandedRow(null);
     } else {
-      newExpanded.add(athleteId);
+      setExpandedRow(athleteId);
       fetchAthleteDetails(athleteId);
     }
-    setExpandedRows(newExpanded);
   };
 
   const handleAddAthlete = async (e: React.FormEvent) => {
@@ -257,7 +255,7 @@ export default function AthletesList() {
                   filteredAthletes.map((athlete) => (
                     <Collapsible
                       key={athlete.id}
-                      open={expandedRows.has(athlete.id)}
+                      open={expandedRow === athlete.id}
                       onOpenChange={() => toggleRow(athlete.id)}
                       asChild
                     >
@@ -265,7 +263,7 @@ export default function AthletesList() {
                         <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRow(athlete.id)}>
                           <TableCell>
                             <ChevronDown 
-                              className={`w-4 h-4 transition-transform duration-200 ${expandedRows.has(athlete.id) ? 'rotate-180' : ''}`} 
+                              className={`w-4 h-4 transition-transform duration-200 ${expandedRow === athlete.id ? 'rotate-180' : ''}`} 
                             />
                           </TableCell>
                           <TableCell className="font-medium">{athlete.name}</TableCell>
@@ -275,7 +273,7 @@ export default function AthletesList() {
                         <CollapsibleContent asChild>
                           <TableRow>
                             <TableCell colSpan={4} className="bg-muted/30 p-0 border-b">
-                              <div className="p-4 md:p-6 space-y-4 animate-accordion-down">
+                              <div className="p-4 md:p-6 space-y-4 transition-all duration-200 ease-out">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                   {/* Events & PRs */}
                                   <Card className="shadow-sm">
