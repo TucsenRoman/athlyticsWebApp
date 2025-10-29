@@ -7,15 +7,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
-import { format, isPast, parseISO } from "date-fns";
+import { Plus, Pencil, Trash2, Repeat } from "lucide-react";
+import { format, isPast, parseISO, addDays, addWeeks, addMonths } from "date-fns";
 
 interface Reminder {
   id: string;
   title: string;
   description: string | null;
   due_date: string | null;
+  time: string | null;
+  recurrence: string | null;
   completed: boolean;
   created_at: string;
 }
@@ -28,7 +31,9 @@ const RemindersList = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    due_date: "",
+    due_date: format(new Date(), "yyyy-MM-dd"),
+    time: "",
+    recurrence: "None",
   });
   const { toast } = useToast();
 
@@ -76,6 +81,8 @@ const RemindersList = () => {
             title: formData.title,
             description: formData.description || null,
             due_date: formData.due_date || null,
+            time: formData.time || null,
+            recurrence: formData.recurrence || "None",
           })
           .eq("id", editingReminder.id);
 
@@ -89,6 +96,8 @@ const RemindersList = () => {
             title: formData.title,
             description: formData.description || null,
             due_date: formData.due_date || null,
+            time: formData.time || null,
+            recurrence: formData.recurrence || "None",
           });
 
         if (error) throw error;
@@ -130,9 +139,46 @@ const RemindersList = () => {
 
   const handleToggleComplete = async (reminder: Reminder) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const newCompletedStatus = !reminder.completed;
+
+      // If marking as complete and it's recurring, create next occurrence
+      if (newCompletedStatus && reminder.recurrence && reminder.recurrence !== "None" && reminder.due_date) {
+        const currentDueDate = parseISO(reminder.due_date);
+        let nextDueDate: Date;
+
+        switch (reminder.recurrence) {
+          case "Daily":
+            nextDueDate = addDays(currentDueDate, 1);
+            break;
+          case "Weekly":
+            nextDueDate = addWeeks(currentDueDate, 1);
+            break;
+          case "Monthly":
+            nextDueDate = addMonths(currentDueDate, 1);
+            break;
+          default:
+            nextDueDate = currentDueDate;
+        }
+
+        // Create new occurrence
+        await supabase.from("reminders").insert({
+          coach_id: user.id,
+          title: reminder.title,
+          description: reminder.description,
+          due_date: format(nextDueDate, "yyyy-MM-dd"),
+          time: reminder.time,
+          recurrence: reminder.recurrence,
+          completed: false,
+        });
+      }
+
+      // Mark current reminder as complete
       const { error } = await supabase
         .from("reminders")
-        .update({ completed: !reminder.completed })
+        .update({ completed: newCompletedStatus })
         .eq("id", reminder.id);
 
       if (error) throw error;
@@ -148,7 +194,13 @@ const RemindersList = () => {
   };
 
   const resetForm = () => {
-    setFormData({ title: "", description: "", due_date: "" });
+    setFormData({ 
+      title: "", 
+      description: "", 
+      due_date: format(new Date(), "yyyy-MM-dd"),
+      time: "",
+      recurrence: "None",
+    });
     setEditingReminder(null);
   };
 
@@ -157,7 +209,9 @@ const RemindersList = () => {
     setFormData({
       title: reminder.title,
       description: reminder.description || "",
-      due_date: reminder.due_date || "",
+      due_date: reminder.due_date || format(new Date(), "yyyy-MM-dd"),
+      time: reminder.time || "",
+      recurrence: reminder.recurrence || "None",
     });
     setIsDialogOpen(true);
   };
@@ -208,14 +262,42 @@ const RemindersList = () => {
                   rows={3}
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="due_date">Due Date</Label>
+                  <Input
+                    id="due_date"
+                    type="date"
+                    value={formData.due_date}
+                    onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="time">Time</Label>
+                  <Input
+                    id="time"
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                  />
+                </div>
+              </div>
               <div>
-                <Label htmlFor="due_date">Due Date</Label>
-                <Input
-                  id="due_date"
-                  type="date"
-                  value={formData.due_date}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                />
+                <Label htmlFor="recurrence">Repeats</Label>
+                <Select
+                  value={formData.recurrence}
+                  onValueChange={(value) => setFormData({ ...formData, recurrence: value })}
+                >
+                  <SelectTrigger id="recurrence">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="Daily">Daily</SelectItem>
+                    <SelectItem value="Weekly">Weekly</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
@@ -263,7 +345,12 @@ const RemindersList = () => {
                   </TableCell>
                   <TableCell className={reminder.completed ? "line-through" : ""}>
                     <div>
-                      <div className="font-medium">{reminder.title}</div>
+                      <div className="font-medium flex items-center gap-2">
+                        {reminder.title}
+                        {reminder.recurrence && reminder.recurrence !== "None" && (
+                          <Repeat className="w-3 h-3 text-muted-foreground" />
+                        )}
+                      </div>
                       {reminder.description && (
                         <div className="text-sm text-muted-foreground mt-1">
                           {reminder.description}
@@ -273,9 +360,16 @@ const RemindersList = () => {
                   </TableCell>
                   <TableCell>
                     {reminder.due_date ? (
-                      <span className={isOverdue(reminder.due_date, reminder.completed) ? "text-destructive font-medium" : ""}>
-                        {format(parseISO(reminder.due_date), "MMM d, yyyy")}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className={isOverdue(reminder.due_date, reminder.completed) ? "text-destructive font-medium" : ""}>
+                          {format(parseISO(reminder.due_date), "MMM d, yyyy")}
+                        </span>
+                        {reminder.time && (
+                          <span className="text-sm text-muted-foreground">
+                            {reminder.time}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-muted-foreground">No date</span>
                     )}
