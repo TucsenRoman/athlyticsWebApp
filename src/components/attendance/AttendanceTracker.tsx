@@ -1,32 +1,38 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CalendarIcon, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CalendarIcon, CheckCircle2, Filter } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 interface Athlete {
   id: string;
   name: string;
+  grade: number | null;
+  gender: string | null;
 }
 
 interface AttendanceRecord {
-  id?: string;
+  id: string;
   athlete_id: string;
+  date: string;
   status: "Present" | "Absent" | "Excused";
-  notes: string;
+  notes: string | null;
 }
 
-export default function AttendanceTracker() {
+const AttendanceTracker = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [athletes, setAthletes] = useState<Athlete[]>([]);
-  const [attendance, setAttendance] = useState<Record<string, AttendanceRecord>>({});
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const { toast } = useToast();
 
@@ -35,268 +41,276 @@ export default function AttendanceTracker() {
   }, []);
 
   useEffect(() => {
-    fetchAttendance();
-  }, [selectedDate]);
+    if (athletes.length > 0) {
+      fetchAttendance();
+    }
+  }, [selectedDate, athletes]);
 
   const fetchAthletes = async () => {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const { data, error } = await supabase
-      .from("athletes")
-      .select("id, name")
-      .eq("coach_id", user.user.id)
-      .order("name");
+      const { data, error } = await supabase
+        .from("athletes")
+        .select("id, name, grade, gender")
+        .eq("coach_id", user.id)
+        .order("name");
 
-    if (error) {
+      if (error) throw error;
+      setAthletes(data || []);
+    } catch (error) {
+      console.error("Error fetching athletes:", error);
       toast({
-        title: "Error loading athletes",
-        description: error.message,
+        title: "Error",
+        description: "Failed to load athletes",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    setAthletes(data || []);
   };
 
   const fetchAttendance = async () => {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    
-    const { data, error } = await supabase
-      .from("attendance")
-      .select("*")
-      .eq("coach_id", user.user.id)
-      .eq("date", dateStr);
-
-    if (error) {
-      toast({
-        title: "Error loading attendance",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const attendanceMap: Record<string, AttendanceRecord> = {};
-    data?.forEach((record) => {
-      attendanceMap[record.athlete_id] = {
-        id: record.id,
-        athlete_id: record.athlete_id,
-        status: record.status as "Present" | "Absent" | "Excused",
-        notes: record.notes || "",
-      };
-    });
-
-    setAttendance(attendanceMap);
-  };
-
-  const updateAttendance = async (athleteId: string, field: "status" | "notes", value: string) => {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return;
-
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const currentRecord = attendance[athleteId];
-
-    const recordData = {
-      athlete_id: athleteId,
-      coach_id: user.user.id,
-      date: dateStr,
-      status: (field === "status" ? value : currentRecord?.status || "Present") as "Present" | "Absent" | "Excused",
-      notes: field === "notes" ? value : currentRecord?.notes || "",
-    };
-
-    if (currentRecord?.id) {
-      const { error } = await supabase
-        .from("attendance")
-        .update({ [field]: value })
-        .eq("id", currentRecord.id);
-
-      if (error) {
-        toast({
-          title: "Error updating attendance",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-    } else {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
       const { data, error } = await supabase
         .from("attendance")
-        .insert([recordData])
-        .select()
-        .single();
+        .select("*")
+        .eq("coach_id", user.id)
+        .eq("date", dateStr);
 
-      if (error) {
-        toast({
-          title: "Error creating attendance",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
+      if (error) throw error;
+      setAttendance((data || []) as AttendanceRecord[]);
+    } catch (error) {
+      console.error("Error fetching attendance:", error);
+    }
+  };
+
+  const updateAttendance = async (
+    athleteId: string,
+    status: "Present" | "Absent" | "Excused",
+    notes?: string
+  ) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const existingRecord = attendance.find((a) => a.athlete_id === athleteId);
+
+      if (existingRecord) {
+        const { error } = await supabase
+          .from("attendance")
+          .update({ status, notes: notes || null })
+          .eq("id", existingRecord.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("attendance")
+          .insert({
+            athlete_id: athleteId,
+            coach_id: user.id,
+            date: dateStr,
+            status,
+            notes: notes || null,
+          });
+
+        if (error) throw error;
       }
 
-      setAttendance((prev) => ({
-        ...prev,
-        [athleteId]: {
-          id: data.id,
-          athlete_id: athleteId,
-          status: recordData.status,
-          notes: recordData.notes,
-        },
-      }));
-      return;
+      await fetchAttendance();
+      toast({
+        title: "Success",
+        description: "Attendance updated",
+      });
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update attendance",
+        variant: "destructive",
+      });
     }
-
-    setAttendance((prev) => ({
-      ...prev,
-      [athleteId]: {
-        ...currentRecord,
-        athlete_id: athleteId,
-        status: field === "status" ? (value as "Present" | "Absent" | "Excused") : currentRecord.status,
-        notes: field === "notes" ? value : currentRecord.notes,
-      },
-    }));
   };
 
   const markAllPresent = async () => {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const records = athletes.map((athlete) => ({
-      athlete_id: athlete.id,
-      coach_id: user.user.id,
-      date: dateStr,
-      status: "Present",
-      notes: "",
-    }));
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      const promises = athletes.map((athlete) => {
+        const existingRecord = attendance.find((a) => a.athlete_id === athlete.id);
+        
+        if (existingRecord) {
+          return supabase
+            .from("attendance")
+            .update({ status: "Present" })
+            .eq("id", existingRecord.id);
+        } else {
+          return supabase
+            .from("attendance")
+            .insert({
+              athlete_id: athlete.id,
+              coach_id: user.id,
+              date: dateStr,
+              status: "Present",
+            });
+        }
+      });
 
-    const { error } = await supabase
-      .from("attendance")
-      .upsert(records, { onConflict: "athlete_id,date" });
-
-    if (error) {
+      await Promise.all(promises);
+      await fetchAttendance();
       toast({
-        title: "Error marking all present",
-        description: error.message,
+        title: "Success",
+        description: "All athletes marked as present",
+      });
+    } catch (error) {
+      console.error("Error marking all present:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark all present",
         variant: "destructive",
       });
-      return;
     }
+  };
 
-    toast({
-      title: "Success",
-      description: "All athletes marked as present",
-    });
+  const getStatusBadge = (status: "Present" | "Absent" | "Excused") => {
+    const variants = {
+      Present: "default",
+      Absent: "destructive",
+      Excused: "secondary",
+    } as const;
 
-    fetchAttendance();
+    return <Badge variant={variants[status]}>{status}</Badge>;
   };
 
   const filteredAthletes = athletes.filter((athlete) => {
     if (filterStatus === "all") return true;
-    const record = attendance[athlete.id];
-    if (!record) return filterStatus === "unmarked";
-    return record.status === filterStatus;
+    const record = attendance.find((a) => a.athlete_id === athlete.id);
+    if (filterStatus === "Absent") {
+      return record?.status === "Absent";
+    }
+    return false;
   });
 
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className={cn("w-[240px] justify-start text-left font-normal")}>
-              <CalendarIcon />
-              {format(selectedDate, "PPP")}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              initialFocus
-              className="p-3 pointer-events-auto"
-            />
-          </PopoverContent>
-        </Popover>
+  if (loading) {
+    return <div className="text-center p-8">Loading...</div>;
+  }
 
-        <div className="flex gap-2">
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Attendance Tracker</CardTitle>
+          <div className="flex items-center gap-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(selectedDate, "PPP")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            <Button onClick={markAllPresent} variant="default">
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              Mark All Present
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4 flex items-center gap-2">
+          <Filter className="h-4 w-4" />
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Athletes</SelectItem>
-              <SelectItem value="Present">Present</SelectItem>
-              <SelectItem value="Absent">Absent</SelectItem>
-              <SelectItem value="Excused">Excused</SelectItem>
-              <SelectItem value="unmarked">Unmarked</SelectItem>
+              <SelectItem value="Absent">Absent Only</SelectItem>
             </SelectContent>
           </Select>
-
-          <Button onClick={markAllPresent} variant="default">
-            <Check className="mr-2 h-4 w-4" />
-            Mark All Present
-          </Button>
         </div>
-      </div>
 
-      <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Athlete Name</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Grade</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Notes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAthletes.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground">
-                  No athletes found
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredAthletes.map((athlete) => {
-                const record = attendance[athlete.id];
-                return (
-                  <TableRow key={athlete.id}>
-                    <TableCell className="font-medium">{athlete.name}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={record?.status || ""}
-                        onValueChange={(value) => updateAttendance(athlete.id, "status", value)}
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Present">Present</SelectItem>
-                          <SelectItem value="Absent">Absent</SelectItem>
-                          <SelectItem value="Excused">Excused</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={record?.notes || ""}
-                        onChange={(e) => updateAttendance(athlete.id, "notes", e.target.value)}
-                        placeholder="Add notes..."
-                        className="max-w-md"
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
+            {filteredAthletes.map((athlete) => {
+              const record = attendance.find((a) => a.athlete_id === athlete.id);
+              const currentStatus = record?.status || "Present";
+              const currentNotes = record?.notes || "";
+
+              return (
+                <TableRow key={athlete.id}>
+                  <TableCell className="font-medium">{athlete.name}</TableCell>
+                  <TableCell>{athlete.grade || "N/A"}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={currentStatus}
+                      onValueChange={(value) =>
+                        updateAttendance(
+                          athlete.id,
+                          value as "Present" | "Absent" | "Excused",
+                          currentNotes
+                        )
+                      }
+                    >
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Present">Present</SelectItem>
+                        <SelectItem value="Absent">Absent</SelectItem>
+                        <SelectItem value="Excused">Excused</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      placeholder="Add notes..."
+                      value={currentNotes}
+                      onChange={(e) =>
+                        updateAttendance(athlete.id, currentStatus, e.target.value)
+                      }
+                      className="max-w-[300px]"
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
-      </div>
-    </div>
+
+        {filteredAthletes.length === 0 && (
+          <div className="text-center p-8 text-muted-foreground">
+            No athletes found
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-}
+};
+
+export default AttendanceTracker;
