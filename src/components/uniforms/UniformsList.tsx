@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Pencil, Trash2, ShirtIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +38,8 @@ export default function UniformsList() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingUniform, setEditingUniform] = useState<Uniform | null>(null);
+  const [selectedUniforms, setSelectedUniforms] = useState<Set<string>>(new Set());
+  const [showBulkReturnDialog, setShowBulkReturnDialog] = useState(false);
   const [newUniform, setNewUniform] = useState({
     top_id: "",
     bottom_id: "",
@@ -150,6 +154,59 @@ export default function UniformsList() {
     setIsEditDialogOpen(true);
   };
 
+  const toggleUniformSelection = (uniformId: string) => {
+    setSelectedUniforms(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(uniformId)) {
+        newSet.delete(uniformId);
+      } else {
+        newSet.add(uniformId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUniforms.size === filteredUniforms.length) {
+      setSelectedUniforms(new Set());
+    } else {
+      setSelectedUniforms(new Set(filteredUniforms.map(u => u.id)));
+    }
+  };
+
+  const handleBulkReturn = async () => {
+    if (selectedUniforms.size === 0) {
+      toast.error("Please select at least one uniform");
+      return;
+    }
+
+    setShowBulkReturnDialog(true);
+  };
+
+  const confirmBulkReturn = async () => {
+    try {
+      const uniformIds = Array.from(selectedUniforms);
+      
+      const { error } = await supabase
+        .from("uniforms")
+        .update({
+          status: "Returned",
+          assigned_to: null,
+          athlete_id: null,
+        })
+        .in("id", uniformIds);
+
+      if (error) throw error;
+
+      toast.success(`${uniformIds.length} uniform(s) marked as returned!`);
+      setSelectedUniforms(new Set());
+      setShowBulkReturnDialog(false);
+      fetchData();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update uniforms");
+    }
+  };
+
   const filteredUniforms = uniforms.filter(uniform => {
     const matchesSearch = 
       uniform.top_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -180,6 +237,17 @@ export default function UniformsList() {
 
   return (
     <div className="space-y-6">
+      {selectedUniforms.size > 0 && (
+        <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
+          <p className="text-sm font-medium">
+            {selectedUniforms.size} uniform(s) selected
+          </p>
+          <Button onClick={handleBulkReturn} variant="default">
+            Mark as Returned
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
           <div className="relative flex-1 max-w-sm">
@@ -381,6 +449,12 @@ export default function UniformsList() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedUniforms.size === filteredUniforms.length && filteredUniforms.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>Top ID</TableHead>
                 <TableHead>Bottom ID</TableHead>
                 <TableHead>Assigned To</TableHead>
@@ -392,13 +466,19 @@ export default function UniformsList() {
             <TableBody>
               {filteredUniforms.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No uniforms found. Add your first uniform to get started!
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredUniforms.map((uniform) => (
                   <TableRow key={uniform.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedUniforms.has(uniform.id)}
+                        onCheckedChange={() => toggleUniformSelection(uniform.id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{uniform.top_id}</TableCell>
                     <TableCell className="font-medium">{uniform.bottom_id}</TableCell>
                     <TableCell>
@@ -441,6 +521,24 @@ export default function UniformsList() {
           </Table>
         </CardContent>
       </Card>
+
+      <AlertDialog open={showBulkReturnDialog} onOpenChange={setShowBulkReturnDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Bulk Return</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark {selectedUniforms.size} uniform(s) as returned? 
+              This will clear all athlete assignments and update the status to "Returned".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBulkReturn}>
+              Confirm Return
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
