@@ -67,6 +67,47 @@ export type Database = {
           },
         ]
       }
+      attendance: {
+        Row: {
+          athlete_id: string
+          coach_id: string
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          coach_id: string
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          coach_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "athletes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

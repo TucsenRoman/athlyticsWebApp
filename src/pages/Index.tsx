@@ -2,8 +2,9 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import AthletesList from "@/components/athletes/AthletesList";
 import UniformsDashboard from "@/components/uniforms/UniformsDashboard";
+import AttendanceTracker from "@/components/attendance/AttendanceTracker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ShirtIcon } from "lucide-react";
+import { Users, ShirtIcon, ClipboardCheck } from "lucide-react";
 const Index = () => {
   return <DashboardLayout>
       <div className="space-y-8">
@@ -17,7 +18,7 @@ const Index = () => {
         <DashboardStats />
 
         <Tabs defaultValue="roster" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-2xl grid-cols-3">
             <TabsTrigger value="roster" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               Roster
@@ -25,6 +26,10 @@ const Index = () => {
             <TabsTrigger value="uniforms" className="flex items-center gap-2">
               <ShirtIcon className="w-4 h-4" />
               Uniforms
+            </TabsTrigger>
+            <TabsTrigger value="attendance" className="flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4" />
+              Attendance
             </TabsTrigger>
           </TabsList>
           
@@ -34,6 +39,10 @@ const Index = () => {
           
           <TabsContent value="uniforms" className="space-y-4 animate-fade-in">
             <UniformsDashboard />
+          </TabsContent>
+          
+          <TabsContent value="attendance" className="space-y-4 animate-fade-in">
+            <AttendanceTracker />
           </TabsContent>
         </Tabs>
       </div>
