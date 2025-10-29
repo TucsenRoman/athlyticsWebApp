@@ -5,12 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Users, BarChart3, ShirtIcon, LayoutDashboard } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 const Index = () => {
   const navigate = useNavigate();
-
-  return (
-    <DashboardLayout>
+  return <DashboardLayout>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
@@ -24,10 +21,7 @@ const Index = () => {
               <LayoutDashboard className="w-4 h-4 mr-2" />
               Uniforms Dashboard
             </Button>
-            <Button onClick={() => navigate("/uniforms")} variant="outline">
-              <ShirtIcon className="w-4 h-4 mr-2" />
-              Manage Uniforms
-            </Button>
+            
           </div>
         </div>
 
@@ -56,8 +50,6 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
-  );
+    </DashboardLayout>;
 };
-
 export default Index;
