@@ -1,5 +1,5 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import DashboardStats from "@/components/dashboard/DashboardStats";
+import RemindersPanel from "@/components/reminders/RemindersPanel";
 import AthletesList from "@/components/athletes/AthletesList";
 import UniformsDashboard from "@/components/uniforms/UniformsDashboard";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
@@ -17,7 +17,7 @@ const Index = () => {
           </p>
         </div>
 
-        <DashboardStats />
+        <RemindersPanel />
 
         <Tabs defaultValue="roster" className="space-y-6">
           <TabsList className="grid w-full max-w-3xl grid-cols-4">
