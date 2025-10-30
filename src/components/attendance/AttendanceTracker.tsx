@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Filter, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarIcon, Filter, Edit, ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
@@ -39,7 +41,9 @@ const AttendanceTracker = () => {
   }>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [currentNoteAthleteId, setCurrentNoteAthleteId] = useState<string | null>(null);
+  const [currentNoteText, setCurrentNoteText] = useState("");
   const {
     toast
   } = useToast();
@@ -48,8 +52,9 @@ const AttendanceTracker = () => {
   }, []);
   useEffect(() => {
     // Reset states when date changes
-    setShowSuccess(false);
     setEditingNotes({});
+    setNoteDialogOpen(false);
+    setCurrentNoteAthleteId(null);
     if (athletes.length > 0) {
       fetchAttendance();
       checkSubmissionStatus();
@@ -151,10 +156,6 @@ const AttendanceTracker = () => {
         if (error) throw error;
       }
       await fetchAttendance();
-      toast({
-        title: "Success",
-        description: "Attendance updated"
-      });
     } catch (error) {
       console.error("Error updating attendance:", error);
       toast({
@@ -167,10 +168,19 @@ const AttendanceTracker = () => {
   const attendanceNotesSchema = z.object({
     notes: z.string().max(500, "Notes must be less than 500 characters").optional().nullable().transform(val => val || null)
   });
-  const saveNotes = async (athleteId: string, notes: string) => {
+  const openNoteDialog = (athleteId: string) => {
+    const record = attendance.find(a => a.athlete_id === athleteId);
+    setCurrentNoteAthleteId(athleteId);
+    setCurrentNoteText(record?.notes || "");
+    setNoteDialogOpen(true);
+  };
+
+  const saveNoteFromDialog = async () => {
+    if (!currentNoteAthleteId) return;
+
     // Validate notes length
     const validation = attendanceNotesSchema.safeParse({
-      notes: notes || null
+      notes: currentNoteText || null
     });
     if (!validation.success) {
       toast({
@@ -180,39 +190,19 @@ const AttendanceTracker = () => {
       });
       return;
     }
-    const record = attendance.find(a => a.athlete_id === athleteId);
+    const record = attendance.find(a => a.athlete_id === currentNoteAthleteId);
     const currentStatus = record?.status || "Present";
-    await updateAttendance(athleteId, currentStatus, validation.data.notes || undefined);
+    await updateAttendance(currentNoteAthleteId, currentStatus, validation.data.notes || undefined);
 
-    // Clear the editing state for this athlete
-    setEditingNotes(prev => {
-      const newState = {
-        ...prev
-      };
-      delete newState[athleteId];
-      return newState;
-    });
+    setNoteDialogOpen(false);
+    setCurrentNoteAthleteId(null);
+    setCurrentNoteText("");
   };
-  const handleNotesChange = (athleteId: string, value: string) => {
-    setEditingNotes(prev => ({
-      ...prev,
-      [athleteId]: value
-    }));
-  };
-  const handleNotesBlur = (athleteId: string) => {
-    const notes = editingNotes[athleteId];
-    if (notes !== undefined) {
-      saveNotes(athleteId, notes);
-    }
-  };
-  const handleNotesKeyDown = (athleteId: string, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const notes = editingNotes[athleteId];
-      if (notes !== undefined) {
-        saveNotes(athleteId, notes);
-      }
-    }
+
+  const cancelNoteDialog = () => {
+    setNoteDialogOpen(false);
+    setCurrentNoteAthleteId(null);
+    setCurrentNoteText("");
   };
   const submitAttendance = async () => {
     try {
@@ -255,12 +245,6 @@ const AttendanceTracker = () => {
       setEditingNotes({});
       setIsEditMode(false);
       setIsSubmitted(true);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      toast({
-        title: "Success",
-        description: "Attendance submitted successfully"
-      });
     } catch (error) {
       console.error("Error submitting attendance:", error);
       toast({
@@ -297,7 +281,6 @@ const AttendanceTracker = () => {
       setEditingNotes({});
       setIsSubmitted(false);
       setIsEditMode(true);
-      setShowSuccess(false);
       toast({
         title: "Cleared",
         description: "All attendance for this date has been cleared"
@@ -352,14 +335,7 @@ const AttendanceTracker = () => {
   return <Card>
       <CardHeader>
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <CardTitle>Attendance for</CardTitle>
-              {showSuccess && <span className="text-sm font-medium text-green-600 animate-fade-in">
-                  ✓ Saved!
-                </span>}
-            </div>
-          </div>
+          <CardTitle>Attendance Tracker</CardTitle>
           
           {/* Date Navigation Bar */}
           <div className="flex items-center justify-center gap-2 p-3 bg-muted rounded-lg">
@@ -387,8 +363,8 @@ const AttendanceTracker = () => {
             </Button>
           </div>
 
-          {/* Controls Bar: Filter and Submit/Edit buttons */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
+          {/* Controls Bar: Filter and Submit/Edit buttons on same line */}
+          <div className="flex items-center gap-3 flex-nowrap overflow-x-auto">
             <Select value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"} onValueChange={value => {
               if (value === "all") {
                 setFilterStatus(["all"]);
@@ -396,7 +372,7 @@ const AttendanceTracker = () => {
                 setFilterStatus([value]);
               }
             }} disabled={!isEditMode}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-[140px] shrink-0">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Filter" />
               </SelectTrigger>
@@ -409,14 +385,12 @@ const AttendanceTracker = () => {
               </SelectContent>
             </Select>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              {isSubmitted && !isEditMode ? <Button onClick={enableEditMode} variant="outline" size="sm" className="touch-manipulation flex-1 sm:flex-none">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button> : <Button onClick={submitAttendance} variant="default" size="sm" className="touch-manipulation flex-1 sm:flex-none">
-                  Submit
-                </Button>}
-            </div>
+            {isSubmitted && !isEditMode ? <Button onClick={enableEditMode} variant="outline" size="sm" className="touch-manipulation shrink-0">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Button> : <Button onClick={submitAttendance} variant="default" size="sm" className="touch-manipulation shrink-0">
+                Submit
+              </Button>}
           </div>
         </div>
       </CardHeader>
@@ -426,22 +400,19 @@ const AttendanceTracker = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Grade</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Notes</TableHead>
+              <TableHead className="w-[80px] text-center">Notes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAthletes.map(athlete => {
             const record = attendance.find(a => a.athlete_id === athlete.id);
             const currentStatus = record?.status || "Present";
-            const savedNotes = record?.notes || "";
-            const displayNotes = editingNotes[athlete.id] !== undefined ? editingNotes[athlete.id] : savedNotes;
+            const hasNote = !!record?.notes;
             return <TableRow key={athlete.id} className={cn(!isEditMode && "opacity-60")}>
                   <TableCell className="font-medium">{athlete.name}</TableCell>
-                  <TableCell>{athlete.grade || "N/A"}</TableCell>
                   <TableCell>
-                    <Select value={currentStatus} onValueChange={value => updateAttendance(athlete.id, value as "Present" | "Absent" | "Excused", savedNotes)} disabled={!isEditMode}>
+                    <Select value={currentStatus} onValueChange={value => updateAttendance(athlete.id, value as "Present" | "Absent" | "Excused", record?.notes || undefined)} disabled={!isEditMode}>
                       <SelectTrigger className="w-[140px]">
                         <SelectValue />
                       </SelectTrigger>
@@ -452,13 +423,36 @@ const AttendanceTracker = () => {
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell>
-                    <Input placeholder="Add notes..." value={displayNotes} onChange={e => handleNotesChange(athlete.id, e.target.value)} onBlur={() => handleNotesBlur(athlete.id)} onKeyDown={e => handleNotesKeyDown(athlete.id, e)} className="max-w-[300px]" disabled={!isEditMode} />
+                  <TableCell className="text-center">
+                    <Button variant="ghost" size="icon" onClick={() => openNoteDialog(athlete.id)} disabled={!isEditMode} className="h-8 w-8">
+                      <MessageSquare className={cn("h-4 w-4", hasNote ? "fill-current" : "")} />
+                    </Button>
                   </TableCell>
                 </TableRow>;
           })}
           </TableBody>
         </Table>
+
+        {/* Note Dialog */}
+        <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
+          <DialogContent className="bg-popover">
+            <DialogHeader>
+              <DialogTitle>Add/Edit Note</DialogTitle>
+              <DialogDescription>
+                Add or edit attendance notes for this athlete (max 500 characters).
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea placeholder="Enter note..." value={currentNoteText} onChange={e => setCurrentNoteText(e.target.value)} className="min-h-[100px]" maxLength={500} />
+            <DialogFooter>
+              <Button variant="outline" onClick={cancelNoteDialog}>
+                Cancel
+              </Button>
+              <Button onClick={saveNoteFromDialog}>
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {filteredAthletes.length === 0 && <div className="text-center p-8 text-muted-foreground">
             No athletes found
