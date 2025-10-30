@@ -175,18 +175,16 @@ export default function Ledger() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              onClick={() => navigate("/")}
-              className="gap-2 -ml-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </Button>
-            <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
-          </div>
+        <div className="space-y-3">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="gap-2 -ml-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Dashboard</span>
+          </Button>
+          <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
         </div>
 
         <ContextSelector 
