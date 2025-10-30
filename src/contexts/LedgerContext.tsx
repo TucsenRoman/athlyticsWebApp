@@ -284,6 +284,26 @@ export function LedgerProvider({ children }: { children: React.ReactNode}) {
 
       if (error) throw error;
 
+      // Initialize empty custom field records for all existing athletes
+      if (athletes.length > 0) {
+        const customFieldInserts = athletes.map(athlete => ({
+          athlete_id: athlete.id,
+          program_id: selectedProgramId,
+          coach_id: userId,
+          field_id: headerId,
+          field_value: ""
+        }));
+
+        const { error: insertError } = await supabase
+          .from("athlete_custom_fields")
+          .insert(customFieldInserts);
+
+        if (insertError) {
+          console.error("Error initializing custom fields:", insertError);
+          // Don't fail the header creation if field initialization fails
+        }
+      }
+
       const newHeader: HeaderDefinition = {
         id: headerId,
         label,
