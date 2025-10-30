@@ -1,69 +1,14 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import DashboardStats from "@/components/dashboard/DashboardStats";
-import RemindersPanel from "@/components/reminders/RemindersPanel";
-import AthletesList from "@/components/athletes/AthletesList";
-import UniformsDashboard from "@/components/uniforms/UniformsDashboard";
-import LockersDashboard from "@/components/lockers/LockersDashboard";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
-import AttendanceReport from "@/components/attendance/AttendanceReport";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ClipboardCheck, Calendar } from "lucide-react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("roster");
-  return <DashboardLayout>
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
-        </div>
-
-        <DashboardStats onSwitchToAttendance={() => setActiveTab("attendance")} />
-
-        
-
-        <RemindersPanel />
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="sticky top-0 z-10 grid w-full max-w-2xl grid-cols-2 bg-background shadow-sm">
-            <TabsTrigger value="roster" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
-              <Users className="w-4 h-4 flex-shrink-0" />
-              <span className="data-[state=inactive]:hidden">Roster</span>
-            </TabsTrigger>
-            <TabsTrigger value="attendance" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
-              <ClipboardCheck className="w-4 h-4 flex-shrink-0" />
-              <span className="data-[state=inactive]:hidden">Attendance</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="roster" className="space-y-4 animate-fade-in">
-            <AthletesList onSwitchToAttendance={() => setActiveTab("attendance")} />
-          </TabsContent>
-          
-          <TabsContent value="attendance" className="space-y-4 animate-fade-in">
-            <Tabs defaultValue="daily" className="space-y-4">
-              <TabsList className="grid w-full max-w-md grid-cols-2">
-                <TabsTrigger value="daily" className="flex items-center gap-2">
-                  <ClipboardCheck className="w-4 h-4" />
-                  Daily Tracker
-                </TabsTrigger>
-                <TabsTrigger value="report" className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Report
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="daily">
-                <AttendanceTracker />
-              </TabsContent>
-              
-              <TabsContent value="report">
-                <AttendanceReport />
-              </TabsContent>
-            </Tabs>
-          </TabsContent>
-        </Tabs>
+  return (
+    <DashboardLayout>
+      <div className="flex flex-col items-center justify-center w-full">
+        <AttendanceTracker />
       </div>
-    </DashboardLayout>;
+    </DashboardLayout>
+  );
 };
+
 export default Index;
