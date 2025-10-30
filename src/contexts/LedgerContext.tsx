@@ -391,6 +391,12 @@ export function LedgerProvider({ children }: { children: React.ReactNode}) {
     if (!currentProgramId || !userId) return;
 
     try {
+      // Ensure gender has a valid value or null
+      let genderValue = athleteData.gender || null;
+      if (genderValue && !['Male', 'Female', 'Other'].includes(genderValue)) {
+        genderValue = null;
+      }
+
       const { data: newAthlete, error } = await supabase
         .from("athletes")
         .insert({
@@ -398,7 +404,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode}) {
           program_id: currentProgramId,
           name: athleteData.name || "",
           grade: athleteData.grade || null,
-          gender: athleteData.gender || null,
+          gender: genderValue,
           team_position: athleteData.team_position || null,
           events: athleteData.events || [],
           achievements: athleteData.achievements || [],

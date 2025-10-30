@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Edit2, Lock, ChevronDown, ArrowLeft } from "lucide-react";
 import { useLedger } from "@/contexts/LedgerContext";
 import { toast } from "sonner";
@@ -367,12 +368,28 @@ export default function Ledger() {
                               {header.label}
                               {header.id === "name" && <span className="text-destructive ml-1">*</span>}
                             </Label>
-                            <Input
-                              id={header.id}
-                              placeholder={`Enter ${header.label.toLowerCase()}`}
-                              value={newAthleteData[header.id] || ""}
-                              onChange={(e) => setNewAthleteData({ ...newAthleteData, [header.id]: e.target.value })}
-                            />
+                            {header.id === "gender" ? (
+                              <Select
+                                value={newAthleteData[header.id] || ""}
+                                onValueChange={(value) => setNewAthleteData({ ...newAthleteData, [header.id]: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-popover z-50">
+                                  <SelectItem value="Male">Male</SelectItem>
+                                  <SelectItem value="Female">Female</SelectItem>
+                                  <SelectItem value="Other">Other</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                id={header.id}
+                                placeholder={`Enter ${header.label.toLowerCase()}`}
+                                value={newAthleteData[header.id] || ""}
+                                onChange={(e) => setNewAthleteData({ ...newAthleteData, [header.id]: e.target.value })}
+                              />
+                            )}
                           </div>
                         ))}
                       </div>
