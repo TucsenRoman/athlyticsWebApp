@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Filter, Download, Trash2, LockKeyhole, Edit } from "lucide-react";
+import { CalendarIcon, Filter, LockKeyhole, Edit, ChevronLeft, ChevronRight } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
@@ -361,18 +361,16 @@ const AttendanceTracker = () => {
     return <Badge variant={variants[status]}>{status}</Badge>;
   };
 
-  const toggleFilter = (value: string) => {
-    if (value === "all") {
-      setFilterStatus(["all"]);
-    } else {
-      const newFilters = filterStatus.includes("all") 
-        ? [value]
-        : filterStatus.includes(value)
-          ? filterStatus.filter(f => f !== value)
-          : [...filterStatus.filter(f => f !== "all"), value];
-      
-      setFilterStatus(newFilters.length === 0 ? ["all"] : newFilters);
-    }
+  const handlePreviousDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const handleNextDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setSelectedDate(newDate);
   };
 
   const filteredAthletes = athletes.filter((athlete) => {
@@ -390,37 +388,6 @@ const AttendanceTracker = () => {
     });
   });
 
-  const exportCSV = () => {
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const headers = ["Name", "Grade", "Status", "Notes"];
-    const rows = athletes.map((athlete) => {
-      const record = attendance.find((a) => a.athlete_id === athlete.id);
-      return [
-        athlete.name,
-        athlete.grade || "N/A",
-        record?.status || "Present",
-        record?.notes || "",
-      ];
-    });
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map(cell => `"${cell}"`).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `attendance-${dateStr}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-
-    toast({
-      title: "Success",
-      description: "Attendance exported successfully",
-    });
-  };
 
   if (loading) {
     return <div className="text-center p-8">Loading...</div>;
@@ -452,99 +419,75 @@ const AttendanceTracker = () => {
               )}
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="text-lg font-medium">
-              {format(selectedDate, "EEEE, MMMM d, yyyy")}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="justify-start">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    Change Date
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-              <Button onClick={exportCSV} variant="outline" size="sm" className="touch-manipulation">
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
-              </Button>
-            </div>
+          
+          {/* Date Navigation Bar */}
+          <div className="flex items-center justify-center gap-2 p-3 bg-muted rounded-lg">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={handlePreviousDay}
+              className="h-8 w-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <span className="text-lg font-bold min-w-[120px] text-center">
+              {format(selectedDate, "MM/dd/yyyy")}
+            </span>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <CalendarIcon className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+            
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={handleNextDay}
+              className="h-8 w-8"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-6 space-y-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filters:</span>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-all"
-                checked={filterStatus.includes("all")}
-                onCheckedChange={() => toggleFilter("all")}
-                disabled={!isEditMode}
-              />
-              <label htmlFor="filter-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                All
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-present"
-                checked={filterStatus.includes("Present")}
-                onCheckedChange={() => toggleFilter("Present")}
-                disabled={!isEditMode}
-              />
-              <label htmlFor="filter-present" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Present
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-absent"
-                checked={filterStatus.includes("Absent")}
-                onCheckedChange={() => toggleFilter("Absent")}
-                disabled={!isEditMode}
-              />
-              <label htmlFor="filter-absent" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Absent
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-excused"
-                checked={filterStatus.includes("Excused")}
-                onCheckedChange={() => toggleFilter("Excused")}
-                disabled={!isEditMode}
-              />
-              <label htmlFor="filter-excused" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Excused
-              </label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="filter-noted"
-                checked={filterStatus.includes("Noted Reason")}
-                onCheckedChange={() => toggleFilter("Noted Reason")}
-                disabled={!isEditMode}
-              />
-              <label htmlFor="filter-noted" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Noted Reason
-              </label>
-            </div>
-          </div>
+        <div className="mb-6">
+          <Select
+            value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"}
+            onValueChange={(value) => {
+              if (value === "all") {
+                setFilterStatus(["all"]);
+              } else {
+                setFilterStatus([value]);
+              }
+            }}
+            disabled={!isEditMode}
+          >
+            <SelectTrigger className="w-[180px]">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="Present">Present</SelectItem>
+              <SelectItem value="Absent">Absent</SelectItem>
+              <SelectItem value="Excused">Excused</SelectItem>
+              <SelectItem value="Noted Reason">Noted Reason</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <Table>
