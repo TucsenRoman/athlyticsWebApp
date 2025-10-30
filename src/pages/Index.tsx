@@ -18,17 +18,17 @@ const Index = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="sticky top-0 z-10 grid w-full max-w-3xl grid-cols-3 bg-background shadow-sm">
-            <TabsTrigger value="overview" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
+            <TabsTrigger value="overview" className="flex items-center justify-center gap-2 touch-manipulation">
               <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
-              <span className="data-[state=inactive]:hidden">Overview</span>
+              <span>Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="management" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
+            <TabsTrigger value="management" className="flex items-center justify-center gap-2 touch-manipulation">
               <Users className="w-4 h-4 flex-shrink-0" />
-              <span className="data-[state=inactive]:hidden">Management</span>
+              <span>Management</span>
             </TabsTrigger>
-            <TabsTrigger value="attendance" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
+            <TabsTrigger value="attendance" className="flex items-center justify-center gap-2 touch-manipulation">
               <ClipboardCheck className="w-4 h-4 flex-shrink-0" />
-              <span className="data-[state=inactive]:hidden">Attendance</span>
+              <span>Attendance</span>
             </TabsTrigger>
           </TabsList>
           

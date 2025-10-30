@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Edit2, Lock, ChevronDown, X } from "lucide-react";
+import { Plus, Trash2, Edit2, Lock, ChevronDown, ArrowLeft } from "lucide-react";
 import { useLedger } from "@/contexts/LedgerContext";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import { cn } from "@/lib/utils";
 import ContextSelector from "@/components/ledger/ContextSelector";
 
 export default function Ledger() {
+  const navigate = useNavigate();
   const {
     currentContext,
     setCurrentContext,
@@ -173,8 +175,18 @@ export default function Ledger() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/")}
+              className="gap-2 -ml-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </Button>
+            <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
+          </div>
         </div>
 
         <ContextSelector 
@@ -280,8 +292,8 @@ export default function Ledger() {
             <CardTitle>Athlete Records</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="relative flex-1">
+            <div className="flex flex-col gap-4">
+              <div className="relative">
                 <Input
                   type="text"
                   placeholder="Search athletes by name..."
@@ -301,10 +313,10 @@ export default function Ledger() {
                 )}
               </div>
               
-              <div className="flex gap-2 items-center w-full sm:w-auto">
+              <div className="flex gap-2 items-center flex-wrap">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="flex-1 sm:flex-none justify-between min-w-[200px]">
+                    <Button variant="outline" className="justify-between min-w-[200px]">
                       Visible Columns ({selectedHeaders.length})
                       <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                     </Button>
@@ -338,9 +350,10 @@ export default function Ledger() {
                 
                 <Dialog open={isAddAthleteOpen} onOpenChange={setIsAddAthleteOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="whitespace-nowrap flex-1 sm:flex-none">
+                    <Button size="sm" className="whitespace-nowrap">
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Athlete
+                      <span className="hidden sm:inline">Add Athlete</span>
+                      <span className="sm:hidden">Add</span>
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md bg-card max-h-[90vh] flex flex-col p-0">
