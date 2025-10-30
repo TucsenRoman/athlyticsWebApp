@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { Users, Lock, Shirt, Search, Plus, Pencil, Trash2, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Users, Lock, Shirt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AthletesView from "./views/AthletesView";
 import LockersView from "./views/LockersView";
@@ -44,20 +42,6 @@ export default function RosterView({
               {isActive && <span className="font-medium">{view.label}</span>}
             </button>;
       })}
-      </div>
-
-      {/* Action + Search Row */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input placeholder={activeView === "athletes" ? "Search athletes..." : activeView === "lockers" ? "Search by name or locker #..." : "Search by name or uniform ID..."} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
-        </div>
-
-        {/* Action Buttons - Rendered by child views */}
-        <div className="flex items-center gap-2">
-          {/* Child views will handle their own action buttons */}
-        </div>
       </div>
 
       {/* Dynamic Content Area */}
