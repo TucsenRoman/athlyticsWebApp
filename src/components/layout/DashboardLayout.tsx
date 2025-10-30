@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import athlyticsLogo from "@/assets/athlytics-logo.png";
 import ProgramSelector from "@/components/header/ProgramSelector";
@@ -89,15 +89,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               />
             </div>
             
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-              size="sm"
-              className="md:h-10 touch-manipulation"
-            >
-              <LogOut className="w-4 h-4 md:mr-2" />
-              <span className="hidden md:inline">Sign Out</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => navigate("/ledger")}
+                size="sm"
+                className="md:h-10 touch-manipulation"
+              >
+                <BookOpen className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">Ledger</span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={handleSignOut}
+                size="sm"
+                className="md:h-10 touch-manipulation"
+              >
+                <LogOut className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">Sign Out</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
