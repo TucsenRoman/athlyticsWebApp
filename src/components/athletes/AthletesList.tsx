@@ -647,14 +647,14 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm w-full">
-          {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" /> */}
-          {/* <Input
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
             placeholder="Search athletes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
             disabled={isEditMode}
-          /> */}
+          />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button
