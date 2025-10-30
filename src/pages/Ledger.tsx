@@ -11,12 +11,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Edit2, Lock, ChevronDown, ArrowLeft } from "lucide-react";
 import { useLedger } from "@/contexts/LedgerContext";
+import { useProgramContext } from "@/hooks/useProgramContext";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import AddProgramModal from "@/components/ledger/AddProgramModal";
 
 export default function Ledger() {
   const navigate = useNavigate();
+  const { setSelectedProgramId } = useProgramContext();
   const {
     headers,
     athletes,
@@ -41,6 +44,11 @@ export default function Ledger() {
   const [editingHeaderValue, setEditingHeaderValue] = useState("");
   const [isAddAthleteOpen, setIsAddAthleteOpen] = useState(false);
   const [newAthleteData, setNewAthleteData] = useState<Record<string, any>>({});
+  const [isAddProgramOpen, setIsAddProgramOpen] = useState(false);
+
+  const handleProgramCreated = (programId: string) => {
+    setSelectedProgramId(programId);
+  };
 
   const filteredAthletes = athletes.filter(athlete =>
     athlete.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -173,17 +181,29 @@ export default function Ledger() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="gap-2 -ml-2"
+            className="gap-2 -ml-2 self-start"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Dashboard</span>
           </Button>
-          <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
+            <Button onClick={() => setIsAddProgramOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Program
+            </Button>
+          </div>
         </div>
+
+        <AddProgramModal
+          open={isAddProgramOpen}
+          onOpenChange={setIsAddProgramOpen}
+          onProgramCreated={handleProgramCreated}
+        />
 
         <Card>
           <CardHeader>

@@ -15,6 +15,8 @@ interface Program {
   sport: string;
   level: string;
   gender: string;
+  school: string;
+  season_year: string;
 }
 
 interface ProgramSelectorProps {
@@ -75,6 +77,10 @@ export default function ProgramSelector({ selectedProgramId, onProgramChange }: 
     return `${program.gender} ${program.level} ${program.sport}`;
   };
 
+  const formatProgramDetails = (program: Program) => {
+    return `${program.school} • ${program.season_year}`;
+  };
+
   if (loading || programs.length === 0) {
     return (
       <div className="flex items-center gap-2 text-sm">
@@ -102,17 +108,17 @@ export default function ProgramSelector({ selectedProgramId, onProgramChange }: 
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64">
+      <DropdownMenuContent align="start" className="w-80">
         {programs.map((program) => (
           <DropdownMenuItem
             key={program.id}
             onClick={() => onProgramChange(program.id)}
             className={selectedProgramId === program.id ? "bg-muted" : ""}
           >
-            <div className="flex flex-col">
-              <span className="font-medium">{program.name}</span>
+            <div className="flex flex-col gap-0.5 w-full">
+              <span className="font-medium">{formatProgramName(program)}</span>
               <span className="text-xs text-muted-foreground">
-                {formatProgramName(program)}
+                {formatProgramDetails(program)}
               </span>
             </div>
           </DropdownMenuItem>
