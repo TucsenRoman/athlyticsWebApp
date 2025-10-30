@@ -1,13 +1,13 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RemindersPanel from "@/components/reminders/RemindersPanel";
-import RosterView from "@/components/roster/RosterView";
+import ManagementView from "@/components/management/ManagementView";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("roster");
+  const [activeTab, setActiveTab] = useState("management");
   return <DashboardLayout>
       <div className="space-y-6">
         <div>
@@ -22,9 +22,9 @@ const Index = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="sticky top-0 z-10 grid w-full max-w-2xl grid-cols-2 bg-background shadow-sm">
-            <TabsTrigger value="roster" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
+            <TabsTrigger value="management" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
               <Users className="w-4 h-4 flex-shrink-0" />
-              <span className="data-[state=inactive]:hidden">Roster</span>
+              <span className="data-[state=inactive]:hidden">Management</span>
             </TabsTrigger>
             <TabsTrigger value="attendance" className="flex items-center justify-center gap-2 touch-manipulation data-[state=inactive]:gap-0">
               <ClipboardCheck className="w-4 h-4 flex-shrink-0" />
@@ -32,8 +32,8 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="roster" className="space-y-4 animate-fade-in">
-            <RosterView onSwitchToAttendance={() => setActiveTab("attendance")} />
+          <TabsContent value="management" className="space-y-4 animate-fade-in">
+            <ManagementView />
           </TabsContent>
           
           <TabsContent value="attendance" className="space-y-4 animate-fade-in">
