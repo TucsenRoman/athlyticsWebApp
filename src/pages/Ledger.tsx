@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -9,17 +9,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit2, Lock, ChevronDown, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Edit2, Lock, ChevronDown, ArrowLeft, Settings } from "lucide-react";
 import { useLedger } from "@/contexts/LedgerContext";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import AddProgramModal from "@/components/ledger/AddProgramModal";
+import EditProgramModal from "@/components/ledger/EditProgramModal";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Ledger() {
   const navigate = useNavigate();
-  const { setSelectedProgramId } = useProgramContext();
+  const { selectedProgramId, setSelectedProgramId } = useProgramContext();
   const {
     headers,
     athletes,
@@ -45,9 +47,43 @@ export default function Ledger() {
   const [isAddAthleteOpen, setIsAddAthleteOpen] = useState(false);
   const [newAthleteData, setNewAthleteData] = useState<Record<string, any>>({});
   const [isAddProgramOpen, setIsAddProgramOpen] = useState(false);
+  const [isEditProgramOpen, setIsEditProgramOpen] = useState(false);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [programsLoading, setProgramsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
+
+  const fetchPrograms = async () => {
+    setProgramsLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("programs")
+        .select("*")
+        .eq("coach_id", user.id)
+        .order("school", { ascending: true });
+
+      if (error) throw error;
+      setPrograms(data || []);
+    } catch (error) {
+      console.error("Error fetching programs:", error);
+      toast.error("Failed to load programs");
+    } finally {
+      setProgramsLoading(false);
+    }
+  };
 
   const handleProgramCreated = (programId: string) => {
     setSelectedProgramId(programId);
+    fetchPrograms();
+  };
+
+  const handleProgramUpdated = () => {
+    fetchPrograms();
   };
 
   const filteredAthletes = athletes.filter(athlete =>
@@ -178,6 +214,8 @@ export default function Ledger() {
     );
   }
 
+  const selectedProgram = programs.find(p => p.id === selectedProgramId);
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -192,10 +230,6 @@ export default function Ledger() {
           </Button>
           <div className="flex items-center justify-between">
             <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
-            <Button onClick={() => setIsAddProgramOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Program
-            </Button>
           </div>
         </div>
 
@@ -204,6 +238,81 @@ export default function Ledger() {
           onOpenChange={setIsAddProgramOpen}
           onProgramCreated={handleProgramCreated}
         />
+
+        {selectedProgramId && (
+          <EditProgramModal
+            open={isEditProgramOpen}
+            onOpenChange={setIsEditProgramOpen}
+            programId={selectedProgramId}
+            onProgramUpdated={handleProgramUpdated}
+          />
+        )}
+
+        {/* Program Selection Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Program Selection</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {programsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Select
+                  value={selectedProgramId || ""}
+                  onValueChange={setSelectedProgramId}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select a program..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {programs.map((program) => (
+                      <SelectItem key={program.id} value={program.id}>
+                        {program.school} – {program.name} ({program.season_year})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex gap-2">
+                  <Button onClick={() => setIsAddProgramOpen(true)} variant="outline">
+                    <Plus className="w-4 h-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Add Program</span>
+                  </Button>
+                  
+                  {selectedProgramId && (
+                    <Button onClick={() => setIsEditProgramOpen(true)} variant="outline">
+                      <Settings className="w-4 h-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Edit Program</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {!selectedProgramId ? (
+          <Card>
+            <CardContent className="py-12">
+              <div className="text-center space-y-4">
+                <div className="text-muted-foreground text-lg">
+                  No program selected
+                </div>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Please create or select a program to view its Ledger.
+                </p>
+                <Button onClick={() => setIsAddProgramOpen(true)} className="mt-4">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Program
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
 
         <Card>
           <CardHeader>
@@ -559,6 +668,8 @@ export default function Ledger() {
             )}
           </CardContent>
         </Card>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
