@@ -390,8 +390,10 @@ const AttendanceTracker = () => {
             <div className="flex-1">
               <Select
                 value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"}
-                onValueChange={(value) => setFilterStatus(value === "all" ? ["all"] : [value])}
-                disabled={!isEditMode}
+                onValueChange={(value) => {
+                  if (value === "all") setFilterStatus(["all"]);
+                  else setFilterStatus([value]);
+                }}
               >
                 <SelectTrigger className="w-full">
                   <Filter className="h-4 w-4 mr-2" />
