@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, User, Search, ChevronDown, Trophy, ShirtIcon, IdCard, TrendingUp, Medal, LockKeyhole, Settings2 } from "lucide-react";
+import { Plus, User, Search, ChevronDown, Trophy, ShirtIcon, IdCard, TrendingUp, Medal, LockKeyhole, Settings2, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import AssignLockerModal from "@/components/lockers/AssignLockerModal";
@@ -93,6 +93,11 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   const [uniformForm, setUniformForm] = useState({ top_id: "", bottom_id: "" });
   const [isLockerModalOpen, setIsLockerModalOpen] = useState(false);
   const [selectedAthleteForLockerAssign, setSelectedAthleteForLockerAssign] = useState<{ id: string; name: string } | null>(null);
+  
+  // Roster edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedAthletes, setEditedAthletes] = useState<Athlete[]>([]);
+  const [newAthleteRows, setNewAthleteRows] = useState<Array<{ tempId: string; name: string; grade: string; gender: string }>>([]);
 
   useEffect(() => {
     fetchAthletes();
@@ -450,12 +455,147 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   };
 
   const handleSort = (field: 'name' | 'grade' | 'gender') => {
+    if (isEditMode) return; // Prevent sorting in edit mode
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDirection('asc');
     }
+  };
+
+  const handleToggleEditMode = () => {
+    if (isEditMode) {
+      // Exiting edit mode - reset
+      setIsEditMode(false);
+      setEditedAthletes([]);
+      setNewAthleteRows([]);
+    } else {
+      // Entering edit mode
+      setIsEditMode(true);
+      setEditedAthletes(JSON.parse(JSON.stringify(athletes))); // Deep copy
+      setExpandedRow(null); // Collapse all rows
+    }
+  };
+
+  const handleEditAthlete = (id: string, field: keyof Athlete, value: any) => {
+    setEditedAthletes(prev =>
+      prev.map(athlete =>
+        athlete.id === id ? { ...athlete, [field]: value } : athlete
+      )
+    );
+  };
+
+  const handleDeleteAthlete = (id: string) => {
+    setEditedAthletes(prev => prev.filter(athlete => athlete.id !== id));
+  };
+
+  const handleAddNewRow = () => {
+    const tempId = `temp-${Date.now()}`;
+    setNewAthleteRows(prev => [...prev, { tempId, name: "", grade: "9", gender: "Male" }]);
+  };
+
+  const handleEditNewRow = (tempId: string, field: string, value: string) => {
+    setNewAthleteRows(prev =>
+      prev.map(row =>
+        row.tempId === tempId ? { ...row, [field]: value } : row
+      )
+    );
+  };
+
+  const handleDeleteNewRow = (tempId: string) => {
+    setNewAthleteRows(prev => prev.filter(row => row.tempId !== tempId));
+  };
+
+  const handleSaveChanges = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Validate all edited athletes
+      for (const athlete of editedAthletes) {
+        const validation = athleteSchema.safeParse({
+          name: athlete.name,
+          grade: athlete.grade,
+          gender: athlete.gender,
+          team_position: athlete.team_position
+        });
+        if (!validation.success) {
+          toast.error(`Invalid data for ${athlete.name}: ${validation.error.errors[0].message}`);
+          return;
+        }
+      }
+
+      // Validate new athlete rows
+      for (const newRow of newAthleteRows) {
+        if (!newRow.name.trim()) {
+          toast.error("All new athletes must have a name");
+          return;
+        }
+        const validation = athleteSchema.safeParse({
+          name: newRow.name,
+          grade: parseInt(newRow.grade),
+          gender: newRow.gender,
+          team_position: "None"
+        });
+        if (!validation.success) {
+          toast.error(`Invalid data for new athlete: ${validation.error.errors[0].message}`);
+          return;
+        }
+      }
+
+      // Delete removed athletes
+      const removedAthletes = athletes.filter(
+        original => !editedAthletes.find(edited => edited.id === original.id)
+      );
+      for (const athlete of removedAthletes) {
+        const { error } = await supabase.from("athletes").delete().eq("id", athlete.id);
+        if (error) throw error;
+      }
+
+      // Update existing athletes
+      for (const athlete of editedAthletes) {
+        const original = athletes.find(a => a.id === athlete.id);
+        if (original && JSON.stringify(original) !== JSON.stringify(athlete)) {
+          const { error } = await supabase
+            .from("athletes")
+            .update({
+              name: athlete.name,
+              grade: athlete.grade,
+              gender: athlete.gender,
+              team_position: athlete.team_position,
+            })
+            .eq("id", athlete.id);
+          if (error) throw error;
+        }
+      }
+
+      // Insert new athletes
+      for (const newRow of newAthleteRows) {
+        const { error } = await supabase.from("athletes").insert({
+          coach_id: user.id,
+          name: newRow.name,
+          grade: parseInt(newRow.grade),
+          gender: newRow.gender,
+          team_position: "None",
+        });
+        if (error) throw error;
+      }
+
+      toast.success("Roster updated successfully!");
+      setIsEditMode(false);
+      setEditedAthletes([]);
+      setNewAthleteRows([]);
+      fetchAthletes();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to save changes");
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditedAthletes([]);
+    setNewAthleteRows([]);
   };
 
   const filteredAthletes = athletes
@@ -491,6 +631,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
+            disabled={isEditMode}
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -499,6 +640,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
             size="sm"
             onClick={() => navigate('/uniforms')}
             className="flex-1 sm:flex-none"
+            disabled={isEditMode}
           >
             <ShirtIcon className="w-4 h-4 mr-2" />
             Manage Uniforms
@@ -508,88 +650,20 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
             size="sm"
             onClick={() => toast.info("Manage Lockers feature coming soon")}
             className="flex-1 sm:flex-none"
+            disabled={isEditMode}
           >
             <LockKeyhole className="w-4 h-4 mr-2" />
             Manage Lockers
           </Button>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Athlete
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Athlete</DialogTitle>
-              <DialogDescription>
-                Enter the athlete's information to add them to your roster.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleAddAthlete} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={newAthlete.name}
-                  onChange={(e) => setNewAthlete({ ...newAthlete, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="grade">Grade</Label>
-                <Select
-                  value={newAthlete.grade}
-                  onValueChange={(value) => setNewAthlete({ ...newAthlete, grade: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="9">9th Grade</SelectItem>
-                    <SelectItem value="10">10th Grade</SelectItem>
-                    <SelectItem value="11">11th Grade</SelectItem>
-                    <SelectItem value="12">12th Grade</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
-                <Select
-                  value={newAthlete.gender}
-                  onValueChange={(value) => setNewAthlete({ ...newAthlete, gender: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="team_position">Team Position</Label>
-                <Select
-                  value={newAthlete.team_position}
-                  onValueChange={(value) => setNewAthlete({ ...newAthlete, team_position: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="None">None</SelectItem>
-                    <SelectItem value="Captain">Captain</SelectItem>
-                    <SelectItem value="Co-Captain">Co-Captain</SelectItem>
-                    <SelectItem value="Manager">Manager</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="w-full">Add Athlete</Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+          <Button
+            variant={isEditMode ? "default" : "destructive"}
+            size="sm"
+            onClick={handleToggleEditMode}
+            className="flex-1 sm:flex-none"
+          >
+            <Settings2 className="w-4 h-4 mr-2" />
+            {isEditMode ? "Exit Edit Mode" : "Manage Roster"}
+          </Button>
         </div>
       </div>
 
@@ -608,49 +682,161 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12"></TableHead>
+                  {!isEditMode && <TableHead className="w-12"></TableHead>}
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className={!isEditMode ? "cursor-pointer hover:bg-muted/50" : ""}
                     onClick={() => handleSort('name')}
                   >
                     <div className="flex items-center gap-2">
                       Name
-                      {sortField === 'name' && (
+                      {sortField === 'name' && !isEditMode && (
                         <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                       )}
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className={!isEditMode ? "cursor-pointer hover:bg-muted/50" : ""}
                     onClick={() => handleSort('grade')}
                   >
                     <div className="flex items-center gap-2">
                       Grade
-                      {sortField === 'grade' && (
+                      {sortField === 'grade' && !isEditMode && (
                         <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                       )}
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className={!isEditMode ? "cursor-pointer hover:bg-muted/50" : ""}
                     onClick={() => handleSort('gender')}
                   >
                     <div className="flex items-center gap-2">
                       Gender
-                      {sortField === 'gender' && (
+                      {sortField === 'gender' && !isEditMode && (
                         <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                       )}
                     </div>
                   </TableHead>
+                  {isEditMode && <TableHead className="w-24 text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredAthletes.length === 0 ? (
+                {!isEditMode && filteredAthletes.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                       No athletes found. Add your first athlete to get started!
                     </TableCell>
                   </TableRow>
+                ) : isEditMode ? (
+                  <>
+                    {editedAthletes.map((athlete) => (
+                      <TableRow key={athlete.id} className="hover:bg-muted/50">
+                        <TableCell>
+                          <Input
+                            value={athlete.name}
+                            onChange={(e) => handleEditAthlete(athlete.id, 'name', e.target.value)}
+                            className="border-primary/50"
+                            placeholder="Name"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={athlete.grade.toString()}
+                            onValueChange={(value) => handleEditAthlete(athlete.id, 'grade', parseInt(value))}
+                          >
+                            <SelectTrigger className="border-primary/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="9">9</SelectItem>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="11">11</SelectItem>
+                              <SelectItem value="12">12</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={athlete.gender}
+                            onValueChange={(value) => handleEditAthlete(athlete.id, 'gender', value)}
+                          >
+                            <SelectTrigger className="border-primary/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Male">Male</SelectItem>
+                              <SelectItem value="Female">Female</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleDeleteAthlete(athlete.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {newAthleteRows.map((row) => (
+                      <TableRow key={row.tempId} className="hover:bg-muted/50 bg-muted/20">
+                        <TableCell>
+                          <Input
+                            value={row.name}
+                            onChange={(e) => handleEditNewRow(row.tempId, 'name', e.target.value)}
+                            className="border-primary/50"
+                            placeholder="New athlete name"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.grade}
+                            onValueChange={(value) => handleEditNewRow(row.tempId, 'grade', value)}
+                          >
+                            <SelectTrigger className="border-primary/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="9">9</SelectItem>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="11">11</SelectItem>
+                              <SelectItem value="12">12</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={row.gender}
+                            onValueChange={(value) => handleEditNewRow(row.tempId, 'gender', value)}
+                          >
+                            <SelectTrigger className="border-primary/50">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Male">Male</SelectItem>
+                              <SelectItem value="Female">Female</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleDeleteNewRow(row.tempId)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </>
                 ) : (
                   filteredAthletes.map((athlete) => (
                     <Collapsible
@@ -994,6 +1180,34 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
               </TableBody>
             </Table>
           </div>
+          
+          {isEditMode && (
+            <div className="mt-4 space-y-3">
+              <Button
+                variant="outline"
+                onClick={handleAddNewRow}
+                className="w-full sm:w-auto"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Athlete
+              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  className="w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveChanges}
+                  className="w-full sm:w-auto"
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
