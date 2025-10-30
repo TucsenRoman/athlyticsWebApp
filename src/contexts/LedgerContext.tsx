@@ -50,7 +50,7 @@ interface LedgerContextType {
   getAttendanceRate: (athleteId: string) => string;
 }
 
-const LedgerContext = createContext<LedgerContextType | undefined>(undefined);
+const LedgerReactContext = createContext<LedgerContextType | undefined>(undefined);
 
 // Hardwired headers that cannot be deleted
 const HARDWIRED_HEADERS: HeaderDefinition[] = [
@@ -438,7 +438,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <LedgerContext.Provider
+    <LedgerReactContext.Provider
       value={{
         currentContext,
         setCurrentContext,
@@ -457,12 +457,12 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       }}
     >
       {children}
-    </LedgerContext.Provider>
+    </LedgerReactContext.Provider>
   );
 }
 
 export function useLedger() {
-  const context = useContext(LedgerContext);
+  const context = useContext(LedgerReactContext);
   if (context === undefined) {
     throw new Error("useLedger must be used within LedgerProvider");
   }
