@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { useProgramContext } from "@/hooks/useProgramContext";
@@ -22,15 +23,15 @@ interface Athlete {
   athlete_of_meet: boolean;
 }
 
-const availableHeaders = [
-  { id: "name", label: "Name" },
-  { id: "grade", label: "Grade" },
-  { id: "gender", label: "Gender" },
-  { id: "team_position", label: "Position" },
-  { id: "events", label: "Events" },
-  { id: "achievements", label: "Achievements" },
-  { id: "athlete_of_week", label: "Athlete of Week" },
-  { id: "athlete_of_meet", label: "Athlete of Meet" },
+const defaultHeaders = [
+  { id: "name", label: "Name", isDefault: true },
+  { id: "grade", label: "Grade", isDefault: true },
+  { id: "gender", label: "Gender", isDefault: true },
+  { id: "team_position", label: "Position", isDefault: true },
+  { id: "events", label: "Events", isDefault: true },
+  { id: "achievements", label: "Achievements", isDefault: true },
+  { id: "athlete_of_week", label: "Athlete of Week", isDefault: true },
+  { id: "athlete_of_meet", label: "Athlete of Meet", isDefault: true },
 ];
 
 export default function Ledger() {
@@ -40,7 +41,24 @@ export default function Ledger() {
   const [selectedHeaders, setSelectedHeaders] = useState<string[]>(["name", "grade", "gender", "team_position"]);
   const [editingCell, setEditingCell] = useState<{ athleteId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [customHeaders, setCustomHeaders] = useState<Array<{ id: string; label: string; isDefault: boolean }>>([]);
+  const [newHeaderName, setNewHeaderName] = useState("");
+  const [isAddHeaderOpen, setIsAddHeaderOpen] = useState(false);
   const { selectedProgramId } = useProgramContext();
+
+  // Load custom headers from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("ledger_custom_headers");
+    if (stored) {
+      try {
+        setCustomHeaders(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to load custom headers");
+      }
+    }
+  }, []);
+
+  const availableHeaders = [...defaultHeaders, ...customHeaders];
 
   useEffect(() => {
     fetchAthletes();
@@ -126,6 +144,23 @@ export default function Ledger() {
   const startEdit = (athleteId: string, field: string, currentValue: any) => {
     setEditingCell({ athleteId, field });
     
+    // Check if it's a custom field
+    const isCustom = customHeaders.some(h => h.id === field);
+    if (isCustom) {
+      const customData = localStorage.getItem(`athlete_${athleteId}_custom`);
+      if (customData) {
+        try {
+          const parsed = JSON.parse(customData);
+          setEditValue(parsed[field] || "");
+        } catch {
+          setEditValue("");
+        }
+      } else {
+        setEditValue("");
+      }
+      return;
+    }
+    
     if (Array.isArray(currentValue)) {
       setEditValue(currentValue.join(", "));
     } else if (typeof currentValue === "boolean") {
@@ -139,6 +174,32 @@ export default function Ledger() {
     if (!editingCell) return;
 
     const { athleteId, field } = editingCell;
+    
+    // Check if it's a custom field
+    const isCustom = customHeaders.some(h => h.id === field);
+    
+    if (isCustom) {
+      // Save to localStorage for custom fields
+      const key = `athlete_${athleteId}_custom`;
+      const existing = localStorage.getItem(key);
+      let customData = {};
+      
+      if (existing) {
+        try {
+          customData = JSON.parse(existing);
+        } catch {
+          customData = {};
+        }
+      }
+      
+      customData = { ...customData, [field]: editValue };
+      localStorage.setItem(key, JSON.stringify(customData));
+      
+      setEditingCell(null);
+      toast.success("Updated");
+      return;
+    }
+
     let processedValue: any = editValue;
 
     // Process value based on field type
@@ -171,6 +232,22 @@ export default function Ledger() {
   };
 
   const renderCellValue = (athlete: Athlete, headerId: string) => {
+    // Check if it's a custom header
+    const isCustom = customHeaders.some(h => h.id === headerId);
+    if (isCustom) {
+      // Custom headers stored in a separate field or localStorage per athlete
+      const customData = localStorage.getItem(`athlete_${athlete.id}_custom`);
+      if (customData) {
+        try {
+          const parsed = JSON.parse(customData);
+          return parsed[headerId] || "—";
+        } catch {
+          return "—";
+        }
+      }
+      return "—";
+    }
+
     const value = athlete[headerId as keyof Athlete];
     
     if (Array.isArray(value)) {
@@ -187,11 +264,50 @@ export default function Ledger() {
   );
 
   const toggleHeader = (headerId: string) => {
-    setSelectedHeaders(prev =>
-      prev.includes(headerId)
+    setSelectedHeaders(prev => {
+      const newHeaders = prev.includes(headerId)
         ? prev.filter(h => h !== headerId)
-        : [...prev, headerId]
-    );
+        : [...prev, headerId];
+      
+      // Enforce at least "name" header
+      if (newHeaders.length === 0 || !newHeaders.includes("name")) {
+        return ["name"];
+      }
+      
+      return newHeaders;
+    });
+  };
+
+  const handleAddCustomHeader = () => {
+    if (!newHeaderName.trim()) {
+      toast.error("Header name cannot be empty");
+      return;
+    }
+
+    const headerId = newHeaderName.toLowerCase().replace(/\s+/g, "_");
+    
+    // Check if header already exists
+    if (availableHeaders.some(h => h.id === headerId)) {
+      toast.error("A header with this name already exists");
+      return;
+    }
+
+    const newHeader = {
+      id: headerId,
+      label: newHeaderName.trim(),
+      isDefault: false,
+    };
+
+    const updatedCustomHeaders = [...customHeaders, newHeader];
+    setCustomHeaders(updatedCustomHeaders);
+    localStorage.setItem("ledger_custom_headers", JSON.stringify(updatedCustomHeaders));
+    
+    // Auto-select the new header
+    setSelectedHeaders([...selectedHeaders, headerId]);
+    
+    setNewHeaderName("");
+    setIsAddHeaderOpen(false);
+    toast.success(`Header "${newHeader.label}" added`);
   };
 
   if (loading) {
@@ -231,18 +347,54 @@ export default function Ledger() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <span className="text-sm font-medium text-muted-foreground self-center">Headers:</span>
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-sm font-medium text-muted-foreground">Headers:</span>
               {availableHeaders.map((header) => (
                 <Button
                   key={header.id}
                   variant={selectedHeaders.includes(header.id) ? "default" : "outline"}
                   size="sm"
                   onClick={() => toggleHeader(header.id)}
+                  disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
                 >
                   {header.label}
                 </Button>
               ))}
+              
+              <Dialog open={isAddHeaderOpen} onOpenChange={setIsAddHeaderOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Header
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md bg-card">
+                  <DialogHeader>
+                    <DialogTitle>Add Custom Header</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div>
+                      <Input
+                        placeholder="Enter header name (e.g., Mile Goal)"
+                        value={newHeaderName}
+                        onChange={(e) => setNewHeaderName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddCustomHeader();
+                        }}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsAddHeaderOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleAddCustomHeader}>
+                        Add Header
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {filteredAthletes.length === 0 ? (
