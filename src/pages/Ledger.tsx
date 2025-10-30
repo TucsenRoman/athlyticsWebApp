@@ -41,6 +41,8 @@ export default function Ledger() {
   const [editingCell, setEditingCell] = useState<{ athleteId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState("");
   const [newHeaderName, setNewHeaderName] = useState("");
+  const [newHeaderType, setNewHeaderType] = useState<"text" | "number" | "date" | "select" | "checkbox" | "email" | "phone" | "percentage" | "read-only">("text");
+  const [newHeaderOptions, setNewHeaderOptions] = useState("");
   const [isAddHeaderOpen, setIsAddHeaderOpen] = useState(false);
   const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
   const [editingHeaderValue, setEditingHeaderValue] = useState("");
@@ -116,8 +118,14 @@ export default function Ledger() {
       return;
     }
 
-    addHeader(newHeaderName);
+    const options = newHeaderType === "select" && newHeaderOptions.trim() 
+      ? newHeaderOptions.split(",").map(o => o.trim()).filter(Boolean)
+      : undefined;
+
+    addHeader(newHeaderName, newHeaderType, options);
     setNewHeaderName("");
+    setNewHeaderType("text");
+    setNewHeaderOptions("");
     setIsAddHeaderOpen(false);
   };
 
@@ -139,8 +147,10 @@ export default function Ledger() {
   };
 
   const startEdit = (athleteId: string, field: string) => {
-    // Don't allow editing attendance_rate
-    if (field === "attendance_rate") return;
+    const header = headers.find(h => h.id === field);
+    
+    // Don't allow editing read-only fields
+    if (header?.type === "read-only") return;
 
     const athlete = athletes.find(a => a.id === athleteId);
     if (!athlete) return;
@@ -406,20 +416,74 @@ export default function Ledger() {
                     <DialogTitle>Add Custom Header</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-4">
-                    <Input
-                      placeholder="Enter header name (e.g., Mile Goal)"
-                      value={newHeaderName}
-                      onChange={(e) => setNewHeaderName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleAddCustomHeader();
-                      }}
-                      autoFocus
-                    />
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsAddHeaderOpen(false)}>
+                    <div className="space-y-2">
+                      <Label htmlFor="header-name" className="text-sm font-semibold">
+                        Header Name <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="header-name"
+                        placeholder="Enter header name (e.g., Mile Goal)"
+                        value={newHeaderName}
+                        onChange={(e) => setNewHeaderName(e.target.value)}
+                        className="min-h-[44px]"
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="header-type" className="text-sm font-semibold">
+                        Header Type <span className="text-destructive">*</span>
+                      </Label>
+                      <Select value={newHeaderType} onValueChange={(v: any) => setNewHeaderType(v)}>
+                        <SelectTrigger id="header-type" className="min-h-[44px] text-base md:text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-popover max-h-[250px]">
+                          <SelectItem value="text" className="min-h-[44px] text-base md:text-sm">Text</SelectItem>
+                          <SelectItem value="number" className="min-h-[44px] text-base md:text-sm">Number</SelectItem>
+                          <SelectItem value="date" className="min-h-[44px] text-base md:text-sm">Date</SelectItem>
+                          <SelectItem value="select" className="min-h-[44px] text-base md:text-sm">Dropdown (custom options)</SelectItem>
+                          <SelectItem value="checkbox" className="min-h-[44px] text-base md:text-sm">Checkbox / Boolean</SelectItem>
+                          <SelectItem value="email" className="min-h-[44px] text-base md:text-sm">Email</SelectItem>
+                          <SelectItem value="phone" className="min-h-[44px] text-base md:text-sm">Phone</SelectItem>
+                          <SelectItem value="percentage" className="min-h-[44px] text-base md:text-sm">Percentage</SelectItem>
+                          <SelectItem value="read-only" className="min-h-[44px] text-base md:text-sm">Read-Only (calculated)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {newHeaderType === "select" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="header-options" className="text-sm font-semibold">
+                          Options (comma separated)
+                        </Label>
+                        <Input
+                          id="header-options"
+                          placeholder="e.g., Forward, Guard, Center"
+                          value={newHeaderOptions}
+                          onChange={(e) => setNewHeaderOptions(e.target.value)}
+                          className="min-h-[44px]"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setIsAddHeaderOpen(false);
+                          setNewHeaderName("");
+                          setNewHeaderType("text");
+                          setNewHeaderOptions("");
+                        }}
+                        className="min-h-[44px] sm:min-h-[40px]"
+                      >
                         Cancel
                       </Button>
-                      <Button onClick={handleAddCustomHeader}>
+                      <Button 
+                        onClick={handleAddCustomHeader}
+                        className="min-h-[44px] sm:min-h-[40px]"
+                      >
                         Add Header
                       </Button>
                     </div>

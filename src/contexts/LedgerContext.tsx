@@ -3,10 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useProgramContext } from "@/hooks/useProgramContext";
 
+export type HeaderType = 
+  | "text" 
+  | "number" 
+  | "date" 
+  | "select" 
+  | "checkbox" 
+  | "email" 
+  | "phone" 
+  | "percentage" 
+  | "read-only";
+
 export interface HeaderDefinition {
   id: string;
   label: string;
   isHardwired: boolean;
+  type?: HeaderType;
+  options?: string[];
 }
 
 export interface AthleteData {
@@ -31,8 +44,8 @@ interface LedgerContextType {
   athletes: AthleteData[];
   loading: boolean;
   athletesLoading: boolean;
-  addHeader: (label: string) => Promise<void>;
-  editHeader: (id: string, newLabel: string) => Promise<void>;
+  addHeader: (label: string, type?: HeaderType, options?: string[]) => Promise<void>;
+  editHeader: (id: string, newLabel: string, type?: HeaderType, options?: string[]) => Promise<void>;
   deleteHeader: (id: string) => Promise<void>;
   addAthlete: (athleteData: Partial<AthleteData>) => Promise<void>;
   updateAthlete: (id: string, field: string, value: any) => Promise<void>;
@@ -46,19 +59,19 @@ const LedgerReactContext = createContext<LedgerContextType | undefined>(undefine
 
 // Hardwired headers that cannot be deleted
 const HARDWIRED_HEADERS: HeaderDefinition[] = [
-  { id: "name", label: "Name", isHardwired: true },
-  { id: "gender", label: "Gender", isHardwired: true },
-  { id: "grade", label: "Grade", isHardwired: true },
-  { id: "attendance_rate", label: "Attendance Rate", isHardwired: true },
+  { id: "name", label: "Name", isHardwired: true, type: "text" },
+  { id: "gender", label: "Gender", isHardwired: true, type: "select", options: ["Male", "Female", "Other"] },
+  { id: "grade", label: "Grade", isHardwired: true, type: "number" },
+  { id: "attendance_rate", label: "Attendance Rate", isHardwired: true, type: "read-only" },
 ];
 
 // Additional default headers that CAN be deleted
 const DEFAULT_HEADERS: HeaderDefinition[] = [
-  { id: "team_position", label: "Position", isHardwired: false },
-  { id: "events", label: "Events", isHardwired: false },
-  { id: "achievements", label: "Achievements", isHardwired: false },
-  { id: "athlete_of_week", label: "Athlete of Week", isHardwired: false },
-  { id: "athlete_of_meet", label: "Athlete of Meet", isHardwired: false },
+  { id: "team_position", label: "Position", isHardwired: false, type: "text" },
+  { id: "events", label: "Events", isHardwired: false, type: "text" },
+  { id: "achievements", label: "Achievements", isHardwired: false, type: "text" },
+  { id: "athlete_of_week", label: "Athlete of Week", isHardwired: false, type: "checkbox" },
+  { id: "athlete_of_meet", label: "Athlete of Meet", isHardwired: false, type: "checkbox" },
 ];
 
 export function LedgerProvider({ children }: { children: React.ReactNode}) {
@@ -102,7 +115,9 @@ export function LedgerProvider({ children }: { children: React.ReactNode}) {
         const dbHeaders: HeaderDefinition[] = (customHeaders || []).map(h => ({
           id: h.header_id,
           label: h.label,
-          isHardwired: h.is_hardwired
+          isHardwired: h.is_hardwired,
+          type: (h as any).type || "text",
+          options: (h as any).options || undefined
         }));
 
         // Check if we have any headers in DB, if not, add defaults
@@ -248,7 +263,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode}) {
     }
   };
 
-  const addHeader = async (label: string) => {
+  const addHeader = async (label: string, type: HeaderType = "text", options?: string[]) => {
     if (!selectedProgramId || !userId) return;
 
     try {
@@ -261,15 +276,19 @@ export function LedgerProvider({ children }: { children: React.ReactNode}) {
           coach_id: userId,
           header_id: headerId,
           label,
-          is_hardwired: false
-        });
+          is_hardwired: false,
+          type,
+          options: options || null
+        } as any);
 
       if (error) throw error;
 
       const newHeader: HeaderDefinition = {
         id: headerId,
         label,
-        isHardwired: false
+        isHardwired: false,
+        type,
+        options
       };
 
       setHeaders(prev => [...prev, newHeader]);
@@ -280,13 +299,17 @@ export function LedgerProvider({ children }: { children: React.ReactNode}) {
     }
   };
 
-  const editHeader = async (id: string, newLabel: string) => {
+  const editHeader = async (id: string, newLabel: string, type?: HeaderType, options?: string[]) => {
     if (!selectedProgramId || !userId) return;
 
     try {
+      const updateData: any = { label: newLabel };
+      if (type) updateData.type = type;
+      if (options !== undefined) updateData.options = options;
+
       const { error } = await supabase
         .from("ledger_headers")
-        .update({ label: newLabel })
+        .update(updateData)
         .eq("program_id", selectedProgramId)
         .eq("header_id", id)
         .eq("coach_id", userId);
@@ -294,7 +317,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode}) {
       if (error) throw error;
 
       setHeaders(prev =>
-        prev.map(h => (h.id === id ? { ...h, label: newLabel } : h))
+        prev.map(h => (h.id === id ? { ...h, label: newLabel, type, options } : h))
       );
       toast.success("Header updated");
     } catch (error) {
