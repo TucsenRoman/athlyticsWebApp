@@ -201,7 +201,9 @@ export type Database = {
           id: string
           is_hardwired: boolean
           label: string
+          options: string[] | null
           program_id: string
+          type: string | null
         }
         Insert: {
           coach_id: string
@@ -210,7 +212,9 @@ export type Database = {
           id?: string
           is_hardwired?: boolean
           label: string
+          options?: string[] | null
           program_id: string
+          type?: string | null
         }
         Update: {
           coach_id?: string
@@ -219,7 +223,9 @@ export type Database = {
           id?: string
           is_hardwired?: boolean
           label?: string
+          options?: string[] | null
           program_id?: string
+          type?: string | null
         }
         Relationships: []
       }

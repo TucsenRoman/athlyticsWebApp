@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import AddProgramModal from "@/components/ledger/AddProgramModal";
 import EditProgramModal from "@/components/ledger/EditProgramModal";
+import EditableCell from "@/components/ledger/EditableCell";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Ledger() {
@@ -683,21 +684,20 @@ export default function Ledger() {
                             <div 
                               className={cn(
                                 "text-sm font-medium p-2 rounded",
-                                header.id !== "attendance_rate" && "cursor-pointer hover:bg-muted/50"
+                                header.type !== "read-only" && "cursor-pointer hover:bg-muted/50"
                               )}
-                              onClick={() => header.id !== "attendance_rate" && startEdit(athlete.id, header.id)}
+                              onClick={() => header.type !== "read-only" && startEdit(athlete.id, header.id)}
                             >
                               {editingCell?.athleteId === athlete.id && editingCell?.field === header.id ? (
-                                <Input
+                                <EditableCell
                                   value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  onBlur={saveEdit}
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") saveEdit();
-                                    if (e.key === "Escape") setEditingCell(null);
+                                  headerType={header.type || "text"}
+                                  options={header.options}
+                                  onSave={async (value) => {
+                                    await updateAthlete(athlete.id, header.id, value);
+                                    setEditingCell(null);
                                   }}
-                                  autoFocus
-                                  className="h-8"
+                                  onCancel={() => setEditingCell(null)}
                                 />
                               ) : (
                                 renderCellValue(athlete, header.id)
@@ -742,29 +742,31 @@ export default function Ledger() {
                   <TableBody>
                     {filteredAthletes.map((athlete) => (
                       <TableRow key={athlete.id}>
-                        {selectedHeaders.map((headerId) => (
-                          <TableCell
-                            key={`${athlete.id}-${headerId}`}
-                            className={`${headerId !== "attendance_rate" ? "cursor-pointer hover:bg-muted/50" : ""}`}
-                            onClick={() => headerId !== "attendance_rate" && startEdit(athlete.id, headerId)}
-                          >
-                            {editingCell?.athleteId === athlete.id && editingCell?.field === headerId ? (
-                              <Input
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onBlur={saveEdit}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") saveEdit();
-                                  if (e.key === "Escape") setEditingCell(null);
-                                }}
-                                autoFocus
-                                className="h-8"
-                              />
-                            ) : (
-                              renderCellValue(athlete, headerId)
-                            )}
-                          </TableCell>
-                        ))}
+                        {selectedHeaders.map((headerId) => {
+                          const header = headers.find(h => h.id === headerId);
+                          return (
+                            <TableCell
+                              key={`${athlete.id}-${headerId}`}
+                              className={`${header?.type !== "read-only" ? "cursor-pointer hover:bg-muted/50" : ""}`}
+                              onClick={() => header?.type !== "read-only" && startEdit(athlete.id, headerId)}
+                            >
+                              {editingCell?.athleteId === athlete.id && editingCell?.field === headerId && header ? (
+                                <EditableCell
+                                  value={editValue}
+                                  headerType={header.type || "text"}
+                                  options={header.options}
+                                  onSave={async (value) => {
+                                    await updateAthlete(athlete.id, headerId, value);
+                                    setEditingCell(null);
+                                  }}
+                                  onCancel={() => setEditingCell(null)}
+                                />
+                              ) : (
+                                renderCellValue(athlete, headerId)
+                              )}
+                            </TableCell>
+                          );
+                        })}
                         <TableCell>
                           <Button
                             variant="ghost"
