@@ -5,7 +5,7 @@ import ManagementView from "@/components/management/ManagementView";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarDays, Paperclip, Users } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Users } from "lucide-react";
 import { useState } from "react";
 
 
@@ -20,27 +20,27 @@ const Index = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="sticky top-0 z-10 grid w-full grid-cols-3 bg-muted border-y border-border shadow-sm rounded-t-lg mb-4">
+          <TabsList className="sticky top-0 z-10 grid w-full grid-cols-3 h-12 bg-muted/50 border-b border-border mb-4 p-0 rounded-none">
             <TabsTrigger 
               value="overview" 
-              className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-2 transition-all"
+              className="h-12 px-4 data-[state=active]:bg-background data-[state=active]:shadow-[0_-1px_4px_rgba(0,0,0,0.05)] data-[state=active]:rounded-t-lg data-[state=inactive]:bg-muted flex items-center justify-center gap-2 transition-all duration-200"
             >
-              <CalendarDays className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
-              <span className="hidden md:inline transition-all">Overview</span>
+              <LayoutDashboard className="w-5 h-5 md:w-[18px] md:h-[18px] flex-shrink-0" />
+              <span className="hidden md:inline">Overview</span>
             </TabsTrigger>
             <TabsTrigger 
               value="management" 
-              className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-2 transition-all"
+              className="h-12 px-4 data-[state=active]:bg-background data-[state=active]:shadow-[0_-1px_4px_rgba(0,0,0,0.05)] data-[state=active]:rounded-t-lg data-[state=inactive]:bg-muted flex items-center justify-center gap-2 transition-all duration-200"
             >
-              <Paperclip className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
-              <span className="hidden md:inline transition-all">Management</span>
+              <ClipboardList className="w-5 h-5 md:w-[18px] md:h-[18px] flex-shrink-0" />
+              <span className="hidden md:inline">Management</span>
             </TabsTrigger>
             <TabsTrigger 
               value="attendance" 
-              className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-2 transition-all"
+              className="h-12 px-4 data-[state=active]:bg-background data-[state=active]:shadow-[0_-1px_4px_rgba(0,0,0,0.05)] data-[state=active]:rounded-t-lg data-[state=inactive]:bg-muted flex items-center justify-center gap-2 transition-all duration-200"
             >
-              <Users className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
-              <span className="hidden md:inline transition-all">Attendance</span>
+              <Users className="w-5 h-5 md:w-[18px] md:h-[18px] flex-shrink-0" />
+              <span className="hidden md:inline">Attendance</span>
             </TabsTrigger>
           </TabsList>
           
