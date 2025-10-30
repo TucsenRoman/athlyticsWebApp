@@ -1,11 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ReactNode } from "react";
 
 interface RosterControlsProps {
   placeholder: string;
   searchValue: string;
   onSearchChange: (value: string) => void;
-  onFilterClick?: () => void;
+  filterOptions?: ReactNode;
   onEditClick?: () => void;
 }
 
@@ -13,7 +21,7 @@ export default function RosterControls({
   placeholder,
   searchValue,
   onSearchChange,
-  onFilterClick,
+  filterOptions,
   onEditClick,
 }: RosterControlsProps) {
   return (
@@ -29,9 +37,18 @@ export default function RosterControls({
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={onFilterClick}>
-          Filter
-        </Button>
+        {filterOptions && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Filter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48">
+              {filterOptions}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         <Button variant="default" size="sm" onClick={onEditClick}>
           Edit
         </Button>

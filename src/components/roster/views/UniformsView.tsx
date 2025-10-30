@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import RosterControls from "../RosterControls";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 interface Uniform {
   id: string;
@@ -26,6 +27,7 @@ export default function UniformsView({ searchQuery }: { searchQuery: string }) {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [localSearch, setLocalSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     fetchData();
@@ -77,11 +79,19 @@ export default function UniformsView({ searchQuery }: { searchQuery: string }) {
     }
   };
 
-  const filteredUniforms = uniforms.filter(uniform =>
-    uniform.top_id.toLowerCase().includes(localSearch.toLowerCase()) ||
-    uniform.bottom_id.toLowerCase().includes(localSearch.toLowerCase()) ||
-    (uniform.assigned_to && uniform.assigned_to.toLowerCase().includes(localSearch.toLowerCase()))
-  );
+  const filteredUniforms = uniforms.filter((uniform) => {
+    const matchesSearch =
+      uniform.top_id.toLowerCase().includes(localSearch.toLowerCase()) ||
+      uniform.bottom_id.toLowerCase().includes(localSearch.toLowerCase()) ||
+      (uniform.assigned_to && uniform.assigned_to.toLowerCase().includes(localSearch.toLowerCase()));
+    
+    if (filter === "all") return matchesSearch;
+    if (filter === "checked_out") return matchesSearch && uniform.status === "Checked Out";
+    if (filter === "returned") return matchesSearch && uniform.status === "Returned";
+    if (filter === "missing") return matchesSearch && uniform.status === "Lost";
+    
+    return matchesSearch;
+  });
 
   if (loading) {
     return <div className="text-center py-8">Loading uniforms...</div>;
@@ -93,6 +103,15 @@ export default function UniformsView({ searchQuery }: { searchQuery: string }) {
         placeholder="Search uniforms..."
         searchValue={localSearch}
         onSearchChange={setLocalSearch}
+        filterOptions={
+          <>
+            <DropdownMenuItem onClick={() => setFilter("all")}>All Uniforms</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setFilter("checked_out")}>Checked Out</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("returned")}>Returned</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("missing")}>Missing</DropdownMenuItem>
+          </>
+        }
       />
 
       <div className="border rounded-lg">

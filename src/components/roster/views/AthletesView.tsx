@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import RosterControls from "../RosterControls";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 interface Athlete {
   id: string;
@@ -38,6 +39,7 @@ export default function AthletesView({
   const [athletes, setAthletes] = useState<AthleteWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [localSearch, setLocalSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     fetchAthletes();
@@ -92,11 +94,19 @@ export default function AthletesView({
     }
   };
 
-  const filteredAthletes = athletes.filter(athlete =>
-    athlete.name.toLowerCase().includes(localSearch.toLowerCase()) ||
-    athlete.grade?.toString().includes(localSearch) ||
-    athlete.gender?.toLowerCase().includes(localSearch.toLowerCase())
-  );
+  const filteredAthletes = athletes.filter((athlete) => {
+    const matchesSearch = athlete.name.toLowerCase().includes(localSearch.toLowerCase());
+    
+    if (filter === "all") return matchesSearch;
+    if (filter === "male") return matchesSearch && athlete.gender === "Male";
+    if (filter === "female") return matchesSearch && athlete.gender === "Female";
+    if (filter.startsWith("grade")) {
+      const gradeNum = parseInt(filter.replace("grade", ""));
+      return matchesSearch && athlete.grade === gradeNum;
+    }
+    
+    return matchesSearch;
+  });
 
   if (loading) {
     return <div className="text-center py-8">Loading athletes...</div>;
@@ -108,6 +118,19 @@ export default function AthletesView({
         placeholder="Search athletes..."
         searchValue={localSearch}
         onSearchChange={setLocalSearch}
+        filterOptions={
+          <>
+            <DropdownMenuItem onClick={() => setFilter("all")}>All Athletes</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setFilter("male")}>Male</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("female")}>Female</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setFilter("grade9")}>Grade 9</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("grade10")}>Grade 10</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("grade11")}>Grade 11</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("grade12")}>Grade 12</DropdownMenuItem>
+          </>
+        }
       />
 
       <div className="border rounded-lg">

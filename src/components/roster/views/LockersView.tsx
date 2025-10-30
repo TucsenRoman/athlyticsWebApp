@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import RosterControls from "../RosterControls";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 interface Locker {
   id: string;
@@ -25,6 +26,7 @@ export default function LockersView({ searchQuery }: { searchQuery: string }) {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [localSearch, setLocalSearch] = useState("");
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     fetchData();
@@ -82,12 +84,18 @@ export default function LockersView({ searchQuery }: { searchQuery: string }) {
     }
   };
 
-  const filteredLockers = lockers.filter(locker => {
+  const filteredLockers = lockers.filter((locker) => {
     const athleteName = getAthleteName(locker.athlete_id);
-    return (
+    const matchesSearch =
       locker.locker_number.toLowerCase().includes(localSearch.toLowerCase()) ||
-      athleteName.toLowerCase().includes(localSearch.toLowerCase())
-    );
+      athleteName.toLowerCase().includes(localSearch.toLowerCase());
+    
+    if (filter === "all") return matchesSearch;
+    if (filter === "available") return matchesSearch && locker.status === "Available";
+    if (filter === "assigned") return matchesSearch && locker.status === "Assigned";
+    if (filter === "maintenance") return matchesSearch && locker.status === "Out of Service";
+    
+    return matchesSearch;
   });
 
   if (loading) {
@@ -100,6 +108,15 @@ export default function LockersView({ searchQuery }: { searchQuery: string }) {
         placeholder="Search lockers..."
         searchValue={localSearch}
         onSearchChange={setLocalSearch}
+        filterOptions={
+          <>
+            <DropdownMenuItem onClick={() => setFilter("all")}>All Lockers</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setFilter("available")}>Available</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("assigned")}>Assigned</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setFilter("maintenance")}>Maintenance</DropdownMenuItem>
+          </>
+        }
       />
 
       <div className="border rounded-lg">
