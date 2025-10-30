@@ -503,14 +503,16 @@ export default function Ledger() {
                       <span className="sm:hidden">Add</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="w-[95vw] max-w-md bg-background max-h-[90vh] flex flex-col p-0">
-                    <DialogHeader className="px-6 pt-6 pb-4 border-b">
-                      <DialogTitle>Add Athlete</DialogTitle>
+                  <DialogContent className="w-[90vw] sm:w-[95vw] max-w-md bg-background rounded-2xl shadow-xl overflow-hidden flex flex-col p-0 max-h-[90vh]">
+                    <DialogHeader className="px-6 pt-6 pb-4 border-b bg-background">
+                      <DialogTitle className="text-lg sm:text-xl font-bold text-center">Add Athlete</DialogTitle>
                     </DialogHeader>
-                    <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
-                      <div className="space-y-4">
+                    
+                    {/* Scrollable Content Area */}
+                    <div className="flex-1 overflow-y-auto px-6 py-4" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+                      <div className="space-y-3">
                         <div className="space-y-2">
-                          <Label htmlFor="name" className="text-base md:text-sm">
+                          <Label htmlFor="name" className="text-sm font-semibold leading-tight">
                             Name <span className="text-destructive">*</span>
                           </Label>
                           <Input
@@ -518,17 +520,17 @@ export default function Ledger() {
                             value={newAthleteData.name || ""}
                             onChange={(e) => setNewAthleteData({ ...newAthleteData, name: e.target.value })}
                             placeholder="Enter athlete name"
-                            className="min-h-[44px] text-base"
+                            className="min-h-[44px] sm:min-h-[48px] text-base w-full rounded-lg"
                           />
                         </div>
                         
                         <div className="space-y-2">
-                          <Label htmlFor="gender" className="text-base md:text-sm">Gender</Label>
+                          <Label htmlFor="gender" className="text-sm font-semibold leading-tight">Gender</Label>
                           <Select
                             value={newAthleteData.gender || ""}
                             onValueChange={(value) => setNewAthleteData({ ...newAthleteData, gender: value })}
                           >
-                            <SelectTrigger id="gender" className="min-h-[44px] text-base">
+                            <SelectTrigger id="gender" className="min-h-[44px] sm:min-h-[48px] text-base rounded-lg">
                               <SelectValue placeholder="Select gender" />
                             </SelectTrigger>
                             <SelectContent>
@@ -539,12 +541,12 @@ export default function Ledger() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="grade" className="text-base md:text-sm">Grade</Label>
+                          <Label htmlFor="grade" className="text-sm font-semibold leading-tight">Grade</Label>
                           <Select
                             value={newAthleteData.grade?.toString() || ""}
                             onValueChange={(value) => setNewAthleteData({ ...newAthleteData, grade: parseInt(value) })}
                           >
-                            <SelectTrigger id="grade" className="min-h-[44px] text-base">
+                            <SelectTrigger id="grade" className="min-h-[44px] sm:min-h-[48px] text-base rounded-lg">
                               <SelectValue placeholder="Select grade" />
                             </SelectTrigger>
                             <SelectContent>
@@ -558,18 +560,20 @@ export default function Ledger() {
                         </div>
                       </div>
                     </div>
-                    <div className="sticky bottom-0 px-6 py-4 bg-background border-t shadow-lg">
-                      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
+                    
+                    {/* Fixed Footer with Buttons */}
+                    <div className="sticky bottom-0 px-6 py-3 bg-background border-t" style={{ boxShadow: '0 -2px 4px rgba(0,0,0,0.05)' }}>
+                      <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
                         <Button 
                           variant="outline" 
                           onClick={() => setIsAddAthleteOpen(false)}
-                          className="min-h-[44px] flex-1 sm:flex-none touch-manipulation"
+                          className="min-h-[44px] sm:min-h-[48px] rounded-lg sm:px-6 touch-manipulation order-2 sm:order-1"
                         >
                           Cancel
                         </Button>
                         <Button 
                           onClick={handleAddAthlete}
-                          className="min-h-[44px] flex-1 sm:flex-none touch-manipulation"
+                          className="min-h-[44px] sm:min-h-[48px] rounded-lg sm:px-6 touch-manipulation order-1 sm:order-2"
                         >
                           Add Athlete
                         </Button>
