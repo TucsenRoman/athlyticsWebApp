@@ -454,26 +454,30 @@ export default function Ledger() {
               <div className="flex gap-2 items-center flex-wrap">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="justify-between min-w-[200px]">
+                    <Button 
+                      variant="outline" 
+                      className="justify-between min-w-[200px] min-h-[44px] touch-manipulation"
+                    >
                       Visible Columns ({selectedHeaders.length})
                       <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[250px] p-3 bg-card" align="start">
+                  <PopoverContent className="w-[250px] p-3 bg-popover max-h-[250px] overflow-y-auto rounded-lg" align="start">
                     <div className="space-y-2">
-                      <div className="text-sm font-medium mb-3">Select Columns</div>
+                      <div className="text-base md:text-sm font-medium mb-3">Select Columns</div>
                       {headers.map((header) => (
-                        <div key={header.id} className="flex items-center space-x-2">
+                        <div key={header.id} className="flex items-center space-x-2 min-h-[44px] py-1">
                           <Checkbox
                             id={`header-${header.id}`}
                             checked={selectedHeaders.includes(header.id)}
                             onCheckedChange={() => toggleHeader(header.id)}
                             disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
+                            className="touch-manipulation"
                           />
                           <label
                             htmlFor={`header-${header.id}`}
                             className={cn(
-                              "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-1",
+                              "text-base md:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-1 flex-1",
                               header.isHardwired && "text-muted-foreground"
                             )}
                           >
@@ -488,13 +492,13 @@ export default function Ledger() {
                 
                 <Dialog open={isAddAthleteOpen} onOpenChange={setIsAddAthleteOpen}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="whitespace-nowrap">
+                    <Button size="sm" className="whitespace-nowrap min-h-[44px] touch-manipulation">
                       <Plus className="w-4 h-4 mr-2" />
                       <span className="hidden sm:inline">Add Athlete</span>
                       <span className="sm:hidden">Add</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md bg-card max-h-[90vh] flex flex-col p-0">
+                  <DialogContent className="w-[95vw] max-w-md bg-popover max-h-[90vh] flex flex-col p-0">
                     <DialogHeader className="px-6 pt-6">
                       <DialogTitle>Add Athlete</DialogTitle>
                     </DialogHeader>
@@ -502,7 +506,7 @@ export default function Ledger() {
                       <div className="space-y-4">
                         {headers.filter(header => header.id !== "attendance_rate").map((header) => (
                           <div key={header.id} className="space-y-2">
-                            <Label htmlFor={header.id} className="flex items-center gap-1">
+                            <Label htmlFor={header.id} className="flex items-center gap-1 text-base md:text-sm">
                               {header.isHardwired && <Lock className="w-3 h-3 text-muted-foreground" />}
                               {header.label}
                               {header.id === "name" && <span className="text-destructive ml-1">*</span>}
@@ -512,7 +516,7 @@ export default function Ledger() {
                                 value={newAthleteData[header.id] || ""}
                                 onValueChange={(value) => setNewAthleteData({ ...newAthleteData, [header.id]: value })}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="min-h-[44px] text-base">
                                   <SelectValue placeholder="Select gender" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-popover z-50">
@@ -527,21 +531,29 @@ export default function Ledger() {
                                 placeholder={`Enter ${header.label.toLowerCase()}`}
                                 value={newAthleteData[header.id] || ""}
                                 onChange={(e) => setNewAthleteData({ ...newAthleteData, [header.id]: e.target.value })}
+                                className="min-h-[44px] text-base"
                               />
                             )}
                           </div>
                         ))}
                       </div>
                     </div>
-                    <DialogFooter className="px-6 py-4 border-t bg-muted/20">
+                    <DialogFooter className="px-6 py-4 border-t bg-card sticky bottom-0">
                       <div className="flex justify-end gap-2 w-full">
-                        <Button variant="outline" onClick={() => {
-                          setIsAddAthleteOpen(false);
-                          setNewAthleteData({});
-                        }}>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsAddAthleteOpen(false);
+                            setNewAthleteData({});
+                          }}
+                          className="min-h-[44px] flex-1 md:flex-none touch-manipulation"
+                        >
                           Cancel
                         </Button>
-                        <Button onClick={handleAddAthlete}>
+                        <Button 
+                          onClick={handleAddAthlete}
+                          className="min-h-[44px] flex-1 md:flex-none touch-manipulation"
+                        >
                           Add Athlete
                         </Button>
                       </div>
