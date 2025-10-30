@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import AssignLockerModal from "@/components/lockers/AssignLockerModal";
+import { z } from "zod";
 
 interface Athlete {
   id: string;
@@ -175,11 +176,30 @@ const AttendanceTracker = () => {
     }
   };
 
+  const attendanceNotesSchema = z.object({
+    notes: z.string()
+      .max(500, "Notes must be less than 500 characters")
+      .optional()
+      .nullable()
+      .transform(val => val || null)
+  });
+
   const saveNotes = async (athleteId: string, notes: string) => {
+    // Validate notes length
+    const validation = attendanceNotesSchema.safeParse({ notes: notes || null });
+    if (!validation.success) {
+      toast({
+        title: "Validation Error",
+        description: validation.error.errors[0].message,
+        variant: "destructive",
+      });
+      return;
+    }
+
     const record = attendance.find((a) => a.athlete_id === athleteId);
     const currentStatus = record?.status || "Present";
     
-    await updateAttendance(athleteId, currentStatus, notes);
+    await updateAttendance(athleteId, currentStatus, validation.data.notes || undefined);
     
     // Clear the editing state for this athlete
     setEditingNotes((prev) => {
