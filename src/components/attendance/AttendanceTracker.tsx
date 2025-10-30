@@ -386,35 +386,39 @@ const AttendanceTracker = () => {
           </div>
 
           {/* Controls Bar */}
-          <div className="flex items-center justify-center gap-3 w-full max-w-md flex-nowrap">
-            <Select
-              value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"}
-              onValueChange={(value) => setFilterStatus(value === "all" ? ["all"] : [value])}
-              disabled={!isEditMode}
-            >
-              <SelectTrigger className="w-[140px] shrink-0">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter" />
-              </SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="Present">Present</SelectItem>
-                <SelectItem value="Absent">Absent</SelectItem>
-                <SelectItem value="Excused">Excused</SelectItem>
-                <SelectItem value="Noted Reason">Noted Reason</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-center gap-3 w-full max-w-md">
+            <div className="flex-1">
+              <Select
+                value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"}
+                onValueChange={(value) => setFilterStatus(value === "all" ? ["all"] : [value])}
+                disabled={!isEditMode}
+              >
+                <SelectTrigger className="w-full">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Present">Present</SelectItem>
+                  <SelectItem value="Absent">Absent</SelectItem>
+                  <SelectItem value="Excused">Excused</SelectItem>
+                  <SelectItem value="Noted Reason">Noted Reason</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            {isSubmitted && !isEditMode ? (
-              <Button onClick={enableEditMode} variant="outline" size="sm" className="shrink-0">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
-            ) : (
-              <Button onClick={submitAttendance} variant="default" size="sm" className="shrink-0">
-                Submit
-              </Button>
-            )}
+            <div className="flex-1">
+              {isSubmitted && !isEditMode ? (
+                <Button onClick={enableEditMode} variant="outline" size="sm" className="w-full">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button>
+              ) : (
+                <Button onClick={submitAttendance} variant="default" size="sm" className="w-full">
+                  Submit
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </CardHeader>
