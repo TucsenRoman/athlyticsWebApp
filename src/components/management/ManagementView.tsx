@@ -4,10 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { useLedger } from "@/contexts/LedgerContext";
+import { ChevronDown, Lock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function ManagementView() {
-  const { headers, athletes, loading, getCustomFieldValue } = useLedger();
+  const { headers, athletes, loading, getCustomFieldValue, getAttendanceRate } = useLedger();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedHeaders, setSelectedHeaders] = useState<string[]>(["name", "gender", "grade"]);
 
@@ -18,18 +23,31 @@ export default function ManagementView() {
   const searchedAthlete = searchQuery && filteredAthletes.length === 1 ? filteredAthletes[0] : null;
 
   const toggleHeader = (headerId: string) => {
-    setSelectedHeaders(prev =>
-      prev.includes(headerId)
+    setSelectedHeaders(prev => {
+      const newHeaders = prev.includes(headerId)
         ? prev.filter(h => h !== headerId)
-        : [...prev, headerId]
-    );
+        : [...prev, headerId];
+      
+      // Enforce at least "name" header
+      if (newHeaders.length === 0 || !newHeaders.includes("name")) {
+        return ["name"];
+      }
+      
+      return newHeaders;
+    });
   };
 
   const renderCellValue = (athlete: any, headerId: string) => {
+    // Special handling for attendance_rate
+    if (headerId === "attendance_rate") {
+      return getAttendanceRate(athlete.id);
+    }
+
+    // Check if it's a custom field
     const header = headers.find(h => h.id === headerId);
-    const isCustomOrSpecial = headerId === "attendance_rate" || (header && !header.isHardwired);
+    const isCustom = header && !header.isHardwired;
     
-    if (isCustomOrSpecial) {
+    if (isCustom) {
       const value = getCustomFieldValue(athlete.id, headerId);
       return value || "—";
     }
@@ -60,29 +78,52 @@ export default function ManagementView() {
           <CardTitle>Management</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Input
-            type="text"
-            placeholder="Search athletes by name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-sm font-medium text-muted-foreground">Visible Columns:</span>
-            {headers.map((header) => (
-              <Button
-                key={header.id}
-                variant={selectedHeaders.includes(header.id) ? "default" : "outline"}
-                size="sm"
-                onClick={() => toggleHeader(header.id)}
-              >
-                {header.label}
-              </Button>
-            ))}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Input
+              type="text"
+              placeholder="Search athletes by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1"
+            />
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-between min-w-[200px]">
+                  Visible Columns ({selectedHeaders.length})
+                  <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[250px] p-3 bg-card" align="start">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium mb-3">Select Columns</div>
+                  {headers.map((header) => (
+                    <div key={header.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`mgmt-header-${header.id}`}
+                        checked={selectedHeaders.includes(header.id)}
+                        onCheckedChange={() => toggleHeader(header.id)}
+                        disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
+                      />
+                      <label
+                        htmlFor={`mgmt-header-${header.id}`}
+                        className={cn(
+                          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-1",
+                          header.isHardwired && "text-muted-foreground"
+                        )}
+                      >
+                        {header.isHardwired && <Lock className="w-3 h-3" />}
+                        {header.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {searchedAthlete ? (
-            <Card className="bg-muted/50">
+            <Card className="bg-muted/30">
               <CardHeader>
                 <CardTitle className="text-2xl">{searchedAthlete.name}</CardTitle>
               </CardHeader>
@@ -94,7 +135,13 @@ export default function ManagementView() {
                     
                     return (
                       <div key={header.id} className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">{header.label}</p>
+                        <p className={cn(
+                          "text-sm font-medium flex items-center gap-1",
+                          header.isHardwired && "text-muted-foreground"
+                        )}>
+                          {header.isHardwired && <Lock className="w-3 h-3" />}
+                          {header.label}
+                        </p>
                         <p className="text-base">
                           {header.id === "athlete_of_week" || header.id === "athlete_of_meet" ? (
                             <Badge variant={value === "Yes" ? "default" : "outline"}>
@@ -123,7 +170,16 @@ export default function ManagementView() {
                       <TableRow>
                         {selectedHeaders.map((headerId) => {
                           const header = headers.find((h) => h.id === headerId);
-                          return header ? <TableHead key={headerId}>{header.label}</TableHead> : null;
+                          return header ? (
+                            <TableHead key={headerId} className={cn(
+                              header.isHardwired && "bg-muted/30"
+                            )}>
+                              <div className="flex items-center gap-1">
+                                {header.isHardwired && <Lock className="w-3 h-3 text-muted-foreground" />}
+                                {header.label}
+                              </div>
+                            </TableHead>
+                          ) : null;
                         })}
                       </TableRow>
                     </TableHeader>
