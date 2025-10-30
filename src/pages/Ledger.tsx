@@ -42,7 +42,7 @@ export default function Ledger() {
   const [editingCell, setEditingCell] = useState<{ athleteId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState("");
   const [newHeaderName, setNewHeaderName] = useState("");
-  const [newHeaderType, setNewHeaderType] = useState<"text" | "number" | "date" | "select" | "checkbox" | "email" | "phone" | "percentage" | "read-only">("text");
+  const [newHeaderType, setNewHeaderType] = useState<"text" | "number" | "date" | "time" | "select" | "checkbox" | "email" | "phone" | "percentage" | "read-only">("text");
   const [newHeaderOptions, setNewHeaderOptions] = useState("");
   const [isAddHeaderOpen, setIsAddHeaderOpen] = useState(false);
   const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
@@ -443,6 +443,7 @@ export default function Ledger() {
                           <SelectItem value="text" className="min-h-[44px] text-base md:text-sm">Text</SelectItem>
                           <SelectItem value="number" className="min-h-[44px] text-base md:text-sm">Number</SelectItem>
                           <SelectItem value="date" className="min-h-[44px] text-base md:text-sm">Date</SelectItem>
+                          <SelectItem value="time" className="min-h-[44px] text-base md:text-sm">Time (MM:SS or MM:SS.HH)</SelectItem>
                           <SelectItem value="select" className="min-h-[44px] text-base md:text-sm">Dropdown (custom options)</SelectItem>
                           <SelectItem value="checkbox" className="min-h-[44px] text-base md:text-sm">Checkbox / Boolean</SelectItem>
                           <SelectItem value="email" className="min-h-[44px] text-base md:text-sm">Email</SelectItem>

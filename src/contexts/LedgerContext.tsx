@@ -6,7 +6,8 @@ import { useProgramContext } from "@/hooks/useProgramContext";
 export type HeaderType = 
   | "text" 
   | "number" 
-  | "date" 
+  | "date"
+  | "time"
   | "select" 
   | "checkbox" 
   | "email" 

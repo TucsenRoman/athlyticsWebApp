@@ -25,11 +25,58 @@ export default function EditableCell({
   const [editValue, setEditValue] = useState(value);
   const [error, setError] = useState("");
 
+  const formatTimeInput = (val: string): string => {
+    const clean = val.replace(/[^\d.]/g, "");
+    
+    // If it's just digits (e.g., "1927"), auto-format
+    if (/^\d{3,4}$/.test(clean)) {
+      const formatted = clean.length === 3
+        ? `${clean[0]}:${clean.slice(1)}`
+        : `${clean.slice(0, 2)}:${clean.slice(2)}`;
+      return formatted;
+    }
+    
+    // If it has colon, ensure seconds are zero-padded
+    if (val.includes(":")) {
+      const parts = val.split(":");
+      if (parts.length === 2) {
+        const [mins, secsWithDec] = parts;
+        const [secs, dec] = secsWithDec.split(".");
+        const paddedSecs = secs.padStart(2, "0");
+        return dec ? `${mins}:${paddedSecs}.${dec}` : `${mins}:${paddedSecs}`;
+      }
+    }
+    
+    return val;
+  };
+
   const validateAndSave = () => {
     let validatedValue = editValue.trim();
     
     // Validation based on type
     switch (headerType) {
+      case "time":
+        // Auto-format first
+        validatedValue = formatTimeInput(validatedValue);
+        
+        // Strict validation
+        const timePattern = /^\d{1,2}:\d{2}(\.\d{1,2})?$/;
+        if (validatedValue && !timePattern.test(validatedValue)) {
+          setError("Format: MM:SS or MM:SS.HH");
+          return;
+        }
+        
+        // Check seconds don't exceed 59
+        if (validatedValue) {
+          const [mins, rest] = validatedValue.split(":");
+          const secs = parseInt(rest.split(".")[0]);
+          if (secs >= 60) {
+            setError("Seconds can't exceed 59");
+            return;
+          }
+        }
+        break;
+      
       case "number":
         if (validatedValue && isNaN(Number(validatedValue))) {
           setError("Must be a number");
@@ -139,6 +186,31 @@ export default function EditableCell({
           autoFocus
           className={cn("h-8 min-h-[44px] sm:min-h-[32px]", error && "border-destructive", className)}
         />
+      );
+
+    case "time":
+      return (
+        <div className="space-y-1">
+          <Input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9:.]*"
+            placeholder="MM:SS or MM:SS.HH"
+            value={editValue}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Only allow numbers, colons, and periods
+              if (/^[\d:.]*$/.test(val)) {
+                setEditValue(val);
+              }
+            }}
+            onBlur={validateAndSave}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            className={cn("h-8 min-h-[44px] sm:min-h-[32px]", error && "border-destructive", className)}
+          />
+          {error && <div className="text-xs text-destructive">{error}</div>}
+        </div>
       );
 
     case "number":
