@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, Edit2, Lock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Trash2, Edit2, Lock, ChevronDown } from "lucide-react";
 import { useLedger } from "@/contexts/LedgerContext";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export default function Ledger() {
   const {
@@ -178,7 +181,10 @@ export default function Ledger() {
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2 items-center">
               {headers.map((header) => (
-                <div key={header.id} className="flex items-center gap-1 bg-muted rounded-md px-2 py-1">
+                <div key={header.id} className={cn(
+                  "flex items-center gap-1 rounded-md px-2 py-1",
+                  header.isHardwired ? "bg-muted/70 border border-muted-foreground/20" : "bg-muted"
+                )}>
                   {header.isHardwired && (
                     <Lock className="w-3 h-3 text-muted-foreground" />
                   )}
@@ -196,7 +202,10 @@ export default function Ledger() {
                       autoFocus
                     />
                   ) : (
-                    <span className="text-sm font-medium">{header.label}</span>
+                    <span className={cn(
+                      "text-sm font-medium",
+                      header.isHardwired && "text-muted-foreground"
+                    )}>{header.label}</span>
                   )}
                   
                   {!header.isHardwired && (
@@ -271,48 +280,90 @@ export default function Ledger() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
               />
-              <Dialog open={isAddAthleteOpen} onOpenChange={setIsAddAthleteOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="whitespace-nowrap">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Athlete
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md bg-card">
-                  <DialogHeader>
-                    <DialogTitle>Add Athlete</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 pt-4 max-h-[60vh] overflow-y-auto">
-                    {headers.map((header) => (
-                      <div key={header.id} className="space-y-2">
-                        <Label htmlFor={header.id}>
-                          {header.label}
-                          {header.id === "name" && <span className="text-destructive ml-1">*</span>}
-                          {header.id === "attendance_rate" && <span className="text-muted-foreground text-xs ml-2">(Auto-calculated)</span>}
-                        </Label>
-                        <Input
-                          id={header.id}
-                          placeholder={header.id === "attendance_rate" ? "Auto-calculated" : `Enter ${header.label.toLowerCase()}`}
-                          value={newAthleteData[header.id] || ""}
-                          onChange={(e) => setNewAthleteData({ ...newAthleteData, [header.id]: e.target.value })}
-                          disabled={header.id === "attendance_rate"}
-                        />
-                      </div>
-                    ))}
-                    <div className="flex justify-end gap-2 pt-4">
-                      <Button variant="outline" onClick={() => {
-                        setIsAddAthleteOpen(false);
-                        setNewAthleteData({});
-                      }}>
-                        Cancel
-                      </Button>
-                      <Button onClick={handleAddAthlete}>
-                        Add Athlete
-                      </Button>
+              
+              <div className="flex gap-2 items-center w-full sm:w-auto">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="flex-1 sm:flex-none justify-between min-w-[200px]">
+                      Visible Columns ({selectedHeaders.length})
+                      <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[250px] p-3 bg-card" align="start">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium mb-3">Select Columns</div>
+                      {headers.map((header) => (
+                        <div key={header.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`header-${header.id}`}
+                            checked={selectedHeaders.includes(header.id)}
+                            onCheckedChange={() => toggleHeader(header.id)}
+                            disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
+                          />
+                          <label
+                            htmlFor={`header-${header.id}`}
+                            className={cn(
+                              "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-1",
+                              header.isHardwired && "text-muted-foreground"
+                            )}
+                          >
+                            {header.isHardwired && <Lock className="w-3 h-3" />}
+                            {header.label}
+                          </label>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </PopoverContent>
+                </Popover>
+                
+                <Dialog open={isAddAthleteOpen} onOpenChange={setIsAddAthleteOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="whitespace-nowrap flex-1 sm:flex-none">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Athlete
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md bg-card max-h-[90vh] flex flex-col p-0">
+                    <DialogHeader className="px-6 pt-6">
+                      <DialogTitle>Add Athlete</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                      <div className="space-y-4">
+                        {headers.map((header) => (
+                          <div key={header.id} className="space-y-2">
+                            <Label htmlFor={header.id} className="flex items-center gap-1">
+                              {header.isHardwired && <Lock className="w-3 h-3 text-muted-foreground" />}
+                              {header.label}
+                              {header.id === "name" && <span className="text-destructive ml-1">*</span>}
+                              {header.id === "attendance_rate" && <span className="text-muted-foreground text-xs ml-2">(Auto-calculated)</span>}
+                            </Label>
+                            <Input
+                              id={header.id}
+                              placeholder={header.id === "attendance_rate" ? "Auto-calculated" : `Enter ${header.label.toLowerCase()}`}
+                              value={newAthleteData[header.id] || ""}
+                              onChange={(e) => setNewAthleteData({ ...newAthleteData, [header.id]: e.target.value })}
+                              disabled={header.id === "attendance_rate"}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <DialogFooter className="px-6 py-4 border-t bg-muted/20">
+                      <div className="flex justify-end gap-2 w-full">
+                        <Button variant="outline" onClick={() => {
+                          setIsAddAthleteOpen(false);
+                          setNewAthleteData({});
+                        }}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleAddAthlete}>
+                          Add Athlete
+                        </Button>
+                      </div>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">
@@ -336,7 +387,7 @@ export default function Ledger() {
                   Search Results ({filteredAthletes.length})
                 </div>
                 {filteredAthletes.map((athlete) => (
-                  <Card key={athlete.id}>
+                  <Card key={athlete.id} className="bg-muted/30">
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">{athlete.name}</CardTitle>
@@ -354,9 +405,18 @@ export default function Ledger() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {headers.map((header) => (
                           <div key={header.id} className="space-y-1">
-                            <Label className="text-sm text-muted-foreground">{header.label}</Label>
+                            <Label className={cn(
+                              "text-sm flex items-center gap-1",
+                              header.isHardwired && "text-muted-foreground"
+                            )}>
+                              {header.isHardwired && <Lock className="w-3 h-3" />}
+                              {header.label}
+                            </Label>
                             <div 
-                              className={`text-sm font-medium ${header.id !== "attendance_rate" ? "cursor-pointer hover:bg-muted/50 p-2 rounded" : "p-2"}`}
+                              className={cn(
+                                "text-sm font-medium p-2 rounded",
+                                header.id !== "attendance_rate" && "cursor-pointer hover:bg-muted/50"
+                              )}
                               onClick={() => header.id !== "attendance_rate" && startEdit(athlete.id, header.id)}
                             >
                               {editingCell?.athleteId === athlete.id && editingCell?.field === header.id ? (
@@ -397,7 +457,16 @@ export default function Ledger() {
                     <TableRow>
                       {selectedHeaders.map((headerId) => {
                         const header = headers.find((h) => h.id === headerId);
-                        return header ? <TableHead key={headerId}>{header.label}</TableHead> : null;
+                        return header ? (
+                          <TableHead key={headerId} className={cn(
+                            header.isHardwired && "bg-muted/30"
+                          )}>
+                            <div className="flex items-center gap-1">
+                              {header.isHardwired && <Lock className="w-3 h-3 text-muted-foreground" />}
+                              {header.label}
+                            </div>
+                          </TableHead>
+                        ) : null;
                       })}
                       <TableHead className="w-16"></TableHead>
                     </TableRow>
