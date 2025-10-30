@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { X } from "lucide-react";
 import { ReactNode } from "react";
 
 interface RosterControlsProps {
@@ -26,14 +27,24 @@ export default function RosterControls({
 }: RosterControlsProps) {
   return (
     <div className="flex items-center justify-between gap-2 flex-wrap">
-      <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+      <div className="flex items-center gap-2 flex-1 min-w-[200px] relative">
         <Input
           type="text"
           placeholder={placeholder}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="w-full"
+          className="w-full pr-8"
         />
+        {searchValue && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onSearchChange("")}
+            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-2">

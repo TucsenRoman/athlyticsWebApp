@@ -30,6 +30,7 @@ import {
   Settings2,
   Pencil,
   Trash2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -652,9 +653,19 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
             placeholder="Search athletes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 pr-8"
             disabled={isEditMode}
           />
+          {searchQuery && !isEditMode && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button

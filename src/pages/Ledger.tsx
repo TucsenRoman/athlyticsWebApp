@@ -273,13 +273,25 @@ export default function Ledger() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <Input
-                type="text"
-                placeholder="Search athletes by name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-              />
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  placeholder="Search athletes by name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-8"
+                />
+                {searchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
+                  >
+                    <Plus className="h-4 w-4 rotate-45" />
+                  </Button>
+                )}
+              </div>
               
               <div className="flex gap-2 items-center w-full sm:w-auto">
                 <Popover>

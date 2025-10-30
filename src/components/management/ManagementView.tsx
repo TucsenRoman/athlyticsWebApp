@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useLedger } from "@/contexts/LedgerContext";
-import { ChevronDown, Lock } from "lucide-react";
+import { ChevronDown, Lock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function ManagementView() {
@@ -79,13 +79,25 @@ export default function ManagementView() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
-            <Input
-              type="text"
-              placeholder="Search athletes by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
-            />
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder="Search athletes by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-8"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             
             <Popover>
               <PopoverTrigger asChild>
