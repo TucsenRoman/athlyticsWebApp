@@ -45,7 +45,7 @@ const AttendanceTracker = () => {
   const { athletes, loading: athletesLoading, refreshAthletes } = useLedger();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string[]>(["all"]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true);
@@ -86,6 +86,7 @@ const AttendanceTracker = () => {
   };
   const fetchAttendance = async () => {
     try {
+      setLoading(true);
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -96,6 +97,8 @@ const AttendanceTracker = () => {
       setAttendance((data || []) as AttendanceRecord[]);
     } catch (error) {
       console.error("Error fetching attendance:", error);
+    } finally {
+      setLoading(false);
     }
   };
   const updateAttendance = async (athleteId: string, status: "Present" | "Absent" | "Excused", notes?: string) => {
