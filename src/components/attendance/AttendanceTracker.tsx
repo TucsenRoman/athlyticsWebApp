@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, Filter, Edit, ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
@@ -19,9 +18,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -34,12 +31,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
-interface Athlete {
-  id: string;
-  name: string;
-  grade: number | null;
-  gender: string | null;
-}
+import { useLedger } from "@/contexts/LedgerContext";
+
 interface AttendanceRecord {
   id: string;
   athlete_id: string;
@@ -47,27 +40,22 @@ interface AttendanceRecord {
   status: "Present" | "Absent" | "Excused";
   notes: string | null;
 }
+
 const AttendanceTracker = () => {
+  const { athletes, loading: athletesLoading, refreshAthletes } = useLedger();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string[]>(["all"]);
-  const [editingNotes, setEditingNotes] = useState<{
-    [key: string]: string;
-  }>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentNoteAthleteId, setCurrentNoteAthleteId] = useState<string | null>(null);
   const [currentNoteText, setCurrentNoteText] = useState("");
   const { toast } = useToast();
-  useEffect(() => {
-    fetchAthletes();
-  }, []);
+
   useEffect(() => {
     // Reset states when date changes
-    setEditingNotes({});
     setNoteDialogOpen(false);
     setCurrentNoteAthleteId(null);
     if (athletes.length > 0) {
@@ -94,30 +82,6 @@ const AttendanceTracker = () => {
       setIsEditMode(!submitted);
     } catch (error) {
       console.error("Error checking submission status:", error);
-    }
-  };
-  const fetchAthletes = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data, error } = await supabase
-        .from("athletes")
-        .select("id, name, grade, gender")
-        .eq("coach_id", user.id)
-        .order("name");
-      if (error) throw error;
-      setAthletes(data || []);
-    } catch (error) {
-      console.error("Error fetching athletes:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load athletes",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
   const fetchAttendance = async () => {
@@ -162,6 +126,7 @@ const AttendanceTracker = () => {
         if (error) throw error;
       }
       await fetchAttendance();
+      await refreshAthletes(); // Refresh attendance rates in Ledger
     } catch (error) {
       console.error("Error updating attendance:", error);
       toast({
@@ -224,13 +189,12 @@ const AttendanceTracker = () => {
       const dateStr = format(selectedDate, "yyyy-MM-dd");
       const promises = athletes.map((athlete) => {
         const existingRecord = attendance.find((a) => a.athlete_id === athlete.id);
-        const currentNotes = editingNotes[athlete.id] || existingRecord?.notes || null;
         if (existingRecord) {
           return supabase
             .from("attendance")
             .update({
               status: existingRecord.status,
-              notes: currentNotes,
+              notes: existingRecord.notes,
             })
             .eq("id", existingRecord.id);
         } else {
@@ -239,7 +203,7 @@ const AttendanceTracker = () => {
             coach_id: user.id,
             date: dateStr,
             status: "Present",
-            notes: currentNotes,
+            notes: null,
           });
         }
       });
@@ -257,9 +221,13 @@ const AttendanceTracker = () => {
         },
       );
       await fetchAttendance();
-      setEditingNotes({});
+      await refreshAthletes(); // Refresh attendance rates in Ledger
       setIsEditMode(false);
       setIsSubmitted(true);
+      toast({
+        title: "Success",
+        description: "Attendance submitted successfully",
+      });
     } catch (error) {
       console.error("Error submitting attendance:", error);
       toast({
@@ -295,9 +263,9 @@ const AttendanceTracker = () => {
 
       // Reset UI state
       setAttendance([]);
-      setEditingNotes({});
       setIsSubmitted(false);
       setIsEditMode(true);
+      await refreshAthletes(); // Refresh attendance rates in Ledger
       toast({
         title: "Cleared",
         description: "All attendance for this date has been cleared",
@@ -346,9 +314,23 @@ const AttendanceTracker = () => {
       return false;
     });
   });
-  if (loading) {
+
+  if (loading || athletesLoading) {
     return <div className="text-center p-8">Loading...</div>;
   }
+
+  if (athletes.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-muted-foreground">
+            No athletes found for this program. Add athletes in Ledger first.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>

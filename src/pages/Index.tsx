@@ -3,17 +3,25 @@ import DashboardStats from "@/components/dashboard/DashboardStats";
 import RemindersPanel from "@/components/reminders/RemindersPanel";
 import ManagementView from "@/components/management/ManagementView";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
+import ContextSelector from "@/components/ledger/ContextSelector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, Users, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
+import { useLedger } from "@/contexts/LedgerContext";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("management");
+  const { currentContext, setCurrentContext } = useLedger();
+  
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
+        <div className="flex flex-col gap-4">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+          <ContextSelector 
+            currentContext={currentContext}
+            onContextChange={setCurrentContext}
+          />
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      athlete_custom_fields: {
+        Row: {
+          athlete_id: string
+          coach_id: string
+          created_at: string
+          field_id: string
+          field_value: string | null
+          id: string
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          coach_id: string
+          created_at?: string
+          field_id: string
+          field_value?: string | null
+          id?: string
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          coach_id?: string
+          created_at?: string
+          field_id?: string
+          field_value?: string | null
+          id?: string
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       athletes: {
         Row: {
           achievements: string[] | null
@@ -160,6 +193,36 @@ export type Database = {
           },
         ]
       }
+      ledger_headers: {
+        Row: {
+          coach_id: string
+          created_at: string
+          header_id: string
+          id: string
+          is_hardwired: boolean
+          label: string
+          program_id: string
+        }
+        Insert: {
+          coach_id: string
+          created_at?: string
+          header_id: string
+          id?: string
+          is_hardwired?: boolean
+          label: string
+          program_id: string
+        }
+        Update: {
+          coach_id?: string
+          created_at?: string
+          header_id?: string
+          id?: string
+          is_hardwired?: boolean
+          label?: string
+          program_id?: string
+        }
+        Relationships: []
+      }
       lockers: {
         Row: {
           athlete_id: string | null
@@ -291,8 +354,10 @@ export type Database = {
           id: string
           level: string
           name: string
+          school: string
           season_end_date: string | null
           season_start_date: string | null
+          season_year: string
           sport: string
           updated_at: string
         }
@@ -303,8 +368,10 @@ export type Database = {
           id?: string
           level: string
           name: string
+          school?: string
           season_end_date?: string | null
           season_start_date?: string | null
+          season_year?: string
           sport: string
           updated_at?: string
         }
@@ -315,8 +382,10 @@ export type Database = {
           id?: string
           level?: string
           name?: string
+          school?: string
           season_end_date?: string | null
           season_start_date?: string | null
+          season_year?: string
           sport?: string
           updated_at?: string
         }
