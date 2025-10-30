@@ -67,21 +67,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between gap-4">
+          {/* Desktop Layout */}
+          <div className="hidden md:flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 md:gap-4">
               <button
                 onClick={() => navigate("/")}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity touch-manipulation"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
                 <img
                   src={athlyticsLogo}
                   alt="Athlytics Logo"
-                  className="w-8 h-8 md:w-10 md:h-10"
+                  className="w-10 h-10"
                 />
-                <h1 className="text-lg md:text-xl font-bold">Athlytics</h1>
+                <h1 className="text-xl font-bold">Athlytics</h1>
               </button>
               
-              <div className="hidden md:block h-8 w-px bg-border" />
+              <div className="h-8 w-px bg-border" />
               
               <ProgramSelector 
                 selectedProgramId={selectedProgramId}
@@ -94,21 +95,67 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 variant="ghost"
                 onClick={() => navigate("/ledger")}
                 size="sm"
-                className="md:h-10 touch-manipulation"
+                className="h-10"
               >
-                <BookOpen className="w-4 h-4 md:mr-2" />
-                <span className="hidden md:inline">Ledger</span>
+                <BookOpen className="w-4 h-4 mr-2" />
+                <span>Ledger</span>
               </Button>
               
               <Button
                 variant="outline"
                 onClick={handleSignOut}
                 size="sm"
-                className="md:h-10 touch-manipulation"
+                className="h-10"
               >
-                <LogOut className="w-4 h-4 md:mr-2" />
-                <span className="hidden md:inline">Sign Out</span>
+                <LogOut className="w-4 h-4 mr-2" />
+                <span>Sign Out</span>
               </Button>
+            </div>
+          </div>
+
+          {/* Mobile Layout - Stacked */}
+          <div className="md:hidden space-y-3">
+            {/* Top Row: Logo + Action Buttons */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => navigate("/")}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity touch-manipulation min-h-[48px]"
+              >
+                <img
+                  src={athlyticsLogo}
+                  alt="Athlytics Logo"
+                  className="w-8 h-8"
+                />
+                <h1 className="text-lg font-bold">Athlytics</h1>
+              </button>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate("/ledger")}
+                  size="sm"
+                  className="min-h-[44px] min-w-[44px] touch-manipulation"
+                >
+                  <BookOpen className="w-5 h-5" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={handleSignOut}
+                  size="sm"
+                  className="min-h-[44px] min-w-[44px] touch-manipulation"
+                >
+                  <LogOut className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Bottom Row: Program Selector - Full Width */}
+            <div className="w-full">
+              <ProgramSelector 
+                selectedProgramId={selectedProgramId}
+                onProgramChange={setSelectedProgramId}
+              />
             </div>
           </div>
         </div>

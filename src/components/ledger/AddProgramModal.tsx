@@ -118,32 +118,33 @@ export default function AddProgramModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-card">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto bg-card">
         <DialogHeader>
           <DialogTitle>Create New Program</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="school">School</Label>
+            <Label htmlFor="school" className="text-base md:text-sm">School</Label>
             <Input
               id="school"
               placeholder="e.g., Zimmerman High School"
               value={school}
               onChange={(e) => setSchool(e.target.value)}
+              className="min-h-[44px] text-base"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sport">
+            <Label htmlFor="sport" className="text-base md:text-sm">
               Sport / Program <span className="text-destructive">*</span>
             </Label>
             <Select value={sport} onValueChange={setSport}>
-              <SelectTrigger>
+              <SelectTrigger className="min-h-[44px] text-base">
                 <SelectValue placeholder="Select sport" />
               </SelectTrigger>
-              <SelectContent className="bg-popover">
+              <SelectContent className="bg-popover max-h-[250px] overflow-y-auto z-50">
                 {SPORTS.map((s) => (
-                  <SelectItem key={s} value={s}>
+                  <SelectItem key={s} value={s} className="min-h-[44px] text-base touch-manipulation">
                     {s}
                   </SelectItem>
                 ))}
@@ -153,14 +154,14 @@ export default function AddProgramModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="level">Level</Label>
+              <Label htmlFor="level" className="text-base md:text-sm">Level</Label>
               <Select value={level} onValueChange={setLevel}>
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[44px] text-base">
                   <SelectValue placeholder="Select level" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover">
+                <SelectContent className="bg-popover max-h-[250px] z-50">
                   {LEVELS.map((l) => (
-                    <SelectItem key={l} value={l}>
+                    <SelectItem key={l} value={l} className="min-h-[44px] text-base touch-manipulation">
                       {l}
                     </SelectItem>
                   ))}
@@ -169,14 +170,14 @@ export default function AddProgramModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="gender">Gender</Label>
+              <Label htmlFor="gender" className="text-base md:text-sm">Gender</Label>
               <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger>
+                <SelectTrigger className="min-h-[44px] text-base">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
-                <SelectContent className="bg-popover">
+                <SelectContent className="bg-popover max-h-[250px] z-50">
                   {GENDERS.map((g) => (
-                    <SelectItem key={g} value={g}>
+                    <SelectItem key={g} value={g} className="min-h-[44px] text-base touch-manipulation">
                       {g}
                     </SelectItem>
                   ))}
@@ -186,20 +187,29 @@ export default function AddProgramModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="season">Season / Year</Label>
+            <Label htmlFor="season" className="text-base md:text-sm">Season / Year</Label>
             <Input
               id="season"
               placeholder="e.g., 2024-2025 or Fall 2024"
               value={seasonYear}
               onChange={(e) => setSeasonYear(e.target.value)}
+              className="min-h-[44px] text-base"
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="sticky bottom-0 bg-card pt-4 pb-2 border-t mt-4">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="min-h-[44px] flex-1 md:flex-none touch-manipulation"
+          >
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={loading}>
+          <Button 
+            onClick={handleCreate} 
+            disabled={loading}
+            className="min-h-[44px] flex-1 md:flex-none touch-manipulation"
+          >
             {loading ? "Creating..." : "Create Program"}
           </Button>
         </DialogFooter>

@@ -228,9 +228,9 @@ export default function Ledger() {
           <Button
             variant="ghost"
             onClick={() => navigate("/")}
-            className="gap-2 -ml-2 self-start"
+            className="gap-2 -ml-2 self-start min-h-[44px] md:min-h-0 touch-manipulation"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5 md:w-4 md:h-4" />
             <span>Dashboard</span>
           </Button>
           <div className="flex items-center justify-between">
@@ -270,12 +270,16 @@ export default function Ledger() {
                   value={selectedProgramId || ""}
                   onValueChange={setSelectedProgramId}
                 >
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger className="flex-1 min-h-[44px] text-base md:text-sm">
                     <SelectValue placeholder="Select a program..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
+                  <SelectContent className="bg-popover z-50 max-h-[250px] overflow-y-auto">
                     {programs.map((program) => (
-                      <SelectItem key={program.id} value={program.id}>
+                      <SelectItem 
+                        key={program.id} 
+                        value={program.id}
+                        className="min-h-[44px] text-base md:text-sm touch-manipulation"
+                      >
                         {program.school} – {program.name} ({program.season_year})
                       </SelectItem>
                     ))}
@@ -283,13 +287,21 @@ export default function Ledger() {
                 </Select>
                 
                 <div className="flex gap-2">
-                  <Button onClick={() => setIsAddProgramOpen(true)} variant="outline">
+                  <Button 
+                    onClick={() => setIsAddProgramOpen(true)} 
+                    variant="outline"
+                    className="min-h-[44px] touch-manipulation"
+                  >
                     <Plus className="w-4 h-4 sm:mr-2" />
                     <span className="hidden sm:inline">Add Program</span>
                   </Button>
                   
                   {selectedProgramId && (
-                    <Button onClick={() => setIsEditProgramOpen(true)} variant="outline">
+                    <Button 
+                      onClick={() => setIsEditProgramOpen(true)} 
+                      variant="outline"
+                      className="min-h-[44px] touch-manipulation"
+                    >
                       <Settings className="w-4 h-4 sm:mr-2" />
                       <span className="hidden sm:inline">Edit Program</span>
                     </Button>

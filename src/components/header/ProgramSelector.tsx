@@ -92,32 +92,38 @@ export default function ProgramSelector({ selectedProgramId, onProgramChange }: 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-auto px-2 py-1 hover:bg-muted/50">
-          <div className="flex items-center gap-2">
-            <div className="text-left">
-              <div className="text-sm font-medium">
+        <Button 
+          variant="ghost" 
+          className="h-auto w-full md:w-auto px-3 py-2 md:px-2 md:py-1 hover:bg-muted/50 min-h-[48px] md:min-h-0 touch-manipulation justify-between md:justify-start"
+        >
+          <div className="flex items-center gap-2 w-full">
+            <div className="text-left flex-1">
+              <div className="text-base md:text-sm font-medium">
                 {userName}
               </div>
               {selectedProgram && (
-                <div className="text-xs text-muted-foreground">
+                <div className="text-sm md:text-xs text-muted-foreground">
                   {formatProgramName(selectedProgram)}
                 </div>
               )}
             </div>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <ChevronDown className="h-5 w-5 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-80">
+      <DropdownMenuContent 
+        align="start" 
+        className="w-[95vw] md:w-80 max-h-[250px] overflow-y-auto z-50"
+      >
         {programs.map((program) => (
           <DropdownMenuItem
             key={program.id}
             onClick={() => onProgramChange(program.id)}
-            className={selectedProgramId === program.id ? "bg-muted" : ""}
+            className={`min-h-[44px] md:min-h-0 touch-manipulation ${selectedProgramId === program.id ? "bg-muted" : ""}`}
           >
-            <div className="flex flex-col gap-0.5 w-full">
-              <span className="font-medium">{formatProgramName(program)}</span>
-              <span className="text-xs text-muted-foreground">
+            <div className="flex flex-col gap-0.5 w-full py-1">
+              <span className="font-medium text-base md:text-sm">{formatProgramName(program)}</span>
+              <span className="text-sm md:text-xs text-muted-foreground">
                 {formatProgramDetails(program)}
               </span>
             </div>
