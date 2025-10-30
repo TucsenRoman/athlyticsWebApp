@@ -14,13 +14,10 @@ import { useLedger } from "@/contexts/LedgerContext";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import ContextSelector from "@/components/ledger/ContextSelector";
 
 export default function Ledger() {
   const navigate = useNavigate();
   const {
-    currentContext,
-    setCurrentContext,
     headers,
     athletes,
     loading,
@@ -187,11 +184,6 @@ export default function Ledger() {
           </Button>
           <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
         </div>
-
-        <ContextSelector 
-          currentContext={currentContext}
-          onContextChange={setCurrentContext}
-        />
 
         <Card>
           <CardHeader>

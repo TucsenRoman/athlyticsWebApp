@@ -7,6 +7,7 @@ import { toZonedTime } from "date-fns-tz";
 import RemindersCard from "./RemindersCard";
 import MessagesCard from "./MessagesCard";
 import TodaysPlanCard from "./TodaysPlanCard";
+import { useProgramContext } from "@/hooks/useProgramContext";
 import {
   Carousel,
   CarouselContent,
@@ -24,8 +25,11 @@ interface DashboardStatsProps {
 const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
   const [attendancePercent, setAttendancePercent] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const { selectedProgramId } = useProgramContext();
 
   useEffect(() => {
+    if (!selectedProgramId) return;
+    
     fetchStats();
     
     // Realtime updates for attendance
@@ -42,9 +46,11 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [selectedProgramId]);
 
   const fetchStats = async () => {
+    if (!selectedProgramId) return;
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -58,6 +64,7 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
         .from("attendance_submissions")
         .select("*")
         .eq("coach_id", user.id)
+        .eq("program_id", selectedProgramId)
         .eq("date", todayDate)
         .maybeSingle();
 
@@ -67,6 +74,7 @@ const DashboardStats = ({ onSwitchToAttendance }: DashboardStatsProps) => {
           .from("attendance")
           .select("status")
           .eq("coach_id", user.id)
+          .eq("program_id", selectedProgramId)
           .eq("date", todayDate);
 
         if (todayAttendance && todayAttendance.length > 0) {
