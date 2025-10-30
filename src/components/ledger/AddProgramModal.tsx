@@ -59,13 +59,8 @@ export default function AddProgramModal({
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
-    if (!school.trim() || !sport || !seasonYear.trim()) {
-      toast.error("Please fill in School, Sport, and Season fields");
-      return;
-    }
-
-    if (!level || !gender) {
-      toast.error("Please select Level and Gender");
+    if (!sport) {
+      toast.error("Sport/Program is required");
       return;
     }
 
@@ -79,17 +74,19 @@ export default function AddProgramModal({
       }
 
       // Create program name
-      const programName = `${gender} ${level} ${sport}`;
+      const finalLevel = level || "Varsity";
+      const finalGender = gender || "Mixed";
+      const programName = `${finalGender} ${finalLevel} ${sport}`;
 
       const { data: newProgram, error } = await supabase
         .from("programs")
         .insert({
           coach_id: user.id,
-          school: school.trim(),
+          school: school.trim() || "My School",
           sport,
-          level,
-          gender,
-          season_year: seasonYear.trim(),
+          level: finalLevel,
+          gender: finalGender,
+          season_year: seasonYear.trim() || new Date().getFullYear().toString(),
           name: programName,
         })
         .select()
@@ -127,9 +124,7 @@ export default function AddProgramModal({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="school">
-              School <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="school">School</Label>
             <Input
               id="school"
               placeholder="e.g., Zimmerman High School"
@@ -158,9 +153,7 @@ export default function AddProgramModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="level">
-                Level <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="level">Level</Label>
               <Select value={level} onValueChange={setLevel}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select level" />
@@ -176,9 +169,7 @@ export default function AddProgramModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="gender">
-                Gender <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="gender">Gender</Label>
               <Select value={gender} onValueChange={setGender}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
@@ -195,9 +186,7 @@ export default function AddProgramModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="season">
-              Season / Year <span className="text-destructive">*</span>
-            </Label>
+            <Label htmlFor="season">Season / Year</Label>
             <Input
               id="season"
               placeholder="e.g., 2024-2025 or Fall 2024"

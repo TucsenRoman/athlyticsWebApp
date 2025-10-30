@@ -86,6 +86,11 @@ export default function Ledger() {
     fetchPrograms();
   };
 
+  const handleProgramDeleted = () => {
+    setSelectedProgramId(null);
+    fetchPrograms();
+  };
+
   const filteredAthletes = athletes.filter(athlete =>
     athlete.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -245,6 +250,7 @@ export default function Ledger() {
             onOpenChange={setIsEditProgramOpen}
             programId={selectedProgramId}
             onProgramUpdated={handleProgramUpdated}
+            onProgramDeleted={handleProgramDeleted}
           />
         )}
 
