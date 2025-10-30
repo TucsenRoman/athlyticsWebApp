@@ -5,6 +5,9 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
+#lovable-badge {
+  display: none !important;
+}
 
 @layer base {
   :root {
@@ -46,7 +49,7 @@ All colors MUST be HSL.
     --gradient-primary: linear-gradient(135deg, hsl(4 84% 48%), hsl(12 88% 55%));
     --gradient-secondary: linear-gradient(135deg, hsl(220 65% 25%), hsl(220 70% 35%));
     --gradient-hero: linear-gradient(135deg, hsl(4 84% 48%) 0%, hsl(220 65% 25%) 100%);
-    
+
     /* Shadows */
     --shadow-lg: 0 10px 30px -5px hsl(4 84% 48% / 0.15);
     --shadow-athletic: 0 8px 24px -4px hsl(220 65% 25% / 0.2);
