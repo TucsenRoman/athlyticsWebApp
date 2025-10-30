@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Athlete {
@@ -103,11 +104,25 @@ export default function AthletesView({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        <Button size="sm" variant="outline">
-          <Plus className="w-4 h-4 mr-2" />
-          Add
-        </Button>
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+          <Input
+            type="text"
+            placeholder="Search athletes..."
+            value={searchQuery}
+            className="w-full"
+            readOnly
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm">
+            Filter
+          </Button>
+          <Button variant="default" size="sm">
+            Edit
+          </Button>
+        </div>
       </div>
 
       <div className="border rounded-lg">
@@ -117,15 +132,13 @@ export default function AthletesView({
               <TableHead>Name</TableHead>
               <TableHead>Grade</TableHead>
               <TableHead>Gender</TableHead>
-              <TableHead>Locker #</TableHead>
-              <TableHead>Uniform ID</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredAthletes.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                   {searchQuery ? "No athletes found" : "No athletes yet"}
                 </TableCell>
               </TableRow>
@@ -136,13 +149,6 @@ export default function AthletesView({
                   <TableCell>{athlete.grade}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{athlete.gender}</Badge>
-                  </TableCell>
-                  <TableCell>{athlete.locker?.locker_number || "—"}</TableCell>
-                  <TableCell>
-                    {athlete.uniform 
-                      ? `${athlete.uniform.top_id}/${athlete.uniform.bottom_id}`
-                      : "—"
-                    }
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
