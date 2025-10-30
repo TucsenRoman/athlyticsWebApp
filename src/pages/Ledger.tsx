@@ -503,66 +503,78 @@ export default function Ledger() {
                       <span className="sm:hidden">Add</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="w-[95vw] max-w-md bg-popover max-h-[90vh] flex flex-col p-0">
-                    <DialogHeader className="px-6 pt-6">
+                  <DialogContent className="w-[95vw] max-w-md bg-background max-h-[90vh] flex flex-col p-0">
+                    <DialogHeader className="px-6 pt-6 pb-4 border-b">
                       <DialogTitle>Add Athlete</DialogTitle>
                     </DialogHeader>
-                    <div className="flex-1 overflow-y-auto px-6 py-4">
+                    <div className="flex-1 overflow-y-auto px-6 py-4 pb-24">
                       <div className="space-y-4">
-                        {headers.filter(header => header.id !== "attendance_rate").map((header) => (
-                          <div key={header.id} className="space-y-2">
-                            <Label htmlFor={header.id} className="flex items-center gap-1 text-base md:text-sm">
-                              {header.isHardwired && <Lock className="w-3 h-3 text-muted-foreground" />}
-                              {header.label}
-                              {header.id === "name" && <span className="text-destructive ml-1">*</span>}
-                            </Label>
-                            {header.id === "gender" ? (
-                              <Select
-                                value={newAthleteData[header.id] || ""}
-                                onValueChange={(value) => setNewAthleteData({ ...newAthleteData, [header.id]: value })}
-                              >
-                                <SelectTrigger className="min-h-[44px] text-base">
-                                  <SelectValue placeholder="Select gender" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-popover z-50">
-                                  <SelectItem value="Male">Male</SelectItem>
-                                  <SelectItem value="Female">Female</SelectItem>
-                                  <SelectItem value="Other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Input
-                                id={header.id}
-                                placeholder={`Enter ${header.label.toLowerCase()}`}
-                                value={newAthleteData[header.id] || ""}
-                                onChange={(e) => setNewAthleteData({ ...newAthleteData, [header.id]: e.target.value })}
-                                className="min-h-[44px] text-base"
-                              />
-                            )}
-                          </div>
-                        ))}
+                        <div className="space-y-2">
+                          <Label htmlFor="name" className="text-base md:text-sm">
+                            Name <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="name"
+                            value={newAthleteData.name || ""}
+                            onChange={(e) => setNewAthleteData({ ...newAthleteData, name: e.target.value })}
+                            placeholder="Enter athlete name"
+                            className="min-h-[44px] text-base"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="gender" className="text-base md:text-sm">Gender</Label>
+                          <Select
+                            value={newAthleteData.gender || ""}
+                            onValueChange={(value) => setNewAthleteData({ ...newAthleteData, gender: value })}
+                          >
+                            <SelectTrigger id="gender" className="min-h-[44px] text-base">
+                              <SelectValue placeholder="Select gender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Male">Male</SelectItem>
+                              <SelectItem value="Female">Female</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="grade" className="text-base md:text-sm">Grade</Label>
+                          <Select
+                            value={newAthleteData.grade?.toString() || ""}
+                            onValueChange={(value) => setNewAthleteData({ ...newAthleteData, grade: parseInt(value) })}
+                          >
+                            <SelectTrigger id="grade" className="min-h-[44px] text-base">
+                              <SelectValue placeholder="Select grade" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[9, 10, 11, 12].map((grade) => (
+                                <SelectItem key={grade} value={grade.toString()}>
+                                  Grade {grade}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
-                    <DialogFooter className="px-6 py-4 border-t bg-card sticky bottom-0">
-                      <div className="flex justify-end gap-2 w-full">
+                    <div className="sticky bottom-0 px-6 py-4 bg-background border-t shadow-lg">
+                      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-2">
                         <Button 
                           variant="outline" 
-                          onClick={() => {
-                            setIsAddAthleteOpen(false);
-                            setNewAthleteData({});
-                          }}
-                          className="min-h-[44px] flex-1 md:flex-none touch-manipulation"
+                          onClick={() => setIsAddAthleteOpen(false)}
+                          className="min-h-[44px] flex-1 sm:flex-none touch-manipulation"
                         >
                           Cancel
                         </Button>
                         <Button 
                           onClick={handleAddAthlete}
-                          className="min-h-[44px] flex-1 md:flex-none touch-manipulation"
+                          className="min-h-[44px] flex-1 sm:flex-none touch-manipulation"
                         >
                           Add Athlete
                         </Button>
                       </div>
-                    </DialogFooter>
+                    </div>
                   </DialogContent>
                 </Dialog>
               </div>

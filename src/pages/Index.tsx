@@ -19,23 +19,32 @@ const Index = () => {
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="sticky top-0 z-10 grid w-full grid-cols-3 bg-muted/50 border-t border-border shadow-md rounded-t-xl">
-            <TabsTrigger value="overview" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 transition-all">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="sticky top-0 z-10 grid w-full grid-cols-3 bg-muted border-y border-border shadow-sm rounded-t-lg mb-4">
+            <TabsTrigger 
+              value="overview" 
+              className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-2 transition-all"
+            >
               <CalendarDays className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
               <span className="hidden md:inline transition-all">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="management" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 transition-all">
+            <TabsTrigger 
+              value="management" 
+              className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-2 transition-all"
+            >
               <Paperclip className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
               <span className="hidden md:inline transition-all">Management</span>
             </TabsTrigger>
-            <TabsTrigger value="attendance" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 transition-all">
+            <TabsTrigger 
+              value="attendance" 
+              className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center justify-center gap-2 transition-all"
+            >
               <Users className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
               <span className="hidden md:inline transition-all">Attendance</span>
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="overview" className="space-y-6 animate-fade-in">
+          <TabsContent value="overview" className="space-y-6 animate-fade-in mt-4">
             <DashboardStats onSwitchToAttendance={() => setActiveTab("attendance")} />
             <RemindersPanel />
           </TabsContent>
