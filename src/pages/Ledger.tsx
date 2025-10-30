@@ -7,14 +7,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, Edit2, Lock, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Edit2, Lock, ChevronDown, X } from "lucide-react";
 import { useLedger } from "@/contexts/LedgerContext";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import ContextSelector from "@/components/ledger/ContextSelector";
 
 export default function Ledger() {
   const {
+    currentContext,
+    setCurrentContext,
     headers,
     athletes,
     loading,
@@ -173,6 +176,11 @@ export default function Ledger() {
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
         </div>
+
+        <ContextSelector 
+          currentContext={currentContext}
+          onContextChange={setCurrentContext}
+        />
 
         <Card>
           <CardHeader>
