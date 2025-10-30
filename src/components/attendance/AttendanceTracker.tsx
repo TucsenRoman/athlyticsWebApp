@@ -464,14 +464,10 @@ const AttendanceTracker = () => {
                     </Select>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openNoteDialog(athlete.id)}
-                      disabled={!isEditMode}
-                      className="h-8 w-8"
-                    >
-                      <MessageSquare className={cn("h-4 w-4", hasNote ? "fill-current" : "")} />
+                    <Button variant="ghost" size="icon" onClick={() => openNoteDialog(athlete.id)} className="h-8 w-8">
+                      <MessageSquare
+                        className={cn("h-4 w-4", hasNote ? "fill-current text-primary" : "text-muted-foreground")}
+                      />
                     </Button>
                   </TableCell>
                 </TableRow>
