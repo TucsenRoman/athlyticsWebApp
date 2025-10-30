@@ -352,11 +352,11 @@ const AttendanceTracker = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col items-center gap-4 text-center">
-          <CardTitle className="text-xl font-semibold">Attendance for</CardTitle>
+        <div className="flex flex-col items-center gap-4">
+          <CardTitle className="text-xl font-semibold text-center">Attendance for</CardTitle>
 
           {/* Date Navigation Bar */}
-          <div className="flex items-center justify-center gap-2 p-3 bg-muted rounded-lg w-full max-w-md">
+          <div className="flex items-center justify-center gap-2 p-3 bg-muted rounded-lg w-full max-w-md mx-auto">
             <Button variant="ghost" size="icon" onClick={handlePreviousDay} className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -386,8 +386,8 @@ const AttendanceTracker = () => {
           </div>
 
           {/* Controls Bar */}
-          <div className="flex items-center justify-center gap-3 w-full max-w-md">
-            <div className="flex-1">
+          <div className="flex flex-nowrap items-center justify-center gap-3 w-full max-w-md mx-auto">
+            <div className="flex-1 min-w-0">
               <Select
                 value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"}
                 onValueChange={(value) => {
@@ -396,7 +396,7 @@ const AttendanceTracker = () => {
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <Filter className="h-4 w-4 mr-2" />
+                  <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
                   <SelectValue placeholder="Filter" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
@@ -409,14 +409,14 @@ const AttendanceTracker = () => {
               </Select>
             </div>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {isSubmitted && !isEditMode ? (
-                <Button onClick={enableEditMode} variant="outline" size="sm" className="w-full">
-                  <Edit className="w-4 h-4 mr-2" />
+                <Button onClick={enableEditMode} variant="outline" size="sm" className="w-full whitespace-nowrap">
+                  <Edit className="w-4 h-4 mr-2 flex-shrink-0" />
                   Edit
                 </Button>
               ) : (
-                <Button onClick={submitAttendance} variant="default" size="sm" className="w-full">
+                <Button onClick={submitAttendance} variant="default" size="sm" className="w-full whitespace-nowrap">
                   Submit
                 </Button>
               )}
@@ -428,9 +428,9 @@ const AttendanceTracker = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[33%]">Name</TableHead>
-              <TableHead className="w-[33%] text-center">Status</TableHead>
-              <TableHead className="w-[33%] text-center">Notes</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead className="w-[160px] text-center">Status</TableHead>
+              <TableHead className="w-[80px] text-center">Notes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -441,7 +441,7 @@ const AttendanceTracker = () => {
               return (
                 <TableRow key={athlete.id} className={cn(!isEditMode && "opacity-60")}>
                   <TableCell className="font-medium">{athlete.name}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     <Select
                       value={currentStatus}
                       onValueChange={(value) =>
@@ -453,7 +453,7 @@ const AttendanceTracker = () => {
                       }
                       disabled={!isEditMode}
                     >
-                      <SelectTrigger className="w-[140px]">
+                      <SelectTrigger className="w-full max-w-[140px] mx-auto">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-popover z-50">
@@ -489,12 +489,13 @@ const AttendanceTracker = () => {
               onChange={(e) => setCurrentNoteText(e.target.value)}
               className="min-h-[100px]"
               maxLength={500}
+              disabled={!isEditMode}
             />
             <DialogFooter>
               <Button variant="outline" onClick={cancelNoteDialog}>
-                Cancel
+                {isEditMode ? "Cancel" : "Close"}
               </Button>
-              <Button onClick={saveNoteFromDialog}>Save</Button>
+              {isEditMode && <Button onClick={saveNoteFromDialog}>Save</Button>}
             </DialogFooter>
           </DialogContent>
         </Dialog>

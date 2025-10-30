@@ -2,14 +2,10 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RemindersPanel from "@/components/reminders/RemindersPanel";
 import AthletesList from "@/components/athletes/AthletesList";
-import UniformsDashboard from "@/components/uniforms/UniformsDashboard";
-import LockersDashboard from "@/components/lockers/LockersDashboard";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
-import AttendanceReport from "@/components/attendance/AttendanceReport";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ClipboardCheck, Calendar } from "lucide-react";
+import { Users, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 const Index = () => {
   const [activeTab, setActiveTab] = useState("roster");
   return <DashboardLayout>
@@ -41,26 +37,7 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="attendance" className="space-y-4 animate-fade-in">
-            <Tabs defaultValue="daily" className="space-y-4">
-              <TabsList className="grid w-full max-w-md grid-cols-2">
-                <TabsTrigger value="daily" className="flex items-center gap-2">
-                  <ClipboardCheck className="w-4 h-4" />
-                  Daily Tracker
-                </TabsTrigger>
-                <TabsTrigger value="report" className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Report
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="daily">
-                <AttendanceTracker />
-              </TabsContent>
-              
-              <TabsContent value="report">
-                <AttendanceReport />
-              </TabsContent>
-            </Tabs>
+            <AttendanceTracker />
           </TabsContent>
         </Tabs>
       </div>
