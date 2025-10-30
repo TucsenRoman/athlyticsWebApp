@@ -9,12 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Filter, LockKeyhole, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarIcon, Filter, Edit, ChevronLeft, ChevronRight } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import AssignLockerModal from "@/components/lockers/AssignLockerModal";
 import { z } from "zod";
 interface Athlete {
   id: string;
@@ -44,11 +43,6 @@ const AttendanceTracker = () => {
   const {
     toast
   } = useToast();
-  const [lockerModalOpen, setLockerModalOpen] = useState(false);
-  const [selectedAthleteForLocker, setSelectedAthleteForLocker] = useState<{
-    athleteId: string;
-    athleteName: string;
-  } | null>(null);
   useEffect(() => {
     fetchAthletes();
   }, []);
@@ -365,14 +359,6 @@ const AttendanceTracker = () => {
                   ✓ Saved!
                 </span>}
             </div>
-            <div className="flex items-center gap-2">
-              {isSubmitted && !isEditMode ? <Button onClick={enableEditMode} variant="outline" size="sm" className="touch-manipulation">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit
-                </Button> : <Button onClick={submitAttendance} variant="default" size="sm" className="touch-manipulation">
-                  Submit
-                </Button>}
-            </div>
           </div>
           
           {/* Date Navigation Bar */}
@@ -391,7 +377,7 @@ const AttendanceTracker = () => {
                   <CalendarIcon className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="center">
+              <PopoverContent className="w-auto p-0 bg-popover z-50" align="center">
                 <Calendar mode="single" selected={selectedDate} onSelect={date => date && setSelectedDate(date)} initialFocus className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
@@ -400,30 +386,41 @@ const AttendanceTracker = () => {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Controls Bar: Filter and Submit/Edit buttons */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 justify-between">
+            <Select value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"} onValueChange={value => {
+              if (value === "all") {
+                setFilterStatus(["all"]);
+              } else {
+                setFilterStatus([value]);
+              }
+            }} disabled={!isEditMode}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="Present">Present</SelectItem>
+                <SelectItem value="Absent">Absent</SelectItem>
+                <SelectItem value="Excused">Excused</SelectItem>
+                <SelectItem value="Noted Reason">Noted Reason</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {isSubmitted && !isEditMode ? <Button onClick={enableEditMode} variant="outline" size="sm" className="touch-manipulation flex-1 sm:flex-none">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit
+                </Button> : <Button onClick={submitAttendance} variant="default" size="sm" className="touch-manipulation flex-1 sm:flex-none">
+                  Submit
+                </Button>}
+            </div>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-6">
-          <Select value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"} onValueChange={value => {
-          if (value === "all") {
-            setFilterStatus(["all"]);
-          } else {
-            setFilterStatus([value]);
-          }
-        }} disabled={!isEditMode}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="Present">Present</SelectItem>
-              <SelectItem value="Absent">Absent</SelectItem>
-              <SelectItem value="Excused">Excused</SelectItem>
-              <SelectItem value="Noted Reason">Noted Reason</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
         <Table>
           <TableHeader>
@@ -432,7 +429,6 @@ const AttendanceTracker = () => {
               <TableHead>Grade</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Notes</TableHead>
-              <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -449,7 +445,7 @@ const AttendanceTracker = () => {
                       <SelectTrigger className="w-[140px]">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-popover z-50">
                         <SelectItem value="Present">Present</SelectItem>
                         <SelectItem value="Absent">Absent</SelectItem>
                         <SelectItem value="Excused">Excused</SelectItem>
@@ -458,17 +454,6 @@ const AttendanceTracker = () => {
                   </TableCell>
                   <TableCell>
                     <Input placeholder="Add notes..." value={displayNotes} onChange={e => handleNotesChange(athlete.id, e.target.value)} onBlur={() => handleNotesBlur(athlete.id)} onKeyDown={e => handleNotesKeyDown(athlete.id, e)} className="max-w-[300px]" disabled={!isEditMode} />
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                  setSelectedAthleteForLocker({
-                    athleteId: athlete.id,
-                    athleteName: athlete.name
-                  });
-                  setLockerModalOpen(true);
-                }} title="Assign Locker">
-                      <LockKeyhole className="w-4 h-4" />
-                    </Button>
                   </TableCell>
                 </TableRow>;
           })}
@@ -479,13 +464,6 @@ const AttendanceTracker = () => {
             No athletes found
           </div>}
       </CardContent>
-
-      {selectedAthleteForLocker && <AssignLockerModal isOpen={lockerModalOpen} onClose={() => {
-      setLockerModalOpen(false);
-      setSelectedAthleteForLocker(null);
-    }} athleteId={selectedAthleteForLocker.athleteId} athleteName={selectedAthleteForLocker.athleteName} onSuccess={() => {
-      // No need to refresh attendance data
-    }} />}
     </Card>;
 };
 export default AttendanceTracker;
