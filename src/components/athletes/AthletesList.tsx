@@ -13,6 +13,7 @@ import { Plus, User, Search, ChevronDown, Trophy, ShirtIcon, IdCard, TrendingUp,
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import AssignLockerModal from "@/components/lockers/AssignLockerModal";
+import { z } from "zod";
 import ProgramSummary from "./ProgramSummary";
 import { useProgramContext } from "@/hooks/useProgramContext";
 
@@ -193,6 +194,22 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
     }
   };
 
+  const athleteSchema = z.object({
+    name: z.string()
+      .trim()
+      .min(1, "Name is required")
+      .max(100, "Name must be less than 100 characters")
+      .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens, and apostrophes"),
+    grade: z.number()
+      .int("Grade must be a whole number")
+      .min(6, "Grade must be at least 6")
+      .max(12, "Grade must be 12 or below"),
+    gender: z.enum(["Male", "Female", "Other"], {
+      errorMap: () => ({ message: "Please select a valid gender" })
+    }),
+    team_position: z.string().max(50, "Position must be less than 50 characters").optional()
+  });
+
   const handleAddAthlete = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -200,12 +217,25 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { error } = await supabase.from("athletes").insert({
-        coach_id: user.id,
+      // Validate input
+      const validation = athleteSchema.safeParse({
         name: newAthlete.name,
         grade: parseInt(newAthlete.grade),
         gender: newAthlete.gender,
-        team_position: newAthlete.team_position,
+        team_position: newAthlete.team_position
+      });
+
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+
+      const { error } = await supabase.from("athletes").insert({
+        coach_id: user.id,
+        name: validation.data.name,
+        grade: validation.data.grade,
+        gender: validation.data.gender,
+        team_position: validation.data.team_position,
       });
 
       if (error) throw error;
@@ -230,13 +260,26 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
     if (!editingAthlete) return;
     
     try {
+      // Validate input
+      const validation = athleteSchema.safeParse({
+        name: editingAthlete.name,
+        grade: editingAthlete.grade,
+        gender: editingAthlete.gender,
+        team_position: editingAthlete.team_position
+      });
+
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+
       const { error } = await supabase
         .from("athletes")
         .update({
-          name: editingAthlete.name,
-          grade: editingAthlete.grade,
-          gender: editingAthlete.gender,
-          team_position: editingAthlete.team_position,
+          name: validation.data.name,
+          grade: validation.data.grade,
+          gender: validation.data.gender,
+          team_position: validation.data.team_position,
         })
         .eq("id", editingAthlete.id);
 

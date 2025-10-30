@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { sanitizeSelectValue } from "@/lib/utils";
 import { LockKeyhole, Plus } from "lucide-react";
+import { z } from "zod";
 
 interface AssignLockerModalProps {
   isOpen: boolean;
@@ -103,13 +104,38 @@ export default function AssignLockerModal({
     }
   };
 
-  const handleQuickCreate = async () => {
-    if (!quickCreateForm.locker_number) {
-      toast.error("Locker number is required");
-      return;
-    }
+  const lockerSchema = z.object({
+    locker_number: z.string()
+      .trim()
+      .min(1, "Locker number is required")
+      .max(20, "Locker number must be less than 20 characters")
+      .regex(/^[A-Za-z0-9-]+$/, "Locker number can only contain letters, numbers, and hyphens"),
+    combination: z.string()
+      .max(50, "Combination must be less than 50 characters")
+      .optional()
+      .nullable()
+      .transform(val => val || null),
+    location: z.string()
+      .max(100, "Location must be less than 100 characters")
+      .optional()
+      .nullable()
+      .transform(val => val || null)
+  });
 
+  const handleQuickCreate = async () => {
     try {
+      // Validate input
+      const validation = lockerSchema.safeParse({
+        locker_number: quickCreateForm.locker_number,
+        combination: quickCreateForm.combination,
+        location: quickCreateForm.location
+      });
+
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -117,9 +143,9 @@ export default function AssignLockerModal({
         .from("lockers")
         .insert({
           coach_id: user.id,
-          locker_number: quickCreateForm.locker_number,
-          combination: quickCreateForm.combination || null,
-          location: quickCreateForm.location || null,
+          locker_number: validation.data.locker_number,
+          combination: validation.data.combination,
+          location: validation.data.location,
           status: "Available",
         })
         .select()

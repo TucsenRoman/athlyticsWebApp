@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Repeat, Clock, MoreVertical, Plus } from "lucide-react";
 import { format, parseISO, addDays, addWeeks, addMonths, addHours, startOfDay, endOfDay, isToday, isBefore, isWithinInterval } from "date-fns";
 import { toZonedTime, fromZonedTime } from "date-fns-tz";
+import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 interface Reminder {
   id: string;
@@ -77,16 +78,51 @@ const RemindersPanel = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+  const reminderSchema = z.object({
+    title: z.string()
+      .trim()
+      .min(1, "Title is required")
+      .max(200, "Title must be less than 200 characters"),
+    description: z.string()
+      .max(1000, "Description must be less than 1000 characters")
+      .optional()
+      .nullable()
+      .transform(val => val || null),
+    due_date: z.string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
+      .optional()
+      .nullable()
+      .transform(val => val || null),
+    time: z.string()
+      .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (use HH:MM)")
+      .optional()
+      .nullable()
+      .transform(val => val || null),
+    recurrence: z.enum(["None", "Daily", "Weekly", "Monthly"], {
+      errorMap: () => ({ message: "Invalid recurrence value" })
+    })
+  });
+
   const handleQuickAdd = async () => {
-    if (!quickAddData.title.trim()) {
-      toast({
-        title: "Error",
-        description: "Title is required",
-        variant: "destructive"
-      });
-      return;
-    }
     try {
+      // Validate input
+      const validation = reminderSchema.safeParse({
+        title: quickAddData.title,
+        description: quickAddData.description,
+        due_date: quickAddData.due_date,
+        time: quickAddData.time,
+        recurrence: quickAddData.recurrence || "None"
+      });
+
+      if (!validation.success) {
+        toast({
+          title: "Error",
+          description: validation.error.errors[0].message,
+          variant: "destructive"
+        });
+        return;
+      }
+
       const {
         data: {
           user
@@ -97,11 +133,11 @@ const RemindersPanel = () => {
         error
       } = await supabase.from("reminders").insert({
         coach_id: user.id,
-        title: quickAddData.title,
-        description: quickAddData.description || null,
-        due_date: quickAddData.due_date || null,
-        time: quickAddData.time || null,
-        recurrence: quickAddData.recurrence || "None",
+        title: validation.data.title,
+        description: validation.data.description,
+        due_date: validation.data.due_date,
+        time: validation.data.time,
+        recurrence: validation.data.recurrence,
         completed: false
       });
       if (error) throw error;
