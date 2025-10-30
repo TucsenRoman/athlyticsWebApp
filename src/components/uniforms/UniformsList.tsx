@@ -15,6 +15,7 @@ import { Plus, Search, Pencil, Trash2, ShirtIcon, LockKeyhole } from "lucide-rea
 import { toast } from "sonner";
 import { sanitizeSelectValue } from "@/lib/utils";
 import AssignLockerModal from "@/components/lockers/AssignLockerModal";
+import { z } from "zod";
 
 interface Uniform {
   id: string;
@@ -75,23 +76,64 @@ export default function UniformsList() {
     }
   };
 
+  const uniformSchema = z.object({
+    top_id: z.string()
+      .trim()
+      .min(1, "Top ID is required")
+      .max(50, "Top ID must be less than 50 characters")
+      .regex(/^[A-Za-z0-9-]+$/, "Top ID can only contain letters, numbers, and hyphens"),
+    bottom_id: z.string()
+      .trim()
+      .min(1, "Bottom ID is required")
+      .max(50, "Bottom ID must be less than 50 characters")
+      .regex(/^[A-Za-z0-9-]+$/, "Bottom ID can only contain letters, numbers, and hyphens"),
+    notes: z.string()
+      .max(500, "Notes must be less than 500 characters")
+      .optional()
+      .nullable()
+      .transform(val => val || null),
+    status: z.enum(["Checked Out", "Returned", "Lost"], {
+      errorMap: () => ({ message: "Invalid status value" })
+    })
+  });
+
   const handleAddUniform = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      // Validate input
+      const validation = uniformSchema.safeParse({
+        top_id: newUniform.top_id,
+        bottom_id: newUniform.bottom_id,
+        notes: newUniform.notes,
+        status: newUniform.status
+      });
+
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const { error } = await supabase.from("uniforms").insert({
         coach_id: user.id,
-        top_id: newUniform.top_id,
-        bottom_id: newUniform.bottom_id,
+        top_id: validation.data.top_id,
+        bottom_id: validation.data.bottom_id,
         athlete_id: newUniform.athlete_id,
-        status: newUniform.status,
-        notes: newUniform.notes || null,
+        status: validation.data.status,
+        notes: validation.data.notes,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          toast.error("A uniform with this Top ID and Bottom ID already exists");
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast.success("Uniform added successfully!");
       setIsAddDialogOpen(false);
@@ -113,18 +155,38 @@ export default function UniformsList() {
     if (!editingUniform) return;
     
     try {
+      // Validate input
+      const validation = uniformSchema.safeParse({
+        top_id: editingUniform.top_id,
+        bottom_id: editingUniform.bottom_id,
+        notes: editingUniform.notes,
+        status: editingUniform.status
+      });
+
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        return;
+      }
+
       const { error } = await supabase
         .from("uniforms")
         .update({
-          top_id: editingUniform.top_id,
-          bottom_id: editingUniform.bottom_id,
+          top_id: validation.data.top_id,
+          bottom_id: validation.data.bottom_id,
           athlete_id: editingUniform.athlete_id,
-          status: editingUniform.status,
-          notes: editingUniform.notes || null,
+          status: validation.data.status,
+          notes: validation.data.notes,
         })
         .eq("id", editingUniform.id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          toast.error("A uniform with this Top ID and Bottom ID already exists");
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast.success("Uniform updated successfully!");
       setIsEditDialogOpen(false);
