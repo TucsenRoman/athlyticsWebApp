@@ -370,7 +370,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
 
 export function useLedger() {
   const context = useContext(LedgerContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useLedger must be used within LedgerProvider");
   }
   return context;
