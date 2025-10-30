@@ -5,7 +5,7 @@ import ManagementView from "@/components/management/ManagementView";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Users, ClipboardCheck } from "lucide-react";
+import { CalendarDays, Paperclip, Users } from "lucide-react";
 import { useState } from "react";
 
 
@@ -20,17 +20,17 @@ const Index = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="sticky top-0 z-10 grid w-full grid-cols-3 bg-card border-b shadow-sm rounded-none md:rounded-lg md:max-w-3xl md:bg-background md:border">
-            <TabsTrigger value="overview" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background md:data-[state=active]:bg-muted gap-2">
-              <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
+          <TabsList className="sticky top-0 z-10 grid w-full grid-cols-3 bg-muted/50 border-t border-border shadow-md rounded-t-xl">
+            <TabsTrigger value="overview" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 transition-all">
+              <CalendarDays className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
               <span className="hidden md:inline transition-all">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="management" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background md:data-[state=active]:bg-muted gap-2">
-              <Users className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
+            <TabsTrigger value="management" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 transition-all">
+              <Paperclip className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
               <span className="hidden md:inline transition-all">Management</span>
             </TabsTrigger>
-            <TabsTrigger value="attendance" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background md:data-[state=active]:bg-muted gap-2">
-              <ClipboardCheck className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
+            <TabsTrigger value="attendance" className="touch-manipulation min-h-[48px] data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2 transition-all">
+              <Users className="w-5 h-5 md:w-4 md:h-4 flex-shrink-0" />
               <span className="hidden md:inline transition-all">Attendance</span>
             </TabsTrigger>
           </TabsList>

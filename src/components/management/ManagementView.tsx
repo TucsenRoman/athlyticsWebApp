@@ -101,26 +101,27 @@ export default function ManagementView() {
             
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-between min-w-[200px]">
+                <Button variant="outline" className="justify-between min-w-[200px] min-h-[44px] touch-manipulation">
                   Visible Columns ({selectedHeaders.length})
                   <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-3 bg-card" align="start">
+              <PopoverContent className="w-[250px] p-3 bg-popover max-h-[250px] overflow-y-auto rounded-lg" align="start">
                 <div className="space-y-2">
-                  <div className="text-sm font-medium mb-3">Select Columns</div>
+                  <div className="text-base md:text-sm font-medium mb-3">Select Columns</div>
                   {headers.map((header) => (
-                    <div key={header.id} className="flex items-center space-x-2">
+                    <div key={header.id} className="flex items-center space-x-2 min-h-[44px] py-1">
                       <Checkbox
                         id={`mgmt-header-${header.id}`}
                         checked={selectedHeaders.includes(header.id)}
                         onCheckedChange={() => toggleHeader(header.id)}
                         disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
+                        className="h-5 w-5"
                       />
                       <label
                         htmlFor={`mgmt-header-${header.id}`}
                         className={cn(
-                          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-1",
+                          "text-base md:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-1 touch-manipulation",
                           header.isHardwired && "text-muted-foreground"
                         )}
                       >

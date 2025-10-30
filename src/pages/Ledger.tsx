@@ -273,14 +273,19 @@ export default function Ledger() {
                   <SelectTrigger className="flex-1 min-h-[44px] text-base md:text-sm">
                     <SelectValue placeholder="Select a program..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-popover z-50 max-h-[250px] overflow-y-auto">
+                  <SelectContent className="bg-popover z-50 max-h-[250px] overflow-y-auto rounded-lg">
                     {programs.map((program) => (
                       <SelectItem 
                         key={program.id} 
                         value={program.id}
-                        className="min-h-[44px] text-base md:text-sm touch-manipulation"
+                        className="min-h-[44px] text-base md:text-sm touch-manipulation py-3 whitespace-normal"
                       >
-                        {program.school} – {program.name} ({program.season_year})
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="font-medium">{program.school}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {program.sport} — {program.season_year} Season
+                          </span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -470,9 +475,9 @@ export default function Ledger() {
                           <Checkbox
                             id={`header-${header.id}`}
                             checked={selectedHeaders.includes(header.id)}
+                            className="h-5 w-5 touch-manipulation"
                             onCheckedChange={() => toggleHeader(header.id)}
                             disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
-                            className="touch-manipulation"
                           />
                           <label
                             htmlFor={`header-${header.id}`}

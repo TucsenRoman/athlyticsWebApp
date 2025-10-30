@@ -113,13 +113,13 @@ export default function ProgramSelector({ selectedProgramId, onProgramChange }: 
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 
-        className="w-[95vw] md:w-80 max-h-[250px] overflow-y-auto z-50"
+        className="w-[95vw] md:w-80 max-h-[250px] overflow-y-auto rounded-lg z-50"
       >
         {programs.map((program) => (
           <DropdownMenuItem
             key={program.id}
             onClick={() => onProgramChange(program.id)}
-            className={`min-h-[44px] md:min-h-0 touch-manipulation ${selectedProgramId === program.id ? "bg-muted" : ""}`}
+            className={`min-h-[44px] touch-manipulation whitespace-normal ${selectedProgramId === program.id ? "bg-muted" : ""}`}
           >
             <div className="flex flex-col gap-0.5 w-full py-1">
               <span className="font-medium text-base md:text-sm">{formatProgramName(program)}</span>
