@@ -426,9 +426,9 @@ const AttendanceTracker = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[80px] text-center">Notes</TableHead>
+              <TableHead className="w-[40%]">Name</TableHead>
+              <TableHead className="w-[30%] text-center">Status</TableHead>
+              <TableHead className="w-[10%] text-center">Notes</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
