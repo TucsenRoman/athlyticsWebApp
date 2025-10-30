@@ -1,263 +1,36 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Plus, Trash2, Edit2, Lock } from "lucide-react";
+import { useLedger } from "@/contexts/LedgerContext";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
-import { useProgramContext } from "@/hooks/useProgramContext";
-
-interface Athlete {
-  id: string;
-  name: string;
-  grade: number | null;
-  gender: string | null;
-  team_position: string | null;
-  events: string[];
-  achievements: string[];
-  personal_records: any;
-  athlete_of_week: boolean;
-  athlete_of_meet: boolean;
-}
-
-const defaultHeaders = [
-  { id: "name", label: "Name", isDefault: true },
-  { id: "grade", label: "Grade", isDefault: true },
-  { id: "gender", label: "Gender", isDefault: true },
-  { id: "team_position", label: "Position", isDefault: true },
-  { id: "events", label: "Events", isDefault: true },
-  { id: "achievements", label: "Achievements", isDefault: true },
-  { id: "athlete_of_week", label: "Athlete of Week", isDefault: true },
-  { id: "athlete_of_meet", label: "Athlete of Meet", isDefault: true },
-];
 
 export default function Ledger() {
-  const [athletes, setAthletes] = useState<Athlete[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    headers,
+    athletes,
+    loading,
+    addHeader,
+    editHeader,
+    deleteHeader,
+    addAthlete,
+    updateAthlete,
+    deleteAthlete,
+    getCustomFieldValue,
+  } = useLedger();
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedHeaders, setSelectedHeaders] = useState<string[]>(["name", "grade", "gender", "team_position"]);
+  const [selectedHeaders, setSelectedHeaders] = useState<string[]>(["name", "gender", "grade", "attendance_rate"]);
   const [editingCell, setEditingCell] = useState<{ athleteId: string; field: string } | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [customHeaders, setCustomHeaders] = useState<Array<{ id: string; label: string; isDefault: boolean }>>([]);
   const [newHeaderName, setNewHeaderName] = useState("");
   const [isAddHeaderOpen, setIsAddHeaderOpen] = useState(false);
-  const { selectedProgramId } = useProgramContext();
-
-  // Load custom headers from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem("ledger_custom_headers");
-    if (stored) {
-      try {
-        setCustomHeaders(JSON.parse(stored));
-      } catch (e) {
-        console.error("Failed to load custom headers");
-      }
-    }
-  }, []);
-
-  const availableHeaders = [...defaultHeaders, ...customHeaders];
-
-  useEffect(() => {
-    fetchAthletes();
-  }, [selectedProgramId]);
-
-  const fetchAthletes = async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      let query = supabase
-        .from("athletes")
-        .select("*")
-        .eq("coach_id", user.id);
-
-      if (selectedProgramId) {
-        query = query.eq("program_id", selectedProgramId);
-      }
-
-      const { data, error } = await query.order("name");
-
-      if (error) throw error;
-      setAthletes(data || []);
-    } catch (error) {
-      console.error("Error fetching athletes:", error);
-      toast.error("Failed to load athletes");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddAthlete = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from("athletes")
-        .insert({
-          name: "New Athlete",
-          coach_id: user.id,
-          program_id: selectedProgramId,
-          grade: null,
-          gender: null,
-          team_position: "None",
-          events: [],
-          achievements: [],
-          personal_records: {},
-          athlete_of_week: false,
-          athlete_of_meet: false,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setAthletes([...athletes, data]);
-      toast.success("Athlete added");
-    } catch (error) {
-      console.error("Error adding athlete:", error);
-      toast.error("Failed to add athlete");
-    }
-  };
-
-  const handleDeleteAthlete = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("athletes")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-
-      setAthletes(athletes.filter(a => a.id !== id));
-      toast.success("Athlete deleted");
-    } catch (error) {
-      console.error("Error deleting athlete:", error);
-      toast.error("Failed to delete athlete");
-    }
-  };
-
-  const startEdit = (athleteId: string, field: string, currentValue: any) => {
-    setEditingCell({ athleteId, field });
-    
-    // Check if it's a custom field
-    const isCustom = customHeaders.some(h => h.id === field);
-    if (isCustom) {
-      const customData = localStorage.getItem(`athlete_${athleteId}_custom`);
-      if (customData) {
-        try {
-          const parsed = JSON.parse(customData);
-          setEditValue(parsed[field] || "");
-        } catch {
-          setEditValue("");
-        }
-      } else {
-        setEditValue("");
-      }
-      return;
-    }
-    
-    if (Array.isArray(currentValue)) {
-      setEditValue(currentValue.join(", "));
-    } else if (typeof currentValue === "boolean") {
-      setEditValue(currentValue ? "true" : "false");
-    } else {
-      setEditValue(currentValue?.toString() || "");
-    }
-  };
-
-  const saveEdit = async () => {
-    if (!editingCell) return;
-
-    const { athleteId, field } = editingCell;
-    
-    // Check if it's a custom field
-    const isCustom = customHeaders.some(h => h.id === field);
-    
-    if (isCustom) {
-      // Save to localStorage for custom fields
-      const key = `athlete_${athleteId}_custom`;
-      const existing = localStorage.getItem(key);
-      let customData = {};
-      
-      if (existing) {
-        try {
-          customData = JSON.parse(existing);
-        } catch {
-          customData = {};
-        }
-      }
-      
-      customData = { ...customData, [field]: editValue };
-      localStorage.setItem(key, JSON.stringify(customData));
-      
-      setEditingCell(null);
-      toast.success("Updated");
-      return;
-    }
-
-    let processedValue: any = editValue;
-
-    // Process value based on field type
-    if (field === "grade") {
-      processedValue = editValue ? parseInt(editValue) : null;
-    } else if (field === "events" || field === "achievements") {
-      processedValue = editValue.split(",").map(s => s.trim()).filter(Boolean);
-    } else if (field === "athlete_of_week" || field === "athlete_of_meet") {
-      processedValue = editValue.toLowerCase() === "true";
-    }
-
-    try {
-      const { error } = await supabase
-        .from("athletes")
-        .update({ [field]: processedValue })
-        .eq("id", athleteId);
-
-      if (error) throw error;
-
-      setAthletes(athletes.map(a => 
-        a.id === athleteId ? { ...a, [field]: processedValue } : a
-      ));
-      
-      setEditingCell(null);
-      toast.success("Updated");
-    } catch (error) {
-      console.error("Error updating athlete:", error);
-      toast.error("Failed to update");
-    }
-  };
-
-  const renderCellValue = (athlete: Athlete, headerId: string) => {
-    // Check if it's a custom header
-    const isCustom = customHeaders.some(h => h.id === headerId);
-    if (isCustom) {
-      // Custom headers stored in a separate field or localStorage per athlete
-      const customData = localStorage.getItem(`athlete_${athlete.id}_custom`);
-      if (customData) {
-        try {
-          const parsed = JSON.parse(customData);
-          return parsed[headerId] || "—";
-        } catch {
-          return "—";
-        }
-      }
-      return "—";
-    }
-
-    const value = athlete[headerId as keyof Athlete];
-    
-    if (Array.isArray(value)) {
-      return value.join(", ") || "—";
-    }
-    if (typeof value === "boolean") {
-      return value ? "Yes" : "No";
-    }
-    return value?.toString() || "—";
-  };
+  const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
+  const [editingHeaderValue, setEditingHeaderValue] = useState("");
 
   const filteredAthletes = athletes.filter(athlete =>
     athlete.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -284,30 +57,78 @@ export default function Ledger() {
       return;
     }
 
-    const headerId = newHeaderName.toLowerCase().replace(/\s+/g, "_");
+    addHeader(newHeaderName);
+    setNewHeaderName("");
+    setIsAddHeaderOpen(false);
+  };
+
+  const startEditHeader = (header: any) => {
+    if (header.isHardwired) return;
+    setEditingHeaderId(header.id);
+    setEditingHeaderValue(header.label);
+  };
+
+  const saveHeaderEdit = () => {
+    if (!editingHeaderId || !editingHeaderValue.trim()) return;
+    editHeader(editingHeaderId, editingHeaderValue);
+    setEditingHeaderId(null);
+  };
+
+  const handleDeleteHeader = (headerId: string) => {
+    deleteHeader(headerId);
+    setSelectedHeaders(prev => prev.filter(h => h !== headerId));
+  };
+
+  const startEdit = (athleteId: string, field: string) => {
+    const athlete = athletes.find(a => a.id === athleteId);
+    if (!athlete) return;
+
+    setEditingCell({ athleteId, field });
     
-    // Check if header already exists
-    if (availableHeaders.some(h => h.id === headerId)) {
-      toast.error("A header with this name already exists");
+    // Check if it's a custom field or attendance_rate
+    const isCustomOrSpecial = field === "attendance_rate" || !headers.find(h => h.id === field && h.isHardwired);
+    
+    if (isCustomOrSpecial) {
+      setEditValue(getCustomFieldValue(athleteId, field));
       return;
     }
 
-    const newHeader = {
-      id: headerId,
-      label: newHeaderName.trim(),
-      isDefault: false,
-    };
+    const currentValue = athlete[field as keyof typeof athlete];
+    
+    if (Array.isArray(currentValue)) {
+      setEditValue(currentValue.join(", "));
+    } else if (typeof currentValue === "boolean") {
+      setEditValue(currentValue ? "true" : "false");
+    } else {
+      setEditValue(currentValue?.toString() || "");
+    }
+  };
 
-    const updatedCustomHeaders = [...customHeaders, newHeader];
-    setCustomHeaders(updatedCustomHeaders);
-    localStorage.setItem("ledger_custom_headers", JSON.stringify(updatedCustomHeaders));
+  const saveEdit = async () => {
+    if (!editingCell) return;
+    await updateAthlete(editingCell.athleteId, editingCell.field, editValue);
+    setEditingCell(null);
+  };
+
+  const renderCellValue = (athlete: any, headerId: string) => {
+    // Check if it's a custom field or attendance_rate
+    const header = headers.find(h => h.id === headerId);
+    const isCustomOrSpecial = headerId === "attendance_rate" || (header && !header.isHardwired);
     
-    // Auto-select the new header
-    setSelectedHeaders([...selectedHeaders, headerId]);
+    if (isCustomOrSpecial) {
+      const value = getCustomFieldValue(athlete.id, headerId);
+      return value || "—";
+    }
+
+    const value = athlete[headerId as keyof typeof athlete];
     
-    setNewHeaderName("");
-    setIsAddHeaderOpen(false);
-    toast.success(`Header "${newHeader.label}" added`);
+    if (Array.isArray(value)) {
+      return value.join(", ") || "—";
+    }
+    if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    }
+    return value?.toString() || "—";
   };
 
   if (loading) {
@@ -325,7 +146,7 @@ export default function Ledger() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
-          <Button onClick={handleAddAthlete} size="sm">
+          <Button onClick={addAthlete} size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Add Athlete
           </Button>
@@ -333,32 +154,53 @@ export default function Ledger() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Athlete Records</CardTitle>
+            <CardTitle>Header Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <Input
-                  type="text"
-                  placeholder="Search athletes by name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
             <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm font-medium text-muted-foreground">Headers:</span>
-              {availableHeaders.map((header) => (
-                <Button
-                  key={header.id}
-                  variant={selectedHeaders.includes(header.id) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleHeader(header.id)}
-                  disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
-                >
-                  {header.label}
-                </Button>
+              {headers.map((header) => (
+                <div key={header.id} className="flex items-center gap-1 bg-muted rounded-md px-2 py-1">
+                  {header.isHardwired && (
+                    <Lock className="w-3 h-3 text-muted-foreground" />
+                  )}
+                  
+                  {editingHeaderId === header.id ? (
+                    <Input
+                      value={editingHeaderValue}
+                      onChange={(e) => setEditingHeaderValue(e.target.value)}
+                      onBlur={saveHeaderEdit}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveHeaderEdit();
+                        if (e.key === "Escape") setEditingHeaderId(null);
+                      }}
+                      className="h-6 w-24 px-1 text-sm"
+                      autoFocus
+                    />
+                  ) : (
+                    <span className="text-sm font-medium">{header.label}</span>
+                  )}
+                  
+                  {!header.isHardwired && (
+                    <div className="flex items-center gap-0.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEditHeader(header)}
+                        className="h-5 w-5 p-0 hover:bg-background"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteHeader(header.id)}
+                        className="h-5 w-5 p-0 hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
               ))}
               
               <Dialog open={isAddHeaderOpen} onOpenChange={setIsAddHeaderOpen}>
@@ -373,17 +215,15 @@ export default function Ledger() {
                     <DialogTitle>Add Custom Header</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-4">
-                    <div>
-                      <Input
-                        placeholder="Enter header name (e.g., Mile Goal)"
-                        value={newHeaderName}
-                        onChange={(e) => setNewHeaderName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleAddCustomHeader();
-                        }}
-                        autoFocus
-                      />
-                    </div>
+                    <Input
+                      placeholder="Enter header name (e.g., Mile Goal)"
+                      value={newHeaderName}
+                      onChange={(e) => setNewHeaderName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAddCustomHeader();
+                      }}
+                      autoFocus
+                    />
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setIsAddHeaderOpen(false)}>
                         Cancel
@@ -396,6 +236,38 @@ export default function Ledger() {
                 </DialogContent>
               </Dialog>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Athlete Records</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Input
+                type="text"
+                placeholder="Search athletes by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-sm font-medium text-muted-foreground">Visible Columns:</span>
+              {headers.map((header) => (
+                <Button
+                  key={header.id}
+                  variant={selectedHeaders.includes(header.id) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleHeader(header.id)}
+                  disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
+                >
+                  {header.label}
+                </Button>
+              ))}
+            </div>
 
             {filteredAthletes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
@@ -407,7 +279,7 @@ export default function Ledger() {
                   <TableHeader>
                     <TableRow>
                       {selectedHeaders.map((headerId) => {
-                        const header = availableHeaders.find((h) => h.id === headerId);
+                        const header = headers.find((h) => h.id === headerId);
                         return header ? <TableHead key={headerId}>{header.label}</TableHead> : null;
                       })}
                       <TableHead className="w-16"></TableHead>
@@ -420,7 +292,7 @@ export default function Ledger() {
                           <TableCell
                             key={`${athlete.id}-${headerId}`}
                             className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => startEdit(athlete.id, headerId, athlete[headerId as keyof Athlete])}
+                            onClick={() => startEdit(athlete.id, headerId)}
                           >
                             {editingCell?.athleteId === athlete.id && editingCell?.field === headerId ? (
                               <Input
@@ -443,7 +315,7 @@ export default function Ledger() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteAthlete(athlete.id)}
+                            onClick={() => deleteAthlete(athlete.id)}
                             className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
                           >
                             <Trash2 className="w-4 h-4" />

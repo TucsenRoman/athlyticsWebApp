@@ -1,95 +1,21 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-
-interface Athlete {
-  id: string;
-  name: string;
-  grade: number;
-  gender: string;
-}
-
-interface Locker {
-  locker_number: string;
-  combination?: string;
-  location?: string;
-  status?: string;
-}
-
-interface Uniform {
-  top_id: string;
-  bottom_id: string;
-  status: string;
-}
-
-interface AthleteWithDetails extends Athlete {
-  locker?: Locker;
-  uniform?: Uniform;
-}
-
-const availableHeaders = [
-  { id: "name", label: "Name" },
-  { id: "grade", label: "Grade" },
-  { id: "gender", label: "Gender" },
-  { id: "locker", label: "Locker #" },
-  { id: "uniform", label: "Uniform" },
-];
+import { useLedger } from "@/contexts/LedgerContext";
 
 export default function ManagementView() {
-  const [athletes, setAthletes] = useState<AthleteWithDetails[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { headers, athletes, loading, getCustomFieldValue } = useLedger();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedHeaders, setSelectedHeaders] = useState<string[]>(["name", "grade", "gender"]);
-  const [showHeaderSelect, setShowHeaderSelect] = useState(false);
+  const [selectedHeaders, setSelectedHeaders] = useState<string[]>(["name", "gender", "grade"]);
 
-  useEffect(() => {
-    fetchAthletes();
-  }, []);
+  const filteredAthletes = athletes.filter(athlete =>
+    athlete.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const fetchAthletes = async () => {
-    try {
-      const { data: athletesData, error: athletesError } = await supabase
-        .from("athletes")
-        .select("*")
-        .order("name");
-
-      if (athletesError) throw athletesError;
-
-      const { data: lockersData } = await supabase
-        .from("lockers")
-        .select("athlete_id, locker_number, combination, location, status");
-
-      const { data: uniformsData } = await supabase
-        .from("uniforms")
-        .select("athlete_id, top_id, bottom_id, status")
-        .eq("status", "Checked Out");
-
-      const athletesWithDetails: AthleteWithDetails[] = (athletesData || []).map(athlete => ({
-        ...athlete,
-        locker: lockersData?.find(l => l.athlete_id === athlete.id),
-        uniform: uniformsData?.find(u => u.athlete_id === athlete.id),
-      }));
-
-      setAthletes(athletesWithDetails);
-    } catch (error: any) {
-      toast.error("Failed to load athletes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const searchedAthlete = searchQuery && filteredAthletes.length === 1 ? filteredAthletes[0] : null;
 
   const toggleHeader = (headerId: string) => {
     setSelectedHeaders(prev =>
@@ -99,154 +25,126 @@ export default function ManagementView() {
     );
   };
 
-  const searchedAthlete = searchQuery.trim()
-    ? athletes.find(a => a.name.toLowerCase() === searchQuery.toLowerCase())
-    : null;
-
-  const filteredAthletes = searchQuery.trim() && !searchedAthlete
-    ? athletes.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : athletes;
-
-  const renderCellValue = (athlete: AthleteWithDetails, headerId: string) => {
-    switch (headerId) {
-      case "name":
-        return athlete.name;
-      case "grade":
-        return athlete.grade;
-      case "gender":
-        return <Badge variant="outline">{athlete.gender}</Badge>;
-      case "locker":
-        return athlete.locker?.locker_number || "—";
-      case "uniform":
-        return athlete.uniform ? `${athlete.uniform.top_id} / ${athlete.uniform.bottom_id}` : "—";
-      default:
-        return "—";
+  const renderCellValue = (athlete: any, headerId: string) => {
+    const header = headers.find(h => h.id === headerId);
+    const isCustomOrSpecial = headerId === "attendance_rate" || (header && !header.isHardwired);
+    
+    if (isCustomOrSpecial) {
+      const value = getCustomFieldValue(athlete.id, headerId);
+      return value || "—";
     }
+
+    const value = athlete[headerId as keyof typeof athlete];
+    
+    if (Array.isArray(value)) {
+      return value.join(", ") || "—";
+    }
+    if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    }
+    return value?.toString() || "—";
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
-        <div className="flex-1">
-          <Label htmlFor="headers" className="mb-2 block">Headers</Label>
-          <div className="relative">
-            <button
-              onClick={() => setShowHeaderSelect(!showHeaderSelect)}
-              className="w-full flex items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <span>{selectedHeaders.length} selected</span>
-              <span>▼</span>
-            </button>
-            {showHeaderSelect && (
-              <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover p-2 shadow-md">
-                {availableHeaders.map(header => (
-                  <div key={header.id} className="flex items-center gap-2 py-2">
-                    <Checkbox
-                      id={header.id}
-                      checked={selectedHeaders.includes(header.id)}
-                      onCheckedChange={() => toggleHeader(header.id)}
-                    />
-                    <label htmlFor={header.id} className="text-sm cursor-pointer flex-1">
-                      {header.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex-1">
-          <Label htmlFor="search" className="mb-2 block">Search</Label>
+      <Card>
+        <CardHeader>
+          <CardTitle>Management</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <Input
-            id="search"
             type="text"
-            placeholder="Search athletes..."
+            placeholder="Search athletes by name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
-      </div>
 
-      {searchedAthlete ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{searchedAthlete.name}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Grade</p>
-                <p className="font-medium">{searchedAthlete.grade}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Gender</p>
-                <p className="font-medium">{searchedAthlete.gender}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Locker #</p>
-                <p className="font-medium">{searchedAthlete.locker?.locker_number || "Not assigned"}</p>
-              </div>
-              {searchedAthlete.locker?.combination && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Combination</p>
-                  <p className="font-medium">{searchedAthlete.locker.combination}</p>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm font-medium text-muted-foreground">Visible Columns:</span>
+            {headers.map((header) => (
+              <Button
+                key={header.id}
+                variant={selectedHeaders.includes(header.id) ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleHeader(header.id)}
+              >
+                {header.label}
+              </Button>
+            ))}
+          </div>
+
+          {searchedAthlete ? (
+            <Card className="bg-muted/50">
+              <CardHeader>
+                <CardTitle className="text-2xl">{searchedAthlete.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {headers.map((header) => {
+                    const value = renderCellValue(searchedAthlete, header.id);
+                    if (value === "—") return null;
+                    
+                    return (
+                      <div key={header.id} className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">{header.label}</p>
+                        <p className="text-base">
+                          {header.id === "athlete_of_week" || header.id === "athlete_of_meet" ? (
+                            <Badge variant={value === "Yes" ? "default" : "outline"}>
+                              {value}
+                            </Badge>
+                          ) : (
+                            value
+                          )}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-              {searchedAthlete.locker?.location && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium">{searchedAthlete.locker.location}</p>
-                </div>
-              )}
-              <div>
-                <p className="text-sm text-muted-foreground">Uniform</p>
-                <p className="font-medium">
-                  {searchedAthlete.uniform
-                    ? `Top: ${searchedAthlete.uniform.top_id}, Bottom: ${searchedAthlete.uniform.bottom_id}`
-                    : "Not assigned"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {selectedHeaders.map(headerId => {
-                  const header = availableHeaders.find(h => h.id === headerId);
-                  return <TableHead key={headerId}>{header?.label}</TableHead>;
-                })}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
               {filteredAthletes.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={selectedHeaders.length} className="text-center text-muted-foreground py-8">
-                    No athletes found
-                  </TableCell>
-                </TableRow>
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchQuery ? "No athletes found matching your search." : "No athletes available."}
+                </div>
               ) : (
-                filteredAthletes.map((athlete) => (
-                  <TableRow key={athlete.id}>
-                    {selectedHeaders.map(headerId => (
-                      <TableCell key={headerId}>
-                        {renderCellValue(athlete, headerId)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
+                <div className="border rounded-lg overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {selectedHeaders.map((headerId) => {
+                          const header = headers.find((h) => h.id === headerId);
+                          return header ? <TableHead key={headerId}>{header.label}</TableHead> : null;
+                        })}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAthletes.map((athlete) => (
+                        <TableRow key={athlete.id}>
+                          {selectedHeaders.map((headerId) => (
+                            <TableCell key={`${athlete.id}-${headerId}`}>
+                              {renderCellValue(athlete, headerId)}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
