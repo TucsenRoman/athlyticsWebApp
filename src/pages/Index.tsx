@@ -1,7 +1,7 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RemindersPanel from "@/components/reminders/RemindersPanel";
-import AthletesList from "@/components/athletes/AthletesList";
+import RosterView from "@/components/roster/RosterView";
 import AttendanceTracker from "@/components/attendance/AttendanceTracker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, ClipboardCheck } from "lucide-react";
@@ -33,7 +33,7 @@ const Index = () => {
           </TabsList>
           
           <TabsContent value="roster" className="space-y-4 animate-fade-in">
-            <AthletesList onSwitchToAttendance={() => setActiveTab("attendance")} />
+            <RosterView onSwitchToAttendance={() => setActiveTab("attendance")} />
           </TabsContent>
           
           <TabsContent value="attendance" className="space-y-4 animate-fade-in">
