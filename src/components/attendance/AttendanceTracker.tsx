@@ -352,11 +352,11 @@ const AttendanceTracker = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col gap-4">
-          <CardTitle>Attendance for</CardTitle>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <CardTitle className="text-xl font-semibold">Attendance for</CardTitle>
 
           {/* Date Navigation Bar */}
-          <div className="flex items-center justify-center gap-2 p-3 bg-muted rounded-lg">
+          <div className="flex items-center justify-center gap-2 p-3 bg-muted rounded-lg w-full max-w-md">
             <Button variant="ghost" size="icon" onClick={handlePreviousDay} className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -385,17 +385,11 @@ const AttendanceTracker = () => {
             </Button>
           </div>
 
-          {/* Controls Bar: Filter and Submit/Edit buttons on same line */}
-          <div className="flex items-center gap-3 flex-nowrap overflow-x-auto">
+          {/* Controls Bar */}
+          <div className="flex items-center justify-center gap-3 w-full max-w-md flex-nowrap">
             <Select
               value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"}
-              onValueChange={(value) => {
-                if (value === "all") {
-                  setFilterStatus(["all"]);
-                } else {
-                  setFilterStatus([value]);
-                }
-              }}
+              onValueChange={(value) => setFilterStatus(value === "all" ? ["all"] : [value])}
               disabled={!isEditMode}
             >
               <SelectTrigger className="w-[140px] shrink-0">
@@ -412,12 +406,12 @@ const AttendanceTracker = () => {
             </Select>
 
             {isSubmitted && !isEditMode ? (
-              <Button onClick={enableEditMode} variant="outline" size="sm" className="touch-manipulation shrink-0">
+              <Button onClick={enableEditMode} variant="outline" size="sm" className="shrink-0">
                 <Edit className="w-4 h-4 mr-2" />
                 Edit
               </Button>
             ) : (
-              <Button onClick={submitAttendance} variant="default" size="sm" className="touch-manipulation shrink-0">
+              <Button onClick={submitAttendance} variant="default" size="sm" className="shrink-0">
                 Submit
               </Button>
             )}
