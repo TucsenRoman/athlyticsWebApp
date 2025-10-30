@@ -6,8 +6,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -74,36 +90,39 @@ export default function UniformsList() {
   };
 
   const uniformSchema = z.object({
-    top_id: z.string()
+    top_id: z
+      .string()
       .trim()
       .min(1, "Top ID is required")
       .max(50, "Top ID must be less than 50 characters")
       .regex(/^[A-Za-z0-9-]+$/, "Top ID can only contain letters, numbers, and hyphens"),
-    bottom_id: z.string()
+    bottom_id: z
+      .string()
       .trim()
       .min(1, "Bottom ID is required")
       .max(50, "Bottom ID must be less than 50 characters")
       .regex(/^[A-Za-z0-9-]+$/, "Bottom ID can only contain letters, numbers, and hyphens"),
-    notes: z.string()
+    notes: z
+      .string()
       .max(500, "Notes must be less than 500 characters")
       .optional()
       .nullable()
-      .transform(val => val || null),
+      .transform((val) => val || null),
     status: z.enum(["Checked Out", "Returned", "Lost"], {
-      errorMap: () => ({ message: "Invalid status value" })
-    })
+      errorMap: () => ({ message: "Invalid status value" }),
+    }),
   });
 
   const handleAddUniform = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       // Validate input
       const validation = uniformSchema.safeParse({
         top_id: newUniform.top_id,
         bottom_id: newUniform.bottom_id,
         notes: newUniform.notes,
-        status: newUniform.status
+        status: newUniform.status,
       });
 
       if (!validation.success) {
@@ -111,7 +130,9 @@ export default function UniformsList() {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const { error } = await supabase.from("uniforms").insert({
@@ -124,7 +145,7 @@ export default function UniformsList() {
       });
 
       if (error) {
-        if (error.code === '23505') {
+        if (error.code === "23505") {
           toast.error("A uniform with this Top ID and Bottom ID already exists");
         } else {
           throw error;
@@ -150,14 +171,14 @@ export default function UniformsList() {
   const handleEditUniform = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUniform) return;
-    
+
     try {
       // Validate input
       const validation = uniformSchema.safeParse({
         top_id: editingUniform.top_id,
         bottom_id: editingUniform.bottom_id,
         notes: editingUniform.notes,
-        status: editingUniform.status
+        status: editingUniform.status,
       });
 
       if (!validation.success) {
@@ -177,7 +198,7 @@ export default function UniformsList() {
         .eq("id", editingUniform.id);
 
       if (error) {
-        if (error.code === '23505') {
+        if (error.code === "23505") {
           toast.error("A uniform with this Top ID and Bottom ID already exists");
         } else {
           throw error;
@@ -198,10 +219,7 @@ export default function UniformsList() {
     if (!confirm("Are you sure you want to delete this uniform?")) return;
 
     try {
-      const { error } = await supabase
-        .from("uniforms")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("uniforms").delete().eq("id", id);
 
       if (error) throw error;
 
@@ -218,7 +236,7 @@ export default function UniformsList() {
   };
 
   const toggleUniformSelection = (uniformId: string) => {
-    setSelectedUniforms(prev => {
+    setSelectedUniforms((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(uniformId)) {
         newSet.delete(uniformId);
@@ -233,7 +251,7 @@ export default function UniformsList() {
     if (selectedUniforms.size === filteredUniforms.length) {
       setSelectedUniforms(new Set());
     } else {
-      setSelectedUniforms(new Set(filteredUniforms.map(u => u.id)));
+      setSelectedUniforms(new Set(filteredUniforms.map((u) => u.id)));
     }
   };
 
@@ -249,7 +267,7 @@ export default function UniformsList() {
   const confirmBulkReturn = async () => {
     try {
       const uniformIds = Array.from(selectedUniforms);
-      
+
       const { error } = await supabase
         .from("uniforms")
         .update({
@@ -270,14 +288,14 @@ export default function UniformsList() {
     }
   };
 
-  const filteredUniforms = uniforms.filter(uniform => {
-    const matchesSearch = 
+  const filteredUniforms = uniforms.filter((uniform) => {
+    const matchesSearch =
       uniform.top_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       uniform.bottom_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (uniform.assigned_to && uniform.assigned_to.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+
     const matchesStatus = statusFilter === "all" || uniform.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -302,9 +320,7 @@ export default function UniformsList() {
     <div className="space-y-6">
       {selectedUniforms.size > 0 && (
         <div className="flex items-center justify-between p-4 bg-primary/10 rounded-lg border border-primary/20">
-          <p className="text-sm font-medium">
-            {selectedUniforms.size} uniform(s) selected
-          </p>
+          <p className="text-sm font-medium">{selectedUniforms.size} uniform(s) selected</p>
           <Button onClick={handleBulkReturn} variant="default">
             Mark as Returned
           </Button>
@@ -314,13 +330,13 @@ export default function UniformsList() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder="Search by athlete or ID..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
-            />
+            /> */}
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-[180px]">
@@ -344,9 +360,7 @@ export default function UniformsList() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Uniform</DialogTitle>
-              <DialogDescription>
-                Enter the uniform set information.
-              </DialogDescription>
+              <DialogDescription>Enter the uniform set information.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleAddUniform} className="space-y-4">
               <div className="space-y-2">
@@ -373,7 +387,9 @@ export default function UniformsList() {
                 <Label htmlFor="athlete">Assign to Athlete (Optional)</Label>
                 <Select
                   value={sanitizeSelectValue(newUniform.athlete_id)}
-                  onValueChange={(value) => setNewUniform({ ...newUniform, athlete_id: value === "NONE" ? null : value })}
+                  onValueChange={(value) =>
+                    setNewUniform({ ...newUniform, athlete_id: value === "NONE" ? null : value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select athlete" />
@@ -414,7 +430,9 @@ export default function UniformsList() {
                   rows={3}
                 />
               </div>
-              <Button type="submit" className="w-full">Add Uniform</Button>
+              <Button type="submit" className="w-full">
+                Add Uniform
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -425,9 +443,7 @@ export default function UniformsList() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Edit Uniform</DialogTitle>
-              <DialogDescription>
-                Update the uniform set information.
-              </DialogDescription>
+              <DialogDescription>Update the uniform set information.</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleEditUniform} className="space-y-4">
               <div className="space-y-2">
@@ -452,7 +468,9 @@ export default function UniformsList() {
                 <Label htmlFor="edit_athlete">Assign to Athlete</Label>
                 <Select
                   value={sanitizeSelectValue(editingUniform.athlete_id)}
-                  onValueChange={(value) => setEditingUniform({ ...editingUniform, athlete_id: value === "NONE" ? null : value })}
+                  onValueChange={(value) =>
+                    setEditingUniform({ ...editingUniform, athlete_id: value === "NONE" ? null : value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select athlete" />
@@ -492,7 +510,9 @@ export default function UniformsList() {
                   rows={3}
                 />
               </div>
-              <Button type="submit" className="w-full">Update Uniform</Button>
+              <Button type="submit" className="w-full">
+                Update Uniform
+              </Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -505,7 +525,7 @@ export default function UniformsList() {
             Uniforms Inventory
           </CardTitle>
           <CardDescription>
-            {filteredUniforms.length} uniform{filteredUniforms.length !== 1 ? 's' : ''} found
+            {filteredUniforms.length} uniform{filteredUniforms.length !== 1 ? "s" : ""} found
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -545,34 +565,20 @@ export default function UniformsList() {
                     <TableCell className="font-medium">{uniform.top_id}</TableCell>
                     <TableCell className="font-medium">{uniform.bottom_id}</TableCell>
                     <TableCell>
-                      {uniform.assigned_to || (
-                        <span className="text-muted-foreground italic">Not assigned</span>
-                      )}
+                      {uniform.assigned_to || <span className="text-muted-foreground italic">Not assigned</span>}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(uniform.status)}>
-                        {uniform.status}
-                      </Badge>
+                      <Badge variant={getStatusBadgeVariant(uniform.status)}>{uniform.status}</Badge>
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
-                      {uniform.notes || (
-                        <span className="text-muted-foreground italic">No notes</span>
-                      )}
+                      {uniform.notes || <span className="text-muted-foreground italic">No notes</span>}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditDialog(uniform)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(uniform)}>
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteUniform(uniform.id)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteUniform(uniform.id)}>
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </div>
@@ -590,15 +596,13 @@ export default function UniformsList() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Bulk Return</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to mark {selectedUniforms.size} uniform(s) as returned? 
-              This will clear all athlete assignments and update the status to "Returned".
+              Are you sure you want to mark {selectedUniforms.size} uniform(s) as returned? This will clear all athlete
+              assignments and update the status to "Returned".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmBulkReturn}>
-              Confirm Return
-            </AlertDialogAction>
+            <AlertDialogAction onClick={confirmBulkReturn}>Confirm Return</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
