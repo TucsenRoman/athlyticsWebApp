@@ -6,10 +6,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Plus, User, Search, ChevronDown, Trophy, ShirtIcon, IdCard, TrendingUp, Medal, LockKeyhole, Settings2, Pencil, Trash2 } from "lucide-react";
+import {
+  Plus,
+  User,
+  Search,
+  ChevronDown,
+  Trophy,
+  ShirtIcon,
+  IdCard,
+  TrendingUp,
+  Medal,
+  LockKeyhole,
+  Settings2,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import AssignLockerModal from "@/components/lockers/AssignLockerModal";
@@ -72,8 +93,8 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortField, setSortField] = useState<'name' | 'grade' | 'gender' | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<"name" | "grade" | "gender" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [athleteDetails, setAthleteDetails] = useState<Record<string, AthleteDetails>>({});
@@ -92,12 +113,17 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   const [selectedAthleteForUniform, setSelectedAthleteForUniform] = useState<{ id: string; name: string } | null>(null);
   const [uniformForm, setUniformForm] = useState({ top_id: "", bottom_id: "" });
   const [isLockerModalOpen, setIsLockerModalOpen] = useState(false);
-  const [selectedAthleteForLockerAssign, setSelectedAthleteForLockerAssign] = useState<{ id: string; name: string } | null>(null);
-  
+  const [selectedAthleteForLockerAssign, setSelectedAthleteForLockerAssign] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
   // Roster edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedAthletes, setEditedAthletes] = useState<Athlete[]>([]);
-  const [newAthleteRows, setNewAthleteRows] = useState<Array<{ tempId: string; name: string; grade: string; gender: string }>>([]);
+  const [newAthleteRows, setNewAthleteRows] = useState<
+    Array<{ tempId: string; name: string; grade: string; gender: string }>
+  >([]);
 
   useEffect(() => {
     fetchAthletes();
@@ -105,10 +131,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
   const fetchAthletes = async () => {
     try {
-      const { data, error } = await supabase
-        .from("athletes")
-        .select("*")
-        .order("name");
+      const { data, error } = await supabase.from("athletes").select("*").order("name");
 
       if (error) throw error;
       setAthletes(data || []);
@@ -138,19 +161,17 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
         .maybeSingle();
 
       // Fetch attendance records
-      const { data: attendance } = await supabase
-        .from("attendance")
-        .select("status")
-        .eq("athlete_id", athleteId);
+      const { data: attendance } = await supabase.from("attendance").select("status").eq("athlete_id", athleteId);
 
       const totalRecords = attendance?.length || 0;
-      const presentRecords = attendance?.filter(a => a.status === "Present").length || 0;
+      const presentRecords = attendance?.filter((a) => a.status === "Present").length || 0;
       const attendanceRate = totalRecords > 0 ? Math.round((presentRecords / totalRecords) * 100) : 0;
 
       // Fetch recent meet results (last 3)
       const { data: results } = await supabase
         .from("results")
-        .select(`
+        .select(
+          `
           id,
           event,
           mark,
@@ -158,23 +179,25 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
           is_pr,
           notes,
           meets!inner(name, date)
-        `)
+        `,
+        )
         .eq("athlete_id", athleteId)
         .order("meets(date)", { ascending: false })
         .limit(3);
 
-      const recentResults: MeetResult[] = results?.map((r: any) => ({
-        id: r.id,
-        meet_name: r.meets.name,
-        meet_date: r.meets.date,
-        event: r.event,
-        mark: r.mark,
-        place: r.place,
-        is_pr: r.is_pr,
-        notes: r.notes,
-      })) || [];
+      const recentResults: MeetResult[] =
+        results?.map((r: any) => ({
+          id: r.id,
+          meet_name: r.meets.name,
+          meet_date: r.meets.date,
+          event: r.event,
+          mark: r.mark,
+          place: r.place,
+          is_pr: r.is_pr,
+          notes: r.notes,
+        })) || [];
 
-      setAthleteDetails(prev => ({
+      setAthleteDetails((prev) => ({
         ...prev,
         [athleteId]: {
           uniforms: uniforms || [],
@@ -183,7 +206,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
           totalAttendance: totalRecords,
           presentCount: presentRecords,
           recentResults,
-        }
+        },
       }));
     } catch (error) {
       console.error("Failed to fetch athlete details:", error);
@@ -200,26 +223,30 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   };
 
   const athleteSchema = z.object({
-    name: z.string()
+    name: z
+      .string()
       .trim()
       .min(1, "Name is required")
       .max(100, "Name must be less than 100 characters")
       .regex(/^[a-zA-Z\s'-]+$/, "Name can only contain letters, spaces, hyphens, and apostrophes"),
-    grade: z.number()
+    grade: z
+      .number()
       .int("Grade must be a whole number")
       .min(6, "Grade must be at least 6")
       .max(12, "Grade must be 12 or below"),
     gender: z.enum(["Male", "Female", "Other"], {
-      errorMap: () => ({ message: "Please select a valid gender" })
+      errorMap: () => ({ message: "Please select a valid gender" }),
     }),
-    team_position: z.string().max(50, "Position must be less than 50 characters").optional()
+    team_position: z.string().max(50, "Position must be less than 50 characters").optional(),
   });
 
   const handleAddAthlete = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       // Validate input
@@ -227,7 +254,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
         name: newAthlete.name,
         grade: parseInt(newAthlete.grade),
         gender: newAthlete.gender,
-        team_position: newAthlete.team_position
+        team_position: newAthlete.team_position,
       });
 
       if (!validation.success) {
@@ -263,14 +290,14 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   const handleUpdateAthlete = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingAthlete) return;
-    
+
     try {
       // Validate input
       const validation = athleteSchema.safeParse({
         name: editingAthlete.name,
         grade: editingAthlete.grade,
         gender: editingAthlete.gender,
-        team_position: editingAthlete.team_position
+        team_position: editingAthlete.team_position,
       });
 
       if (!validation.success) {
@@ -317,7 +344,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
     if (!selectedAthleteForUniform) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const { top_id, bottom_id } = uniformForm;
@@ -331,8 +360,8 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
       if (existingUniform) {
         // Update existing uniform
-        const status = (top_id || bottom_id) ? "Checked Out" : "Returned";
-        const athlete_id = (top_id || bottom_id) ? selectedAthleteForUniform.id : null;
+        const status = top_id || bottom_id ? "Checked Out" : "Returned";
+        const athlete_id = top_id || bottom_id ? selectedAthleteForUniform.id : null;
 
         const { error } = await supabase
           .from("uniforms")
@@ -347,18 +376,16 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
         if (error) throw error;
       } else {
         // Insert new uniform
-        const status = (top_id || bottom_id) ? "Checked Out" : "Returned";
-        const athlete_id = (top_id || bottom_id) ? selectedAthleteForUniform.id : null;
+        const status = top_id || bottom_id ? "Checked Out" : "Returned";
+        const athlete_id = top_id || bottom_id ? selectedAthleteForUniform.id : null;
 
-        const { error } = await supabase
-          .from("uniforms")
-          .insert({
-            coach_id: user.id,
-            top_id: top_id || "",
-            bottom_id: bottom_id || "",
-            status,
-            athlete_id,
-          });
+        const { error } = await supabase.from("uniforms").insert({
+          coach_id: user.id,
+          top_id: top_id || "",
+          bottom_id: bottom_id || "",
+          status,
+          athlete_id,
+        });
 
         if (error) throw error;
       }
@@ -366,7 +393,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
       toast.success("Uniform assignment updated");
       setIsUniformModalOpen(false);
       setUniformForm({ top_id: "", bottom_id: "" });
-      
+
       // Refresh this athlete's details
       if (expandedRow === selectedAthleteForUniform.id) {
         delete athleteDetails[selectedAthleteForUniform.id];
@@ -379,15 +406,13 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
   const handleUnassignLocker = async (athleteId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       // Find the locker for this athlete
-      const { data: locker } = await supabase
-        .from("lockers")
-        .select("id")
-        .eq("athlete_id", athleteId)
-        .maybeSingle();
+      const { data: locker } = await supabase.from("lockers").select("id").eq("athlete_id", athleteId).maybeSingle();
 
       if (!locker) {
         toast.error("No locker found for this athlete");
@@ -420,11 +445,12 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   const openResultsModal = async (athlete: Athlete) => {
     setSelectedAthleteForResults(athlete);
     setIsResultsModalOpen(true);
-    
+
     try {
       const { data: results } = await supabase
         .from("results")
-        .select(`
+        .select(
+          `
           id,
           event,
           mark,
@@ -432,20 +458,22 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
           is_pr,
           notes,
           meets!inner(name, date)
-        `)
+        `,
+        )
         .eq("athlete_id", athlete.id)
         .order("meets(date)", { ascending: false });
 
-      const allMeetResults: MeetResult[] = results?.map((r: any) => ({
-        id: r.id,
-        meet_name: r.meets.name,
-        meet_date: r.meets.date,
-        event: r.event,
-        mark: r.mark,
-        place: r.place,
-        is_pr: r.is_pr,
-        notes: r.notes,
-      })) || [];
+      const allMeetResults: MeetResult[] =
+        results?.map((r: any) => ({
+          id: r.id,
+          meet_name: r.meets.name,
+          meet_date: r.meets.date,
+          event: r.event,
+          mark: r.mark,
+          place: r.place,
+          is_pr: r.is_pr,
+          notes: r.notes,
+        })) || [];
 
       setAllResults(allMeetResults);
     } catch (error) {
@@ -454,13 +482,13 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
     }
   };
 
-  const handleSort = (field: 'name' | 'grade' | 'gender') => {
+  const handleSort = (field: "name" | "grade" | "gender") => {
     if (isEditMode) return; // Prevent sorting in edit mode
     if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
@@ -479,37 +507,31 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   };
 
   const handleEditAthlete = (id: string, field: keyof Athlete, value: any) => {
-    setEditedAthletes(prev =>
-      prev.map(athlete =>
-        athlete.id === id ? { ...athlete, [field]: value } : athlete
-      )
-    );
+    setEditedAthletes((prev) => prev.map((athlete) => (athlete.id === id ? { ...athlete, [field]: value } : athlete)));
   };
 
   const handleDeleteAthlete = (id: string) => {
-    setEditedAthletes(prev => prev.filter(athlete => athlete.id !== id));
+    setEditedAthletes((prev) => prev.filter((athlete) => athlete.id !== id));
   };
 
   const handleAddNewRow = () => {
     const tempId = `temp-${Date.now()}`;
-    setNewAthleteRows(prev => [...prev, { tempId, name: "", grade: "9", gender: "Male" }]);
+    setNewAthleteRows((prev) => [...prev, { tempId, name: "", grade: "9", gender: "Male" }]);
   };
 
   const handleEditNewRow = (tempId: string, field: string, value: string) => {
-    setNewAthleteRows(prev =>
-      prev.map(row =>
-        row.tempId === tempId ? { ...row, [field]: value } : row
-      )
-    );
+    setNewAthleteRows((prev) => prev.map((row) => (row.tempId === tempId ? { ...row, [field]: value } : row)));
   };
 
   const handleDeleteNewRow = (tempId: string) => {
-    setNewAthleteRows(prev => prev.filter(row => row.tempId !== tempId));
+    setNewAthleteRows((prev) => prev.filter((row) => row.tempId !== tempId));
   };
 
   const handleSaveChanges = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       // Validate all edited athletes
@@ -518,7 +540,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
           name: athlete.name,
           grade: athlete.grade,
           gender: athlete.gender,
-          team_position: athlete.team_position
+          team_position: athlete.team_position,
         });
         if (!validation.success) {
           toast.error(`Invalid data for ${athlete.name}: ${validation.error.errors[0].message}`);
@@ -536,7 +558,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
           name: newRow.name,
           grade: parseInt(newRow.grade),
           gender: newRow.gender,
-          team_position: "None"
+          team_position: "None",
         });
         if (!validation.success) {
           toast.error(`Invalid data for new athlete: ${validation.error.errors[0].message}`);
@@ -546,7 +568,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
       // Delete removed athletes
       const removedAthletes = athletes.filter(
-        original => !editedAthletes.find(edited => edited.id === original.id)
+        (original) => !editedAthletes.find((edited) => edited.id === original.id),
       );
       for (const athlete of removedAthletes) {
         const { error } = await supabase.from("athletes").delete().eq("id", athlete.id);
@@ -555,7 +577,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
       // Update existing athletes
       for (const athlete of editedAthletes) {
-        const original = athletes.find(a => a.id === athlete.id);
+        const original = athletes.find((a) => a.id === athlete.id);
         if (original && JSON.stringify(original) !== JSON.stringify(athlete)) {
           const { error } = await supabase
             .from("athletes")
@@ -599,17 +621,17 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
   };
 
   const filteredAthletes = athletes
-    .filter(athlete => athlete.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((athlete) => athlete.name.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => {
       if (!sortField) return 0;
-      
-      const direction = sortDirection === 'asc' ? 1 : -1;
-      
-      if (sortField === 'name') {
+
+      const direction = sortDirection === "asc" ? 1 : -1;
+
+      if (sortField === "name") {
         return direction * a.name.localeCompare(b.name);
-      } else if (sortField === 'grade') {
+      } else if (sortField === "grade") {
         return direction * (a.grade - b.grade);
-      } else if (sortField === 'gender') {
+      } else if (sortField === "gender") {
         return direction * a.gender.localeCompare(b.gender);
       }
       return 0;
@@ -625,20 +647,20 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
+          {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" /> */}
+          {/* <Input
             placeholder="Search athletes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
             disabled={isEditMode}
-          />
+          /> */}
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/uniforms')}
+            onClick={() => navigate("/uniforms")}
             className="flex-1 sm:flex-none"
             disabled={isEditMode}
           >
@@ -674,7 +696,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
             Athletes Roster
           </CardTitle>
           <CardDescription>
-            {filteredAthletes.length} athlete{filteredAthletes.length !== 1 ? 's' : ''} in your program
+            {filteredAthletes.length} athlete{filteredAthletes.length !== 1 ? "s" : ""} in your program
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -683,36 +705,36 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
               <TableHeader>
                 <TableRow>
                   {!isEditMode && <TableHead className="w-12"></TableHead>}
-                  <TableHead 
+                  <TableHead
                     className={!isEditMode ? "cursor-pointer hover:bg-muted/50" : ""}
-                    onClick={() => handleSort('name')}
+                    onClick={() => handleSort("name")}
                   >
                     <div className="flex items-center gap-2">
                       Name
-                      {sortField === 'name' && !isEditMode && (
-                        <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      {sortField === "name" && !isEditMode && (
+                        <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className={!isEditMode ? "cursor-pointer hover:bg-muted/50" : ""}
-                    onClick={() => handleSort('grade')}
+                    onClick={() => handleSort("grade")}
                   >
                     <div className="flex items-center gap-2">
                       Grade
-                      {sortField === 'grade' && !isEditMode && (
-                        <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      {sortField === "grade" && !isEditMode && (
+                        <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className={!isEditMode ? "cursor-pointer hover:bg-muted/50" : ""}
-                    onClick={() => handleSort('gender')}
+                    onClick={() => handleSort("gender")}
                   >
                     <div className="flex items-center gap-2">
                       Gender
-                      {sortField === 'gender' && !isEditMode && (
-                        <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                      {sortField === "gender" && !isEditMode && (
+                        <span className="text-xs">{sortDirection === "asc" ? "↑" : "↓"}</span>
                       )}
                     </div>
                   </TableHead>
@@ -733,7 +755,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                         <TableCell>
                           <Input
                             value={athlete.name}
-                            onChange={(e) => handleEditAthlete(athlete.id, 'name', e.target.value)}
+                            onChange={(e) => handleEditAthlete(athlete.id, "name", e.target.value)}
                             className="border-primary/50"
                             placeholder="Name"
                           />
@@ -741,7 +763,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                         <TableCell>
                           <Select
                             value={athlete.grade.toString()}
-                            onValueChange={(value) => handleEditAthlete(athlete.id, 'grade', parseInt(value))}
+                            onValueChange={(value) => handleEditAthlete(athlete.id, "grade", parseInt(value))}
                           >
                             <SelectTrigger className="border-primary/50">
                               <SelectValue />
@@ -757,7 +779,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                         <TableCell>
                           <Select
                             value={athlete.gender}
-                            onValueChange={(value) => handleEditAthlete(athlete.id, 'gender', value)}
+                            onValueChange={(value) => handleEditAthlete(athlete.id, "gender", value)}
                           >
                             <SelectTrigger className="border-primary/50">
                               <SelectValue />
@@ -788,7 +810,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                         <TableCell>
                           <Input
                             value={row.name}
-                            onChange={(e) => handleEditNewRow(row.tempId, 'name', e.target.value)}
+                            onChange={(e) => handleEditNewRow(row.tempId, "name", e.target.value)}
                             className="border-primary/50"
                             placeholder="New athlete name"
                           />
@@ -796,7 +818,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                         <TableCell>
                           <Select
                             value={row.grade}
-                            onValueChange={(value) => handleEditNewRow(row.tempId, 'grade', value)}
+                            onValueChange={(value) => handleEditNewRow(row.tempId, "grade", value)}
                           >
                             <SelectTrigger className="border-primary/50">
                               <SelectValue />
@@ -812,7 +834,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                         <TableCell>
                           <Select
                             value={row.gender}
-                            onValueChange={(value) => handleEditNewRow(row.tempId, 'gender', value)}
+                            onValueChange={(value) => handleEditNewRow(row.tempId, "gender", value)}
                           >
                             <SelectTrigger className="border-primary/50">
                               <SelectValue />
@@ -848,8 +870,8 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                       <>
                         <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleRow(athlete.id)}>
                           <TableCell>
-                            <ChevronDown 
-                              className={`w-4 h-4 transition-transform duration-200 ${expandedRow === athlete.id ? 'rotate-180' : ''}`} 
+                            <ChevronDown
+                              className={`w-4 h-4 transition-transform duration-200 ${expandedRow === athlete.id ? "rotate-180" : ""}`}
                             />
                           </TableCell>
                           <TableCell className="font-medium">{athlete.name}</TableCell>
@@ -869,9 +891,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           <Trophy className="w-4 h-4 text-primary" />
                                           Events & Personal Records
                                         </CardTitle>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
                                           className="h-7 text-xs"
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -888,14 +910,17 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           {athlete.events.map((event, i) => {
                                             const pr = athlete.personal_records?.[event];
                                             return (
-                                              <div key={i} className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 p-3 bg-background rounded-md border">
+                                              <div
+                                                key={i}
+                                                className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 p-3 bg-background rounded-md border"
+                                              >
                                                 <span className="font-medium text-sm">{event}</span>
                                                 {pr ? (
                                                   <div className="flex flex-col items-start sm:items-end gap-0.5">
                                                     <Badge variant="secondary" className="text-xs font-semibold">
-                                                      {typeof pr === 'string' ? pr : pr.time}
+                                                      {typeof pr === "string" ? pr : pr.time}
                                                     </Badge>
-                                                    {typeof pr === 'object' && pr.date && (
+                                                    {typeof pr === "object" && pr.date && (
                                                       <span className="text-xs text-muted-foreground">{pr.date}</span>
                                                     )}
                                                   </div>
@@ -920,9 +945,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           <ShirtIcon className="w-4 h-4 text-primary" />
                                           Uniform Assignments
                                         </CardTitle>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
                                           className="h-7 text-xs"
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -934,12 +959,15 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                       </div>
                                     </CardHeader>
                                     <CardContent>
-                                      {athleteDetails[athlete.id]?.uniforms && athleteDetails[athlete.id].uniforms.length > 0 ? (
+                                      {athleteDetails[athlete.id]?.uniforms &&
+                                      athleteDetails[athlete.id].uniforms.length > 0 ? (
                                         <div className="space-y-3">
                                           {athleteDetails[athlete.id].uniforms.map((uniform, i) => (
                                             <div key={i} className="p-3 bg-background rounded-md border">
                                               {i === 0 && athleteDetails[athlete.id].uniforms.length > 1 && (
-                                                <Badge variant="default" className="text-xs mb-2">Current</Badge>
+                                                <Badge variant="default" className="text-xs mb-2">
+                                                  Current
+                                                </Badge>
                                               )}
                                               <div className="grid grid-cols-2 gap-2">
                                                 <div className="space-y-1">
@@ -971,9 +999,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           <IdCard className="w-4 h-4 text-primary" />
                                           Team Position
                                         </CardTitle>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
                                           className="h-7 text-xs"
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -985,8 +1013,11 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                       </div>
                                     </CardHeader>
                                     <CardContent>
-                                      <Badge variant={athlete.team_position !== 'None' ? 'default' : 'secondary'} className="w-fit">
-                                        {athlete.team_position || 'None'}
+                                      <Badge
+                                        variant={athlete.team_position !== "None" ? "default" : "secondary"}
+                                        className="w-fit"
+                                      >
+                                        {athlete.team_position || "None"}
                                       </Badge>
                                     </CardContent>
                                   </Card>
@@ -1000,9 +1031,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           Locker
                                         </CardTitle>
                                         {athleteDetails[athlete.id]?.locker ? (
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
                                             className="h-7 text-xs"
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -1012,9 +1043,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                             Unassign
                                           </Button>
                                         ) : (
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
                                             className="h-7 text-xs"
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -1042,7 +1073,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                                   </div>
                                                 )}
                                               </div>
-                                              <Badge variant="default" className="text-xs">Assigned</Badge>
+                                              <Badge variant="default" className="text-xs">
+                                                Assigned
+                                              </Badge>
                                             </div>
                                           </div>
                                         </div>
@@ -1060,9 +1093,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           <TrendingUp className="w-4 h-4 text-primary" />
                                           Attendance Rate
                                         </CardTitle>
-                                        <Button 
-                                          variant="ghost" 
-                                          size="sm" 
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
                                           className="h-7 text-xs"
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -1080,7 +1113,8 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                         </span>
                                         {athleteDetails[athlete.id] && (
                                           <span className="text-sm text-muted-foreground">
-                                            ({athleteDetails[athlete.id].presentCount}/{athleteDetails[athlete.id].totalAttendance})
+                                            ({athleteDetails[athlete.id].presentCount}/
+                                            {athleteDetails[athlete.id].totalAttendance})
                                           </span>
                                         )}
                                       </div>
@@ -1096,9 +1130,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           Recent Meet Results
                                         </CardTitle>
                                         <div className="flex gap-2">
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
                                             className="h-7 text-xs"
                                             onClick={(e) => {
                                               e.stopPropagation();
@@ -1107,24 +1141,26 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                           >
                                             Add Result
                                           </Button>
-                                          {athleteDetails[athlete.id]?.recentResults && athleteDetails[athlete.id].recentResults.length > 0 && (
-                                            <Button 
-                                              variant="ghost" 
-                                              size="sm" 
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                openResultsModal(athlete);
-                                              }}
-                                              className="h-7 text-xs"
-                                            >
-                                              View all
-                                            </Button>
-                                          )}
+                                          {athleteDetails[athlete.id]?.recentResults &&
+                                            athleteDetails[athlete.id].recentResults.length > 0 && (
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  openResultsModal(athlete);
+                                                }}
+                                                className="h-7 text-xs"
+                                              >
+                                                View all
+                                              </Button>
+                                            )}
                                         </div>
                                       </div>
                                     </CardHeader>
                                     <CardContent>
-                                      {athleteDetails[athlete.id]?.recentResults && athleteDetails[athlete.id].recentResults.length > 0 ? (
+                                      {athleteDetails[athlete.id]?.recentResults &&
+                                      athleteDetails[athlete.id].recentResults.length > 0 ? (
                                         <div className="space-y-3">
                                           {athleteDetails[athlete.id].recentResults.map((result) => (
                                             <div key={result.id} className="p-3 bg-background rounded-md border">
@@ -1133,7 +1169,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                                   <div className="font-medium text-sm flex items-center gap-2">
                                                     {result.meet_name}
                                                     {result.is_pr && (
-                                                      <Badge variant="default" className="text-xs">PR</Badge>
+                                                      <Badge variant="default" className="text-xs">
+                                                        PR
+                                                      </Badge>
                                                     )}
                                                   </div>
                                                   <div className="text-xs text-muted-foreground">
@@ -1156,7 +1194,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                                 <div>
                                                   <span className="text-xs text-muted-foreground">Place</span>
                                                   <div className="font-medium">
-                                                    {result.place ? getOrdinal(result.place) : 'N/A'}
+                                                    {result.place ? getOrdinal(result.place) : "N/A"}
                                                   </div>
                                                 </div>
                                               </div>
@@ -1180,29 +1218,18 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
               </TableBody>
             </Table>
           </div>
-          
+
           {isEditMode && (
             <div className="mt-4 space-y-3">
-              <Button
-                variant="outline"
-                onClick={handleAddNewRow}
-                className="w-full sm:w-auto"
-              >
+              <Button variant="outline" onClick={handleAddNewRow} className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Athlete
               </Button>
               <div className="flex flex-col sm:flex-row gap-2 justify-end">
-                <Button
-                  variant="outline"
-                  onClick={handleCancelEdit}
-                  className="w-full sm:w-auto"
-                >
+                <Button variant="outline" onClick={handleCancelEdit} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button
-                  onClick={handleSaveChanges}
-                  className="w-full sm:w-auto"
-                >
+                <Button onClick={handleSaveChanges} className="w-full sm:w-auto">
                   Save Changes
                 </Button>
               </div>
@@ -1216,9 +1243,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Athlete</DialogTitle>
-            <DialogDescription>
-              Update athlete information
-            </DialogDescription>
+            <DialogDescription>Update athlete information</DialogDescription>
           </DialogHeader>
           {editingAthlete && (
             <form onSubmit={handleUpdateAthlete} className="space-y-4">
@@ -1281,7 +1306,9 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                   </SelectContent>
                 </Select>
               </div>
-              <Button type="submit" className="w-full">Update Athlete</Button>
+              <Button type="submit" className="w-full">
+                Update Athlete
+              </Button>
             </form>
           )}
         </DialogContent>
@@ -1289,7 +1316,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
 
       {/* Results Modal */}
       <Dialog open={isResultsModalOpen} onOpenChange={setIsResultsModalOpen}>
-...
+        ...
       </Dialog>
 
       {/* Uniform Assignment Modal */}
@@ -1297,9 +1324,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Assign Uniform</DialogTitle>
-            <DialogDescription>
-              Assign uniform to {selectedAthleteForUniform?.name}
-            </DialogDescription>
+            <DialogDescription>Assign uniform to {selectedAthleteForUniform?.name}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -1324,9 +1349,7 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
               <Button variant="outline" onClick={() => setIsUniformModalOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleUniformAssignment}>
-                Save
-              </Button>
+              <Button onClick={handleUniformAssignment}>Save</Button>
             </div>
           </div>
         </DialogContent>
