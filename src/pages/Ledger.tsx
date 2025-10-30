@@ -329,20 +329,18 @@ export default function Ledger() {
                     </DialogHeader>
                     <div className="flex-1 overflow-y-auto px-6 py-4">
                       <div className="space-y-4">
-                        {headers.map((header) => (
+                        {headers.filter(header => header.id !== "attendance_rate").map((header) => (
                           <div key={header.id} className="space-y-2">
                             <Label htmlFor={header.id} className="flex items-center gap-1">
                               {header.isHardwired && <Lock className="w-3 h-3 text-muted-foreground" />}
                               {header.label}
                               {header.id === "name" && <span className="text-destructive ml-1">*</span>}
-                              {header.id === "attendance_rate" && <span className="text-muted-foreground text-xs ml-2">(Auto-calculated)</span>}
                             </Label>
                             <Input
                               id={header.id}
-                              placeholder={header.id === "attendance_rate" ? "Auto-calculated" : `Enter ${header.label.toLowerCase()}`}
+                              placeholder={`Enter ${header.label.toLowerCase()}`}
                               value={newAthleteData[header.id] || ""}
                               onChange={(e) => setNewAthleteData({ ...newAthleteData, [header.id]: e.target.value })}
-                              disabled={header.id === "attendance_rate"}
                             />
                           </div>
                         ))}
@@ -366,20 +364,6 @@ export default function Ledger() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm font-medium text-muted-foreground">Visible Columns:</span>
-              {headers.map((header) => (
-                <Button
-                  key={header.id}
-                  variant={selectedHeaders.includes(header.id) ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => toggleHeader(header.id)}
-                  disabled={header.id === "name" && selectedHeaders.includes("name") && selectedHeaders.length === 1}
-                >
-                  {header.label}
-                </Button>
-              ))}
-            </div>
 
             {searchQuery && filteredAthletes.length > 0 ? (
               <div className="space-y-4">
