@@ -31,11 +31,12 @@ interface LedgerContextType {
   addHeader: (label: string) => void;
   editHeader: (id: string, newLabel: string) => void;
   deleteHeader: (id: string) => void;
-  addAthlete: () => Promise<void>;
+  addAthlete: (athleteData: Partial<AthleteData>) => Promise<void>;
   updateAthlete: (id: string, field: string, value: any) => Promise<void>;
   deleteAthlete: (id: string) => Promise<void>;
   refreshAthletes: () => Promise<void>;
   getCustomFieldValue: (athleteId: string, fieldId: string) => string;
+  getAttendanceRate: (athleteId: string) => string;
 }
 
 const LedgerContext = createContext<LedgerContextType | undefined>(undefined);
@@ -61,6 +62,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
   const [headers, setHeaders] = useState<HeaderDefinition[]>([]);
   const [athletes, setAthletes] = useState<AthleteData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [attendanceData, setAttendanceData] = useState<Record<string, { total: number; present: number }>>({});
 
   // Initialize headers from localStorage or defaults
   useEffect(() => {
@@ -88,6 +90,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Fetch athletes
       const { data, error } = await supabase
         .from("athletes")
         .select("*")
@@ -96,6 +99,28 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       setAthletes(data || []);
+
+      // Fetch attendance data
+      const { data: attendanceRecords, error: attendanceError } = await supabase
+        .from("attendance")
+        .select("athlete_id, status")
+        .eq("coach_id", user.id);
+
+      if (attendanceError) throw attendanceError;
+
+      // Calculate attendance rates
+      const attendanceMap: Record<string, { total: number; present: number }> = {};
+      attendanceRecords?.forEach((record) => {
+        if (!attendanceMap[record.athlete_id]) {
+          attendanceMap[record.athlete_id] = { total: 0, present: 0 };
+        }
+        attendanceMap[record.athlete_id].total++;
+        if (record.status === "Present") {
+          attendanceMap[record.athlete_id].present++;
+        }
+      });
+
+      setAttendanceData(attendanceMap);
     } catch (error) {
       console.error("Error fetching athletes:", error);
       toast.error("Failed to load athletes");
@@ -175,7 +200,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     toast.success("Header deleted");
   };
 
-  const addAthlete = async () => {
+  const addAthlete = async (athleteData: Partial<AthleteData>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -183,21 +208,38 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from("athletes")
         .insert({
-          name: "New Athlete",
+          name: athleteData.name || "New Athlete",
           coach_id: user.id,
-          grade: null,
-          gender: null,
-          team_position: "None",
-          events: [],
-          achievements: [],
-          personal_records: {},
-          athlete_of_week: false,
-          athlete_of_meet: false,
+          grade: athleteData.grade || null,
+          gender: athleteData.gender || null,
+          team_position: athleteData.team_position || "None",
+          events: athleteData.events || [],
+          achievements: athleteData.achievements || [],
+          personal_records: athleteData.personal_records || {},
+          athlete_of_week: athleteData.athlete_of_week || false,
+          athlete_of_meet: athleteData.athlete_of_meet || false,
         })
         .select()
         .single();
 
       if (error) throw error;
+      
+      // Save custom field data if any
+      const customFields = Object.keys(athleteData).filter(
+        key => !HARDWIRED_HEADERS.some(h => h.id === key) && 
+               !DEFAULT_HEADERS.some(h => h.id === key) &&
+               key !== 'attendance_rate'
+      );
+      
+      if (customFields.length > 0) {
+        const customData: Record<string, any> = {};
+        customFields.forEach(field => {
+          if (athleteData[field] !== undefined) {
+            customData[field] = athleteData[field];
+          }
+        });
+        localStorage.setItem(`athlete_${data.id}_custom`, JSON.stringify(customData));
+      }
       
       setAthletes([...athletes, data]);
       toast.success("Athlete added");
@@ -297,6 +339,13 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
     return "";
   };
 
+  const getAttendanceRate = (athleteId: string): string => {
+    const data = attendanceData[athleteId];
+    if (!data || data.total === 0) return "0%";
+    const rate = Math.round((data.present / data.total) * 100);
+    return `${rate}%`;
+  };
+
   return (
     <LedgerContext.Provider
       value={{
@@ -311,6 +360,7 @@ export function LedgerProvider({ children }: { children: React.ReactNode }) {
         deleteAthlete,
         refreshAthletes,
         getCustomFieldValue,
+        getAttendanceRate,
       }}
     >
       {children}

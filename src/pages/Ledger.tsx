@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Trash2, Edit2, Lock } from "lucide-react";
 import { useLedger } from "@/contexts/LedgerContext";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
 export default function Ledger() {
   const {
@@ -21,6 +22,7 @@ export default function Ledger() {
     updateAthlete,
     deleteAthlete,
     getCustomFieldValue,
+    getAttendanceRate,
   } = useLedger();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +33,8 @@ export default function Ledger() {
   const [isAddHeaderOpen, setIsAddHeaderOpen] = useState(false);
   const [editingHeaderId, setEditingHeaderId] = useState<string | null>(null);
   const [editingHeaderValue, setEditingHeaderValue] = useState("");
+  const [isAddAthleteOpen, setIsAddAthleteOpen] = useState(false);
+  const [newAthleteData, setNewAthleteData] = useState<Record<string, any>>({});
 
   const filteredAthletes = athletes.filter(athlete =>
     athlete.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -80,13 +84,16 @@ export default function Ledger() {
   };
 
   const startEdit = (athleteId: string, field: string) => {
+    // Don't allow editing attendance_rate
+    if (field === "attendance_rate") return;
+
     const athlete = athletes.find(a => a.id === athleteId);
     if (!athlete) return;
 
     setEditingCell({ athleteId, field });
     
-    // Check if it's a custom field or attendance_rate
-    const isCustomOrSpecial = field === "attendance_rate" || !headers.find(h => h.id === field && h.isHardwired);
+    // Check if it's a custom field
+    const isCustomOrSpecial = !headers.find(h => h.id === field && h.isHardwired);
     
     if (isCustomOrSpecial) {
       setEditValue(getCustomFieldValue(athleteId, field));
@@ -111,11 +118,16 @@ export default function Ledger() {
   };
 
   const renderCellValue = (athlete: any, headerId: string) => {
-    // Check if it's a custom field or attendance_rate
+    // Special handling for attendance_rate
+    if (headerId === "attendance_rate") {
+      return getAttendanceRate(athlete.id);
+    }
+
+    // Check if it's a custom field
     const header = headers.find(h => h.id === headerId);
-    const isCustomOrSpecial = headerId === "attendance_rate" || (header && !header.isHardwired);
+    const isCustom = header && !header.isHardwired;
     
-    if (isCustomOrSpecial) {
+    if (isCustom) {
       const value = getCustomFieldValue(athlete.id, headerId);
       return value || "—";
     }
@@ -129,6 +141,17 @@ export default function Ledger() {
       return value ? "Yes" : "No";
     }
     return value?.toString() || "—";
+  };
+
+  const handleAddAthlete = async () => {
+    if (!newAthleteData.name?.trim()) {
+      toast.error("Name is required");
+      return;
+    }
+
+    await addAthlete(newAthleteData);
+    setNewAthleteData({});
+    setIsAddAthleteOpen(false);
   };
 
   if (loading) {
@@ -146,10 +169,6 @@ export default function Ledger() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold tracking-tight">Ledger</h2>
-          <Button onClick={addAthlete} size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Athlete
-          </Button>
         </div>
 
         <Card>
@@ -244,7 +263,7 @@ export default function Ledger() {
             <CardTitle>Athlete Records</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <Input
                 type="text"
                 placeholder="Search athletes by name..."
@@ -252,6 +271,48 @@ export default function Ledger() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
               />
+              <Dialog open={isAddAthleteOpen} onOpenChange={setIsAddAthleteOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="whitespace-nowrap">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Athlete
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md bg-card">
+                  <DialogHeader>
+                    <DialogTitle>Add Athlete</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4 max-h-[60vh] overflow-y-auto">
+                    {headers.map((header) => (
+                      <div key={header.id} className="space-y-2">
+                        <Label htmlFor={header.id}>
+                          {header.label}
+                          {header.id === "name" && <span className="text-destructive ml-1">*</span>}
+                          {header.id === "attendance_rate" && <span className="text-muted-foreground text-xs ml-2">(Auto-calculated)</span>}
+                        </Label>
+                        <Input
+                          id={header.id}
+                          placeholder={header.id === "attendance_rate" ? "Auto-calculated" : `Enter ${header.label.toLowerCase()}`}
+                          value={newAthleteData[header.id] || ""}
+                          onChange={(e) => setNewAthleteData({ ...newAthleteData, [header.id]: e.target.value })}
+                          disabled={header.id === "attendance_rate"}
+                        />
+                      </div>
+                    ))}
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button variant="outline" onClick={() => {
+                        setIsAddAthleteOpen(false);
+                        setNewAthleteData({});
+                      }}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleAddAthlete}>
+                        Add Athlete
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             <div className="flex flex-wrap gap-2 items-center">
@@ -269,9 +330,65 @@ export default function Ledger() {
               ))}
             </div>
 
-            {filteredAthletes.length === 0 ? (
+            {searchQuery && filteredAthletes.length > 0 ? (
+              <div className="space-y-4">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Search Results ({filteredAthletes.length})
+                </div>
+                {filteredAthletes.map((athlete) => (
+                  <Card key={athlete.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{athlete.name}</CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteAthlete(athlete.id)}
+                          className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {headers.map((header) => (
+                          <div key={header.id} className="space-y-1">
+                            <Label className="text-sm text-muted-foreground">{header.label}</Label>
+                            <div 
+                              className={`text-sm font-medium ${header.id !== "attendance_rate" ? "cursor-pointer hover:bg-muted/50 p-2 rounded" : "p-2"}`}
+                              onClick={() => header.id !== "attendance_rate" && startEdit(athlete.id, header.id)}
+                            >
+                              {editingCell?.athleteId === athlete.id && editingCell?.field === header.id ? (
+                                <Input
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  onBlur={saveEdit}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") saveEdit();
+                                    if (e.key === "Escape") setEditingCell(null);
+                                  }}
+                                  autoFocus
+                                  className="h-8"
+                                />
+                              ) : (
+                                renderCellValue(athlete, header.id)
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : searchQuery ? (
               <div className="text-center py-8 text-muted-foreground">
-                {searchQuery ? "No athletes found matching your search." : "No athletes yet. Click 'Add Athlete' to get started."}
+                No athletes found matching your search.
+              </div>
+            ) : filteredAthletes.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No athletes yet. Click 'Add Athlete' to get started.
               </div>
             ) : (
               <div className="border rounded-lg overflow-auto">
@@ -291,8 +408,8 @@ export default function Ledger() {
                         {selectedHeaders.map((headerId) => (
                           <TableCell
                             key={`${athlete.id}-${headerId}`}
-                            className="cursor-pointer hover:bg-muted/50"
-                            onClick={() => startEdit(athlete.id, headerId)}
+                            className={`${headerId !== "attendance_rate" ? "cursor-pointer hover:bg-muted/50" : ""}`}
+                            onClick={() => headerId !== "attendance_rate" && startEdit(athlete.id, headerId)}
                           >
                             {editingCell?.athleteId === athlete.id && editingCell?.field === headerId ? (
                               <Input
