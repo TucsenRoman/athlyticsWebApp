@@ -203,6 +203,8 @@ export default function EditableCell({
               // Only allow numbers, colons, and periods
               if (/^[\d:.]*$/.test(val) || val === "") {
                 setEditValue(val);
+                // Save raw value immediately for persistence
+                onSave(val);
                 // Clear error while typing
                 if (error) setError("");
               }
@@ -211,7 +213,26 @@ export default function EditableCell({
               // Auto-format on blur
               const formatted = formatTimeInput(editValue);
               setEditValue(formatted);
-              validateAndSave();
+              // Validate the formatted value
+              const timePattern = /^(\d{1,2}):([0-5]\d)(\.\d{1,2})?$/;
+              const match = formatted.match(timePattern);
+              
+              if (formatted && !match) {
+                setError("Format: MM:SS or MM:SS.xx");
+              } else if (formatted) {
+                const [_, minutes, seconds] = match;
+                const secs = parseInt(seconds);
+                
+                if (secs >= 60) {
+                  setError("Seconds can't exceed 59");
+                } else {
+                  setError("");
+                  onSave(formatted);
+                }
+              } else {
+                setError("");
+                onSave(formatted);
+              }
             }}
             onKeyDown={handleKeyDown}
             autoFocus
