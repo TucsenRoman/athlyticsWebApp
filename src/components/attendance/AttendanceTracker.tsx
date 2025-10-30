@@ -10,9 +10,26 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, Filter, Edit, ChevronLeft, ChevronRight, MessageSquare } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -44,9 +61,7 @@ const AttendanceTracker = () => {
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [currentNoteAthleteId, setCurrentNoteAthleteId] = useState<string | null>(null);
   const [currentNoteText, setCurrentNoteText] = useState("");
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   useEffect(() => {
     fetchAthletes();
   }, []);
@@ -63,16 +78,16 @@ const AttendanceTracker = () => {
   const checkSubmissionStatus = async () => {
     try {
       const {
-        data: {
-          user
-        }
+        data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
       const dateStr = format(selectedDate, "yyyy-MM-dd");
-      const {
-        data,
-        error
-      } = await supabase.from("attendance_submissions").select("*").eq("coach_id", user.id).eq("date", dateStr).maybeSingle();
+      const { data, error } = await supabase
+        .from("attendance_submissions")
+        .select("*")
+        .eq("coach_id", user.id)
+        .eq("date", dateStr)
+        .maybeSingle();
       if (error) throw error;
       const submitted = !!data;
       setIsSubmitted(submitted);
@@ -84,15 +99,14 @@ const AttendanceTracker = () => {
   const fetchAthletes = async () => {
     try {
       const {
-        data: {
-          user
-        }
+        data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
-      const {
-        data,
-        error
-      } = await supabase.from("athletes").select("id, name, grade, gender").eq("coach_id", user.id).order("name");
+      const { data, error } = await supabase
+        .from("athletes")
+        .select("id, name, grade, gender")
+        .eq("coach_id", user.id)
+        .order("name");
       if (error) throw error;
       setAthletes(data || []);
     } catch (error) {
@@ -100,7 +114,7 @@ const AttendanceTracker = () => {
       toast({
         title: "Error",
         description: "Failed to load athletes",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -109,16 +123,11 @@ const AttendanceTracker = () => {
   const fetchAttendance = async () => {
     try {
       const {
-        data: {
-          user
-        }
+        data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
       const dateStr = format(selectedDate, "yyyy-MM-dd");
-      const {
-        data,
-        error
-      } = await supabase.from("attendance").select("*").eq("coach_id", user.id).eq("date", dateStr);
+      const { data, error } = await supabase.from("attendance").select("*").eq("coach_id", user.id).eq("date", dateStr);
       if (error) throw error;
       setAttendance((data || []) as AttendanceRecord[]);
     } catch (error) {
@@ -128,30 +137,27 @@ const AttendanceTracker = () => {
   const updateAttendance = async (athleteId: string, status: "Present" | "Absent" | "Excused", notes?: string) => {
     try {
       const {
-        data: {
-          user
-        }
+        data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
       const dateStr = format(selectedDate, "yyyy-MM-dd");
-      const existingRecord = attendance.find(a => a.athlete_id === athleteId);
+      const existingRecord = attendance.find((a) => a.athlete_id === athleteId);
       if (existingRecord) {
-        const {
-          error
-        } = await supabase.from("attendance").update({
-          status,
-          notes: notes || null
-        }).eq("id", existingRecord.id);
+        const { error } = await supabase
+          .from("attendance")
+          .update({
+            status,
+            notes: notes || null,
+          })
+          .eq("id", existingRecord.id);
         if (error) throw error;
       } else {
-        const {
-          error
-        } = await supabase.from("attendance").insert({
+        const { error } = await supabase.from("attendance").insert({
           athlete_id: athleteId,
           coach_id: user.id,
           date: dateStr,
           status,
-          notes: notes || null
+          notes: notes || null,
         });
         if (error) throw error;
       }
@@ -161,15 +167,20 @@ const AttendanceTracker = () => {
       toast({
         title: "Error",
         description: "Failed to update attendance",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
   const attendanceNotesSchema = z.object({
-    notes: z.string().max(500, "Notes must be less than 500 characters").optional().nullable().transform(val => val || null)
+    notes: z
+      .string()
+      .max(500, "Notes must be less than 500 characters")
+      .optional()
+      .nullable()
+      .transform((val) => val || null),
   });
   const openNoteDialog = (athleteId: string) => {
-    const record = attendance.find(a => a.athlete_id === athleteId);
+    const record = attendance.find((a) => a.athlete_id === athleteId);
     setCurrentNoteAthleteId(athleteId);
     setCurrentNoteText(record?.notes || "");
     setNoteDialogOpen(true);
@@ -180,17 +191,17 @@ const AttendanceTracker = () => {
 
     // Validate notes length
     const validation = attendanceNotesSchema.safeParse({
-      notes: currentNoteText || null
+      notes: currentNoteText || null,
     });
     if (!validation.success) {
       toast({
         title: "Validation Error",
         description: validation.error.errors[0].message,
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    const record = attendance.find(a => a.athlete_id === currentNoteAthleteId);
+    const record = attendance.find((a) => a.athlete_id === currentNoteAthleteId);
     const currentStatus = record?.status || "Present";
     await updateAttendance(currentNoteAthleteId, currentStatus, validation.data.notes || undefined);
 
@@ -207,40 +218,44 @@ const AttendanceTracker = () => {
   const submitAttendance = async () => {
     try {
       const {
-        data: {
-          user
-        }
+        data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
       const dateStr = format(selectedDate, "yyyy-MM-dd");
-      const promises = athletes.map(athlete => {
-        const existingRecord = attendance.find(a => a.athlete_id === athlete.id);
+      const promises = athletes.map((athlete) => {
+        const existingRecord = attendance.find((a) => a.athlete_id === athlete.id);
         const currentNotes = editingNotes[athlete.id] || existingRecord?.notes || null;
         if (existingRecord) {
-          return supabase.from("attendance").update({
-            status: existingRecord.status,
-            notes: currentNotes
-          }).eq("id", existingRecord.id);
+          return supabase
+            .from("attendance")
+            .update({
+              status: existingRecord.status,
+              notes: currentNotes,
+            })
+            .eq("id", existingRecord.id);
         } else {
           return supabase.from("attendance").insert({
             athlete_id: athlete.id,
             coach_id: user.id,
             date: dateStr,
             status: "Present",
-            notes: currentNotes
+            notes: currentNotes,
           });
         }
       });
       await Promise.all(promises);
 
       // Mark as submitted in attendance_submissions
-      await supabase.from("attendance_submissions").upsert({
-        coach_id: user.id,
-        date: dateStr,
-        submitted_at: new Date().toISOString()
-      }, {
-        onConflict: 'coach_id,date'
-      });
+      await supabase.from("attendance_submissions").upsert(
+        {
+          coach_id: user.id,
+          date: dateStr,
+          submitted_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "coach_id,date",
+        },
+      );
       await fetchAttendance();
       setEditingNotes({});
       setIsEditMode(false);
@@ -250,30 +265,32 @@ const AttendanceTracker = () => {
       toast({
         title: "Error",
         description: "Failed to submit attendance",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
   const clearAllAttendance = async () => {
     try {
       const {
-        data: {
-          user
-        }
+        data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
       const dateStr = format(selectedDate, "yyyy-MM-dd");
 
       // Delete all attendance records for this date
-      const {
-        error: attendanceError
-      } = await supabase.from("attendance").delete().eq("coach_id", user.id).eq("date", dateStr);
+      const { error: attendanceError } = await supabase
+        .from("attendance")
+        .delete()
+        .eq("coach_id", user.id)
+        .eq("date", dateStr);
       if (attendanceError) throw attendanceError;
 
       // Delete submission marker
-      const {
-        error: submissionError
-      } = await supabase.from("attendance_submissions").delete().eq("coach_id", user.id).eq("date", dateStr);
+      const { error: submissionError } = await supabase
+        .from("attendance_submissions")
+        .delete()
+        .eq("coach_id", user.id)
+        .eq("date", dateStr);
       if (submissionError) throw submissionError;
 
       // Reset UI state
@@ -283,14 +300,14 @@ const AttendanceTracker = () => {
       setIsEditMode(true);
       toast({
         title: "Cleared",
-        description: "All attendance for this date has been cleared"
+        description: "All attendance for this date has been cleared",
       });
     } catch (error) {
       console.error("Error clearing attendance:", error);
       toast({
         title: "Error",
         description: "Failed to clear attendance",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -302,7 +319,7 @@ const AttendanceTracker = () => {
     const variants = {
       Present: "default",
       Absent: "destructive",
-      Excused: "secondary"
+      Excused: "secondary",
     } as const;
     return <Badge variant={variants[status]}>{status}</Badge>;
   };
@@ -316,12 +333,12 @@ const AttendanceTracker = () => {
     newDate.setDate(newDate.getDate() + 1);
     setSelectedDate(newDate);
   };
-  const filteredAthletes = athletes.filter(athlete => {
+  const filteredAthletes = athletes.filter((athlete) => {
     if (filterStatus.includes("all")) return true;
-    const record = attendance.find(a => a.athlete_id === athlete.id);
+    const record = attendance.find((a) => a.athlete_id === athlete.id);
     const status = record?.status || "Present";
     const hasNotes = !!record?.notes;
-    return filterStatus.some(filter => {
+    return filterStatus.some((filter) => {
       if (filter === "Present") return status === "Present";
       if (filter === "Absent") return status === "Absent";
       if (filter === "Excused") return status === "Excused";
@@ -332,21 +349,20 @@ const AttendanceTracker = () => {
   if (loading) {
     return <div className="text-center p-8">Loading...</div>;
   }
-  return <Card>
+  return (
+    <Card>
       <CardHeader>
         <div className="flex flex-col gap-4">
-          <CardTitle>Attendance Tracker</CardTitle>
-          
+          <CardTitle>Attendance for</CardTitle>
+
           {/* Date Navigation Bar */}
           <div className="flex items-center justify-center gap-2 p-3 bg-muted rounded-lg">
             <Button variant="ghost" size="icon" onClick={handlePreviousDay} className="h-8 w-8">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            
-            <span className="text-lg font-bold min-w-[120px] text-center">
-              {format(selectedDate, "MM/dd/yyyy")}
-            </span>
-            
+
+            <span className="text-lg font-bold min-w-[120px] text-center">{format(selectedDate, "MM/dd/yyyy")}</span>
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -354,10 +370,16 @@ const AttendanceTracker = () => {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 bg-popover z-50" align="center">
-                <Calendar mode="single" selected={selectedDate} onSelect={date => date && setSelectedDate(date)} initialFocus className={cn("p-3 pointer-events-auto")} />
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
               </PopoverContent>
             </Popover>
-            
+
             <Button variant="ghost" size="icon" onClick={handleNextDay} className="h-8 w-8">
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -365,13 +387,17 @@ const AttendanceTracker = () => {
 
           {/* Controls Bar: Filter and Submit/Edit buttons on same line */}
           <div className="flex items-center gap-3 flex-nowrap overflow-x-auto">
-            <Select value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"} onValueChange={value => {
-              if (value === "all") {
-                setFilterStatus(["all"]);
-              } else {
-                setFilterStatus([value]);
-              }
-            }} disabled={!isEditMode}>
+            <Select
+              value={filterStatus.includes("all") ? "all" : filterStatus[0] || "all"}
+              onValueChange={(value) => {
+                if (value === "all") {
+                  setFilterStatus(["all"]);
+                } else {
+                  setFilterStatus([value]);
+                }
+              }}
+              disabled={!isEditMode}
+            >
               <SelectTrigger className="w-[140px] shrink-0">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Filter" />
@@ -385,17 +411,20 @@ const AttendanceTracker = () => {
               </SelectContent>
             </Select>
 
-            {isSubmitted && !isEditMode ? <Button onClick={enableEditMode} variant="outline" size="sm" className="touch-manipulation shrink-0">
+            {isSubmitted && !isEditMode ? (
+              <Button onClick={enableEditMode} variant="outline" size="sm" className="touch-manipulation shrink-0">
                 <Edit className="w-4 h-4 mr-2" />
                 Edit
-              </Button> : <Button onClick={submitAttendance} variant="default" size="sm" className="touch-manipulation shrink-0">
+              </Button>
+            ) : (
+              <Button onClick={submitAttendance} variant="default" size="sm" className="touch-manipulation shrink-0">
                 Submit
-              </Button>}
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-
         <Table>
           <TableHeader>
             <TableRow>
@@ -405,14 +434,25 @@ const AttendanceTracker = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAthletes.map(athlete => {
-            const record = attendance.find(a => a.athlete_id === athlete.id);
-            const currentStatus = record?.status || "Present";
-            const hasNote = !!record?.notes;
-            return <TableRow key={athlete.id} className={cn(!isEditMode && "opacity-60")}>
+            {filteredAthletes.map((athlete) => {
+              const record = attendance.find((a) => a.athlete_id === athlete.id);
+              const currentStatus = record?.status || "Present";
+              const hasNote = !!record?.notes;
+              return (
+                <TableRow key={athlete.id} className={cn(!isEditMode && "opacity-60")}>
                   <TableCell className="font-medium">{athlete.name}</TableCell>
                   <TableCell>
-                    <Select value={currentStatus} onValueChange={value => updateAttendance(athlete.id, value as "Present" | "Absent" | "Excused", record?.notes || undefined)} disabled={!isEditMode}>
+                    <Select
+                      value={currentStatus}
+                      onValueChange={(value) =>
+                        updateAttendance(
+                          athlete.id,
+                          value as "Present" | "Absent" | "Excused",
+                          record?.notes || undefined,
+                        )
+                      }
+                      disabled={!isEditMode}
+                    >
                       <SelectTrigger className="w-[140px]">
                         <SelectValue />
                       </SelectTrigger>
@@ -424,12 +464,19 @@ const AttendanceTracker = () => {
                     </Select>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Button variant="ghost" size="icon" onClick={() => openNoteDialog(athlete.id)} disabled={!isEditMode} className="h-8 w-8">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openNoteDialog(athlete.id)}
+                      disabled={!isEditMode}
+                      className="h-8 w-8"
+                    >
                       <MessageSquare className={cn("h-4 w-4", hasNote ? "fill-current" : "")} />
                     </Button>
                   </TableCell>
-                </TableRow>;
-          })}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
 
@@ -438,26 +485,29 @@ const AttendanceTracker = () => {
           <DialogContent className="bg-popover">
             <DialogHeader>
               <DialogTitle>Add/Edit Note</DialogTitle>
-              <DialogDescription>
-                Add or edit attendance notes for this athlete (max 500 characters).
-              </DialogDescription>
+              <DialogDescription>Add or edit attendance notes for this athlete (max 500 characters).</DialogDescription>
             </DialogHeader>
-            <Textarea placeholder="Enter note..." value={currentNoteText} onChange={e => setCurrentNoteText(e.target.value)} className="min-h-[100px]" maxLength={500} />
+            <Textarea
+              placeholder="Enter note..."
+              value={currentNoteText}
+              onChange={(e) => setCurrentNoteText(e.target.value)}
+              className="min-h-[100px]"
+              maxLength={500}
+            />
             <DialogFooter>
               <Button variant="outline" onClick={cancelNoteDialog}>
                 Cancel
               </Button>
-              <Button onClick={saveNoteFromDialog}>
-                Save
-              </Button>
+              <Button onClick={saveNoteFromDialog}>Save</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
 
-        {filteredAthletes.length === 0 && <div className="text-center p-8 text-muted-foreground">
-            No athletes found
-          </div>}
+        {filteredAthletes.length === 0 && (
+          <div className="text-center p-8 text-muted-foreground">No athletes found</div>
+        )}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
 export default AttendanceTracker;
