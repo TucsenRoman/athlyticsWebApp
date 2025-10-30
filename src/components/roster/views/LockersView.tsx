@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import RosterControls from "../RosterControls";
 
 interface Locker {
   id: string;
@@ -23,6 +24,7 @@ export default function LockersView({ searchQuery }: { searchQuery: string }) {
   const [lockers, setLockers] = useState<Locker[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
+  const [localSearch, setLocalSearch] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -83,8 +85,8 @@ export default function LockersView({ searchQuery }: { searchQuery: string }) {
   const filteredLockers = lockers.filter(locker => {
     const athleteName = getAthleteName(locker.athlete_id);
     return (
-      locker.locker_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      athleteName.toLowerCase().includes(searchQuery.toLowerCase())
+      locker.locker_number.toLowerCase().includes(localSearch.toLowerCase()) ||
+      athleteName.toLowerCase().includes(localSearch.toLowerCase())
     );
   });
 
@@ -94,12 +96,11 @@ export default function LockersView({ searchQuery }: { searchQuery: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        <Button size="sm" variant="outline">
-          <Plus className="w-4 h-4 mr-2" />
-          Add
-        </Button>
-      </div>
+      <RosterControls
+        placeholder="Search lockers..."
+        searchValue={localSearch}
+        onSearchChange={setLocalSearch}
+      />
 
       <div className="border rounded-lg">
         <Table>
@@ -115,7 +116,7 @@ export default function LockersView({ searchQuery }: { searchQuery: string }) {
             {filteredLockers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                  {searchQuery ? "No lockers found" : "No lockers yet"}
+                  {localSearch ? "No lockers found" : "No lockers yet"}
                 </TableCell>
               </TableRow>
             ) : (

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import RosterControls from "../RosterControls";
 
 interface Athlete {
   id: string;
@@ -37,6 +37,7 @@ export default function AthletesView({
 }) {
   const [athletes, setAthletes] = useState<AthleteWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [localSearch, setLocalSearch] = useState("");
 
   useEffect(() => {
     fetchAthletes();
@@ -92,10 +93,9 @@ export default function AthletesView({
   };
 
   const filteredAthletes = athletes.filter(athlete =>
-    athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    athlete.locker?.locker_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    athlete.uniform?.top_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    athlete.uniform?.bottom_id?.toLowerCase().includes(searchQuery.toLowerCase())
+    athlete.name.toLowerCase().includes(localSearch.toLowerCase()) ||
+    athlete.grade?.toString().includes(localSearch) ||
+    athlete.gender?.toLowerCase().includes(localSearch.toLowerCase())
   );
 
   if (loading) {
@@ -104,26 +104,11 @@ export default function AthletesView({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-          <Input
-            type="text"
-            placeholder="Search athletes..."
-            value={searchQuery}
-            className="w-full"
-            readOnly
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            Filter
-          </Button>
-          <Button variant="default" size="sm">
-            Edit
-          </Button>
-        </div>
-      </div>
+      <RosterControls
+        placeholder="Search athletes..."
+        searchValue={localSearch}
+        onSearchChange={setLocalSearch}
+      />
 
       <div className="border rounded-lg">
         <Table>
@@ -139,7 +124,7 @@ export default function AthletesView({
             {filteredAthletes.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                  {searchQuery ? "No athletes found" : "No athletes yet"}
+                  {localSearch ? "No athletes found" : "No athletes yet"}
                 </TableCell>
               </TableRow>
             ) : (

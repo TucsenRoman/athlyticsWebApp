@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import RosterControls from "../RosterControls";
 
 interface Uniform {
   id: string;
@@ -24,6 +25,7 @@ export default function UniformsView({ searchQuery }: { searchQuery: string }) {
   const [uniforms, setUniforms] = useState<Uniform[]>([]);
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [loading, setLoading] = useState(true);
+  const [localSearch, setLocalSearch] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -76,9 +78,9 @@ export default function UniformsView({ searchQuery }: { searchQuery: string }) {
   };
 
   const filteredUniforms = uniforms.filter(uniform =>
-    uniform.top_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    uniform.bottom_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (uniform.assigned_to && uniform.assigned_to.toLowerCase().includes(searchQuery.toLowerCase()))
+    uniform.top_id.toLowerCase().includes(localSearch.toLowerCase()) ||
+    uniform.bottom_id.toLowerCase().includes(localSearch.toLowerCase()) ||
+    (uniform.assigned_to && uniform.assigned_to.toLowerCase().includes(localSearch.toLowerCase()))
   );
 
   if (loading) {
@@ -87,12 +89,11 @@ export default function UniformsView({ searchQuery }: { searchQuery: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        <Button size="sm" variant="outline">
-          <Plus className="w-4 h-4 mr-2" />
-          Add
-        </Button>
-      </div>
+      <RosterControls
+        placeholder="Search uniforms..."
+        searchValue={localSearch}
+        onSearchChange={setLocalSearch}
+      />
 
       <div className="border rounded-lg">
         <Table>
@@ -108,7 +109,7 @@ export default function UniformsView({ searchQuery }: { searchQuery: string }) {
             {filteredUniforms.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                  {searchQuery ? "No uniforms found" : "No uniforms yet"}
+                  {localSearch ? "No uniforms found" : "No uniforms yet"}
                 </TableCell>
               </TableRow>
             ) : (
