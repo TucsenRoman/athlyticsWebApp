@@ -26,9 +26,11 @@ export default function EditableCell({
   const [error, setError] = useState("");
 
   const formatTimeInput = (val: string): string => {
-    const clean = val.replace(/[^\d.]/g, "");
+    if (!val.trim()) return val;
     
-    // If it's just digits (e.g., "1927"), auto-format
+    const clean = val.trim();
+    
+    // Auto-format plain digits (e.g., "1927" -> "19:27")
     if (/^\d{3,4}$/.test(clean)) {
       const formatted = clean.length === 3
         ? `${clean[0]}:${clean.slice(1)}`
@@ -36,18 +38,14 @@ export default function EditableCell({
       return formatted;
     }
     
-    // If it has colon, ensure seconds are zero-padded
-    if (val.includes(":")) {
-      const parts = val.split(":");
-      if (parts.length === 2) {
-        const [mins, secsWithDec] = parts;
-        const [secs, dec] = secsWithDec.split(".");
-        const paddedSecs = secs.padStart(2, "0");
-        return dec ? `${mins}:${paddedSecs}.${dec}` : `${mins}:${paddedSecs}`;
-      }
-    }
-    
-    return val;
+    // Format time with colon to ensure proper padding
+    const regex = /^(\d{1,2}):([0-5]?\d)(\.\d{1,2})?$/;
+    const match = clean.match(regex);
+    if (!match) return clean;
+
+    const [_, minutes, seconds, decimals] = match;
+    const paddedSeconds = seconds.padStart(2, "0");
+    return `${parseInt(minutes)}:${paddedSeconds}${decimals || ""}`;
   };
 
   const validateAndSave = () => {
@@ -59,17 +57,20 @@ export default function EditableCell({
         // Auto-format first
         validatedValue = formatTimeInput(validatedValue);
         
-        // Strict validation
-        const timePattern = /^\d{1,2}:\d{2}(\.\d{1,2})?$/;
-        if (validatedValue && !timePattern.test(validatedValue)) {
-          setError("Format: MM:SS or MM:SS.HH");
-          return;
-        }
-        
-        // Check seconds don't exceed 59
         if (validatedValue) {
-          const [mins, rest] = validatedValue.split(":");
-          const secs = parseInt(rest.split(".")[0]);
+          // Strict validation for time format
+          const timePattern = /^(\d{1,2}):([0-5]\d)(\.\d{1,2})?$/;
+          const match = validatedValue.match(timePattern);
+          
+          if (!match) {
+            setError("Format: MM:SS or MM:SS.xx");
+            return;
+          }
+          
+          const [_, minutes, seconds] = match;
+          const secs = parseInt(seconds);
+          
+          // Seconds validation (should be 00-59)
           if (secs >= 60) {
             setError("Seconds can't exceed 59");
             return;
@@ -193,23 +194,38 @@ export default function EditableCell({
         <div className="space-y-1">
           <Input
             type="text"
-            inputMode="numeric"
+            inputMode="decimal"
             pattern="[0-9:.]*"
-            placeholder="MM:SS or MM:SS.HH"
+            placeholder="MM:SS or MM:SS.xx"
             value={editValue}
             onChange={(e) => {
               const val = e.target.value;
               // Only allow numbers, colons, and periods
-              if (/^[\d:.]*$/.test(val)) {
+              if (/^[\d:.]*$/.test(val) || val === "") {
                 setEditValue(val);
+                // Clear error while typing
+                if (error) setError("");
               }
             }}
-            onBlur={validateAndSave}
+            onBlur={() => {
+              // Auto-format on blur
+              const formatted = formatTimeInput(editValue);
+              setEditValue(formatted);
+              validateAndSave();
+            }}
             onKeyDown={handleKeyDown}
             autoFocus
-            className={cn("h-8 min-h-[44px] sm:min-h-[32px]", error && "border-destructive", className)}
+            className={cn(
+              "h-8 min-h-[44px] sm:min-h-[32px]", 
+              error && "border-destructive ring-destructive", 
+              className
+            )}
           />
-          {error && <div className="text-xs text-destructive">{error}</div>}
+          {error && (
+            <div className="text-xs text-destructive font-medium">
+              {error}
+            </div>
+          )}
         </div>
       );
 
@@ -221,13 +237,24 @@ export default function EditableCell({
             type="text"
             inputMode="numeric"
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={(e) => {
+              setEditValue(e.target.value);
+              if (error) setError("");
+            }}
             onBlur={validateAndSave}
             onKeyDown={handleKeyDown}
             autoFocus
-            className={cn("h-8 min-h-[44px] sm:min-h-[32px]", error && "border-destructive", className)}
+            className={cn(
+              "h-8 min-h-[44px] sm:min-h-[32px]", 
+              error && "border-destructive ring-destructive", 
+              className
+            )}
           />
-          {error && <div className="text-xs text-destructive">{error}</div>}
+          {error && (
+            <div className="text-xs text-destructive font-medium">
+              {error}
+            </div>
+          )}
         </div>
       );
 
@@ -240,14 +267,25 @@ export default function EditableCell({
           <Input
             type={headerType === "email" ? "email" : headerType === "phone" ? "tel" : "text"}
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={(e) => {
+              setEditValue(e.target.value);
+              if (error) setError("");
+            }}
             onBlur={validateAndSave}
             onKeyDown={handleKeyDown}
             autoFocus
             maxLength={64}
-            className={cn("h-8 min-h-[44px] sm:min-h-[32px]", error && "border-destructive", className)}
+            className={cn(
+              "h-8 min-h-[44px] sm:min-h-[32px]", 
+              error && "border-destructive ring-destructive", 
+              className
+            )}
           />
-          {error && <div className="text-xs text-destructive">{error}</div>}
+          {error && (
+            <div className="text-xs text-destructive font-medium">
+              {error}
+            </div>
+          )}
         </div>
       );
   }
