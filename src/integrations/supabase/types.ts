@@ -49,49 +49,49 @@ export type Database = {
       }
       athletes: {
         Row: {
-          achievements: string[] | null
-          athlete_of_meet: boolean | null
-          athlete_of_week: boolean | null
+          // achievements: string[] | null
+          // athlete_of_meet: boolean | null
+          // athlete_of_week: boolean | null
           coach_id: string
           created_at: string
-          events: string[] | null
+          // events: string[] | null
           gender: string | null
           grade: number | null
           id: string
           name: string
-          personal_records: Json | null
+          // personal_records: Json | null
           program_id: string | null
           team_position: string | null
           updated_at: string
         }
         Insert: {
-          achievements?: string[] | null
-          athlete_of_meet?: boolean | null
-          athlete_of_week?: boolean | null
+          // achievements?: string[] | null
+          // athlete_of_meet?: boolean | null
+          // athlete_of_week?: boolean | null
           coach_id: string
           created_at?: string
-          events?: string[] | null
+          // events?: string[] | null
           gender?: string | null
           grade?: number | null
           id?: string
           name: string
-          personal_records?: Json | null
+          // personal_records?: Json | null
           program_id?: string | null
           team_position?: string | null
           updated_at?: string
         }
         Update: {
-          achievements?: string[] | null
-          athlete_of_meet?: boolean | null
-          athlete_of_week?: boolean | null
+          // achievements?: string[] | null
+          // athlete_of_meet?: boolean | null
+          // athlete_of_week?: boolean | null
           coach_id?: string
           created_at?: string
-          events?: string[] | null
+          // events?: string[] | null
           gender?: string | null
           grade?: number | null
           id?: string
           name?: string
-          personal_records?: Json | null
+          // personal_records?: Json | null
           program_id?: string | null
           team_position?: string | null
           updated_at?: string
@@ -197,10 +197,10 @@ export type Database = {
         Row: {
           coach_id: string
           created_at: string
-          header_id: string
+          // header_id: string
           id: string
           is_hardwired: boolean
-          label: string
+          name: string
           options: string[] | null
           program_id: string
           type: string | null
@@ -208,10 +208,10 @@ export type Database = {
         Insert: {
           coach_id: string
           created_at?: string
-          header_id: string
+          // header_id: string
           id?: string
           is_hardwired?: boolean
-          label: string
+          name: string
           options?: string[] | null
           program_id: string
           type?: string | null
@@ -219,10 +219,10 @@ export type Database = {
         Update: {
           coach_id?: string
           created_at?: string
-          header_id?: string
+          // header_id?: string
           id?: string
           is_hardwired?: boolean
-          label?: string
+          name?: string
           options?: string[] | null
           program_id?: string
           type?: string | null

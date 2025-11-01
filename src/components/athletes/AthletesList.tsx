@@ -44,11 +44,11 @@ interface Athlete {
   name: string;
   grade: number;
   gender: string;
-  events: string[];
-  personal_records: any;
-  achievements: string[];
-  athlete_of_week: boolean;
-  athlete_of_meet: boolean;
+  // events: string[];
+  // personal_records: any;
+  // achievements: string[];
+  // athlete_of_week: boolean;
+  // athlete_of_meet: boolean;
   team_position: string;
 }
 
@@ -915,37 +915,6 @@ export default function AthletesList({ onSwitchToAttendance }: { onSwitchToAtten
                                         </Button>
                                       </div>
                                     </CardHeader>
-                                    <CardContent>
-                                      {athlete.events && athlete.events.length > 0 ? (
-                                        <div className="space-y-2">
-                                          {athlete.events.map((event, i) => {
-                                            const pr = athlete.personal_records?.[event];
-                                            return (
-                                              <div
-                                                key={i}
-                                                className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 p-3 bg-background rounded-md border"
-                                              >
-                                                <span className="font-medium text-sm">{event}</span>
-                                                {pr ? (
-                                                  <div className="flex flex-col items-start sm:items-end gap-0.5">
-                                                    <Badge variant="secondary" className="text-xs font-semibold">
-                                                      {typeof pr === "string" ? pr : pr.time}
-                                                    </Badge>
-                                                    {typeof pr === "object" && pr.date && (
-                                                      <span className="text-xs text-muted-foreground">{pr.date}</span>
-                                                    )}
-                                                  </div>
-                                                ) : (
-                                                  <span className="text-xs text-muted-foreground">No PR</span>
-                                                )}
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
-                                      ) : (
-                                        <p className="text-sm text-muted-foreground py-2">No events assigned</p>
-                                      )}
-                                    </CardContent>
                                   </Card>
 
                                   {/* Uniforms */}

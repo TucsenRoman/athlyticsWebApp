@@ -55,7 +55,7 @@ CREATE TABLE public.athletes (
   gender TEXT CHECK (gender IN ('Male', 'Female', 'Other')),
   events TEXT[] DEFAULT '{}',
   personal_records JSONB DEFAULT '{}',
-  achievements TEXT[] DEFAULT '{}',
+  -- achievements TEXT[] DEFAULT '{}',
   athlete_of_week BOOLEAN DEFAULT false,
   athlete_of_meet BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
