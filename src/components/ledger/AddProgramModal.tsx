@@ -86,7 +86,7 @@ export default function AddProgramModal({
           sport,
           level: finalLevel,
           gender: finalGender,
-          season_year: seasonYear.trim() || new Date().getFullYear().toString(),
+          season: seasonYear.trim() || new Date().getFullYear().toString(),
           name: programName,
         })
         .select()

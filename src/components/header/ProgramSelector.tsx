@@ -34,42 +34,35 @@ export default function ProgramSelector({ selectedProgramId, onProgramChange }: 
   }, []);
 
   const fetchUserAndPrograms = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  console.log('Fetching user and programs...');
 
-      // Fetch user profile
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", user.id)
-        .single();
+  try {
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
 
-      if (profileData) {
-        setUserName(profileData.full_name || user.email || "Coach");
-      }
+    console.log('User:', user);
+    console.log('UserError:', userError);
 
-      // Fetch programs
-      const { data: programsData } = await supabase
-        .from("programs")
-        .select("*")
-        .eq("coach_id", user.id)
-        .order("created_at", { ascending: true });
-
-      if (programsData && programsData.length > 0) {
-        setPrograms(programsData);
-        
-        // Set first program as default if none selected
-        if (!selectedProgramId) {
-          onProgramChange(programsData[0].id);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching programs:", error);
-    } finally {
-      setLoading(false);
+    if (!user) {
+      console.warn('No user found, skipping Supabase calls.');
+      return;
     }
-  };
+
+    const { data: profileData, error: profileError } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single();
+
+    console.log('ProfileData:', profileData);
+    console.log('ProfileError:', profileError);
+  } catch (error) {
+    console.error("Error fetching programs:", error);
+  }
+};
+
 
   const selectedProgram = programs.find(p => p.id === selectedProgramId);
   

@@ -47,7 +47,8 @@ export default function AuthForm() {
         toast.success("Welcome back!");
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        // --- SIGNUP FLOW ---
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -58,6 +59,19 @@ export default function AuthForm() {
           },
         });
         if (error) throw error;
+
+        const user = data.user;
+        if (user) {
+          // Auto-create a matching profile row
+          const { error: profileError } = await supabase.from("profiles").insert([
+            {
+              id: user.id,
+              full_name: fullName,
+            },
+          ]);
+          if (profileError) console.error("Profile insert error:", profileError);
+        }
+
         toast.success("Account created! Logging you in...");
         navigate("/");
       }
@@ -67,6 +81,7 @@ export default function AuthForm() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-secondary to-accent p-4">
