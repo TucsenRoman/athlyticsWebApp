@@ -193,11 +193,47 @@ export type Database = {
           },
         ]
       }
+      ledgers: {
+        Row: {
+          id: string
+          coach_id: string
+          program_id: string
+          template_key: string | null
+          name: string
+          created_at: string
+          updated_at: string
+          status: string | null
+          data: Json | null
+        }
+        Insert: {
+          id?: string
+          coach_id: string
+          program_id: string
+          template_key?: string | null
+          name: string
+          created_at?: string
+          updated_at?: string
+          status?: string | null
+          data?: Json | null
+        }
+        Update: {
+          id?: string
+          coach_id?: string
+          program_id?: string
+          template_key?: string | null
+          name?: string
+          created_at?: string
+          updated_at?: string
+          status?: string | null
+          data?: Json | null
+        }
+        Relationships: []
+      },
       ledger_headers: {
         Row: {
           coach_id: string
           created_at: string
-          // header_id: string
+          header_id: string
           id: string
           is_hardwired: boolean
           name: string
@@ -359,7 +395,6 @@ export type Database = {
           gender: string
           id: string
           level: string
-          name: string
           school: string
           season_end_date: string | null
           season_start_date: string | null
@@ -373,7 +408,6 @@ export type Database = {
           gender: string
           id?: string
           level: string
-          name: string
           school?: string
           season_end_date?: string | null
           season_start_date?: string | null
@@ -387,7 +421,6 @@ export type Database = {
           gender?: string
           id?: string
           level?: string
-          name?: string
           school?: string
           season_end_date?: string | null
           season_start_date?: string | null

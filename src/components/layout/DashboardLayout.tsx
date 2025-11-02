@@ -3,8 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LogOut, BookOpen } from "lucide-react";
-import { toast } from "sonner";
+import { LayoutDashboard, LogOut, FileSpreadsheet } from "lucide-react";
+// import { toast } from "sonner";
 import athlyticsLogo from "@/assets/athlytics-logo.png";
 import ProgramSelector from "@/components/header/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    toast.success("Signed out successfully");
+    // toast.success("Signed out successfully");
     navigate("/auth");
   };
 
@@ -65,98 +65,82 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-3 md:py-4">
-          {/* Desktop Layout */}
-          <div className="hidden md:flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 md:gap-4">
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-              >
-                <img
-                  src={athlyticsLogo}
-                  alt="Athlytics Logo"
-                  className="w-10 h-10"
-                />
-                <h1 className="text-xl font-bold">Athlytics</h1>
-              </button>
-              
-              <div className="h-8 w-px bg-border" />
-              
-              <ProgramSelector 
-                selectedProgramId={selectedProgramId}
-                onProgramChange={setSelectedProgramId}
+      <header className="border-b bg-card relative h-16">
+        <div className="container mx-auto px-4 h-full flex items-center justify-between relative">
+          {/* 🧭 Left Section */}
+          <div className="flex items-center gap-2 z-10">
+            {/* 📱 Mobile: logo stays left */}
+            <button
+              onClick={() => navigate("/")}
+              className="
+                flex items-center gap-2 
+                hover:opacity-80 transition-opacity touch-manipulation
+                md:hidden
+              "
+            >
+              <img
+                src={athlyticsLogo}
+                alt='Athlytics Logo'
+                className='w-8 h-8 md:w-10 md:h-10'
               />
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/ledger")}
-                size="sm"
-                className="h-10"
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                <span>Ledger</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={handleSignOut}
-                size="sm"
-                className="h-10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                <span>Sign Out</span>
-              </Button>
-            </div>
+            </button>
+
+            {/* Program Selector — always visible */}
+            <ProgramSelector
+              selectedProgramId={selectedProgramId}
+              onProgramChange={setSelectedProgramId}
+            />
           </div>
 
-          {/* Mobile Layout - Stacked */}
-          <div className="md:hidden space-y-3">
-            {/* Top Row: Logo + Action Buttons */}
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => navigate("/")}
-                className="flex items-center gap-2 hover:opacity-80 transition-opacity touch-manipulation min-h-[48px]"
-              >
-                <img
-                  src={athlyticsLogo}
-                  alt="Athlytics Logo"
-                  className="w-8 h-8"
-                />
-                <h1 className="text-lg font-bold">Athlytics</h1>
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate("/ledger")}
-                  size="sm"
-                  className="min-h-[44px] min-w-[44px] touch-manipulation"
-                >
-                  <BookOpen className="w-5 h-5" />
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={handleSignOut}
-                  size="sm"
-                  className="min-h-[44px] min-w-[44px] touch-manipulation"
-                >
-                  <LogOut className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
+          {/* 🎯 Center Section (desktop only) */}
+          <button
+            onClick={() => navigate("/")}
+            className="
+              hidden md:flex items-center gap-2 
+              hover:opacity-80 transition-opacity touch-manipulation
+              absolute left-1/2 -translate-x-1/2
+            "
+          >
+            <img
+              src={athlyticsLogo}
+              alt='Athlytics Logo'
+              className='w-8 h-8 md:w-10 md:h-10'
+            />
+            <h1 className='text-2xl font-bold'>Athlytics</h1>
+          </button>
 
-            {/* Bottom Row: Program Selector - Full Width */}
-            <div className="w-full">
-              <ProgramSelector 
-                selectedProgramId={selectedProgramId}
-                onProgramChange={setSelectedProgramId}
-              />
-            </div>
+          {/* ⚙️ Right-side Buttons */}
+          <div className="flex items-center gap-2 z-10">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                navigate(location.pathname.includes("ledger") ? "/" : "/ledger")
+              }
+              size="sm"
+              className="h-10 min-w-[44px] touch-manipulation"
+            >
+              {location.pathname.includes("ledger") ? (
+                <>
+                  <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
+                  <span className="hidden md:inline">Go To Dashboard</span>
+                </>
+              ) : (
+                <>
+                  <FileSpreadsheet className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
+                  <span className="hidden md:inline">Go To Ledgers</span>
+                </>
+              )}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleSignOut}
+              size="sm"
+              className="h-10 min-w-[44px] touch-manipulation"
+            >
+              <LogOut className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
+              <span className="hidden md:inline">Sign Out</span>
+            </Button>
           </div>
         </div>
       </header>
