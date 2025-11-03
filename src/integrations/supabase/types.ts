@@ -231,40 +231,69 @@ export type Database = {
       },
       ledger_headers: {
         Row: {
-          coach_id: string
-          created_at: string
-          header_id: string
-          id: string
-          is_hardwired: boolean
-          name: string
-          options: string[] | null
-          program_id: string
-          type: string | null
-        }
+          id: string;
+          created_at: string;
+          ledger_id: string;
+          name: string;
+          type: string | null;
+          is_locked: boolean;
+          options: string | null;
+          formula: string | null;
+        };
         Insert: {
-          coach_id: string
-          created_at?: string
-          // header_id: string
-          id?: string
-          is_hardwired?: boolean
-          name: string
-          options?: string[] | null
-          program_id: string
-          type?: string | null
-        }
+          id?: string;
+          created_at?: string;
+          ledger_id: string;
+          name: string;
+          type?: string | null;
+          is_locked?: boolean;
+          options?: string | null;
+          formula: string | null;
+        };
         Update: {
-          coach_id?: string
-          created_at?: string
-          // header_id?: string
-          id?: string
-          is_hardwired?: boolean
-          name?: string
-          options?: string[] | null
-          program_id?: string
-          type?: string | null
-        }
-        Relationships: []
-      }
+          id?: string;
+          created_at?: string;
+          ledger_id?: string;
+          name?: string;
+          type?: string | null;
+          is_locked?: boolean;
+          options?: string | null;
+          formula: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ledger_headers_ledger_id_fkey";
+            columns: ["ledger_id"];
+            isOneToOne: false;
+            referencedRelation: "ledgers";
+            referencedColumns: ["id"];
+          }
+        ];
+      },
+      ledger_entries: {
+        Row: {
+          id: string;
+          created_st: string | null;
+          ledger_id: string;
+          entity_name: string;
+          values: Json | null;
+        };
+        Insert: {
+          id?: string;
+          created_st?: string | null;
+          ledger_id: string;
+          entity_name: string;
+          values?: Json | null;
+        };
+        Update: {
+          id?: string;
+          created_st?: string | null;
+          ledger_id?: string;
+          entity_name?: string;
+          values?: Json | null;
+        };
+        Relationships: [];
+      };
       lockers: {
         Row: {
           athlete_id: string | null

@@ -1,8 +1,8 @@
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import DashboardStats from "@/components/dashboard/DashboardStats";
 import RemindersPanel from "@/components/reminders/RemindersPanel";
-import ManagementView from "@/components/management/ManagementView";
-import AttendanceTracker from "@/components/attendance/AttendanceTracker";
+// import ManagementView from "@/components/management/ManagementView";
+// import AttendanceTracker from "@/components/attendance/AttendanceTracker";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, ClipboardList, Users } from "lucide-react";
@@ -20,7 +20,7 @@ const Index = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 h-12 bg-muted/50 border-b border-border mb-4 p-0 rounded-none">
+          {/* <TabsList className="sticky top-0 z-10 grid w-full grid-cols-2 h-12 bg-muted/50 border-b border-border mb-4 p-0 rounded-none"> */}
             {/* <TabsTrigger 
               value="overview" 
               className="h-12 px-4 data-[state=active]:bg-background data-[state=active]:shadow-[0_-1px_4px_rgba(0,0,0,0.05)] data-[state=active]:rounded-t-lg data-[state=inactive]:bg-muted flex items-center justify-center gap-2 transition-all duration-200"
@@ -28,7 +28,7 @@ const Index = () => {
               <LayoutDashboard className="w-5 h-5 md:w-[18px] md:h-[18px] flex-shrink-0" />
               <span className="hidden md:inline">Overview</span>
             </TabsTrigger> */}
-            <TabsTrigger 
+            {/* <TabsTrigger 
               value="management" 
               className="h-12 px-4 data-[state=active]:bg-background data-[state=active]:shadow-[0_-1px_4px_rgba(0,0,0,0.05)] data-[state=active]:rounded-t-lg data-[state=inactive]:bg-muted flex items-center justify-center gap-2 transition-all duration-200"
             >
@@ -54,8 +54,8 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="attendance" className="space-y-4 animate-fade-in">
-            <AttendanceTracker />
-          </TabsContent>
+            <AttendanceTracker /> */}
+          {/* </TabsContent> */}
         </Tabs>
       </div>
     </DashboardLayout>
