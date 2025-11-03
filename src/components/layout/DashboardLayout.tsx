@@ -5,7 +5,6 @@ import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, LogOut, FileSpreadsheet } from "lucide-react";
 // import { toast } from "sonner";
-import athlyticsLogo from "@/assets/athlytics-logo.png";
 import ProgramSelector from "@/components/header/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
 
@@ -79,9 +78,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               "
             >
               <img
-                src={athlyticsLogo}
-                alt='Athlytics Logo'
-                className='w-8 h-8 md:w-10 md:h-10'
+                src="/android-chrome-512x512.png"
+                alt="Athlytics Logo"
+                className="w-8 h-8 md:w-10 md:h-10"
               />
             </button>
 
@@ -102,9 +101,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             "
           >
             <img
-              src={athlyticsLogo}
-              alt='Athlytics Logo'
-              className='w-8 h-8 md:w-10 md:h-10'
+              src="/android-chrome-512x512.png"
+              alt="Athlytics Logo"
+              className="w-8 h-8 md:w-10 md:h-10"
             />
             <h1 className='text-2xl font-bold'>Athlytics</h1>
           </button>

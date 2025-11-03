@@ -248,7 +248,7 @@ export type Database = {
           type?: string | null;
           is_locked?: boolean;
           options?: string | null;
-          formula: string | null;
+          formula?: string | null;
         };
         Update: {
           id?: string;
@@ -258,7 +258,7 @@ export type Database = {
           type?: string | null;
           is_locked?: boolean;
           options?: string | null;
-          formula: string | null;
+          formula?: string | null;
         };
         Relationships: [
           {

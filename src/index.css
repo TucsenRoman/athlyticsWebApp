@@ -11,7 +11,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Track red primary - like running track surfaces */
+    /* Athlytics orange primary - vibrant and energetic */
     --background: 0 0% 100%;
     --foreground: 220 15% 15%;
 
@@ -21,18 +21,18 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    /* Track red - vibrant athletic color */
-    --primary: 4 84% 48%;
+    /* Primary: Athlytics orange */
+    --primary: 22 94% 57%;
     --primary-foreground: 0 0% 100%;
 
-    /* Navy secondary - professional athletic */
+    /* Secondary: navy tone for professionalism */
     --secondary: 220 65% 25%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 13% 95%;
     --muted-foreground: 220 10% 45%;
 
-    /* Green accent - field/grass color */
+    /* Accent: green/field tone */
     --accent: 142 76% 36%;
     --accent-foreground: 0 0% 100%;
 
@@ -41,27 +41,27 @@ All colors MUST be HSL.
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 4 84% 48%;
+    --ring: 22 94% 57%;
 
     --radius: 0.75rem;
 
     /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(4 84% 48%), hsl(12 88% 55%));
+    --gradient-primary: linear-gradient(135deg, hsl(22 94% 57%), hsl(28 96% 60%));
     --gradient-secondary: linear-gradient(135deg, hsl(220 65% 25%), hsl(220 70% 35%));
-    --gradient-hero: linear-gradient(135deg, hsl(4 84% 48%) 0%, hsl(220 65% 25%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(22 94% 57%) 0%, hsl(220 65% 25%) 100%);
 
     /* Shadows */
-    --shadow-lg: 0 10px 30px -5px hsl(4 84% 48% / 0.15);
+    --shadow-lg: 0 10px 30px -5px hsl(22 94% 57% / 0.15);
     --shadow-athletic: 0 8px 24px -4px hsl(220 65% 25% / 0.2);
 
     --sidebar-background: 0 0% 99%;
     --sidebar-foreground: 220 15% 15%;
-    --sidebar-primary: 4 84% 48%;
+    --sidebar-primary: 22 94% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 13% 95%;
     --sidebar-accent-foreground: 220 15% 15%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 4 84% 48%;
+    --sidebar-ring: 22 94% 57%;
   }
 
   .dark {
@@ -74,7 +74,7 @@ All colors MUST be HSL.
     --popover: 220 18% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 4 84% 55%;
+    --primary: 22 94% 57%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 65% 30%;
@@ -91,16 +91,16 @@ All colors MUST be HSL.
 
     --border: 220 15% 20%;
     --input: 220 15% 20%;
-    --ring: 4 84% 55%;
+    --ring: 22 94% 57%;
 
     --sidebar-background: 220 20% 10%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 4 84% 55%;
+    --sidebar-primary: 22 94% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 15% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 4 84% 55%;
+    --sidebar-ring: 22 94% 57%;
   }
 }
 
