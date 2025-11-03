@@ -9,7 +9,6 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { Input } from "@/components/ui/input";
@@ -20,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEditMode } from "@/contexts/EditModeContext"; // ✅ correct path and hook
 
 interface Program {
   id: string;
@@ -33,6 +33,7 @@ interface Program {
 interface ProgramSelectorProps {
   selectedProgramId: string | null;
   onProgramChange: (programId: string) => void;
+  isEditMode?: boolean;
 }
 
 // ✅ option arrays
@@ -84,8 +85,7 @@ export default function ProgramSelector({
   const [gender, setGender] = useState("");
   const [seasonYear, setSeasonYear] = useState("");
 
-  const location = useLocation();
-  const isLedgerPage = location.pathname.includes("ledger");
+  const { isEditMode } = useEditMode();
 
   // --- Fetch user + programs ---
   useEffect(() => {
@@ -210,352 +210,362 @@ export default function ProgramSelector({
     );
 
   return (
-    <div className="flex items-center gap-2">
-      {/* 🧭 Program Selector Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="h-auto w-full md:w-auto px-3 py-2 md:px-2 md:py-1 hover:bg-muted/50 min-h-[48px] md:min-h-0 justify-between"
-          >
-            <div className="flex w-full items-center justify-between">
-              <div className="flex flex-col flex-1 text-left">
-                {/* Username */}
-                <span className="font-medium text-base md:text-sm text-foreground">
-                  {userName || "Unknown User"}
-                </span>
-
-                {/* Program Name / Info */}
-                {selectedProgram ? (
-                  <>
-                    {/* 🖥 Desktop: single line */}
-                    <span className="hidden md:block text-xs text-muted-foreground truncate">
-                      {selectedProgram.sport} • {selectedProgram.school} • {selectedProgram.season_year}
-                    </span>
-
-                    {/* 📱 Mobile: stacked (sport on top, school/year below) */}
-                    <span className="block md:hidden text-xs text-muted-foreground leading-tight">
-                      {selectedProgram.sport} • {selectedProgram.season_year}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-xs text-muted-foreground">No program selected</span>
-                )}
-              </div>
-
-              {/* Dropdown chevron */}
-              <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-            </div>
-          </Button>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent
-          align="start"
-          className="w-[95vw] md:w-80 max-h-[250px] overflow-y-auto rounded-lg"
-        >
-          {programs.map((program) => (
-            <DropdownMenuItem
-              key={program.id}
-              onClick={() => onProgramChange(program.id)}
-              className={`flex justify-between items-center ${
-                selectedProgramId === program.id ? "bg-muted" : ""
-              }`}
+    <div
+      className={`flex items-center gap-2 transition-opacity duration-300 ${
+        !isEditMode ? "opacity-60" : ""
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        {/* 🧭 Program Selector Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-auto w-full md:w-auto px-3 py-2 md:px-2 md:py-1 hover:bg-muted/50 min-h-[48px] md:min-h-0 justify-between"
             >
-              <div>
-                <span className="font-medium text-sm block">
-                  {formatProgramName(program)}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {formatProgramDetails(program)}
-                </span>
-              </div>
+              <div className="flex w-full items-center justify-between">
+                <div className="flex flex-col flex-1 text-left">
+                  {/* Username */}
+                  <span className="font-medium text-base md:text-sm text-foreground">
+                    {userName || "Unknown User"}
+                  </span>
 
-              {isLedgerPage && (
-                <div className="flex items-center">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditProgram(program);
-                      setSchool(program.school);
-                      setSport(program.sport);
-                      setLevels(
-                        program.level
-                          ? program.level.split(",").map((s) => s.trim())
-                          : []
-                      );
-                      setGender(program.gender);
-                      setSeasonYear(program.season_year);
-                      setIsEditModalOpen(true);
-                    }}
-                    className="ml-1 h-7 w-7"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                  <ConfirmationDialog
-                    title="Delete Program"
-                    message={`Are you sure you want to delete "${program.sport}"?`}
-                    confirmLabel="Delete"
-                    confirmVariant="destructive"
-                    onConfirm={() => handleDeleteProgram(program.id)}
-                    asChild
-                  >
+                  {/* Program Name / Info */}
+                  {selectedProgram ? (
+                    <>
+                      {/* 🖥 Desktop: single line */}
+                      <span className="hidden md:block text-xs text-muted-foreground truncate">
+                        {selectedProgram.sport} • {selectedProgram.school} • {selectedProgram.season_year}
+                      </span>
+
+                      {/* 📱 Mobile: stacked (sport on top, school/year below) */}
+                      <span className="block md:hidden text-xs text-muted-foreground leading-tight">
+                        {selectedProgram.sport} • {selectedProgram.season_year}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No program selected</span>
+                  )}
+                </div>
+
+                {/* Dropdown chevron */}
+                <ChevronDown className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+              </div>
+            </Button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            align="start"
+            className="w-[95vw] md:w-80 max-h-[250px] overflow-y-auto rounded-lg"
+          >
+            {programs.map((program) => (
+              <DropdownMenuItem
+                key={program.id}
+                onClick={() => onProgramChange(program.id)}
+                className={`flex justify-between items-center ${
+                  selectedProgramId === program.id ? "bg-muted" : ""
+                }`}
+              >
+                <div>
+                  <span className="font-medium text-sm block">
+                    {formatProgramName(program)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatProgramDetails(program)}
+                  </span>
+                </div>
+
+                {/* 🧩 Only show the edit + delete controls when in ledger + edit mode */}
+                {isEditMode && (
+                  <div className="flex items-center gap-1">
+                    {/* ⚙️ Edit Program Button */}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="ml-1 h-7 w-7 text-destructive hover:bg-destructive/10"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditProgram(program);
+                        setSchool(program.school);
+                        setSport(program.sport);
+                        setLevels(
+                          program.level
+                            ? program.level.split(",").map((s) => s.trim())
+                            : []
+                        );
+                        setGender(program.gender);
+                        setSeasonYear(program.season_year);
+                        setIsEditModalOpen(true);
+                      }}
+                      className="ml-1 h-7 w-7 hover:bg-primary/10"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Settings className="h-4 w-4 text-primary" />
                     </Button>
-                  </ConfirmationDialog>
-                </div>
+
+                    {/* 🗑️ Delete Program Button */}
+                    <ConfirmationDialog
+                      title="Delete Program"
+                      message={`Are you sure you want to delete "${program.sport}"?`}
+                      confirmLabel="Delete"
+                      confirmVariant="destructive"
+                      onConfirm={() => handleDeleteProgram(program.id)}
+                      asChild
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="ml-1 h-7 w-7 text-destructive hover:bg-destructive/10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </ConfirmationDialog>
+                  </div>
+                )}
+              </DropdownMenuItem>
+            ))}
+
+            {programs.length === 0 && (
+              <div className="p-3 text-sm text-muted-foreground text-center">
+                No programs found.
+              </div>
+            )}
+
+            {isEditMode && (
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={() => setIsAddModalOpen(true)}
+                className="ml-2 h-8 w-8"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* ➕ Add Program Modal */}
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogContent className="sm:max-w-md bg-card">
+            <DialogHeader>
+              <DialogTitle>Add New Program</DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              {/* School */}
+              <Input
+                placeholder="School (e.g., Zimmerman High School)"
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
+              />
+
+              {/* Sport Select */}
+              <Select value={sport} onValueChange={setSport}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Sport" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SPORTS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {sport === "Other" && (
+                <Input
+                  className="mt-2"
+                  placeholder="Enter custom sport"
+                  value={customSport}
+                  onChange={(e) => setCustomSport(e.target.value)}
+                />
               )}
-            </DropdownMenuItem>
-          ))}
 
-          {programs.length === 0 && (
-            <div className="p-3 text-sm text-muted-foreground text-center">
-              No programs found.
+              {/* Level Multi-Select */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {levels.length === 0
+                      ? "Select Levels"
+                      : levels.length > 2
+                      ? `${levels.length} levels selected`
+                      : levels.join(", ")}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  {LEVEL_OPTIONS.map((option) => (
+                    <DropdownMenuCheckboxItem
+                      key={option}
+                      checked={levels.includes(option)}
+                      onCheckedChange={(checked) => {
+                        setLevels((prev) =>
+                          checked
+                            ? [...prev, option]
+                            : prev.filter((lvl) => lvl !== option)
+                        );
+                      }}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {option}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Gender */}
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDERS.map((g) => (
+                    <SelectItem key={g} value={g}>
+                      {g}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Season */}
+              <Input
+                placeholder="Season / Year (e.g., 2024-2025)"
+                value={seasonYear}
+                onChange={(e) => setSeasonYear(e.target.value)}
+              />
             </div>
-          )}
 
-          {isLedgerPage && (
-            <Button
-              size="icon"
-              variant="outline"
-              onClick={() => setIsAddModalOpen(true)}
-              className="ml-2 h-8 w-8"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <div className="flex flex-col gap-2">
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleAddProgram}
+              >
+                Create Program
+              </Button>
+              <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      {/* ➕ Add Program Modal */}
-      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="sm:max-w-md bg-card">
-          <DialogHeader>
-            <DialogTitle>Add New Program</DialogTitle>
-          </DialogHeader>
+        {/* ⚙️ Edit Program Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="sm:max-w-md bg-card">
+            <DialogHeader>
+              <DialogTitle>Edit Program</DialogTitle>
+            </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            {/* School */}
-            <Input
-              placeholder="School (e.g., Zimmerman High School)"
-              value={school}
-              onChange={(e) => setSchool(e.target.value)}
-            />
-
-            {/* Sport Select */}
-            <Select value={sport} onValueChange={setSport}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Sport" />
-              </SelectTrigger>
-              <SelectContent>
-                {SPORTS.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {sport === "Other" && (
+            <div className="space-y-4 py-2">
               <Input
-                className="mt-2"
-                placeholder="Enter custom sport"
-                value={customSport}
-                onChange={(e) => setCustomSport(e.target.value)}
+                placeholder="e.g., Zimmerman High School"
+                value={school}
+                onChange={(e) => setSchool(e.target.value)}
               />
-            )}
 
-            {/* Level Multi-Select */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  {levels.length === 0
-                    ? "Select Levels"
-                    : levels.length > 2
-                    ? `${levels.length} levels selected`
-                    : levels.join(", ")}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                {LEVEL_OPTIONS.map((option) => (
-                  <DropdownMenuCheckboxItem
-                    key={option}
-                    checked={levels.includes(option)}
-                    onCheckedChange={(checked) => {
-                      setLevels((prev) =>
-                        checked
-                          ? [...prev, option]
-                          : prev.filter((lvl) => lvl !== option)
-                      );
-                    }}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    {option}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+              {/* Sport Select */}
+              <Select value={sport} onValueChange={setSport}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Sport" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SPORTS.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {/* Gender */}
-            <Select value={gender} onValueChange={setGender}>
-              <SelectTrigger>
-                <SelectValue placeholder="Gender" />
-              </SelectTrigger>
-              <SelectContent>
-                {GENDERS.map((g) => (
-                  <SelectItem key={g} value={g}>
-                    {g}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {sport === "Other" && (
+                <Input
+                  className="mt-2"
+                  placeholder="Enter custom sport"
+                  value={customSport}
+                  onChange={(e) => setCustomSport(e.target.value)}
+                />
+              )}
 
-            {/* Season */}
-            <Input
-              placeholder="Season / Year (e.g., 2024-2025)"
-              value={seasonYear}
-              onChange={(e) => setSeasonYear(e.target.value)}
-            />
-          </div>
+              {/* Level Multi-Select */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between">
+                    {levels.length === 0
+                      ? "Select Levels"
+                      : levels.length > 2
+                      ? `${levels.length} levels selected`
+                      : levels.join(", ")}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56">
+                  {LEVEL_OPTIONS.map((option) => (
+                    <DropdownMenuCheckboxItem
+                      key={option}
+                      checked={levels.includes(option)}
+                      onCheckedChange={(checked) => {
+                        setLevels((prev) =>
+                          checked
+                            ? [...prev, option]
+                            : prev.filter((lvl) => lvl !== option)
+                        );
+                      }}
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      {option}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-          <div className="flex flex-col gap-2">
-            <Button
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={handleAddProgram}
-            >
-              Create Program
-            </Button>
-            <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+              {/* Gender */}
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDERS.map((g) => (
+                    <SelectItem key={g} value={g}>
+                      {g}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-      {/* ⚙️ Edit Program Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-md bg-card">
-          <DialogHeader>
-            <DialogTitle>Edit Program</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <Input
-              placeholder="e.g., Zimmerman High School"
-              value={school}
-              onChange={(e) => setSchool(e.target.value)}
-            />
-
-            {/* Sport Select */}
-            <Select value={sport} onValueChange={setSport}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Sport" />
-              </SelectTrigger>
-              <SelectContent>
-                {SPORTS.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {sport === "Other" && (
+              {/* Season */}
               <Input
-                className="mt-2"
-                placeholder="Enter custom sport"
-                value={customSport}
-                onChange={(e) => setCustomSport(e.target.value)}
+                placeholder="Season / Year (e.g., 2024-2025)"
+                value={seasonYear}
+                onChange={(e) => setSeasonYear(e.target.value)}
               />
-            )}
+            </div>
 
-            {/* Level Multi-Select */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  {levels.length === 0
-                    ? "Select Levels"
-                    : levels.length > 2
-                    ? `${levels.length} levels selected`
-                    : levels.join(", ")}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                {LEVEL_OPTIONS.map((option) => (
-                  <DropdownMenuCheckboxItem
-                    key={option}
-                    checked={levels.includes(option)}
-                    onCheckedChange={(checked) => {
-                      setLevels((prev) =>
-                        checked
-                          ? [...prev, option]
-                          : prev.filter((lvl) => lvl !== option)
-                      );
-                    }}
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    {option}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex flex-col gap-2">
+              <Button
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={handleUpdateProgram}
+              >
+                Save Changes
+              </Button>
 
-            {/* Gender */}
-            <Select value={gender} onValueChange={setGender}>
-              <SelectTrigger>
-                <SelectValue placeholder="Gender" />
-              </SelectTrigger>
-              <SelectContent>
-                {GENDERS.map((g) => (
-                  <SelectItem key={g} value={g}>
-                    {g}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <ConfirmationDialog
+                title="Delete Program"
+                message={`Are you sure you want to delete "${sport}"?`}
+                confirmLabel="Delete"
+                confirmVariant="destructive"
+                onConfirm={() => {
+                  if (editProgram) handleDeleteProgram(editProgram.id);
+                }}
+                asChild
+              >
+                <Button variant="destructive">Delete Program</Button>
+              </ConfirmationDialog>
 
-            {/* Season */}
-            <Input
-              placeholder="Season / Year (e.g., 2024-2025)"
-              value={seasonYear}
-              onChange={(e) => setSeasonYear(e.target.value)}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={handleUpdateProgram}
-            >
-              Save Changes
-            </Button>
-
-            <ConfirmationDialog
-              title="Delete Program"
-              message={`Are you sure you want to delete "${sport}"?`}
-              confirmLabel="Delete"
-              confirmVariant="destructive"
-              onConfirm={() => {
-                if (editProgram) handleDeleteProgram(editProgram.id);
-              }}
-              asChild
-            >
-              <Button variant="destructive">Delete Program</Button>
-            </ConfirmationDialog>
-
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

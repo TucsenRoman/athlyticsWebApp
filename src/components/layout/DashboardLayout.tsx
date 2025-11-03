@@ -1,29 +1,66 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, LogOut, FileSpreadsheet } from "lucide-react";
-// import { toast } from "sonner";
+import { Lock, Unlock, LogOut } from "lucide-react";
 import ProgramSelector from "@/components/header/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
+import { EditModeContext } from "@/contexts/EditModeContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children:
+    | React.ReactNode
+    | ((props: { isEditMode: boolean }) => React.ReactNode);
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const holdDuration = 2000; // 2 seconds
+  const holdTimeout = useRef<NodeJS.Timeout | null>(null);
+  const holdInterval = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
   const { selectedProgramId, setSelectedProgramId } = useProgramContext();
 
+  // --- Hold-to-unlock logic ---
+  const handleHoldStart = () => {
+    if (isEditMode) {
+      setIsEditMode(false);
+      return;
+    }
+
+    let progress = 0;
+    setHoldProgress(0);
+
+    holdInterval.current = setInterval(() => {
+      progress += 100 / (holdDuration / 50);
+      setHoldProgress(progress);
+    }, 50);
+
+    holdTimeout.current = setTimeout(() => {
+      clearInterval(holdInterval.current!);
+      setHoldProgress(100);
+      setIsEditMode(true);
+      if (navigator.vibrate) navigator.vibrate(60);
+    }, holdDuration);
+  };
+
+  const handleHoldEnd = () => {
+    if (holdTimeout.current) clearTimeout(holdTimeout.current);
+    if (holdInterval.current) clearInterval(holdInterval.current);
+    setHoldProgress(0);
+  };
+
+  // --- Supabase Auth handling ---
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -46,7 +83,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    // toast.success("Signed out successfully");
     navigate("/auth");
   };
 
@@ -58,92 +94,120 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card relative h-16">
-        <div className="container mx-auto px-4 h-full flex items-center justify-between relative">
-          {/* 🧭 Left Section */}
-          <div className="flex items-center gap-2 z-10">
-            {/* 📱 Mobile: logo stays left */}
+    <EditModeContext.Provider value={{ isEditMode, setIsEditMode }}>
+      <div className="min-h-screen bg-background">
+        <header className="border-b bg-card relative h-16">
+          <div className="container mx-auto px-4 h-full flex items-center justify-between relative">
+            {/* 🧭 Left Section */}
+            <div className="flex items-center gap-2 z-10">
+              <button
+                onClick={() => navigate("/")}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity touch-manipulation md:hidden"
+              >
+                <img
+                  src="/android-chrome-512x512.png"
+                  alt="Athlytics Logo"
+                  className="w-8 h-8 md:w-10 md:h-10"
+                />
+              </button>
+
+              <ProgramSelector
+                selectedProgramId={selectedProgramId}
+                onProgramChange={setSelectedProgramId}
+              />
+            </div>
+
+            {/* 🎯 Center Section */}
             <button
               onClick={() => navigate("/")}
-              className="
-                flex items-center gap-2 
-                hover:opacity-80 transition-opacity touch-manipulation
-                md:hidden
-              "
+              className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity absolute left-1/2 -translate-x-1/2"
             >
               <img
                 src="/android-chrome-512x512.png"
                 alt="Athlytics Logo"
                 className="w-8 h-8 md:w-10 md:h-10"
               />
+              <h1 className="text-2xl font-bold">Athlytics</h1>
             </button>
 
-            {/* Program Selector — always visible */}
-            <ProgramSelector
-              selectedProgramId={selectedProgramId}
-              onProgramChange={setSelectedProgramId}
-            />
+            {/* ⚙️ Right-side Buttons */}
+            <div className="flex items-center gap-2 z-10">
+              {/* 🔒 Hold-to-Unlock Button */}
+              <div
+                className="relative h-10 w-10 flex items-center justify-center rounded-xl overflow-hidden cursor-pointer"
+                onMouseDown={handleHoldStart}
+                onMouseUp={handleHoldEnd}
+                onMouseLeave={handleHoldEnd}
+                onTouchStart={handleHoldStart}
+                onTouchEnd={handleHoldEnd}
+              >
+                {/* --- Base background --- */}
+                <div
+                  className={`absolute inset-0 rounded-xl transition-colors duration-300 ${
+                    isEditMode ? "bg-green-600" : "bg-red-600"
+                  }`}
+                />
+
+                {/* --- Transparent sweep overlay --- */}
+               {!isEditMode && (
+  <motion.div
+    className="absolute inset-0 rounded-xl"
+    style={{
+      background: `conic-gradient(
+        from -90deg,
+        rgba(255, 255, 255, 1) 0deg,                            /* pivot color (bright orange/red) */
+        rgba(248, 45, 45, 1) ${holdProgress * 3.6 - 2}deg,    /* keep solid up to this angle */
+        transparent ${holdProgress * 3.6}deg,               /* hard transition to transparent */
+        transparent 360deg
+      )`,
+    }}
+    transition={{ duration: 0.05, ease: "linear" }}
+  />
+)}
+
+                {/* --- Icons --- */}
+                <AnimatePresence mode="wait" initial={false}>
+                  {isEditMode ? (
+                    <motion.div
+                      key="unlock"
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.6, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="text-white z-10"
+                    >
+                      <Unlock className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="lock"
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.6, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="text-white z-10"
+                    >
+                      <Lock className="w-5 h-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+            </div>
           </div>
+        </header>
 
-          {/* 🎯 Center Section (desktop only) */}
-          <button
-            onClick={() => navigate("/")}
-            className="
-              hidden md:flex items-center gap-2 
-              hover:opacity-80 transition-opacity touch-manipulation
-              absolute left-1/2 -translate-x-1/2
-            "
-          >
-            <img
-              src="/android-chrome-512x512.png"
-              alt="Athlytics Logo"
-              className="w-8 h-8 md:w-10 md:h-10"
-            />
-            <h1 className='text-2xl font-bold'>Athlytics</h1>
-          </button>
-
-          {/* ⚙️ Right-side Buttons */}
-          <div className="flex items-center gap-2 z-10">
-            <Button
-              variant="ghost"
-              onClick={() =>
-                navigate(location.pathname.includes("ledger") ? "/" : "/ledger")
-              }
-              size="sm"
-              className="h-10 min-w-[44px] touch-manipulation"
-            >
-              {location.pathname.includes("ledger") ? (
-                <>
-                  <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
-                  <span className="hidden md:inline">Go To Dashboard</span>
-                </>
-              ) : (
-                <>
-                  <FileSpreadsheet className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
-                  <span className="hidden md:inline">Go To Ledgers</span>
-                </>
-              )}
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={handleSignOut}
-              size="sm"
-              className="h-10 min-w-[44px] touch-manipulation"
-            >
-              <LogOut className="w-5 h-5 md:w-4 md:h-4 md:mr-2" />
-              <span className="hidden md:inline">Sign Out</span>
-            </Button>
-          </div>
-        </div>
-      </header>
-      <main className="container mx-auto px-4 py-8">{children}</main>
-    </div>
+        {/* Pass edit-mode state to pages */}
+        <main className="container mx-auto px-4 py-8">
+          {children &&
+            (typeof children === "function"
+              ? children({ isEditMode })
+              : children)}
+        </main>
+      </div>
+    </EditModeContext.Provider>
   );
 }
