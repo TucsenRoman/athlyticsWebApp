@@ -256,10 +256,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* 🧱 Page Content */}
-        <main className="container mx-auto px-4 py-8">
-          {typeof children === "function"
-            ? children({ isEditMode })
-            : children}
+        <main className="flex-1 w-full h-[calc(100vh-4rem)] overflow-hidden bg-background">
+          {typeof children === "function" ? children({ isEditMode }) : children}
         </main>
       </div>
     </EditModeContext.Provider>

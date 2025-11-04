@@ -66,7 +66,7 @@ type AnyLedger = {
   name: string;
   description?: string | null;
   template_key?: string | null;
-  icon_key?: string | null;
+  icon?: string | null;
   status?: "active" | "archived" | "draft" | string | null;
   created_at?: string | null;
   updated_at?: string | null;
@@ -117,6 +117,13 @@ export default function Ledger() {
     },
   ]);
 
+  // 🧭 Program selection for Move/Duplicate
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [targetProgramId, setTargetProgramId] = useState<string | null>(null);
+  const [isMoveOpen, setIsMoveOpen] = useState(false);
+  const [isDuplicateToOpen, setIsDuplicateToOpen] = useState(false);
+  const [activeLedger, setActiveLedger] = useState<AnyLedger | null>(null);
+
   // Create/Edit Dialog
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -148,14 +155,45 @@ export default function Ledger() {
           .order("created_at", { ascending: true });
 
         if (error) throw error;
-        if (data && data.length > 0) {
-          setTemplates((prev) => [...prev, ...data]);
-        }
+
+        // Always include the default blank template at the top
+        const uniqueTemplates = [
+          {
+            id: "blank_template",
+            name: "Blank Ledger",
+            description: "Start fresh with a fully customizable ledger layout.",
+            icon: 'file',
+          },
+          ...(data || []),
+        ];
+
+        // ✅ Remove duplicates by ID (handles re-renders or refreshes)
+        const deduped = Array.from(
+          new Map(uniqueTemplates.map((t) => [t.id, t])).values()
+        );
+
+        setTemplates(deduped);
       } catch (err) {
         console.error("Error loading templates:", err);
       }
     };
+
     fetchTemplates();
+  }, []);
+
+  // Fetch only the coach's programs
+  useEffect(() => {
+    const fetchPrograms = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("programs")
+        .select("*")
+        .eq("coach_id", user.id)
+        .order("created_at", { ascending: false });
+      if (!error && data) setPrograms(data);
+    };
+    fetchPrograms();
   }, []);
 
   // ----- Load Ledgers -----
@@ -216,13 +254,37 @@ export default function Ledger() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not logged in");
 
+      // Fetch the selected template (if not blank)
+      let templateDefaults = null;
+      if (selectedTemplate !== "blank_template") {
+        const { data: template, error: templateErr } = await supabase
+          .from("ledger_templates")
+          .select("name, description, icon")
+          .eq("id", selectedTemplate)
+          .single();
+
+        if (!templateErr && template) {
+          templateDefaults = template;
+        }
+      }
+
+      // ✅ Use template defaults for name, description, and icon
       const payload = {
         coach_id: user.id,
         program_id: selectedProgramId,
-        name: ledgerName.trim() || "Untitled Ledger",
-        description: ledgerDescription.trim(),
+        name:
+          ledgerName.trim() ||
+          templateDefaults?.name ||
+          "Untitled Ledger",
+        description:
+          ledgerDescription.trim() ||
+          templateDefaults?.description ||
+          "",
         template_key: selectedTemplate,
-        icon_key: selectedIcon,
+        icon:
+          selectedIcon ||
+          templateDefaults?.icon ||
+          "ClipboardList",
         status: "active" as const,
       };
 
@@ -277,7 +339,7 @@ export default function Ledger() {
     setEditingLedger(ledger);
     setLedgerName(ledger.name || "");
     setLedgerDescription(ledger.description || "");
-    setSelectedIcon(ledger.icon_key || null);
+    setSelectedIcon(ledger.icon || null);
     setIsEditOpen(true);
   };
 
@@ -290,7 +352,7 @@ export default function Ledger() {
         .update({
           name: ledgerName.trim(),
           description: ledgerDescription.trim(),
-          icon_key: selectedIcon,
+          icon: selectedIcon,
         })
         .eq("id", editingLedger.id)
         .select()
@@ -328,12 +390,20 @@ export default function Ledger() {
     try {
       const { data, error } = await supabase
         .from("ledgers")
-        .update({ status: next })
+        .update({
+          status: next,
+          icon: ledger.icon || "ClipboardList", // ✅ add this line
+        })
         .eq("id", ledger.id)
         .select()
         .single();
+
       if (error) throw error;
-      setLedgers((prev) => prev.map((l) => (l.id === ledger.id ? (data as AnyLedger) : l)));
+
+      setLedgers((prev) =>
+        prev.map((l) => (l.id === ledger.id ? (data as AnyLedger) : l))
+      );
+
       toast.success(next === "archived" ? "Ledger archived." : "Ledger restored.");
     } catch (err) {
       console.error("Error updating status:", err);
@@ -356,7 +426,7 @@ export default function Ledger() {
             name: dupName,
             description: ledger.description || "",
             template_key: ledger.template_key || "blank_template",
-            icon_key: ledger.icon_key || null,
+            icon: ledger.icon || null,
             status: "active",
           },
         ])
@@ -398,6 +468,112 @@ export default function Ledger() {
       toast.success("Ledger duplicated.");
     } catch (err) {
       console.error("Error duplicating ledger:", err);
+      toast.error("Failed to duplicate ledger.");
+    }
+  };
+
+  const handleMoveLedger = async () => {
+    if (!activeLedger || !targetProgramId) return;
+
+    const { error } = await supabase
+      .from("ledgers")
+      .update({
+        program_id: targetProgramId,
+        icon: activeLedger.icon || "clipboard",
+      })
+      .eq("id", activeLedger.id);
+
+    if (error) {
+      toast.error("Failed to move ledger.");
+      return;
+    }
+
+    toast.success("Ledger moved successfully.");
+    setIsMoveOpen(false);
+    setTargetProgramId(null);
+
+    // 🧠 Remove from current list (no need to reload full page)
+    setLedgers((prev) => prev.filter((l) => l.id !== activeLedger.id));
+
+    // ✅ Optionally also reset the active ledger
+    setActiveLedger(null);
+
+    // ✅ Re-fetch entry counts to stay accurate
+    const ids = ledgers.filter((l) => l.id !== activeLedger.id).map((l) => l.id);
+    if (ids.length) {
+      const { data: rows, error: countErr } = await supabase
+        .from("ledger_entries")
+        .select("ledger_id, id", { count: "exact" })
+        .in("ledger_id", ids);
+
+      if (!countErr && rows) {
+        const counts: Record<string, number> = {};
+        rows.forEach((r: any) => {
+          counts[r.ledger_id] = (counts[r.ledger_id] || 0) + 1;
+        });
+        setEntryCounts(counts);
+      }
+    } else {
+      setEntryCounts({});
+    }
+  };
+
+  const handleDuplicateToProgram = async () => {
+    if (!activeLedger || !targetProgramId) return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not logged in");
+
+      const { data: newLedger, error: insertErr } = await supabase
+        .from("ledgers")
+        .insert([
+          {
+            coach_id: user.id,
+            program_id: targetProgramId,
+            name: `${activeLedger.name} (Copy)`,
+            description: activeLedger.description || "",
+            icon: activeLedger.icon || "clipboard",
+            status: "active",
+          },
+        ])
+        .select()
+        .single();
+      if (insertErr || !newLedger) throw insertErr;
+
+      // Copy headers + entries
+      const { data: headers } = await supabase
+        .from("ledger_headers")
+        .select("*")
+        .eq("ledger_id", activeLedger.id);
+      if (headers?.length)
+        await supabase.from("ledger_headers").insert(
+          headers.map((h: any) => ({
+            ledger_id: newLedger.id,
+            name: h.name,
+            type: h.type,
+            options: h.options,
+            formula: h.formula,
+            is_locked: h.is_locked,
+          }))
+        );
+
+      const { data: entries } = await supabase
+        .from("ledger_entries")
+        .select("*")
+        .eq("ledger_id", activeLedger.id);
+      if (entries?.length)
+        await supabase.from("ledger_entries").insert(
+          entries.map((e: any) => ({
+            ledger_id: newLedger.id,
+            entity_name: e.entity_name,
+            values: e.values,
+          }))
+        );
+
+      toast.success("Ledger duplicated to another program.");
+      setIsDuplicateToOpen(false);
+    } catch (err) {
+      console.error(err);
       toast.error("Failed to duplicate ledger.");
     }
   };
@@ -504,7 +680,7 @@ export default function Ledger() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredSorted.map((ledger) => {
-              const Icon = getIcon(ledger.icon_key);
+              const Icon = getIcon(ledger.icon);
               const count = entryCounts[ledger.id] || 0;
               const status = ledger.status || "active";
               const updated = ledger.updated_at || ledger.created_at;
@@ -559,8 +735,21 @@ export default function Ledger() {
                               <Archive className="w-4 h-4 mr-2" /> Archive
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem onClick={() => handleDuplicateLedger(ledger)}>
-                            <Copy className="w-4 h-4 mr-2" /> Duplicate
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setActiveLedger(ledger);
+                              setIsMoveOpen(true);
+                            }}
+                          >
+                            <FileText className="w-4 h-4 mr-2" /> Move to Program
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setActiveLedger(ledger);
+                              setIsDuplicateToOpen(true);
+                            }}
+                          >
+                            <Copy className="w-4 h-4 mr-2" /> Duplicate to Program
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -602,7 +791,24 @@ export default function Ledger() {
               <label className="text-sm font-medium">Template</label>
               <Select
                 value={selectedTemplate || ""}
-                onValueChange={(v) => setSelectedTemplate(v)}
+                onValueChange={(v) => {
+                  setSelectedTemplate(v);
+
+                  // 🧠 Find the template object
+                  const chosen = templates.find((t) => t.id === v);
+
+                  // 🪄 Auto-fill defaults from template (if not blank)
+                  if (chosen && v !== "blank_template") {
+                    setLedgerName(chosen.name || "");
+                    setLedgerDescription(chosen.description || "");
+                    setSelectedIcon(chosen.icon || null);
+                  } else {
+                    // Reset to blank if the user picks "Blank Ledger"
+                    setLedgerName("");
+                    setLedgerDescription("");
+                    setSelectedIcon(null);
+                  }
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a template" />
@@ -737,6 +943,73 @@ export default function Ledger() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsIconDialogOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* ===== MOVE LEDGER MODAL ===== */}
+      <Dialog open={isMoveOpen} onOpenChange={setIsMoveOpen}>
+        <DialogContent className="sm:max-w-md bg-card">
+          <DialogHeader>
+            <DialogTitle>Move Ledger</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={targetProgramId ?? ""} onValueChange={setTargetProgramId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a program" />
+              </SelectTrigger>
+                <SelectContent>
+                  {programs
+                    .filter((p) => p.id !== selectedProgramId) // ✅ hide active program
+                    .map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.school} {p.sport} {p.level} ({p.season_year})
+                      </SelectItem>
+                    ))
+                  }
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMoveOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleMoveLedger} disabled={!targetProgramId}>
+              Move
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== DUPLICATE TO PROGRAM MODAL ===== */}
+      <Dialog open={isDuplicateToOpen} onOpenChange={setIsDuplicateToOpen}>
+        <DialogContent className="sm:max-w-md bg-card">
+          <DialogHeader>
+            <DialogTitle>Duplicate Ledger to Program</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={targetProgramId ?? ""} onValueChange={setTargetProgramId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a program" />
+              </SelectTrigger>
+              <SelectContent>
+                  {programs
+                    .filter((p) => p.id !== selectedProgramId) // ✅ hide active program
+                    .map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.school} {p.sport} {p.level} ({p.season_year})
+                      </SelectItem>
+                    ))
+                  }
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDuplicateToOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleDuplicateToProgram} disabled={!targetProgramId}>
+              Duplicate
             </Button>
           </DialogFooter>
         </DialogContent>

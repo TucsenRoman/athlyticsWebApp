@@ -204,6 +204,8 @@ export type Database = {
           updated_at: string
           status: string | null
           data: Json | null
+          description: string | null
+          icon: string;
         }
         Insert: {
           id?: string
@@ -215,6 +217,8 @@ export type Database = {
           updated_at?: string
           status?: string | null
           data?: Json | null
+          description?: string | null
+          icon: string;
         }
         Update: {
           id?: string
@@ -226,6 +230,8 @@ export type Database = {
           updated_at?: string
           status?: string | null
           data?: Json | null
+          description?: string | null
+          icon: string;
         }
         Relationships: []
       },
@@ -299,18 +305,27 @@ export type Database = {
           id: string;
           name: string;
           description: string | null;
+          icon: string | null;
+          coach_id: string | null;
+          visibility: string | null;
           created_at: string | null;
         };
         Insert: {
           id?: string;
           name: string;
           description?: string | null;
+          icon?: string | null;
+          coach_id?: string | null;
+          visibility?: string | null;
           created_at?: string | null;
         };
         Update: {
           id?: string;
           name?: string;
           description?: string | null;
+          icon?: string | null;
+          coach_id?: string | null;
+          visibility?: string | null;
           created_at?: string | null;
         };
         Relationships: [];
@@ -344,6 +359,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "ledger_template_headers_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_templates";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      ledger_template_entries: {
+        Row: {
+          id: string;
+          template_id: string;
+          values: Json | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          values?: Json | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          values?: Json | null;
+          created_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ledger_template_entries_template_id_fkey";
             columns: ["template_id"];
             isOneToOne: false;
             referencedRelation: "ledger_templates";
