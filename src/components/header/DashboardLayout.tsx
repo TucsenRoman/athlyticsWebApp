@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
-import { Button } from "@/components/ui/button";
 import { Lock, Unlock, LogOut } from "lucide-react";
 import ProgramSelector from "@/components/header/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
@@ -21,14 +20,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [holdProgress, setHoldProgress] = useState(0);
-  const holdDuration = 2000; // 2 seconds
+  const [showPopup, setShowPopup] = useState(false);
+
+  const holdDuration = 500; // ms to unlock (0.5s)
   const holdTimeout = useRef<NodeJS.Timeout | null>(null);
   const holdInterval = useRef<NodeJS.Timeout | null>(null);
+  const popupTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const navigate = useNavigate();
   const { selectedProgramId, setSelectedProgramId } = useProgramContext();
 
-  // --- Hold-to-unlock logic ---
+  // 🧠 Hold-to-Unlock Logic
   const handleHoldStart = () => {
+    // If already unlocked, a tap should just re-lock immediately (no popup)
     if (isEditMode) {
       setIsEditMode(false);
       return;
@@ -37,26 +41,49 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     let progress = 0;
     setHoldProgress(0);
 
+    // Start increasing hold progress
     holdInterval.current = setInterval(() => {
       progress += 100 / (holdDuration / 50);
       setHoldProgress(progress);
     }, 50);
 
+    // Finish unlock after holdDuration
     holdTimeout.current = setTimeout(() => {
       clearInterval(holdInterval.current!);
       setHoldProgress(100);
       setIsEditMode(true);
       if (navigator.vibrate) navigator.vibrate(60);
+      // mark as successful hold
+      holdTimeout.current = null;
     }, holdDuration);
   };
 
   const handleHoldEnd = () => {
-    if (holdTimeout.current) clearTimeout(holdTimeout.current);
-    if (holdInterval.current) clearInterval(holdInterval.current);
+    // If we ended early (no completed hold) AND we were locked
+    const wasLockedBefore = !isEditMode;
+    const holdDidNotFinish = holdTimeout.current !== null;
+
+    // Stop all timers
+    if (holdTimeout.current) {
+      clearTimeout(holdTimeout.current);
+      holdTimeout.current = null;
+    }
+    if (holdInterval.current) {
+      clearInterval(holdInterval.current);
+      holdInterval.current = null;
+    }
+
+    // ✅ Show popup ONLY if user *tapped while locked*
+    if (wasLockedBefore && holdDidNotFinish) {
+      setShowPopup(true);
+      if (popupTimeout.current) clearTimeout(popupTimeout.current);
+      popupTimeout.current = setTimeout(() => setShowPopup(false), 2000);
+    }
+
     setHoldProgress(0);
   };
 
-  // --- Supabase Auth handling ---
+  // Supabase Auth handling
   useEffect(() => {
     const {
       data: { subscription },
@@ -76,9 +103,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
+    if (!loading && !user) navigate("/auth");
   }, [user, loading, navigate]);
 
   const handleSignOut = async () => {
@@ -86,6 +111,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     navigate("/auth");
   };
 
+  // -------------------------------
+  // 🌀 Loading Screen
+  // -------------------------------
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -96,6 +124,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (!user) return null;
 
+  // -------------------------------
+  // 🧩 Layout
+  // -------------------------------
   return (
     <EditModeContext.Provider value={{ isEditMode, setIsEditMode }}>
       <div className="min-h-screen bg-background">
@@ -133,42 +164,40 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <h1 className="text-2xl font-bold">Athlytics</h1>
             </button>
 
-            {/* ⚙️ Right-side Buttons */}
-            <div className="flex items-center gap-2 z-10">
+            {/* ⚙️ Right Section */}
+            <div className="flex items-center gap-2 z-10 relative">
               {/* 🔒 Hold-to-Unlock Button */}
               <div
-                className="relative h-10 w-10 flex items-center justify-center rounded-xl overflow-hidden cursor-pointer"
+                className="relative h-10 w-10 flex items-center justify-center rounded-xl overflow-hidden cursor-pointer select-none"
                 onMouseDown={handleHoldStart}
                 onMouseUp={handleHoldEnd}
                 onMouseLeave={handleHoldEnd}
                 onTouchStart={handleHoldStart}
                 onTouchEnd={handleHoldEnd}
               >
-                {/* --- Base background --- */}
+                {/* Base background */}
                 <div
                   className={`absolute inset-0 rounded-xl transition-colors duration-300 ${
-                    isEditMode ? "bg-green-600" : "bg-red-600"
+                    isEditMode ? "bg-green-600" : "bg-[rgb(248,114,45)]"
                   }`}
                 />
 
-                {/* --- Transparent sweep overlay --- */}
-               {!isEditMode && (
-  <motion.div
-    className="absolute inset-0 rounded-xl"
-    style={{
-      background: `conic-gradient(
-        from -90deg,
-        rgba(255, 255, 255, 1) 0deg,                            /* pivot color (bright orange/red) */
-        rgba(248, 45, 45, 1) ${holdProgress * 3.6 - 2}deg,    /* keep solid up to this angle */
-        transparent ${holdProgress * 3.6}deg,               /* hard transition to transparent */
-        transparent 360deg
-      )`,
-    }}
-    transition={{ duration: 0.05, ease: "linear" }}
-  />
-)}
+                {/* Progress overlay */}
+                {!isEditMode && (
+                  <motion.div
+                    className="absolute inset-0 rounded-xl"
+                    style={{
+                      background: `conic-gradient(
+                        from -90deg,
+                        rgba(255,255,255,0.9) 0deg,
+                        rgba(255,255,255,0) ${holdProgress * 3.6}deg
+                      )`,
+                    }}
+                    transition={{ duration: 0.05, ease: "linear" }}
+                  />
+                )}
 
-                {/* --- Icons --- */}
+                {/* Icon transition */}
                 <AnimatePresence mode="wait" initial={false}>
                   {isEditMode ? (
                     <motion.div
@@ -196,16 +225,41 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </AnimatePresence>
               </div>
 
+              {/* 💬 Tap Popup (shifted left, square style) */}
+              <AnimatePresence>
+                {showPopup && !isEditMode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.25 }}
+                    className="absolute top-full right-0 mt-1 px-2 py-1 bg-black/90 text-white text-xs rounded-sm shadow-md whitespace-nowrap"
+                    style={{
+                      transform: "translateX(-60%)", // moves it further left
+                    }}
+                  >
+                    Press and hold to unlock
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* 🚪 Sign Out */}
+              <button
+                onClick={handleSignOut}
+                className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted hover:bg-muted/70 transition"
+                title="Sign out"
+              >
+                <LogOut className="w-5 h-5 text-muted-foreground" />
+              </button>
             </div>
           </div>
         </header>
 
-        {/* Pass edit-mode state to pages */}
+        {/* 🧱 Page Content */}
         <main className="container mx-auto px-4 py-8">
-          {children &&
-            (typeof children === "function"
-              ? children({ isEditMode })
-              : children)}
+          {typeof children === "function"
+            ? children({ isEditMode })
+            : children}
         </main>
       </div>
     </EditModeContext.Provider>

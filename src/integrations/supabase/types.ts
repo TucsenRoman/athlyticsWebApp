@@ -237,7 +237,7 @@ export type Database = {
           name: string;
           type: string | null;
           is_locked: boolean;
-          options: string | null;
+          options: string[] | null;
           formula: string | null;
         };
         Insert: {
@@ -247,7 +247,7 @@ export type Database = {
           name: string;
           type?: string | null;
           is_locked?: boolean;
-          options?: string | null;
+          options?: string[] | null;
           formula?: string | null;
         };
         Update: {
@@ -257,7 +257,7 @@ export type Database = {
           name?: string;
           type?: string | null;
           is_locked?: boolean;
-          options?: string | null;
+          options?: string[] | null;
           formula?: string | null;
         };
         Relationships: [
@@ -294,108 +294,63 @@ export type Database = {
         };
         Relationships: [];
       };
-      lockers: {
+      ledger_templates: {
         Row: {
-          athlete_id: string | null
-          coach_id: string
-          combination: string | null
-          created_at: string | null
-          id: string
-          location: string | null
-          locker_number: string
-          notes: string | null
-          program_id: string | null
-          status: string | null
-          updated_at: string | null
-        }
+          id: string;
+          name: string;
+          description: string | null;
+          created_at: string | null;
+        };
         Insert: {
-          athlete_id?: string | null
-          coach_id: string
-          combination?: string | null
-          created_at?: string | null
-          id?: string
-          location?: string | null
-          locker_number: string
-          notes?: string | null
-          program_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
+          id?: string;
+          name: string;
+          description?: string | null;
+          created_at?: string | null;
+        };
         Update: {
-          athlete_id?: string | null
-          coach_id?: string
-          combination?: string | null
-          created_at?: string | null
-          id?: string
-          location?: string | null
-          locker_number?: string
-          notes?: string | null
-          program_id?: string | null
-          status?: string | null
-          updated_at?: string | null
-        }
+          id?: string;
+          name?: string;
+          description?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
+
+      ledger_template_headers: {
+        Row: {
+          id: string;
+          template_id: string;
+          column_name: string;
+          column_type: string;
+          options: string[] | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          template_id: string;
+          column_name: string;
+          column_type: string;
+          options?: string[] | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          template_id?: string;
+          column_name?: string;
+          column_type?: string;
+          options?: string[] | null;
+          created_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "lockers_athlete_id_fkey"
-            columns: ["athlete_id"]
-            isOneToOne: false
-            referencedRelation: "athletes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lockers_coach_id_fkey"
-            columns: ["coach_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lockers_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      meets: {
-        Row: {
-          coach_id: string
-          created_at: string | null
-          date: string
-          id: string
-          location: string | null
-          name: string
-          program_id: string | null
-        }
-        Insert: {
-          coach_id: string
-          created_at?: string | null
-          date: string
-          id?: string
-          location?: string | null
-          name: string
-          program_id?: string | null
-        }
-        Update: {
-          coach_id?: string
-          created_at?: string | null
-          date?: string
-          id?: string
-          location?: string | null
-          name?: string
-          program_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meets_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+            foreignKeyName: "ledger_template_headers_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_templates";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       profiles: {
         Row: {
           created_at: string

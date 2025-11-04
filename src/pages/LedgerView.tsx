@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import DashboardLayout from "@/components/header/DashboardLayout";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -164,6 +164,53 @@ export default function LedgerView() {
     }
   };
 
+  // 💾 Save this ledger as a reusable template
+  const handleSaveAsTemplate = async () => {
+    if (!ledger) return;
+
+    try {
+      // 👤 Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not logged in");
+
+      // 1️⃣ Create template entry
+      const { data: template, error: templateErr } = await supabase
+        .from("ledger_templates")
+        .insert([
+          {
+            name: ledger.name || "Untitled Template",
+            description: `Created from ledger ${ledger.name}`,
+            coach_id: user.id, // ✅ this line links the template to the user
+          },
+        ])
+        .select()
+        .single();
+
+      if (templateErr || !template) throw templateErr;
+
+      // 2️⃣ Copy all headers into template_headers
+      if (headers.length > 0) {
+        const headerPayload = headers.map((h) => ({
+          template_id: template.id,
+          column_name: h.name,
+          column_type: h.type || "text",
+          options: h.options || null,
+        }));
+
+        const { error: insertErr } = await supabase
+          .from("ledger_template_headers")
+          .insert(headerPayload);
+
+        if (insertErr) throw insertErr;
+      }
+
+      toast.success(`Saved "${ledger.name}" as a new template.`);
+    } catch (err) {
+      console.error("Error saving as template:", err);
+      toast.error("Failed to save as template.");
+    }
+  };
+
   // ✏️ Rename header
   const handleRenameHeader = async (id: string) => {
     if (!editName.trim()) return;
@@ -255,6 +302,14 @@ export default function LedgerView() {
               </p>
             </div>
           </div>
+          <Button
+            onClick={handleSaveAsTemplate}
+            variant="outline"
+            className="ml-auto flex items-center gap-2"
+          >
+            <Save className="w-4 h-4" />
+            Save as Template
+          </Button>
         </CardHeader>
 
         <CardContent>

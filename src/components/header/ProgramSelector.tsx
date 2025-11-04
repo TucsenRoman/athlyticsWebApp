@@ -233,12 +233,12 @@ export default function ProgramSelector({
                   {/* Program Name / Info */}
                   {selectedProgram ? (
                     <>
-                      {/* 🖥 Desktop: single line */}
+                      {/* Desktop */}
                       <span className="hidden md:block text-xs text-muted-foreground truncate">
-                        {selectedProgram.sport} • {selectedProgram.school} • {selectedProgram.season_year}
+                        {selectedProgram.sport} • {selectedProgram.season_year}
                       </span>
 
-                      {/* 📱 Mobile: stacked (sport on top, school/year below) */}
+                      {/* Mobile */}
                       <span className="block md:hidden text-xs text-muted-foreground leading-tight">
                         {selectedProgram.sport} • {selectedProgram.season_year}
                       </span>
