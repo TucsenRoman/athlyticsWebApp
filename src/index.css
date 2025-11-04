@@ -113,3 +113,16 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Prevent accidental selection or long-press highlights */
+* {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+button, a, input, textarea {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
