@@ -243,7 +243,7 @@ export type Database = {
           name: string;
           type: string | null;
           is_locked: boolean;
-          options: string[] | null;
+          options: Json[] | null;
           formula: string | null;
         };
         Insert: {
@@ -253,7 +253,7 @@ export type Database = {
           name: string;
           type?: string | null;
           is_locked?: boolean;
-          options?: string[] | null;
+          options?: Json[] | null;
           formula?: string | null;
         };
         Update: {
@@ -263,7 +263,7 @@ export type Database = {
           name?: string;
           type?: string | null;
           is_locked?: boolean;
-          options?: string[] | null;
+          options?: Json[] | null;
           formula?: string | null;
         };
         Relationships: [
@@ -275,7 +275,7 @@ export type Database = {
             referencedColumns: ["id"];
           }
         ];
-      },
+      };
       ledger_entries: {
         Row: {
           id: string;

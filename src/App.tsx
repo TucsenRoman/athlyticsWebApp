@@ -7,8 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-// import Ledger from "./pages/Ledger";
-import LedgerView from "./pages/LedgerView";
+import LedgerView from "./components/ledger/LedgerView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import DashboardLayout from "@/components/header/DashboardLayout";
+import DashboardLayout from "@/components/header/HeaderLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, ClipboardList } from "lucide-react";
 

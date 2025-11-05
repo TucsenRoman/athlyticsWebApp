@@ -36,6 +36,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Program Selector */}
+      {/* needs coach_id attached */}
       <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle>Select a Program</CardTitle>
