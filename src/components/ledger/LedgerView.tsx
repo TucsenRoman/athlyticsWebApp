@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import HeaderLayout from "@/components/header/HeaderLayout";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LedgerToolbar from "./LedgerToolbar";
 import LedgerSheet from "./LedgerSheet";
+import LedgerFooter from "./LedgerFooter";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Ledger = Tables<"ledgers">;
@@ -16,12 +16,13 @@ export default function LedgerView() {
   const { ledgerId } = useParams<{ ledgerId: string }>();
   const navigate = useNavigate();
 
+  const [title, setTitle] = useState("Untitled Ledger");
   const [ledger, setLedger] = useState<Ledger | null>(null);
   const [headers, setHeaders] = useState<LedgerHeader[]>([]);
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🧭 Load ledger + related data
+  // ===== LOAD LEDGER DATA =====
   useEffect(() => {
     if (!ledgerId) return;
 
@@ -49,7 +50,9 @@ export default function LedgerView() {
         setLedger(ledgerData);
         setHeaders(headerData || []);
         setEntries(entryData || []);
+        if (ledgerData?.name) setTitle(ledgerData.name);
       } catch (err) {
+        console.error(err);
         toast.error("Failed to load ledger data");
       } finally {
         setLoading(false);
@@ -59,6 +62,7 @@ export default function LedgerView() {
     loadData();
   }, [ledgerId]);
 
+  // ===== RELOAD HELPERS =====
   const reloadHeaders = async () => {
     const { data } = await supabase
       .from("ledger_headers")
@@ -77,37 +81,60 @@ export default function LedgerView() {
     setEntries(data || []);
   };
 
+  // ===== MOVE & DUPLICATE HANDLERS =====
+  const handleMoveLedger = async () => {
+    if (!ledger) return;
+    try {
+      // You can open your move modal here if desired
+      toast.info("Move ledger modal would open here.");
+      // Example supabase call:
+      // await supabase.from("ledgers").update({ program_id: newProgramId }).eq("id", ledger.id);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to move ledger.");
+    }
+  };
+
+  // ===== PAGE STATE =====
   if (loading) {
     return (
-      <HeaderLayout>
-        <div className="flex justify-center items-center py-24">
-          <Loader2 className="animate-spin w-8 h-8 text-muted-foreground" />
-        </div>
-      </HeaderLayout>
+      <div className="flex justify-center items-center py-24">
+        <Loader2 className="animate-spin w-8 h-8 text-muted-foreground" />
+      </div>
     );
   }
 
   if (!ledger) {
     return (
-      <HeaderLayout>
-        <div className="text-center py-24 text-muted-foreground">
-          Ledger not found.
-        </div>
-      </HeaderLayout>
+      <div className="text-center py-24 text-muted-foreground">
+        Ledger not found.
+      </div>
     );
   }
 
+  // ===== RENDER =====
   return (
-    <HeaderLayout>
-      <LedgerToolbar onBack={() => navigate(-1)} />
-      <LedgerSheet
-        ledgerId={ledgerId!}
-        headers={headers}
-        entries={entries}
-        setEntries={setEntries}
-        reloadHeaders={reloadHeaders}
-        reloadEntries={reloadEntries}
+    <div className="flex-1 overflow-auto pb-28">
+      <LedgerToolbar
+        ledgerId={ledgerId}
+        title={title}
+        setTitle={setTitle}
       />
-    </HeaderLayout>
+
+      <div className="flex-1 flex flex-col">
+        <LedgerSheet
+          ledgerId={ledgerId!}
+          headers={headers}
+          entries={entries}
+          setEntries={setEntries}
+          reloadHeaders={reloadHeaders}
+          reloadEntries={reloadEntries}
+          onMove={handleMoveLedger}
+        />
+      </div>
+
+      {/* 🧭 LedgerFooter likely contains LedgerOrb */}
+      <LedgerFooter />
+    </div>
   );
 }

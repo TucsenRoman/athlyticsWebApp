@@ -32,9 +32,9 @@ All colors MUST be HSL.
     --muted: 220 13% 95%;
     --muted-foreground: 220 10% 45%;
 
-    /* Accent: green/field tone */
-    --accent: 142 76% 36%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent: neutral gray tone */
+    --accent: 0 0% 60%;              /* medium gray */
+    --accent-foreground: 0 0% 100%;  /* keep white text for contrast */
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;

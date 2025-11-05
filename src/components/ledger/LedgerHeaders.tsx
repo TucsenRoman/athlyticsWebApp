@@ -1,4 +1,3 @@
-// src/components/ledger/LedgerHeaders.tsx
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,14 +36,12 @@ import { toast } from "sonner";
 interface LedgerHeadersProps {
   ledgerId: string;
   headers: any[];
-  setHeaders: React.Dispatch<React.SetStateAction<any[]>>;
   reloadHeaders: () => Promise<void>;
 }
 
 export default function LedgerHeaders({
   ledgerId,
   headers,
-  setHeaders,
   reloadHeaders,
 }: LedgerHeadersProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,12 +61,14 @@ export default function LedgerHeaders({
   const handleRename = async (headerId: string) => {
     if (!editValue.trim()) return;
     try {
-      await supabase.from("ledger_headers").update({ name: editValue }).eq("id", headerId);
+      await supabase
+        .from("ledger_headers")
+        .update({ name: editValue })
+        .eq("id", headerId);
       toast.success("Header renamed");
       setEditingId(null);
       reloadHeaders();
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Failed to rename header");
     }
   };
@@ -81,8 +80,7 @@ export default function LedgerHeaders({
       await supabase.from("ledger_headers").delete().eq("id", headerId);
       toast.success("Header deleted");
       reloadHeaders();
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Failed to delete header");
     }
   };
@@ -93,8 +91,7 @@ export default function LedgerHeaders({
       await supabase.from("ledger_headers").update({ type }).eq("id", headerId);
       toast.success(`Column type set to ${type}`);
       reloadHeaders();
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Failed to update column type");
     }
   };
@@ -114,13 +111,12 @@ export default function LedgerHeaders({
       ]);
       toast.success("New column added");
       reloadHeaders();
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Failed to add new column");
     }
   };
 
-  // 🧩 Load options when opening editor
+  // 🧩 Load dropdown options
   useEffect(() => {
     if (openOptionsEditor) {
       try {
@@ -145,17 +141,13 @@ export default function LedgerHeaders({
       toast.success("Dropdown options updated");
       setOpenOptionsEditor(null);
       reloadHeaders();
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Failed to update options");
     }
   };
 
   return (
     <>
-      {/* Empty left cell */}
-      <div className="sticky top-0 bg-gray-100 border-b border-r p-2 z-10" />
-
       {/* Header cells */}
       {headers.map((h, i) => {
         const Icon = typeIcons[h.type] || Type;
@@ -164,7 +156,6 @@ export default function LedgerHeaders({
             key={h.id}
             className="sticky top-0 bg-gray-100 border-b border-r px-2 py-1.5 flex items-center justify-between z-10"
           >
-            {/* Left: type icon + name */}
             <div className="flex items-center gap-1 overflow-hidden">
               <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
               {editingId === h.id ? (
@@ -189,7 +180,6 @@ export default function LedgerHeaders({
               )}
             </div>
 
-            {/* Right: settings dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-7 w-7 p-0">
@@ -198,7 +188,7 @@ export default function LedgerHeaders({
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="w-56">
-                {/* ⚙️ Type editor */}
+                {/* ⚙️ Type Editor */}
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger>
                     <Settings2 className="w-4 h-4 mr-2" /> Edit column type
@@ -218,7 +208,7 @@ export default function LedgerHeaders({
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
 
-                {/* ✏️ Dropdown options editor */}
+                {/* Dropdown editor */}
                 {h.type === "dropdown" && (
                   <DropdownMenuItem onClick={() => setOpenOptionsEditor(h)}>
                     <List className="w-4 h-4 mr-2" /> Edit dropdown options
@@ -227,7 +217,7 @@ export default function LedgerHeaders({
 
                 <DropdownMenuSeparator />
 
-                {/* ✏️ Rename / Delete */}
+                {/* Rename / Delete */}
                 <DropdownMenuItem
                   onClick={() => {
                     setEditingId(h.id);
@@ -248,17 +238,11 @@ export default function LedgerHeaders({
         );
       })}
 
-      {/* ➕ Add Column Button */}
-      <div
-        onClick={handleAddColumn}
-        className="sticky top-0 bg-gray-100 border-b border-r p-2 text-gray-400 hover:text-primary hover:bg-gray-200 cursor-pointer transition flex items-center justify-center"
-        title="Add new column"
+      {/* Dropdown Options Dialog */}
+      <Dialog
+        open={!!openOptionsEditor}
+        onOpenChange={() => setOpenOptionsEditor(null)}
       >
-        <Plus className="w-4 h-4 rotate-90" />
-      </div>
-
-      {/* 🧭 Dropdown Options Editor */}
-      <Dialog open={!!openOptionsEditor} onOpenChange={() => setOpenOptionsEditor(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -299,7 +283,10 @@ export default function LedgerHeaders({
           </div>
 
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setOpenOptionsEditor(null)}>
+            <Button
+              variant="secondary"
+              onClick={() => setOpenOptionsEditor(null)}
+            >
               Cancel
             </Button>
             <Button onClick={handleSaveOptions}>Save</Button>
