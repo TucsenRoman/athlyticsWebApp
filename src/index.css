@@ -2,16 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-#lovable-badge {
-  display: none !important;
-}
+/* -------------------------------------------------------------------------- */
+/*  ATHLYTICS DESIGN SYSTEM — COLOR VARIABLES (HSL ONLY)                      */
+/* -------------------------------------------------------------------------- */
 
 @layer base {
   :root {
-    /* Athlytics orange primary - vibrant and energetic */
+    /* ---------- LIGHT THEME ---------- */
+
     --background: 0 0% 100%;
     --foreground: 220 15% 15%;
 
@@ -21,20 +19,20 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    /* Primary: Athlytics orange */
+    /* Primary Athlytics orange */
     --primary: 22 94% 57%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: navy tone for professionalism */
+    /* Secondary navy tone */
     --secondary: 220 65% 25%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 13% 95%;
     --muted-foreground: 220 10% 45%;
 
-    /* Accent: neutral gray tone */
-    --accent: 0 0% 60%;              /* medium gray */
-    --accent-foreground: 0 0% 100%;  /* keep white text for contrast */
+    /* Accent neutral */
+    --accent: 0 0% 60%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -45,7 +43,7 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Custom gradients */
+    /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(22 94% 57%), hsl(28 96% 60%));
     --gradient-secondary: linear-gradient(135deg, hsl(220 65% 25%), hsl(220 70% 35%));
     --gradient-hero: linear-gradient(135deg, hsl(22 94% 57%) 0%, hsl(220 65% 25%) 100%);
@@ -54,6 +52,7 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 30px -5px hsl(22 94% 57% / 0.15);
     --shadow-athletic: 0 8px 24px -4px hsl(220 65% 25% / 0.2);
 
+    /* Sidebar */
     --sidebar-background: 0 0% 99%;
     --sidebar-foreground: 220 15% 15%;
     --sidebar-primary: 22 94% 57%;
@@ -62,48 +61,79 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 220 15% 15%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 22 94% 57%;
+
+    /* ---------- DARK THEME TOKENS (FOR JS / CSS USE) ---------- */
+    --dark-background: 220 20% 8%;
+    --dark-foreground: 0 0% 98%;
+    --dark-card: 220 18% 12%;
+    --dark-card-foreground: 0 0% 98%;
+    --dark-popover: 220 18% 12%;
+    --dark-popover-foreground: 0 0% 98%;
+    --dark-primary: 22 94% 57%;
+    --dark-primary-foreground: 0 0% 100%;
+    --dark-secondary: 220 65% 30%;
+    --dark-secondary-foreground: 0 0% 100%;
+    --dark-muted: 220 15% 20%;
+    --dark-muted-foreground: 220 10% 65%;
+    --dark-accent: 142 76% 40%;
+    --dark-accent-foreground: 0 0% 100%;
+    --dark-destructive: 0 84% 60%;
+    --dark-destructive-foreground: 0 0% 100%;
+    --dark-border: 220 15% 20%;
+    --dark-input: 220 15% 20%;
+    --dark-ring: 22 94% 57%;
+    --dark-sidebar-background: 220 20% 10%;
+    --dark-sidebar-foreground: 0 0% 95%;
+    --dark-sidebar-primary: 22 94% 57%;
+    --dark-sidebar-primary-foreground: 0 0% 100%;
+    --dark-sidebar-accent: 220 15% 18%;
+    --dark-sidebar-accent-foreground: 0 0% 95%;
+    --dark-sidebar-border: 220 15% 18%;
+    --dark-sidebar-ring: 22 94% 57%;
   }
 
+  /* ---------- ACTIVE DARK MODE OVERRIDES ---------- */
   .dark {
-    --background: 220 20% 8%;
-    --foreground: 0 0% 98%;
+    --background: var(--dark-background);
+    --foreground: var(--dark-foreground);
 
-    --card: 220 18% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: var(--dark-card);
+    --card-foreground: var(--dark-card-foreground);
 
-    --popover: 220 18% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: var(--dark-popover);
+    --popover-foreground: var(--dark-popover-foreground);
 
-    --primary: 22 94% 57%;
-    --primary-foreground: 0 0% 100%;
+    --primary: var(--dark-primary);
+    --primary-foreground: var(--dark-primary-foreground);
 
-    --secondary: 220 65% 30%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: var(--dark-secondary);
+    --secondary-foreground: var(--dark-secondary-foreground);
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 220 10% 65%;
+    --muted: var(--dark-muted);
+    --muted-foreground: var(--dark-muted-foreground);
 
-    --accent: 142 76% 40%;
-    --accent-foreground: 0 0% 100%;
+    --accent: var(--dark-accent);
+    --accent-foreground: var(--dark-accent-foreground);
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: var(--dark-destructive);
+    --destructive-foreground: var(--dark-destructive-foreground);
 
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
-    --ring: 22 94% 57%;
+    --border: var(--dark-border);
+    --input: var(--dark-input);
+    --ring: var(--dark-ring);
 
-    --sidebar-background: 220 20% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 22 94% 57%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 15% 18%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 22 94% 57%;
+    --sidebar-background: var(--dark-sidebar-background);
+    --sidebar-foreground: var(--dark-sidebar-foreground);
+    --sidebar-primary: var(--dark-sidebar-primary);
+    --sidebar-primary-foreground: var(--dark-sidebar-primary-foreground);
+    --sidebar-accent: var(--dark-sidebar-accent);
+    --sidebar-accent-foreground: var(--dark-sidebar-accent-foreground);
+    --sidebar-border: var(--dark-sidebar-border);
+    --sidebar-ring: var(--dark-sidebar-ring);
   }
 }
 
+/* ---------- Global Styles ---------- */
 @layer base {
   * {
     @apply border-border;
@@ -114,6 +144,65 @@ All colors MUST be HSL.
   }
 }
 
+@layer components {
+  /* ---------- THEME UTILITIES ---------- */
+
+  /* 🟠 Primary Surface (cards, panels, highlights) */
+  .theme-surface {
+    @apply bg-card text-card-foreground shadow-athletic transition-colors duration-300;
+  }
+
+  /* 🔸 Primary Accent (use for buttons or key icons) */
+  .theme-primary {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    @apply font-medium transition-all duration-300 hover:brightness-110 active:scale-95;
+  }
+
+  /* 🔵 Secondary Accent (navbars, sidebars, etc.) */
+  .theme-secondary {
+    background-color: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
+    @apply font-medium transition-all duration-300 hover:brightness-110 active:scale-95;
+  }
+
+  /* ⚫ Muted Background (for subtler UI areas or outlines) */
+  .theme-muted {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* 🌈 Gradient Background (hero areas, large buttons) */
+  .theme-gradient {
+    background-image: var(--gradient-primary);
+    color: hsl(var(--primary-foreground));
+    @apply font-semibold transition-transform duration-300 hover:scale-[1.02];
+  }
+
+  /* 🧊 Card Borders & Surfaces */
+  .theme-border {
+    border-color: hsl(var(--border));
+  }
+
+  /* ✴️ Accent highlight — useful for icons */
+  .theme-accent {
+    color: hsl(var(--accent));
+  }
+
+  /* 💬 Text muted (consistent across modes) */
+  .text-muted {
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* 🌘 Shadow & Elevation Presets */
+  .shadow-athletic {
+    box-shadow: var(--shadow-athletic);
+  }
+  .shadow-glow {
+    box-shadow: 0 0 10px hsl(var(--primary) / 0.4);
+  }
+}
+
 /* Prevent accidental selection or long-press highlights */
 * {
   -webkit-user-select: none;
@@ -121,8 +210,81 @@ All colors MUST be HSL.
   user-select: none;
 }
 
-button, a, input, textarea {
+button,
+a,
+input,
+textarea {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   user-select: none;
 }
+
+/* ====================================================== */
+/*  HIDE DEFAULT SCROLLBARS — ONLY IN SPECIFIC CONTAINERS */
+/* ====================================================== */
+.hide-scrollbars::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbars {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* ====================================================== */
+/*        CUSTOM SCROLLBAR TRACKS (VISIBLE)               */
+/* ====================================================== */
+.custom-scrollbar {
+  position: absolute;
+  background: transparent;
+  z-index: 50;
+  overflow: auto;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.7);
+  border-radius: 9999px;
+  transition: background 0.2s ease-in-out;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Fade animation (optional aesthetic) */
+.custom-scrollbar {
+  opacity: 0.6;
+  transition: opacity 0.3s ease-in-out;
+}
+.custom-scrollbar:hover {
+  opacity: 1;
+}
+
+/* Chrome, Safari, Edge */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: none; /* hides scrollbar but keeps scrollability */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+
+* {
+  border: none;
+}
+/* *,
+*::before,
+*::after {
+  box-sizing: border-box;
+} */

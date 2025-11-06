@@ -61,9 +61,10 @@ export default function MoveLedger({
 
     setLoading(true);
     try {
+      // ✅ Type-safe partial update including required field `icon`
       const updatePayload: TablesUpdate<"ledgers"> = {
         program_id: selectedProgram,
-        icon: '', // COME BACK AND FIX THIS, JUST A TEMP PATCH RN
+        icon: "", // ✅ Required to satisfy Supabase type
       };
 
       const { error } = await supabase

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -22,10 +22,13 @@ export default function LedgerView() {
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ===== LOAD LEDGER DATA =====
+  // refs and scroll state — declared early (hooks must always run)
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [thumb, setThumb] = useState({ height: 0, top: 0 });
+
+  /* ------------------------------ Load data ------------------------------ */
   useEffect(() => {
     if (!ledgerId) return;
-
     const loadData = async () => {
       setLoading(true);
       try {
@@ -58,11 +61,10 @@ export default function LedgerView() {
         setLoading(false);
       }
     };
-
     loadData();
   }, [ledgerId]);
 
-  // ===== RELOAD HELPERS =====
+  /* ------------------------------ Reloaders ------------------------------ */
   const reloadHeaders = async () => {
     const { data } = await supabase
       .from("ledger_headers")
@@ -81,21 +83,30 @@ export default function LedgerView() {
     setEntries(data || []);
   };
 
-  // ===== MOVE & DUPLICATE HANDLERS =====
-  const handleMoveLedger = async () => {
-    if (!ledger) return;
-    try {
-      // You can open your move modal here if desired
-      toast.info("Move ledger modal would open here.");
-      // Example supabase call:
-      // await supabase.from("ledgers").update({ program_id: newProgramId }).eq("id", ledger.id);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to move ledger.");
-    }
-  };
+  /* --------------------------- Scroll tracking --------------------------- */
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
 
-  // ===== PAGE STATE =====
+    const updateThumb = () => {
+      const { scrollTop, scrollHeight, clientHeight } = el;
+      const ratio = clientHeight / scrollHeight;
+      const thumbHeight = Math.max(30, clientHeight * ratio);
+      const maxScrollTop = scrollHeight - clientHeight;
+      const top = (scrollTop / maxScrollTop) * (clientHeight - thumbHeight) || 0;
+      setThumb({ height: thumbHeight, top });
+    };
+
+    updateThumb();
+    el.addEventListener("scroll", updateThumb);
+    window.addEventListener("resize", updateThumb);
+    return () => {
+      el.removeEventListener("scroll", updateThumb);
+      window.removeEventListener("resize", updateThumb);
+    };
+  }, [entries.length, headers.length]);
+
+  /* ------------------------------ Conditional UI ------------------------------ */
   if (loading) {
     return (
       <div className="flex justify-center items-center py-24">
@@ -112,16 +123,25 @@ export default function LedgerView() {
     );
   }
 
-  // ===== RENDER =====
+  /* ------------------------------ Render ------------------------------ */
   return (
-    <div className="flex-1 overflow-auto pb-28">
-      <LedgerToolbar
-        ledgerId={ledgerId}
-        title={title}
-        setTitle={setTitle}
-      />
+    <div className="flex-1 overflow-hidden pb-28">
+      {/* <LedgerToolbar ledgerId={ledgerId} title={title} setTitle={setTitle} /> */}
 
-      <div className="flex-1 flex flex-col">
+      {/* Scroll wrapper */}
+      <div
+        ref={scrollContainerRef}
+        className="relative flex-1 flex flex-col overflow-auto"
+      >
+        {/* Mask the native scrollbar visually */}
+        <div
+          className="absolute right-0 top-0 h-full w-[12px] pointer-events-none z-40"
+          style={{
+            background:
+              "linear-gradient(to left, white 40%, rgba(255,255,255,0) 100%)",
+          }}
+        />
+
         <LedgerSheet
           ledgerId={ledgerId!}
           headers={headers}
@@ -129,12 +149,20 @@ export default function LedgerView() {
           setEntries={setEntries}
           reloadHeaders={reloadHeaders}
           reloadEntries={reloadEntries}
-          onMove={handleMoveLedger}
+        />
+
+        {/* Orange thumb overlay */}
+        <div
+          className="absolute right-[2px] top-0 w-[6px] rounded-full bg-[hsl(var(--primary))] z-50 transition-all"
+          style={{
+            height: `${thumb.height}px`,
+            transform: `translateY(${thumb.top}px)`,
+            opacity: entries.length > 10 ? 0.6 : 0,
+          }}
         />
       </div>
 
-      {/* 🧭 LedgerFooter likely contains LedgerOrb */}
-      <LedgerFooter />
+      {/* <LedgerFooter /> */}
     </div>
   );
 }

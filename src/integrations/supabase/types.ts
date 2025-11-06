@@ -245,6 +245,7 @@ export type Database = {
           is_locked: boolean;
           options: Json[] | null;
           formula: string | null;
+          order_index: number | null; // 🧩 new column
         };
         Insert: {
           id?: string;
@@ -255,6 +256,7 @@ export type Database = {
           is_locked?: boolean;
           options?: Json[] | null;
           formula?: string | null;
+          order_index?: number | null; // 🧩 new column
         };
         Update: {
           id?: string;
@@ -265,6 +267,7 @@ export type Database = {
           is_locked?: boolean;
           options?: Json[] | null;
           formula?: string | null;
+          order_index?: number | null; // 🧩 new column
         };
         Relationships: [
           {
@@ -685,6 +688,16 @@ export type Database = {
         }
         Returns: boolean
       }
+
+      shift_ledger_headers_order: {
+        Args: { p_ledger_id: string; p_start_index: number };
+        Returns: void;
+      };
+
+      compact_ledger_headers_order: {
+        Args: { p_ledger_id: string };
+        Returns: void;
+      };
     }
     Enums: {
       app_role: "admin" | "head_coach" | "assistant_coach" | "viewer"

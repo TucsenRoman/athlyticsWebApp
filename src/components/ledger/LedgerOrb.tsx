@@ -17,6 +17,7 @@ import {
   FolderOutput,
   ArrowLeft,
   Moon,
+  Sun,
   Pin,
   Share2,
   Lock,
@@ -24,29 +25,41 @@ import {
   Copy,
   EyeOff,
   TableProperties,
+  FileSpreadsheet,
 } from "lucide-react";
 import CopyLedger from "./CopyLedger";
 import MoveLedger from "./MoveLedger";
 
 interface LedgerOrbProps {
-  ledgerId: string; // ✅ added
-  onExport: () => void;
+  ledgerId: string;
+  onExportCSV: () => void;
   onBulkMode: () => void;
   onPrint: () => void;
   onToggleView: () => void;
+  onExportPDF?: () => void;
+  onExportPNG?: () => void;
+  onExportJSON?: () => void;
+  onTogglePinMode?: () => void;
 }
 
 export default function LedgerOrb({
   ledgerId,
-  onExport,
+  onExportCSV,
   onBulkMode,
   onPrint,
   onToggleView,
+  onExportPDF,
+  onExportPNG,
+  onExportJSON,
+  onTogglePinMode,
 }: LedgerOrbProps) {
   const [open, setOpen] = useState(false);
   const [activeNest, setActiveNest] = useState<string | null>(null);
   const [copyOpen, setCopyOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(
+    document.documentElement.classList.contains("dark") ? "dark" : "light"
+  );
 
   const ICON_SIZE = 18;
   const iconStyle = { width: ICON_SIZE, height: ICON_SIZE };
@@ -54,8 +67,14 @@ export default function LedgerOrb({
   /* ------------------------------- UTILITIES ------------------------------- */
 
   const toastAlert = (message: string) => alert(message);
-  const toggleTheme = () => document.documentElement.classList.toggle("dark");
-  const pinColumns = () => toastAlert("Pinning columns not yet implemented.");
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    document.documentElement.classList.toggle("dark", next === "dark");
+  };
+
+  const pinColumns = onTogglePinMode;
   const showCommunity = () => toastAlert("Opening community space...");
   const managePermissions = () => toastAlert("Manage permissions modal here...");
   const hideColumn = () => toastAlert("Hide/lock column action...");
@@ -65,16 +84,10 @@ export default function LedgerOrb({
     toastAlert("Ledger share link copied!");
   };
 
-  // 🖼 Capture ledger area only
   const captureScreenshot = async () => {
     const el = document.getElementById("ledger-container");
     if (!el) return toastAlert("Ledger container not found.");
-
-    const canvas = await html2canvas(el, {
-      backgroundColor: "#ffffff",
-      scale: 2,
-    });
-
+    const canvas = await html2canvas(el, { backgroundColor: "#ffffff", scale: 2 });
     const dataUrl = canvas.toDataURL("image/png");
     const a = document.createElement("a");
     a.href = dataUrl;
@@ -94,38 +107,58 @@ export default function LedgerOrb({
   };
 
   /* ------------------------------ MENU STRUCTURE ------------------------------ */
-
   const MENU_TREE: Record<string, any[]> = {
     Ledger: [
-      { icon: <Printer style={iconStyle} />, label: "Print", action: onPrint },
-      { icon: <Copy style={iconStyle} />, label: "Duplicate to Program", action: () => setCopyOpen(true), },
-      { icon: <FolderOutput style={iconStyle} />, label: "Move to Program", action: () => setMoveOpen(true) },
-      { icon: <SquareMousePointer style={iconStyle} />, label: "Bulk Select", action: onBulkMode },
+      { icon: <Printer style={iconStyle} />, label: "Print", action: onPrint, closeOnClick: true },
+      { icon: <Copy style={iconStyle} />, label: "Duplicate to Program", action: () => setCopyOpen(true), closeOnClick: true },
+      { icon: <FolderOutput style={iconStyle} />, label: "Move to Program", action: () => setMoveOpen(true), closeOnClick: true },
+      { icon: <SquareMousePointer style={iconStyle} />, label: "Bulk Select", action: onBulkMode, closeOnClick: true },
     ],
     View: [
-      { icon: <Moon style={iconStyle} />, label: "Light/Dark Mode", action: toggleTheme },
-      { icon: <Pin style={iconStyle} />, label: "Pin Columns", action: pinColumns },
-      { icon: <ScanEye style={iconStyle} />, label: "Capture View", action: captureScreenshot },
+      {
+        icon: (
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={theme}
+              initial={{ rotate: 0, opacity: 1 }}
+              animate={{ rotate: 360, opacity: 1 }}
+              exit={{ opacity: 0, rotate: -180 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              {theme === "dark" ? (
+                <Sun style={iconStyle} />
+              ) : (
+                <Moon style={iconStyle} />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        ),
+        label: theme === "dark" ? "Light Mode" : "Dark Mode",
+        action: toggleTheme,
+        closeOnClick: false,
+      },
+      { icon: <Pin style={iconStyle} />, label: "Pin Columns", action: onTogglePinMode, closeOnClick: false },
+      { icon: <ScanEye style={iconStyle} />, label: "Capture View", action: captureScreenshot, closeOnClick: true },
     ],
     Export: [
-      { icon: <FileDown style={iconStyle} />, label: "CSV", action: onExport },
-      { icon: <FileText style={iconStyle} />, label: "PDF", action: exportPDF },
-      { icon: <Image style={iconStyle} />, label: "PNG", action: captureScreenshot },
-      { icon: <Braces style={iconStyle} />, label: "JSON", action: exportJSON },
+      { icon: <FileSpreadsheet style={iconStyle} />, label: "CSV", action: onExportCSV, closeOnClick: true },
+      { icon: <FileText style={iconStyle} />, label: "PDF", action: onExportPDF, closeOnClick: true },
+      // { icon: <Image style={iconStyle} />, label: "PNG", action: onExportPNG, closeOnClick: true },
+      { icon: <Braces style={iconStyle} />, label: "JSON", action: onExportJSON, closeOnClick: true },
     ],
     Share: [
-      { icon: <Users style={iconStyle} />, label: "Community", action: showCommunity },
-      { icon: <Lock style={iconStyle} />, label: "Permissions", action: managePermissions },
-      { icon: <Link2 style={iconStyle} />, label: "Link", action: copyLink },
-      { icon: <EyeOff style={iconStyle} />, label: "Lock/Hide Col", action: hideColumn },
+      { icon: <Users style={iconStyle} />, label: "Community", action: showCommunity, closeOnClick: true },
+      { icon: <Lock style={iconStyle} />, label: "Permissions", action: managePermissions, closeOnClick: true },
+      { icon: <Link2 style={iconStyle} />, label: "Link", action: copyLink, closeOnClick: true },
+      { icon: <EyeOff style={iconStyle} />, label: "Lock/Hide Col", action: hideColumn, closeOnClick: true },
     ],
   };
 
   const ROOT_ACTIONS = [
-    { icon: <TableProperties style={iconStyle} />, label: "Ledger", nested: "Ledger" },
-    { icon: <Eye style={iconStyle} />, label: "View", nested: "View" },
-    { icon: <SquareArrowOutUpRight style={iconStyle} />, label: "Export", nested: "Export" },
-    { icon: <Share2 style={iconStyle} />, label: "Share", nested: "Share" },
+    { icon: <TableProperties style={iconStyle} />, label: "Ledger Settings", nested: "Ledger", closeOnClick: false },
+    { icon: <Eye style={iconStyle} />, label: "View", nested: "View", closeOnClick: false },
+    { icon: <SquareArrowOutUpRight style={iconStyle} />, label: "Export", nested: "Export", closeOnClick: false },
+    { icon: <Share2 style={iconStyle} />, label: "Share", nested: "Share", closeOnClick: false },
   ];
 
   /* ----------------------------- ORB RENDERING ----------------------------- */
@@ -155,16 +188,20 @@ export default function LedgerOrb({
               title={a.label}
               onClick={() => {
                 if (a.nested) return setActiveNest(a.nested);
-                setOpen(false);
-                setActiveNest(null);
-                setTimeout(() => a.action(), 150);
+                if (a.closeOnClick) {
+                  setOpen(false);
+                  setActiveNest(null);
+                  setTimeout(() => a.action(), 100);
+                } else {
+                  a.action();
+                }
               }}
-              className="h-7 w-7 p-0 rounded-full bg-white shadow-md hover:bg-[hsl(22,94%,57%)]/10 transition"
+              className="h-7 w-7 p-0 rounded-full bg-card dark:bg-neutral-900 shadow-md hover:bg-[hsl(var(--primary))/0.15] transition"
             >
               <motion.div
                 whileHover={{ scale: 1.15 }}
                 transition={{ type: "spring", stiffness: 300 }}
-                className="text-[hsl(22,94%,57%)]"
+                className="text-[hsl(var(--primary))]"
               >
                 {a.icon}
               </motion.div>
@@ -174,6 +211,7 @@ export default function LedgerOrb({
       })}
     </AnimatePresence>
   );
+
 
   /* ----------------------------- MAIN ORB BUTTON ----------------------------- */
 
@@ -187,16 +225,21 @@ export default function LedgerOrb({
   /* -------------------------------- RENDER -------------------------------- */
 
   return (
-    <div className="relative flex items-center justify-center w-9 h-9 overflow-visible">
-      {/* ⚙️ Main Orb / Back Button */}
+    <div
+      className="relative flex items-center justify-center w-9 h-9 overflow-visible"
+      style={{
+        zIndex: 9999, // sits above any header cell or pinned element
+        isolation: "isolate", // creates its own stacking context
+      }}
+    >      {/* ⚙️ Main Orb / Back Button */}
       <Button
         variant="ghost"
         size="icon"
         onClick={handleMainClick}
         className={`h-8 w-8 p-0 rounded-full transition-all duration-300 ${
           open || activeNest
-            ? "bg-[hsl(22,94%,57%)]/20 ring-2 ring-[hsl(22,94%,57%)]/50"
-            : "bg-gray-100 hover:bg-gray-200"
+            ? "bg-[hsl(var(--primary))/0.25] ring-2 ring-[hsl(var(--primary))/0.6]"
+            : "bg-muted hover:bg-muted/70 dark:bg-neutral-800 dark:hover:bg-neutral-700"
         }`}
       >
         <motion.div
@@ -206,9 +249,9 @@ export default function LedgerOrb({
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           {isNested ? (
-            <ArrowLeft className="w-4 h-4 text-[hsl(22,94%,57%)]" />
+            <ArrowLeft className="w-4 h-4 text-[hsl(var(--primary))]" />
           ) : (
-            <Settings2 className="w-4 h-4 text-[hsl(22,94%,57%)]" />
+            <Settings2 className="w-4 h-4 text-[hsl(var(--primary))]" />
           )}
         </motion.div>
       </Button>
@@ -217,9 +260,7 @@ export default function LedgerOrb({
       <MoveLedger open={moveOpen} onOpenChange={setMoveOpen} ledgerId={ledgerId!} />
 
       {/* 🌀 Render active arc */}
-      {activeNest
-        ? renderArc(MENU_TREE[activeNest], 55)
-        : open && renderArc(ROOT_ACTIONS, 60)}
+      {activeNest ? renderArc(MENU_TREE[activeNest], 55) : open && renderArc(ROOT_ACTIONS, 60)}
     </div>
   );
 }
