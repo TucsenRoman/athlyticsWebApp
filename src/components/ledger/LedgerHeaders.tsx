@@ -1,3 +1,4 @@
+// src/components/ledger/LedgerHeaders.tsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,9 @@ import {
   Clock,
   Plus,
   Pin,
+  Funnel,
+  ArrowUpNarrowWide,
+  ArrowDownWideNarrow,
 } from "lucide-react";
 import {
   Dialog,
@@ -34,15 +38,6 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface LedgerHeadersProps {
-  ledgerId: string;
-  headers: any[];
-  reloadHeaders: () => Promise<void>;
-  pinnedColumns?: string[];
-  onTogglePin?: (id: string) => void;
-  pinMode?: boolean;
-}
 
 /* -------------------------------------------------------------------------- */
 /*                            HEADER CELL COMPONENT                           */
@@ -62,110 +57,117 @@ function HeaderCell({
   pinnedColumns = [],
   onTogglePin,
   pinMode = false,
+  onSort,
+  onFilter,
 }: any) {
   const Icon = typeIcons[header.type] || Type;
   const isPinned = pinnedColumns.includes(header.id);
   const pinnedIndex = pinnedColumns.indexOf(header.id);
-  const columnWidth = 150; // must match LedgerSheet
-  const leftOffset = pinnedIndex >= 0 ? 50 + pinnedIndex * columnWidth : null; // WHY IS THIS??
+  const columnWidth = 150;
+  const leftOffset = pinnedIndex >= 0 ? 50 + pinnedIndex * columnWidth : null;
+
+  // 🔶 Local dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
-    <motion.div
-      layout
-      transition={{ type: "spring", stiffness: 280, damping: 25 }}
-      className={`group relative overflow-visible w-full border-none px-2 py-1.5 flex items-center justify-between
-        ${isPinned ? "bg-gray-50 shadow-inner" : "bg-gray-100"}
-        ${pinMode ? "ring-2 ring-primary/40" : ""}
-        ${isPinned ? "z-10" : "z-0"}
-      `}
-      style={
-        isPinned
-          ? {
-              left: `${leftOffset}px`,
-              zIndex: 60,
-              background: "white",
-              boxShadow: "1px 0 0 rgba(0,0,0,0.08)",
-            }
-          : {}
-      }
-    >
-      {/* --- Left side: icon + name --- */}
-      <div
-        className="flex items-center gap-2 overflow-hidden select-none"
-        onClick={() => {
-          if (pinMode) onTogglePin?.(header.id);
+    <>
+      <motion.div
+        layout
+        transition={{ type: "spring", stiffness: 280, damping: 25 }}
+        className={`group relative overflow-visible w-full px-2 py-1.5 flex items-center justify-between
+          ${isPinned ? "bg-gray-50" : "bg-gray-100"}
+          ${pinMode ? "ring-2" : ""} z-10`}
+        style={{
+          left: isPinned ? `${leftOffset}px` : undefined,
+          zIndex: isPinned ? 60 : 0,
+          background: isPinned ? "#fff" : undefined,
+          border: "none",
+          boxShadow: "none",
+          borderRight: isPinned ? "1px solid rgba(0,0,0,0.05)" : "none",
         }}
       >
-        <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-        {isEditing ? (
-          <Input
-            value={editValue}
-            autoFocus
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={() => handleRename(header.id)}
-            onKeyDown={(e) => e.key === "Enter" && handleRename(header.id)}
-            className="h-7 text-sm px-1"
-          />
-        ) : (
-          <span
-            className="font-semibold text-sm truncate cursor-pointer"
-            onDoubleClick={() => {
-              if (!pinMode) {
-                setEditingId(header.id);
-                setEditValue(header.name);
-              }
-            }}
-          >
-            {header.name || String.fromCharCode(65 + index)}
-          </span>
-        )}
-      </div>
+        {/* Left: Icon + Label */}
+        <div className="flex items-center gap-2 overflow-hidden select-none">
+          <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
 
-      {/* --- Right side: pin + dropdown --- */}
-      <div className="flex items-center gap-1">
-        {/* 📌 Pin toggle */}
-        <motion.button
-          title={isPinned ? "Unpin column" : "Pin column"}
-          onClick={() => onTogglePin?.(header.id)}
-          className={`h-7 w-7 p-0 flex items-center justify-center rounded-md transition
-            ${
-              isPinned
-                ? "text-primary opacity-100"
-                : "text-muted-foreground hover:text-primary/80 " +
-                  (pinMode ? "opacity-100" : "opacity-0 group-hover:opacity-100")
-            }
-          `}
-          whileTap={{ scale: 0.9 }}
-        >
-          <motion.div
-            initial={false}
-            animate={{
-              rotate: isPinned ? 45 : 0,
-              scale: isPinned ? 1.05 : 1,
-            }}
-            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-          >
-            <Pin
-              className={`w-4 h-4 transition ${
-                isPinned ? "fill-[hsl(var(--primary))]" : ""
-              }`}
+          {(isPinned || pinMode) && (
+            <motion.button
+              onClick={(e) => {
+                e.stopPropagation();
+                onTogglePin?.(header.id);
+              }}
+              title={isPinned ? "Unpin column" : "Pin column"}
+              initial={{ opacity: 0, rotate: 0, scale: 0.9 }}
+              animate={{
+                opacity: 1,
+                rotate: isPinned ? 45 : 0,
+                scale: 1,
+                transition: { duration: 0.35 },
+              }}
+              whileHover={{ scale: 1.1, opacity: 0.9 }}
+              className="flex items-center justify-center cursor-pointer transition-colors"
+            >
+              <Pin
+                className={`w-3.5 h-3.5 ${
+                  isPinned
+                    ? "fill-[hsl(var(--primary))] text-[hsl(var(--primary))]"
+                    : "text-muted-foreground"
+                }`}
+              />
+            </motion.button>
+          )}
+
+          {isEditing ? (
+            <Input
+              value={editValue}
+              autoFocus
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={() => handleRename(header.id)}
+              onKeyDown={(e) => e.key === "Enter" && handleRename(header.id)}
+              className="h-7 text-sm px-1 border-none outline-none focus:ring-0"
             />
-          </motion.div>
-        </motion.button>
+          ) : (
+            <span
+              className="font-semibold text-sm truncate cursor-pointer"
+              onDoubleClick={() => {
+                if (!pinMode) {
+                  setEditingId(header.id);
+                  setEditValue(header.name);
+                }
+              }}
+            >
+              {header.name || String.fromCharCode(65 + index)}
+            </span>
+          )}
+        </div>
 
-        {/* ⚙️ Dropdown Menu — always visible */}
+        {/* Right: Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-primary/80 transition"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-primary transition"
             >
               <ChevronDown className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 border border-gray-200 shadow-md">
+            {/* ---------- SORT + FILTER ---------- */}
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                setDialogOpen(true);
+              }}
+            >
+              <Funnel className="w-4 h-4 mr-2" />
+              Sort & Filter...
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-gray-200" />
+
+            {/* ---------- TYPE SETTINGS ---------- */}
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <Settings2 className="w-4 h-4 mr-2" /> Edit column type
@@ -185,8 +187,9 @@ function HeaderCell({
               </DropdownMenuSubContent>
             </DropdownMenuSub>
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-gray-200" />
 
+            {/* ---------- COLUMN ACTIONS ---------- */}
             <DropdownMenuItem
               onClick={() => {
                 setEditingId(header.id);
@@ -196,6 +199,17 @@ function HeaderCell({
               <Pencil className="w-4 h-4 mr-2" /> Rename column
             </DropdownMenuItem>
 
+            <DropdownMenuItem onClick={() => onTogglePin?.(header.id)}>
+              <Pin className="w-4 h-4 mr-2" />
+              {isPinned ? "Unpin column" : "Pin column"}
+            </DropdownMenuItem>
+
+            <DropdownMenuItem onClick={() => addAt(index + 1)}>
+              <Plus className="w-4 h-4 mr-2" /> Add new column
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator className="bg-gray-200" />
+
             <DropdownMenuItem
               onClick={() => handleDelete(header.id, header.name)}
               className="text-red-600 focus:text-red-600"
@@ -204,17 +218,51 @@ function HeaderCell({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </div>
+      </motion.div>
 
-      {/* ➕ Add Column Button */}
-      <button
-        onClick={() => addAt(index + 1)}
-        className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-6 w-6 rounded-md bg-primary text-primary-foreground shadow opacity-0 group-hover:opacity-100 transition hover:bg-primary/80"
-        title="Add column here"
-      >
-        <Plus className="w-3 h-3" />
-      </button>
-    </motion.div>
+      {/* ---------- Sort & Filter Dialog ---------- */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Sort & Filter</DialogTitle>
+          </DialogHeader>
+
+          {/* Column Name Only */}
+          <div className="mt-3 mb-5 flex flex-col items-center text-center">
+            <h3 className="text-base font-semibold">{header.name}</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Choose a sort order or close to keep as-is
+            </p>
+          </div>
+
+          {/* Sort Buttons */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 justify-center gap-1"
+              onClick={() => onSort?.(header.id, "asc")}
+            >
+              <ArrowUpNarrowWide className="w-4 h-4" /> Ascending
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 justify-center gap-1"
+              onClick={() => onSort?.(header.id, "desc")}
+            >
+              <ArrowDownWideNarrow className="w-4 h-4" /> Descending
+            </Button>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button size="sm" onClick={() => setDialogOpen(false)}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -228,11 +276,11 @@ export default function LedgerHeaders({
   pinnedColumns = [],
   onTogglePin,
   pinMode = false,
-}: LedgerHeadersProps) {
+  onSort,
+  onFilter,
+}: any) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [newOptions, setNewOptions] = useState<string[]>([]);
-  const [openOptionsEditor, setOpenOptionsEditor] = useState<any | null>(null);
 
   const typeIcons: Record<string, React.ElementType> = {
     text: Type,
@@ -242,7 +290,6 @@ export default function LedgerHeaders({
     time: Clock,
   };
 
-  /* ---------------------------- Add Column ---------------------------- */
   const addAt = async (index: number) => {
     try {
       const { error } = await supabase.from("ledger_headers").insert([
@@ -252,28 +299,21 @@ export default function LedgerHeaders({
           type: "text",
           is_locked: false,
           options: [],
-          formula: null,
           order_index: index,
         },
       ]);
       if (error) throw error;
-
       toast.success("Column added");
       reloadHeaders();
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Failed to add column");
     }
   };
 
-  /* ---------------------------- Rename Column ---------------------------- */
   const handleRename = async (headerId: string) => {
     if (!editValue.trim()) return;
     try {
-      await supabase
-        .from("ledger_headers")
-        .update({ name: editValue })
-        .eq("id", headerId);
+      await supabase.from("ledger_headers").update({ name: editValue }).eq("id", headerId);
       toast.success("Header renamed");
       setEditingId(null);
       reloadHeaders();
@@ -282,7 +322,6 @@ export default function LedgerHeaders({
     }
   };
 
-  /* ---------------------------- Delete Column ---------------------------- */
   const handleDelete = async (headerId: string, name: string) => {
     if (!confirm(`Delete column "${name}"?`)) return;
     try {
@@ -294,7 +333,6 @@ export default function LedgerHeaders({
     }
   };
 
-  /* --------------------------- Change Type --------------------------- */
   const handleChangeType = async (headerId: string, type: string) => {
     try {
       await supabase.from("ledger_headers").update({ type }).eq("id", headerId);
@@ -305,7 +343,6 @@ export default function LedgerHeaders({
     }
   };
 
-  /* ----------------------------- RENDER ----------------------------- */
   return (
     <>
       {headers.map((h, i) => (
@@ -325,76 +362,10 @@ export default function LedgerHeaders({
           pinnedColumns={pinnedColumns}
           onTogglePin={onTogglePin}
           pinMode={pinMode}
+          onSort={onSort}
+          onFilter={onFilter}
         />
       ))}
-
-      {/* --- Dropdown Options Editor --- */}
-      <Dialog
-        open={!!openOptionsEditor}
-        onOpenChange={() => setOpenOptionsEditor(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Edit Options for {openOptionsEditor?.name || "Dropdown"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            {newOptions.map((opt, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Input
-                  value={opt}
-                  onChange={(e) => {
-                    const copy = [...newOptions];
-                    copy[i] = e.target.value;
-                    setNewOptions(copy);
-                  }}
-                  placeholder={`Option ${i + 1}`}
-                />
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={() =>
-                    setNewOptions((prev) => prev.filter((_, idx) => idx !== i))
-                  }
-                >
-                  ✕
-                </Button>
-              </div>
-            ))}
-            <Button
-              variant="outline"
-              onClick={() => setNewOptions([...newOptions, ""])}
-            >
-              + Add Option
-            </Button>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="secondary"
-              onClick={() => setOpenOptionsEditor(null)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                const options = newOptions.filter((o) => o.trim() !== "");
-                await supabase
-                  .from("ledger_headers")
-                  .update({ options })
-                  .eq("id", openOptionsEditor.id);
-                toast.success("Dropdown options updated");
-                setOpenOptionsEditor(null);
-                reloadHeaders();
-              }}
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

@@ -126,7 +126,7 @@ export default function LedgerView() {
   /* ------------------------------ Render ------------------------------ */
   return (
     <div className="flex-1 overflow-hidden pb-28">
-      {/* <LedgerToolbar ledgerId={ledgerId} title={title} setTitle={setTitle} /> */}
+      <LedgerToolbar ledgerId={ledgerId} title={title} setTitle={setTitle} />
 
       {/* Scroll wrapper */}
       <div
@@ -150,19 +150,9 @@ export default function LedgerView() {
           reloadHeaders={reloadHeaders}
           reloadEntries={reloadEntries}
         />
-
-        {/* Orange thumb overlay */}
-        <div
-          className="absolute right-[2px] top-0 w-[6px] rounded-full bg-[hsl(var(--primary))] z-50 transition-all"
-          style={{
-            height: `${thumb.height}px`,
-            transform: `translateY(${thumb.top}px)`,
-            opacity: entries.length > 10 ? 0.6 : 0,
-          }}
-        />
       </div>
 
-      {/* <LedgerFooter /> */}
+      <LedgerFooter />
     </div>
   );
 }

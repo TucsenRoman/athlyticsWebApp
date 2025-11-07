@@ -206,6 +206,7 @@ export type Database = {
           data: Json | null
           description: string | null
           icon: string;
+          favorite: boolean;
         }
         Insert: {
           id?: string
@@ -219,6 +220,7 @@ export type Database = {
           data?: Json | null
           description?: string | null
           icon: string;
+          favorite: boolean;
         }
         Update: {
           id?: string
@@ -232,6 +234,7 @@ export type Database = {
           data?: Json | null
           description?: string | null
           icon: string;
+          favorite: boolean;
         }
         Relationships: []
       },

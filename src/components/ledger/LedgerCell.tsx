@@ -9,10 +9,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { SquarePen } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { SquarePen, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// 🧱 DND Kit imports
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface LedgerCellProps {
   entryId: string;
@@ -21,28 +43,80 @@ interface LedgerCellProps {
   onChange: (val: any) => void;
 }
 
-export default function LedgerCell({
-  entryId,
-  header,
+/* -------------------------------------------------------------------------- */
+/*                              Sortable Item Row                             */
+/* -------------------------------------------------------------------------- */
+function SortableOption({
+  id,
   value,
-  onChange,
-}: LedgerCellProps) {
+  onEdit,
+  onDelete,
+}: {
+  id: string;
+  value: string;
+  onEdit: (val: string) => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id });
+
+  // 🧠 Only apply transform/transition when dragging
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? "none" : transition,
+    zIndex: isDragging ? 999 : "auto",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-2 px-2 py-1.5 rounded-md bg-muted/20 ${
+        isDragging ? "shadow-lg scale-[1.02]" : ""
+      }`}
+    >
+      <GripVertical
+        {...attributes}
+        {...listeners}
+        className="w-4 h-4 cursor-grab text-muted-foreground"
+      />
+      <Input
+        value={value}
+        onChange={(e) => onEdit(e.target.value)}
+        placeholder="Option"
+        className="flex-1 h-7"
+      />
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={onDelete}
+        className="text-muted-foreground hover:text-red-500"
+      >
+        ✕
+      </Button>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Ledger Cell Main                              */
+/* -------------------------------------------------------------------------- */
+function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
   const [localValue, setLocalValue] = useState(value ?? "");
   const [openOptionsEditor, setOpenOptionsEditor] = useState(false);
   const [options, setOptions] = useState<string[]>([]);
   const [editedOptions, setEditedOptions] = useState<string[]>([]);
 
-  // Keep local value in sync with external updates
+  /* ---------------------------- Sync External Value ---------------------------- */
   useEffect(() => {
     setLocalValue(value ?? "");
   }, [value, header.id]);
 
-  // Parse dropdown options safely
+  /* ---------------------------- Parse Dropdown Options ---------------------------- */
   useEffect(() => {
     try {
       const parsed =
-        Array.isArray(header.options) ||
-        typeof header.options === "object"
+        Array.isArray(header.options) || typeof header.options === "object"
           ? header.options
           : JSON.parse(header.options || "[]");
       setOptions(parsed);
@@ -53,12 +127,7 @@ export default function LedgerCell({
     }
   }, [header]);
 
-  const handleChange = (newVal: any) => {
-    setLocalValue(newVal);
-    onChange(newVal);
-  };
-
-  // 💾 Save edited options to Supabase
+  /* ---------------------------- Save Dropdown Options ---------------------------- */
   const handleSaveOptions = async () => {
     const cleanOptions = editedOptions.filter((o) => o.trim() !== "");
     try {
@@ -75,11 +144,26 @@ export default function LedgerCell({
     }
   };
 
+  /* ---------------------------- Drag & Drop Setup ---------------------------- */
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = editedOptions.findIndex((o, i) => `${i}` === active.id);
+    const newIndex = editedOptions.findIndex((o, i) => `${i}` === over.id);
+
+    setEditedOptions((prev) => arrayMove(prev, oldIndex, newIndex));
+  };
+
+  /* ---------------------------- Render Types ---------------------------- */
+
   // 🧭 Dropdown cell
   if (header.type === "dropdown") {
     return (
       <>
-        <Select value={localValue ?? ""} onValueChange={handleChange}>
+        <Select value={localValue ?? ""} onValueChange={onChange}>
           <SelectTrigger className="h-7 text-sm bg-transparent border-none shadow-none focus:ring-0">
             <SelectValue placeholder="Select..." />
           </SelectTrigger>
@@ -91,12 +175,8 @@ export default function LedgerCell({
               </SelectItem>
             ))}
 
-            {/* Divider */}
-            {options.length > 0 && (
-              <div className="border-t my-1 border-border" />
-            )}
+            {options.length > 0 && <div className="border-t my-1 border-border" />}
 
-            {/* Manage dropdown button */}
             <div className="flex items-center justify-center py-1">
               <Button
                 variant="ghost"
@@ -120,41 +200,47 @@ export default function LedgerCell({
               </DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-2">
-              {editedOptions.map((opt, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    value={opt}
-                    onChange={(e) => {
-                      const copy = [...editedOptions];
-                      copy[i] = e.target.value;
-                      setEditedOptions(copy);
-                    }}
-                    placeholder={`Option ${i + 1}`}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() =>
-                      setEditedOptions((prev) =>
-                        prev.filter((_, idx) => idx !== i)
-                      )
-                    }
-                  >
-                    ✕
-                  </Button>
-                </div>
-              ))}
-
-              <Button
-                variant="outline"
-                onClick={() => setEditedOptions([...editedOptions, ""])}
+            {/* DnD reorderable list */}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={editedOptions.map((_, i) => `${i}`)}
+                strategy={verticalListSortingStrategy}
               >
-                + Add Option
-              </Button>
-            </div>
+                <div className="space-y-2">
+                  {editedOptions.map((opt, i) => (
+                    <SortableOption
+                      key={i}
+                      id={`${i}`}
+                      value={opt}
+                      onEdit={(val) => {
+                        const copy = [...editedOptions];
+                        copy[i] = val;
+                        setEditedOptions(copy);
+                      }}
+                      onDelete={() =>
+                        setEditedOptions((prev) =>
+                          prev.filter((_, idx) => idx !== i)
+                        )
+                      }
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
 
-            <DialogFooter>
+            <Button
+              variant="outline"
+              className="mt-3"
+              onClick={() => setEditedOptions([...editedOptions, ""])}
+            >
+              + Add Option
+            </Button>
+
+            <DialogFooter className="pt-3">
               <Button
                 variant="secondary"
                 onClick={() => setOpenOptionsEditor(false)}
@@ -176,14 +262,14 @@ export default function LedgerCell({
         <input
           type="checkbox"
           checked={!!localValue}
-          onChange={(e) => handleChange(e.target.checked)}
+          onChange={(e) => onChange(e.target.checked)}
           className="w-4 h-4 cursor-pointer"
         />
       </div>
     );
   }
 
-  // ✏️ Text / number / time input cell
+  // ✏️ Text / number / time input cell — with blur/enter save
   return (
     <Input
       type={
@@ -194,8 +280,18 @@ export default function LedgerCell({
           : "text"
       }
       value={localValue ?? ""}
-      onChange={(e) => handleChange(e.target.value)}
+      onChange={(e) => setLocalValue(e.target.value)} // only local typing
+      onBlur={() => {
+        if (localValue !== value) onChange(localValue); // save on blur
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && localValue !== value) {
+          e.currentTarget.blur(); // triggers onBlur save
+        }
+      }}
       className="h-7 text-sm w-full border-none bg-transparent focus:ring-0 focus:outline-none"
     />
   );
 }
+
+export default React.memo(LedgerCell);
