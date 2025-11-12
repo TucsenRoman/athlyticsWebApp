@@ -65,6 +65,7 @@ export default function MoveLedger({
       const updatePayload: TablesUpdate<"ledgers"> = {
         program_id: selectedProgram,
         icon: "", // ✅ Required to satisfy Supabase type
+        favorite: null, //COME BACK TO THIS AND ACTUALLY FIX IT.
       };
 
       const { error } = await supabase

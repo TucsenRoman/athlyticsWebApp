@@ -1,3 +1,4 @@
+// src/components/ledger/LedgerMenu.tsx
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -24,11 +25,12 @@ import {
   FileSpreadsheet,
   Trash2,
   XCircle,
+  Save,
 } from "lucide-react";
 import CopyLedger from "./CopyLedger";
 import MoveLedger from "./MoveLedger";
 
-interface LedgerOrbProps {
+interface LedgerMenu {
   ledgerId: string;
   onExportCSV: () => void;
   onPrint: () => void;
@@ -39,7 +41,7 @@ interface LedgerOrbProps {
   onTogglePinMode?: () => void;
 }
 
-export default function LedgerOrb({
+export default function LedgerMenu({
   ledgerId,
   onExportCSV,
   onPrint,
@@ -48,7 +50,7 @@ export default function LedgerOrb({
   onExportPNG,
   onExportJSON,
   onTogglePinMode,
-}: LedgerOrbProps) {
+}: LedgerMenu) {
   const [open, setOpen] = useState(false);
   const [activeNest, setActiveNest] = useState<string | null>(null);
   const [copyOpen, setCopyOpen] = useState(false);
@@ -88,25 +90,14 @@ export default function LedgerOrb({
         action: () => setMoveOpen(true),
         closeOnClick: true,
       },
+      {
+        icon: <Save style={iconStyle} />,
+        label: "Save as Template",
+        action: () => alert("Save as template feature coming soon."),
+        closeOnClick: true,
+      },
     ],
     View: [
-      {
-        icon: (
-          <Pin
-            style={{
-              ...iconStyle,
-              fill: pinActive ? "hsl(var(--primary))" : "none",
-              color: pinActive ? "hsl(var(--primary))" : "currentColor",
-            }}
-          />
-        ),
-        label: pinActive ? "Exit Pin Mode" : "Pin Columns",
-        action: () => {
-          setPinActive(!pinActive);
-          onTogglePinMode?.();
-        },
-        closeOnClick: false,
-      },
       {
         icon: <ScanEye style={iconStyle} />,
         label: "Capture View",

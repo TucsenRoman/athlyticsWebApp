@@ -1,4 +1,3 @@
-// src/components/ledger/LedgerCell.tsx
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -44,7 +43,7 @@ interface LedgerCellProps {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Sortable Item Row                             */
+/*                              Sortable Option Row                            */
 /* -------------------------------------------------------------------------- */
 function SortableOption({
   id,
@@ -60,7 +59,6 @@ function SortableOption({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
 
-  // 🧠 Only apply transform/transition when dragging
   const style = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? "none" : transition,
@@ -110,15 +108,26 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
   /* ---------------------------- Sync External Value ---------------------------- */
   useEffect(() => {
     setLocalValue(value ?? "");
-  }, [value, header.id]);
+  }, [value, header?.id]);
 
   /* ---------------------------- Parse Dropdown Options ---------------------------- */
   useEffect(() => {
     try {
-      const parsed =
-        Array.isArray(header.options) || typeof header.options === "object"
-          ? header.options
-          : JSON.parse(header.options || "[]");
+      if (!header) {
+        setOptions([]);
+        setEditedOptions([]);
+        return;
+      }
+
+      let parsed: any[] = [];
+
+      if (Array.isArray(header.options)) parsed = header.options;
+      else if (typeof header.options === "string" && header.options.trim() !== "") {
+        parsed = JSON.parse(header.options);
+      }
+
+      if (!Array.isArray(parsed)) parsed = [];
+
       setOptions(parsed);
       setEditedOptions(parsed);
     } catch {
@@ -129,17 +138,18 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
 
   /* ---------------------------- Save Dropdown Options ---------------------------- */
   const handleSaveOptions = async () => {
-    const cleanOptions = editedOptions.filter((o) => o.trim() !== "");
+    const cleanOptions = (editedOptions ?? []).filter((o) => o.trim() !== "");
     try {
-      await supabase
+      const { error } = await supabase
         .from("ledger_headers")
         .update({ options: cleanOptions })
         .eq("id", header.id);
+      if (error) throw error;
       toast.success("Dropdown options updated");
       setOptions(cleanOptions);
       setOpenOptionsEditor(false);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Failed to update options:", err);
       toast.error("Failed to update options");
     }
   };
@@ -151,16 +161,16 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = editedOptions.findIndex((o, i) => `${i}` === active.id);
-    const newIndex = editedOptions.findIndex((o, i) => `${i}` === over.id);
+    const oldIndex = (editedOptions ?? []).findIndex((_, i) => `${i}` === active.id);
+    const newIndex = (editedOptions ?? []).findIndex((_, i) => `${i}` === over.id);
 
-    setEditedOptions((prev) => arrayMove(prev, oldIndex, newIndex));
+    setEditedOptions((prev) => arrayMove(prev ?? [], oldIndex, newIndex));
   };
 
   /* ---------------------------- Render Types ---------------------------- */
 
   // 🧭 Dropdown cell
-  if (header.type === "dropdown") {
+  if (header?.type === "dropdown") {
     return (
       <>
         <Select value={localValue ?? ""} onValueChange={onChange}>
@@ -169,13 +179,15 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
           </SelectTrigger>
 
           <SelectContent>
-            {options.map((opt, i) => (
+            {(options ?? []).map((opt, i) => (
               <SelectItem key={i} value={opt}>
                 {opt}
               </SelectItem>
             ))}
 
-            {options.length > 0 && <div className="border-t my-1 border-border" />}
+            {(options ?? []).length > 0 && (
+              <div className="border-t my-1 border-border" />
+            )}
 
             <div className="flex items-center justify-center py-1">
               <Button
@@ -196,34 +208,33 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                Manage Options for {header.name || "Dropdown"}
+                Manage Options for {header?.name || "Dropdown"}
               </DialogTitle>
             </DialogHeader>
 
-            {/* DnD reorderable list */}
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
-                items={editedOptions.map((_, i) => `${i}`)}
+                items={(editedOptions ?? []).map((_, i) => `${i}`)}
                 strategy={verticalListSortingStrategy}
               >
                 <div className="space-y-2">
-                  {editedOptions.map((opt, i) => (
+                  {(editedOptions ?? []).map((opt, i) => (
                     <SortableOption
                       key={i}
                       id={`${i}`}
                       value={opt}
                       onEdit={(val) => {
-                        const copy = [...editedOptions];
+                        const copy = [...(editedOptions ?? [])];
                         copy[i] = val;
                         setEditedOptions(copy);
                       }}
                       onDelete={() =>
                         setEditedOptions((prev) =>
-                          prev.filter((_, idx) => idx !== i)
+                          (prev ?? []).filter((_, idx) => idx !== i)
                         )
                       }
                     />
@@ -235,7 +246,7 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
             <Button
               variant="outline"
               className="mt-3"
-              onClick={() => setEditedOptions([...editedOptions, ""])}
+              onClick={() => setEditedOptions([...(editedOptions ?? []), ""])}
             >
               + Add Option
             </Button>
@@ -256,7 +267,7 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
   }
 
   // ☑️ Checkbox cell
-  if (header.type === "checkbox") {
+  if (header?.type === "checkbox") {
     return (
       <div className="flex justify-center items-center">
         <input
@@ -269,25 +280,23 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
     );
   }
 
-  // ✏️ Text / number / time input cell — with blur/enter save
+  // ✏️ Text / number / time cell
   return (
     <Input
       type={
-        header.type === "number"
+        header?.type === "number"
           ? "number"
-          : header.type === "time"
+          : header?.type === "time"
           ? "time"
           : "text"
       }
       value={localValue ?? ""}
-      onChange={(e) => setLocalValue(e.target.value)} // only local typing
+      onChange={(e) => setLocalValue(e.target.value)}
       onBlur={() => {
-        if (localValue !== value) onChange(localValue); // save on blur
+        if (localValue !== value) onChange(localValue);
       }}
       onKeyDown={(e) => {
-        if (e.key === "Enter" && localValue !== value) {
-          e.currentTarget.blur(); // triggers onBlur save
-        }
+        if (e.key === "Enter" && localValue !== value) e.currentTarget.blur();
       }}
       className="h-7 text-sm w-full border-none bg-transparent focus:ring-0 focus:outline-none"
     />

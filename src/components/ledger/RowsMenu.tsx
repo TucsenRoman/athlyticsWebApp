@@ -1,4 +1,4 @@
-// src/components/ledger/RowsUtilityOrb.tsx
+// src/components/ledger/RowsMenu.tsx
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,13 @@ import {
   Copy,
   Pin,
   SquareMousePointer,
-  X,
+  CircleX,
   CopyPlus,
   Delete,
+  CircleChevronLeft,
 } from "lucide-react";
 
-interface RowsUtilityOrbProps {
+interface RowsMenuProps {
   ledgerId: string;
   onAddRow: () => void;
   onBulkAddRows: (count: number) => void;
@@ -29,7 +30,7 @@ interface RowsUtilityOrbProps {
   setOpen?: (val: boolean) => void;
 }
 
-export default function RowsUtilityOrb({
+export default function RowsMenu({
   ledgerId,
   onAddRow,
   onBulkAddRows,
@@ -42,7 +43,7 @@ export default function RowsUtilityOrb({
   allSelected,
   open,
   setOpen,
-}: RowsUtilityOrbProps) {
+}: RowsMenuProps) {
   const [submenu, setSubmenu] = useState<"bulk" | null>(null);
   const [bulkCount, setBulkCount] = useState(1);
   const ICON_SIZE = 18;
@@ -72,12 +73,11 @@ export default function RowsUtilityOrb({
         destructive: true,
       },
       {
-        icon: <X size={ICON_SIZE} />,
+        icon: <CircleChevronLeft size={ICON_SIZE} />,
         label: "Exit Select Mode",
         action: () => {
           onExitBulk?.();
           setSubmenu(null);
-          setOpen?.(false);
         },
       },
     ],
@@ -106,7 +106,7 @@ export default function RowsUtilityOrb({
       action: onBulkMode,
     },
     {
-      icon: <X size={ICON_SIZE} />,
+      icon: <CircleX size={ICON_SIZE} />,
       label: "Exit Menu",
       action: () => {
         setSubmenu(null);
@@ -136,16 +136,18 @@ export default function RowsUtilityOrb({
             title={a.label}
             onClick={() => {
               a.action?.();
-              if (a.label.includes("Exit")) {
+              if (a.label === "Exit Menu") {
                 setSubmenu(null);
                 setOpen?.(false);
-                setBulkCount(1); // ✅ reset count on exit
+                setBulkCount(1);
+              } else if (a.label.includes("Exit")) {
+                setSubmenu(null);
               }
             }}
             className={`group h-7 w-7 flex items-center justify-center rounded-full shadow-md transition-all duration-200
               ${
                 a.destructive
-                  ? "bg-white hover:bg-[#ff4d4d80]"
+                  ? "bg-white hover:bg-[#f39ca3]"
                   : "bg-white hover:bg-transparent"
               }`}
           >
@@ -178,8 +180,10 @@ export default function RowsUtilityOrb({
           type="number"
           min={1}
           value={bulkCount}
-          onChange={(e) => setBulkCount(Math.max(1, parseInt(e.target.value) || 1))}
-          className="w-12 text-sm text-center rounded-md border border-gray-300 px-1 py-[2px] bg-white shadow-sm focus:ring-1 focus:ring-[hsl(var(--primary))] focus:outline-none"
+          onChange={(e) =>
+            setBulkCount(Math.max(1, parseInt(e.target.value) || 1))
+          }
+          className="w-14 text-sm text-center rounded-md border border-gray-300 px-1 py-[2px] bg-white shadow-sm focus:ring-1 focus:ring-[hsl(var(--primary))] focus:outline-none"
         />
         <Button
           size="icon"
@@ -187,11 +191,11 @@ export default function RowsUtilityOrb({
           onClick={() => {
             setSubmenu(null);
             setOpen?.(false);
-            setBulkCount(1); // ✅ reset on exit
+            setBulkCount(1);
           }}
           className="h-7 w-7 p-0 rounded-full bg-white hover:bg-[hsl(var(--primary))/0.15)]"
         >
-          <X className="text-gray-500" size={16} />
+          <CircleX className="text-gray-500" size={16} />
         </Button>
       </motion.div>
     </AnimatePresence>
@@ -208,16 +212,28 @@ export default function RowsUtilityOrb({
         variant="ghost"
         size="icon"
         onClick={() => {
+          if (bulkModeActive) {
+            onSelectAll?.();
+            return;
+          }
+
           if (submenu === "bulk") {
-            onBulkAddRows(bulkCount);
+            // ✅ confirm bulk add
+            onBulkAddRows?.(bulkCount);
             setSubmenu(null);
             setOpen?.(false);
-            setBulkCount(1); // ✅ reset on add
-          } else if (!bulkModeActive) {
-            setOpen?.(!open);
-          } else {
-            onSelectAll?.();
+            setBulkCount(1);
+            return;
           }
+
+          if (open) {
+            // ✅ single add
+            onAddRow?.();
+            setOpen?.(false);
+            return;
+          }
+
+          setOpen?.(true);
         }}
         className={`h-8 w-8 p-0 rounded-full transition-all duration-300 relative ${
           open || submenu === "bulk"
@@ -232,13 +248,13 @@ export default function RowsUtilityOrb({
             bulkModeActive
               ? "checkbox"
               : submenu === "bulk"
-              ? "rows-to-plus"
+              ? "copyplus"
               : open
-              ? "rows-to-plus"
+              ? "plus"
               : "rows"
           }
           animate={{
-            rotate: open || submenu === "bulk" ? 90 : 0,
+            rotate: submenu === "bulk" ? 0 : open ? 90 : 0,
             opacity: 1,
           }}
           initial={{ rotate: 0, opacity: 0 }}
@@ -247,11 +263,16 @@ export default function RowsUtilityOrb({
         >
           {bulkModeActive ? (
             <div
-              className={`h-[14px] w-[14px] rounded-[4px] border-[1.5px] ${
-                allSelected
-                  ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]"
-                  : "border-[hsl(var(--muted-foreground))] bg-transparent"
-              } flex items-center justify-center`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectAll?.();
+              }}
+              className={`h-[14px] w-[14px] rounded-[4px] border-[1.5px] cursor-pointer flex items-center justify-center
+                ${
+                  allSelected
+                    ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]"
+                    : "border-[hsl(var(--muted-foreground))] bg-transparent"
+                }`}
             >
               {allSelected && (
                 <motion.div
@@ -263,11 +284,17 @@ export default function RowsUtilityOrb({
                 />
               )}
             </div>
-          ) : open || submenu === "bulk" ? (
-            <Plus
+          ) : submenu === "bulk" ? (
+            <CopyPlus
               className="text-[hsl(var(--primary))] cursor-pointer hover:scale-110 transition-transform"
               size={20}
-              aria-label="Add Row(s)"
+              aria-label="Confirm Bulk Add"
+            />
+          ) : open ? (
+            <Plus
+              className="text-[hsl(var(--primary))] transition-transform"
+              size={20}
+              aria-label="Add Single Row"
             />
           ) : (
             <Rows3

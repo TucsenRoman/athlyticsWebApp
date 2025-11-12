@@ -125,7 +125,7 @@ export default function LedgerView() {
 
   /* ------------------------------ Render ------------------------------ */
   return (
-    <div className="flex-1 overflow-hidden pb-28">
+    <div className="flex-1 overflow-hidden">
       <LedgerToolbar ledgerId={ledgerId} title={title} setTitle={setTitle} />
 
       {/* Scroll wrapper */}
@@ -151,8 +151,7 @@ export default function LedgerView() {
           reloadEntries={reloadEntries}
         />
       </div>
-
-      <LedgerFooter />
+      {/* <LedgerFooter /> */}
     </div>
   );
 }

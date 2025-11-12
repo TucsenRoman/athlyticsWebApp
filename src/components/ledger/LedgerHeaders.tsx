@@ -64,7 +64,7 @@ function HeaderCell({
   const isPinned = pinnedColumns.includes(header.id);
   const pinnedIndex = pinnedColumns.indexOf(header.id);
   const columnWidth = 150;
-  const leftOffset = pinnedIndex >= 0 ? 50 + pinnedIndex * columnWidth : null;
+  // const leftOffset = pinnedIndex >= 0 ? 50 + pinnedIndex * columnWidth : null;
 
   // 🔶 Local dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -74,16 +74,14 @@ function HeaderCell({
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 280, damping: 25 }}
-        className={`group relative overflow-visible w-full px-2 py-1.5 flex items-center justify-between
-          ${isPinned ? "bg-gray-50" : "bg-gray-100"}
-          ${pinMode ? "ring-2" : ""} z-10`}
+        className={`group relative overflow-visible h-full w-full px-2 flex items-center justify-between
+          ${pinMode ? "ring-2" : ""} z-10 rounded-t-[20px]`}
         style={{
-          left: isPinned ? `${leftOffset}px` : undefined,
+          // left: isPinned ? `${leftOffset}px` : undefined,
           zIndex: isPinned ? 60 : 0,
           background: isPinned ? "#fff" : undefined,
           border: "none",
           boxShadow: "none",
-          borderRight: isPinned ? "1px solid rgba(0,0,0,0.05)" : "none",
         }}
       >
         {/* Left: Icon + Label */}
