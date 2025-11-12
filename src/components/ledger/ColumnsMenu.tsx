@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import RouteSetup from "./RouteSetup";
 import {
   Columns3,
   Plus,
@@ -23,11 +24,12 @@ interface ColumnsMenuProps {
   onDeleteSelected?: () => void;
   onDeleteLastColumn?: () => void;
   onExitBulk?: () => void;
-  onTogglePinMode?: () => void; // ⬅️ added hook
+  onTogglePinMode?: () => void;
   bulkModeActive?: boolean;
   allSelected?: boolean;
   open?: boolean;
   setOpen?: (val: boolean) => void;
+  reloadHeaders?: () => void;
 }
 
 export default function ColumnsMenu({
@@ -43,11 +45,14 @@ export default function ColumnsMenu({
   allSelected,
   open,
   setOpen,
+  reloadHeaders,
 }: ColumnsMenuProps) {
   const [submenu, setSubmenu] = useState<"routes" | null>(null);
   const [pinActive, setPinActive] = useState(false); // ⬅️ new
   const ICON_SIZE = 18;
   const [returningToRoot, setReturningToRoot] = useState(false);
+  const [routeDialogOpen, setRouteDialogOpen] = useState(false);
+  const [activeColumn, setActiveColumn] = useState<any>(null);
 
   /* -------------------- MENU TREE -------------------- */
   const MENU_TREE = {
@@ -104,8 +109,8 @@ export default function ColumnsMenu({
     // },
     {
       icon: <Route size={ICON_SIZE} />,
-      label: "Routes (coming soon)",
-      action: () => setSubmenu("routes"),
+      label: "Create Route",
+      action: () => setRouteDialogOpen(true),
     },
     {
       icon: (
@@ -209,9 +214,6 @@ export default function ColumnsMenu({
         transition={{ duration: 0.25 }}
         className="absolute left-0 bottom-1 translate-x-[-100%] flex flex-col items-center gap-2 z-[10001]"
       >
-        <div className="text-xs text-gray-600 bg-white border border-gray-200 rounded-md px-3 py-1 shadow-sm">
-          Routes interface coming soon
-        </div>
         <Button
           size="icon"
           variant="ghost"
@@ -311,10 +313,18 @@ export default function ColumnsMenu({
 
       {/* Expansions */}
       {bulkModeActive
-        ? renderLinear(MENU_TREE["Select"], 54)
+        ? renderLinear(MENU_TREE["Select"], 43) // 43 for 4 btns and 54 for 5 btns
         : submenu === "routes"
         ? renderRoutesShell()
         : open && renderLinear(ROOT_ACTIONS, 32)}
+        
+      <RouteSetup
+        currentLedgerId={ledgerId}
+        open={routeDialogOpen}
+        onClose={() => setRouteDialogOpen(false)}
+        column={activeColumn}
+        onRouted={reloadHeaders}
+      />
     </div>
   );
 }

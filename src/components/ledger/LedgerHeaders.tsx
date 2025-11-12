@@ -1,8 +1,9 @@
-// src/components/ledger/LedgerHeaders.tsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import RouteInfo from "./RouteInfo";
+import RouteSetup from "./RouteSetup";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -28,6 +29,7 @@ import {
   Funnel,
   ArrowUpNarrowWide,
   ArrowDownWideNarrow,
+  Route,
 } from "lucide-react";
 import {
   Dialog,
@@ -58,33 +60,34 @@ function HeaderCell({
   onTogglePin,
   pinMode = false,
   onSort,
-  onFilter,
+  reloadHeaders,
+  ledgerId,
 }: any) {
-  const Icon = typeIcons[header.type] || Type;
-  const isPinned = pinnedColumns.includes(header.id);
-  const pinnedIndex = pinnedColumns.indexOf(header.id);
-  const columnWidth = 150;
-  // const leftOffset = pinnedIndex >= 0 ? 50 + pinnedIndex * columnWidth : null;
+  const Icon = typeIcons?.[header?.type] || Type;
+  const isPinned = pinnedColumns?.includes(header?.id);
 
-  // 🔶 Local dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [routeSetupOpen, setRouteSetupOpen] = useState(false);
+  const [routeInfoOpen, setRouteInfoOpen] = useState(false);
+  const [activeColumn, setActiveColumn] = useState<any>(null);
+
+  const isPrimary = header?.is_routed && !header?.source_ledger_id;
+  const isSecondary = header?.is_routed && !!header?.source_ledger_id;
 
   return (
     <>
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 280, damping: 25 }}
-        className={`group relative overflow-visible h-full w-full px-2 flex items-center justify-between
-          ${pinMode ? "ring-2" : ""} z-10 rounded-t-[20px]`}
+        className={`group relative overflow-visible h-full w-full px-2 flex gap-[20px] ${
+          pinMode ? "ring-2" : ""
+        } z-10 rounded-t-[20px]`}
         style={{
-          // left: isPinned ? `${leftOffset}px` : undefined,
           zIndex: isPinned ? 60 : 0,
           background: isPinned ? "#fff" : undefined,
-          border: "none",
-          boxShadow: "none",
         }}
       >
-        {/* Left: Icon + Label */}
+        {/* Left Side — Icon + Name */}
         <div className="flex items-center gap-2 overflow-hidden select-none">
           <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
 
@@ -92,7 +95,7 @@ function HeaderCell({
             <motion.button
               onClick={(e) => {
                 e.stopPropagation();
-                onTogglePin?.(header.id);
+                onTogglePin?.(header?.id);
               }}
               title={isPinned ? "Unpin column" : "Pin column"}
               initial={{ opacity: 0, rotate: 0, scale: 0.9 }}
@@ -100,7 +103,6 @@ function HeaderCell({
                 opacity: 1,
                 rotate: isPinned ? 45 : 0,
                 scale: 1,
-                transition: { duration: 0.35 },
               }}
               whileHover={{ scale: 1.1, opacity: 0.9 }}
               className="flex items-center justify-center cursor-pointer transition-colors"
@@ -120,8 +122,8 @@ function HeaderCell({
               value={editValue}
               autoFocus
               onChange={(e) => setEditValue(e.target.value)}
-              onBlur={() => handleRename(header.id)}
-              onKeyDown={(e) => e.key === "Enter" && handleRename(header.id)}
+              onBlur={() => handleRename?.(header?.id)}
+              onKeyDown={(e) => e.key === "Enter" && handleRename?.(header?.id)}
               className="h-7 text-sm px-1 border-none outline-none focus:ring-0"
             />
           ) : (
@@ -129,93 +131,128 @@ function HeaderCell({
               className="font-semibold text-sm truncate cursor-pointer"
               onDoubleClick={() => {
                 if (!pinMode) {
-                  setEditingId(header.id);
-                  setEditValue(header.name);
+                  setEditingId?.(header?.id);
+                  setEditValue?.(header?.name);
                 }
               }}
             >
-              {header.name || String.fromCharCode(65 + index)}
+              {header?.name || `Column ${index + 1}`}
             </span>
           )}
         </div>
 
-        {/* Right: Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-primary transition"
-            >
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent align="end" className="w-56 border border-gray-200 shadow-md">
-            {/* ---------- SORT + FILTER ---------- */}
-            <DropdownMenuItem
+        {/* Right Side — Route Icon (if routed) + Dropdown */}
+        <div className="flex items-center gap-1 pr-[3px] text-muted-foreground">
+          {header?.is_routed && (
+            <Route
+              size={14}
+              strokeWidth={2}
               onClick={(e) => {
                 e.stopPropagation();
-                setDialogOpen(true);
+                setActiveColumn(header);
+                setRouteInfoOpen(true);
               }}
+              className={`cursor-pointer opacity-80 hover:opacity-100 text-[hsl(var(--secondary))]`}
+            />
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-primary transition"
+              >
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              align="end"
+              className="w-56 border border-gray-200 shadow-md"
             >
-              <Funnel className="w-4 h-4 mr-2" />
-              Sort & Filter...
-            </DropdownMenuItem>
+              {/* ---------- SORT + FILTER ---------- */}
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDialogOpen(true);
+                }}
+              >
+                <Funnel className="w-4 h-4 mr-2" />
+                Sort & Filter...
+              </DropdownMenuItem>
 
-            <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuSeparator className="bg-gray-200" />
 
-            {/* ---------- TYPE SETTINGS ---------- */}
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>
-                <Settings2 className="w-4 h-4 mr-2" /> Edit column type
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                {Object.keys(typeIcons).map((type) => {
-                  const TypeIcon = typeIcons[type];
-                  return (
-                    <DropdownMenuItem
-                      key={type}
-                      onClick={() => handleChangeType(header.id, type)}
-                    >
-                      <TypeIcon className="w-4 h-4 mr-2" /> {type}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
+              {/* ---------- TYPE SETTINGS ---------- */}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Settings2 className="w-4 h-4 mr-2" /> Edit column type
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {Object.keys(typeIcons || {}).map((type) => {
+                    const TypeIcon = typeIcons[type];
+                    return (
+                      <DropdownMenuItem
+                        key={type}
+                        onClick={() =>
+                          handleChangeType?.(header?.id, type)
+                        }
+                      >
+                        <TypeIcon className="w-4 h-4 mr-2" /> {type}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 
-            <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuSeparator className="bg-gray-200" />
 
-            {/* ---------- COLUMN ACTIONS ---------- */}
-            <DropdownMenuItem
-              onClick={() => {
-                setEditingId(header.id);
-                setEditValue(header.name);
-              }}
-            >
-              <Pencil className="w-4 h-4 mr-2" /> Rename column
-            </DropdownMenuItem>
+              {/* 🧩 Route Setup — Only if NOT routed */}
+              {!header?.is_routed && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setActiveColumn(header);
+                      setRouteSetupOpen(true);
+                    }}
+                  >
+                    <Route className="w-4 h-4 mr-2" /> Route Column
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-200" />
+                </>
+              )}
 
-            <DropdownMenuItem onClick={() => onTogglePin?.(header.id)}>
-              <Pin className="w-4 h-4 mr-2" />
-              {isPinned ? "Unpin column" : "Pin column"}
-            </DropdownMenuItem>
+              {/* ---------- COLUMN ACTIONS ---------- */}
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditingId?.(header?.id);
+                  setEditValue?.(header?.name);
+                }}
+              >
+                <Pencil className="w-4 h-4 mr-2" /> Rename column
+              </DropdownMenuItem>
 
-            <DropdownMenuItem onClick={() => addAt(index + 1)}>
-              <Plus className="w-4 h-4 mr-2" /> Add new column
-            </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onTogglePin?.(header?.id)}>
+                <Pin className="w-4 h-4 mr-2" />
+                {isPinned ? "Unpin column" : "Pin column"}
+              </DropdownMenuItem>
 
-            <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuItem onClick={() => addAt?.(index + 1)}>
+                <Plus className="w-4 h-4 mr-2" /> Add new column
+              </DropdownMenuItem>
 
-            <DropdownMenuItem
-              onClick={() => handleDelete(header.id, header.name)}
-              className="text-red-600 focus:text-red-600"
-            >
-              <Trash2 className="w-4 h-4 mr-2" /> Delete column
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuSeparator className="bg-gray-200" />
+
+              <DropdownMenuItem
+                onClick={() => handleDelete?.(header?.id, header?.name)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash2 className="w-4 h-4 mr-2" /> Delete column
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </motion.div>
 
       {/* ---------- Sort & Filter Dialog ---------- */}
@@ -225,21 +262,19 @@ function HeaderCell({
             <DialogTitle>Sort & Filter</DialogTitle>
           </DialogHeader>
 
-          {/* Column Name Only */}
           <div className="mt-3 mb-5 flex flex-col items-center text-center">
-            <h3 className="text-base font-semibold">{header.name}</h3>
+            <h3 className="text-base font-semibold">{header?.name}</h3>
             <p className="text-xs text-muted-foreground mt-1">
               Choose a sort order or close to keep as-is
             </p>
           </div>
 
-          {/* Sort Buttons */}
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               className="flex-1 justify-center gap-1"
-              onClick={() => onSort?.(header.id, "asc")}
+              onClick={() => onSort?.(header?.id, "asc")}
             >
               <ArrowUpNarrowWide className="w-4 h-4" /> Ascending
             </Button>
@@ -247,7 +282,7 @@ function HeaderCell({
               variant="outline"
               size="sm"
               className="flex-1 justify-center gap-1"
-              onClick={() => onSort?.(header.id, "desc")}
+              onClick={() => onSort?.(header?.id, "desc")}
             >
               <ArrowDownWideNarrow className="w-4 h-4" /> Descending
             </Button>
@@ -260,6 +295,21 @@ function HeaderCell({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 🧭 Route Dialogs */}
+      <RouteSetup
+        currentLedgerId={ledgerId}
+        open={routeSetupOpen}
+        onClose={() => setRouteSetupOpen(false)}
+        column={activeColumn}
+        onRouted={reloadHeaders}
+      />
+      <RouteInfo
+        open={routeInfoOpen}
+        onClose={() => setRouteInfoOpen(false)}
+        column={activeColumn}
+        onUpdated={reloadHeaders}
+      />
     </>
   );
 }
@@ -269,13 +319,12 @@ function HeaderCell({
 /* -------------------------------------------------------------------------- */
 export default function LedgerHeaders({
   ledgerId,
-  headers,
+  headers = [],
   reloadHeaders,
   pinnedColumns = [],
   onTogglePin,
   pinMode = false,
   onSort,
-  onFilter,
 }: any) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -293,7 +342,7 @@ export default function LedgerHeaders({
       const { error } = await supabase.from("ledger_headers").insert([
         {
           ledger_id: ledgerId,
-          name: `Column ${headers.length + 1}`,
+          name: `Column ${headers?.length + 1}`,
           type: "text",
           is_locked: false,
           options: [],
@@ -302,7 +351,7 @@ export default function LedgerHeaders({
       ]);
       if (error) throw error;
       toast.success("Column added");
-      reloadHeaders();
+      reloadHeaders?.();
     } catch {
       toast.error("Failed to add column");
     }
@@ -311,10 +360,13 @@ export default function LedgerHeaders({
   const handleRename = async (headerId: string) => {
     if (!editValue.trim()) return;
     try {
-      await supabase.from("ledger_headers").update({ name: editValue }).eq("id", headerId);
+      await supabase
+        .from("ledger_headers")
+        .update({ name: editValue })
+        .eq("id", headerId);
       toast.success("Header renamed");
       setEditingId(null);
-      reloadHeaders();
+      reloadHeaders?.();
     } catch {
       toast.error("Failed to rename header");
     }
@@ -325,7 +377,7 @@ export default function LedgerHeaders({
     try {
       await supabase.from("ledger_headers").delete().eq("id", headerId);
       toast.success("Header deleted");
-      reloadHeaders();
+      reloadHeaders?.();
     } catch {
       toast.error("Failed to delete header");
     }
@@ -335,20 +387,28 @@ export default function LedgerHeaders({
     try {
       await supabase.from("ledger_headers").update({ type }).eq("id", headerId);
       toast.success(`Column type set to ${type}`);
-      reloadHeaders();
+      reloadHeaders?.();
     } catch {
       toast.error("Failed to update column type");
     }
   };
 
+  if (!Array.isArray(headers) || headers.length === 0) {
+    return (
+      <div className="text-sm text-muted-foreground italic px-2 py-2">
+        No columns yet.
+      </div>
+    );
+  }
+
   return (
-    <>
-      {headers.map((h, i) => (
+    <div className="flex items-center gap-[1px]">
+      {headers.map((header: any, index: number) => (
         <HeaderCell
-          key={h.id}
-          header={h}
-          index={i}
-          isEditing={editingId === h.id}
+          key={header.id}
+          header={header}
+          index={index}
+          isEditing={editingId === header.id}
           editValue={editValue}
           setEditValue={setEditValue}
           setEditingId={setEditingId}
@@ -361,9 +421,10 @@ export default function LedgerHeaders({
           onTogglePin={onTogglePin}
           pinMode={pinMode}
           onSort={onSort}
-          onFilter={onFilter}
+          reloadHeaders={reloadHeaders}
+          ledgerId={ledgerId}
         />
       ))}
-    </>
+    </div>
   );
 }

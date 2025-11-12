@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Settings2,
-  CircleArrowLeft,
+  CircleChevronLeft,
   Printer,
   FileText,
   Braces,
@@ -267,7 +267,7 @@ export default function LedgerMenu({
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           {isNested ? (
-            <CircleArrowLeft
+            <CircleChevronLeft
               style={{ width: 24, height: 24, color: "hsl(var(--primary))" }}
             />
           ) : (

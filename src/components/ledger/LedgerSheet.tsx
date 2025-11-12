@@ -337,6 +337,7 @@ const handleDeleteLastColumn = useCallback(async () => {
           open={columnsMenuOpen}
           setOpen={setColumnsMenuOpen}
           onTogglePinMode={handleColumnPinModeToggle}
+          reloadHeaders={reloadHeaders} 
         />
       </div>
 

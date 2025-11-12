@@ -248,7 +248,12 @@ export type Database = {
           is_locked: boolean;
           options: Json[] | null;
           formula: string | null;
-          order_index: number | null; // 🧩 new column
+          order_index: number | null;
+          is_routed: boolean;
+          source_ledger_id: string | null;
+          source_column_id: string | null;
+          editable: boolean;
+          permission_level: "everyone" | "coach" | "locked";
         };
         Insert: {
           id?: string;
@@ -259,7 +264,12 @@ export type Database = {
           is_locked?: boolean;
           options?: Json[] | null;
           formula?: string | null;
-          order_index?: number | null; // 🧩 new column
+          order_index?: number | null;
+          is_routed?: boolean;
+          source_ledger_id?: string | null;
+          source_column_id?: string | null;
+          editable?: boolean;
+          permission_level?: "everyone" | "coach" | "locked";
         };
         Update: {
           id?: string;
@@ -270,7 +280,12 @@ export type Database = {
           is_locked?: boolean;
           options?: Json[] | null;
           formula?: string | null;
-          order_index?: number | null; // 🧩 new column
+          order_index?: number | null;
+          is_routed?: boolean;
+          source_ledger_id?: string | null;
+          source_column_id?: string | null;
+          editable?: boolean;
+          permission_level?: "everyone" | "coach" | "locked";
         };
         Relationships: [
           {
@@ -278,6 +293,20 @@ export type Database = {
             columns: ["ledger_id"];
             isOneToOne: false;
             referencedRelation: "ledgers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ledger_headers_source_ledger_id_fkey";
+            columns: ["source_ledger_id"];
+            isOneToOne: false;
+            referencedRelation: "ledgers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ledger_headers_source_column_id_fkey";
+            columns: ["source_column_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_headers";
             referencedColumns: ["id"];
           }
         ];
@@ -305,6 +334,68 @@ export type Database = {
           values?: Json | null;
         };
         Relationships: [];
+      };
+      ledger_routes: {
+        Row: {
+          id: string;
+          source_ledger_id: string;
+          source_column_id: string;
+          target_ledger_id: string;
+          target_column_id: string;
+          editable: boolean;
+          permission_level: "everyone" | "coach" | "locked";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          source_ledger_id: string;
+          source_column_id: string;
+          target_ledger_id: string;
+          target_column_id: string;
+          editable?: boolean;
+          permission_level?: "everyone" | "coach" | "locked";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          source_ledger_id?: string;
+          source_column_id?: string;
+          target_ledger_id?: string;
+          target_column_id?: string;
+          editable?: boolean;
+          permission_level?: "everyone" | "coach" | "locked";
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ledger_routes_source_ledger_id_fkey";
+            columns: ["source_ledger_id"];
+            isOneToOne: false;
+            referencedRelation: "ledgers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ledger_routes_source_column_id_fkey";
+            columns: ["source_column_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_headers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ledger_routes_target_ledger_id_fkey";
+            columns: ["target_ledger_id"];
+            isOneToOne: false;
+            referencedRelation: "ledgers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ledger_routes_target_column_id_fkey";
+            columns: ["target_column_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_headers";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       ledger_templates: {
         Row: {
