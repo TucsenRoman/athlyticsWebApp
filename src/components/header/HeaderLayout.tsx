@@ -1,100 +1,38 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
-import { Lock, Unlock, LogOut } from "lucide-react";
+
+import { Lock, Unlock, User2, LayoutDashboard, ClipboardList } from "lucide-react";
+
 import ProgramSelector from "@/components/header/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { EditModeContext } from "@/contexts/EditModeContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "react-router-dom";
+
+import { AnimatePresence, motion } from "framer-motion";
 
 interface HeaderLayoutProps {
-  children:
-    | React.ReactNode
-    | ((props: { isEditMode: boolean }) => React.ReactNode);
-    hideHeader?: boolean; // Hide or show header.
+  children: React.ReactNode;
 }
 
 export default function HeaderLayout({ children }: HeaderLayoutProps) {
-  // HIDE HEADER BY ROUTE
+  const navigate = useNavigate();
   const location = useLocation();
+
   const hideHeader = location.pathname.startsWith("/ledgers/");
-  
-  //
+
+  /* -------------------------------------------------------------------------- */
+  /*                                AUTH STATE                                  */
+  /* -------------------------------------------------------------------------- */
+
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [holdProgress, setHoldProgress] = useState(0);
-  const [showPopup, setShowPopup] = useState(false);
 
-  const holdDuration = 500; // ms to unlock (0.5s)
-  const holdTimeout = useRef<NodeJS.Timeout | null>(null);
-  const holdInterval = useRef<NodeJS.Timeout | null>(null);
-  const popupTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  const navigate = useNavigate();
   const { selectedProgramId, setSelectedProgramId } = useProgramContext();
 
-  // 🧠 Hold-to-Unlock Logic
-  const handleHoldStart = () => {
-    // If already unlocked, a tap should just re-lock immediately (no popup)
-    if (isEditMode) {
-      setIsEditMode(false);
-      return;
-    }
-
-    let progress = 0;
-    setHoldProgress(0);
-
-    // Start increasing hold progress
-    holdInterval.current = setInterval(() => {
-      progress += 100 / (holdDuration / 50);
-      setHoldProgress(progress);
-    }, 50);
-
-    // Finish unlock after holdDuration
-    holdTimeout.current = setTimeout(() => {
-      clearInterval(holdInterval.current!);
-      setHoldProgress(100);
-      setIsEditMode(true);
-      if (navigator.vibrate) navigator.vibrate(60);
-      // mark as successful hold
-      holdTimeout.current = null;
-    }, holdDuration);
-  };
-
-  const handleHoldEnd = () => {
-    // If we ended early (no completed hold) AND we were locked
-    const wasLockedBefore = !isEditMode;
-    const holdDidNotFinish = holdTimeout.current !== null;
-
-    // Stop all timers
-    if (holdTimeout.current) {
-      clearTimeout(holdTimeout.current);
-      holdTimeout.current = null;
-    }
-    if (holdInterval.current) {
-      clearInterval(holdInterval.current);
-      holdInterval.current = null;
-    }
-
-    // ✅ Show popup ONLY if user *tapped while locked*
-    if (wasLockedBefore && holdDidNotFinish) {
-      setShowPopup(true);
-      if (popupTimeout.current) clearTimeout(popupTimeout.current);
-      popupTimeout.current = setTimeout(() => setShowPopup(false), 2000);
-    }
-
-    setHoldProgress(0);
-  };
-
-  // Supabase Auth handling
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -106,51 +44,111 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/auth");
-  }, [user, loading, navigate]);
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [loading, user, navigate]);
+
+  /* -------------------------------------------------------------------------- */
+  /*                                 EDIT MODE                                  */
+  /* -------------------------------------------------------------------------- */
+
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+
+  const holdDuration = 500;
+
+  const holdTimeout = useRef<NodeJS.Timeout | null>(null);
+  const holdInterval = useRef<NodeJS.Timeout | null>(null);
+  const popupTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const handleHoldStart = () => {
+    if (isEditMode) {
+      setIsEditMode(false);
+      return;
+    }
+
+    let progress = 0;
+    setHoldProgress(0);
+
+    holdInterval.current = setInterval(() => {
+      progress += 100 / (holdDuration / 50);
+      setHoldProgress(progress);
+    }, 50);
+
+    holdTimeout.current = setTimeout(() => {
+      clearInterval(holdInterval.current!);
+      setHoldProgress(100);
+      setIsEditMode(true);
+      if (navigator.vibrate) navigator.vibrate(60);
+      holdTimeout.current = null;
+    }, holdDuration);
+  };
+
+  const handleHoldEnd = () => {
+    const unfinished = holdTimeout.current !== null;
+
+    if (holdTimeout.current) clearTimeout(holdTimeout.current);
+    if (holdInterval.current) clearInterval(holdInterval.current);
+
+    holdTimeout.current = null;
+    holdInterval.current = null;
+
+    if (!isEditMode && unfinished) {
+      setShowPopup(true);
+      if (popupTimeout.current) clearTimeout(popupTimeout.current);
+      popupTimeout.current = setTimeout(() => setShowPopup(false), 2000);
+    }
+
+    setHoldProgress(0);
+  };
+
+  /* -------------------------------------------------------------------------- */
+  /*                           FIELDVIEW ↔ LEDGER TOGGLE                        */
+  /* -------------------------------------------------------------------------- */
+
+  const onLedger = location.pathname.startsWith("/ledger");
+
+  const toggleView = () => {
+    navigate(onLedger ? "/" : "/ledger");
+  };
+
+  /* -------------------------------------------------------------------------- */
+  /*                                    LOGOUT                                  */
+  /* -------------------------------------------------------------------------- */
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
   };
 
-  // -------------------------------
-  // 🌀 Loading Screen
-  // -------------------------------
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  /* -------------------------------------------------------------------------- */
+  /*                                    RENDER                                  */
+  /* -------------------------------------------------------------------------- */
 
-  if (!user) return null;
-
-  // -------------------------------
-  // 🧩 Layout
-  // -------------------------------
   return (
     <EditModeContext.Provider value={{ isEditMode, setIsEditMode }}>
-      <div className="min-h-screen bg-background">
-        {!hideHeader && (
-          <header className="border-b bg-card relative h-16">
-            <div className="container mx-auto px-4 h-full flex items-center justify-between relative">
-              {/* 🧭 Left Section */}
-              <div className="flex items-center gap-2 z-10">
+      <div className="min-h-screen bg-background overflow-hidden">
+
+        {/* HEADER (only hides visually, not logically) */}
+        {!hideHeader && user && (
+          <header className="border-b bg-card/90 backdrop-blur-md h-16 flex items-center">
+            <div className="container mx-auto px-4 w-full flex items-center justify-between relative">
+
+              {/* ----- LEFT: LOGO + PROGRAM SELECTOR ----- */}
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => navigate("/")}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity touch-manipulation md:hidden"
+                  className="flex md:hidden items-center hover:opacity-80 transition"
                 >
-                  <img
-                    src="/android-chrome-512x512.png"
-                    alt="Athlytics Logo"
-                    className="w-8 h-8 md:w-10 md:h-10"
-                  />
+                  <img src="/android-chrome-512x512.png" className="w-8 h-8" />
                 </button>
 
                 <ProgramSelector
@@ -159,23 +157,32 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                 />
               </div>
 
-              {/* 🎯 Center Section */}
+              {/* ----- CENTER: DESKTOP LOGO ----- */}
               <button
                 onClick={() => navigate("/")}
-                className="hidden md:flex items-center gap-2 hover:opacity-80 transition-opacity absolute left-1/2 -translate-x-1/2"
+                className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2 hover:opacity-80 transition"
               >
-                <img
-                  src="/android-chrome-512x512.png"
-                  alt="Athlytics Logo"
-                  className="w-8 h-8 md:w-10 md:h-10"
-                />
-                <h1 className="text-2xl font-bold">Athlytics</h1>
+                <img src="/android-chrome-512x512.png" className="w-9 h-9" />
+                <h1 className="text-xl font-bold">Athlytics</h1>
               </button>
 
-              {/* ⚙️ Right Section */}
-              <div className="flex items-center gap-2 z-10 relative">
-                {/* 🔒 Hold-to-Unlock Button */}
-                <div
+              {/* ----- RIGHT: TOGGLE + EDIT-MODE + LOGOUT ----- */}
+              <div className="flex items-center gap-2 relative">
+
+                {/* SWITCH BUTTON */}
+                <button
+                  onClick={toggleView}
+                  className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted hover:bg-muted/70 transition"
+                >
+                  {onLedger ? (
+                    <LayoutDashboard className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ClipboardList className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </button>
+
+                {/* HOLD-TO-UNLOCK */}
+                {/* <div
                   className="relative h-10 w-10 flex items-center justify-center rounded-xl overflow-hidden cursor-pointer select-none"
                   onMouseDown={handleHoldStart}
                   onMouseUp={handleHoldEnd}
@@ -183,17 +190,15 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                   onTouchStart={handleHoldStart}
                   onTouchEnd={handleHoldEnd}
                 >
-                  {/* Base background */}
                   <div
-                    className={`absolute inset-0 rounded-xl transition-colors duration-300 ${
+                    className={`absolute inset-0 ${
                       isEditMode ? "bg-green-600" : "bg-[rgb(248,114,45)]"
                     }`}
                   />
 
-                  {/* Progress overlay */}
                   {!isEditMode && (
                     <motion.div
-                      className="absolute inset-0 rounded-xl"
+                      className="absolute inset-0"
                       style={{
                         background: `conic-gradient(
                           from -90deg,
@@ -201,39 +206,23 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                           rgba(255,255,255,0) ${holdProgress * 3.6}deg
                         )`,
                       }}
-                      transition={{ duration: 0.05, ease: "linear" }}
                     />
                   )}
 
-                  {/* Icon transition */}
-                  <AnimatePresence mode="wait" initial={false}>
-                    {isEditMode ? (
-                      <motion.div
-                        key="unlock"
-                        initial={{ scale: 0.6, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.6, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="text-white z-10"
-                      >
-                        <Unlock className="w-5 h-5" />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="lock"
-                        initial={{ scale: 0.6, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0.6, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="text-white z-10"
-                      >
-                        <Lock className="w-5 h-5" />
-                      </motion.div>
-                    )}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={isEditMode ? "unlock" : "lock"}
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.6, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="text-white z-10"
+                    >
+                      {isEditMode ? <Unlock /> : <Lock />}
+                    </motion.div>
                   </AnimatePresence>
                 </div>
 
-                {/* 💬 Tap Popup (shifted left, square style) */}
                 <AnimatePresence>
                   {showPopup && !isEditMode && (
                     <motion.div
@@ -242,31 +231,28 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                       exit={{ opacity: 0, y: -5 }}
                       transition={{ duration: 0.25 }}
                       className="absolute top-full right-0 mt-1 px-2 py-1 bg-black/90 text-white text-xs rounded-sm shadow-md whitespace-nowrap"
-                      style={{
-                        transform: "translateX(-60%)", // moves it further left
-                      }}
+                      style={{ transform: "translateX(-50%)" }}
                     >
-                      Press and hold to unlock
+                      Press & hold to unlock
                     </motion.div>
                   )}
-                </AnimatePresence>
+                </AnimatePresence> */}
 
-                {/* 🚪 Sign Out */}
+                {/* SIGN OUT */}
                 <button
                   onClick={handleSignOut}
                   className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted hover:bg-muted/70 transition"
-                  title="Sign out"
                 >
-                  <LogOut className="w-5 h-5 text-muted-foreground" />
+                  <User2 className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
             </div>
           </header>
         )}
 
-        {/* 🧱 Page Content */}
-        <main className="flex-1 w-full h-[calc(100vh-4rem)] overflow-hidden bg-background">
-          {typeof children === "function" ? children({ isEditMode }) : children}
+        {/* ----- PAGE CONTENT ----- */}
+        <main className="flex-1 h-[calc(100vh-4rem)] overflow-hidden">
+          {loading ? null : children}
         </main>
       </div>
     </EditModeContext.Provider>

@@ -211,9 +211,7 @@ export default function ProgramSelector({
 
   return (
     <div
-      className={`flex items-center gap-2 transition-opacity duration-300 ${
-        !isEditMode ? "opacity-60" : ""
-      }`}
+      className={`flex items-center gap-2 transition-opacity duration-300`}
     >
       <div className="flex items-center gap-2">
         {/* 🧭 Program Selector Dropdown */}
@@ -227,7 +225,8 @@ export default function ProgramSelector({
                 <div className="flex flex-col flex-1 text-left">
                   {/* Username */}
                   <span className="font-medium text-base md:text-sm text-foreground">
-                    {userName || "Unknown User"}
+                    Asst. Coach
+                    {/* ^^^ MAKE THIS DYNAMIC LATER ^^^ */}
                   </span>
 
                   {/* Program Name / Info */}

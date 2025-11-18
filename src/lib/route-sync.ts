@@ -24,7 +24,7 @@ type LedgerRouteRecord = {
 };
 
 /* -------------------------------------------------------------
- * GLOBAL DELETE (NEW!)
+ * GLOBAL DELETE
  * Deletes an entity across ALL ledgers by entity_key
  * -----------------------------------------------------------*/
 export async function deleteEntityEverywhere(entityKey: string) {
