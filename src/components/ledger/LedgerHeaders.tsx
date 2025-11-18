@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import RouteInfo from "./RouteInfo";
-import RouteSetup from "./RouteSetup";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,6 +15,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
+
 import {
   ChevronDown,
   Pencil,
@@ -29,8 +31,9 @@ import {
   Funnel,
   ArrowUpNarrowWide,
   ArrowDownWideNarrow,
-  Route,
+  Link,
 } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -38,12 +41,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+
+import RouteConnect from "./RouteConnect";
+import RouteInfo from "./RouteInfo";
 
 /* -------------------------------------------------------------------------- */
-/*                            HEADER CELL COMPONENT                           */
+/*                                Header Cell                                 */
 /* -------------------------------------------------------------------------- */
+
 function HeaderCell({
   header,
   index,
@@ -56,38 +61,47 @@ function HeaderCell({
   handleDelete,
   addAt,
   typeIcons,
-  pinnedColumns = [],
+  pinnedColumns,
   onTogglePin,
-  pinMode = false,
+  pinMode,
   onSort,
-  reloadHeaders,
   ledgerId,
+  routes,
+  onOpenRouteConnect,
+  onOpenRouteInfo,
 }: any) {
   const Icon = typeIcons?.[header?.type] || Type;
-  const isPinned = pinnedColumns?.includes(header?.id);
+  const isPinned = pinnedColumns.includes(header?.id);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [routeSetupOpen, setRouteSetupOpen] = useState(false);
-  const [routeInfoOpen, setRouteInfoOpen] = useState(false);
-  const [activeColumn, setActiveColumn] = useState<any>(null);
 
-  const isPrimary = header?.is_routed && !header?.source_ledger_id;
-  const isSecondary = header?.is_routed && !!header?.source_ledger_id;
+  // 🔗 Route state now comes from route_class via parent
+  const isPrimary = header?.isPrimary;
+  const isSecondary = header?.isSecondary;
+
+  const routeIconColor =
+    isPrimary
+      ? "text-blue-500 hover:text-blue-600"
+      : isSecondary
+      ? "text-green-500 hover:text-green-600"
+      : "";
 
   return (
     <>
       <motion.div
         layout
-        transition={{ type: "spring", stiffness: 280, damping: 25 }}
-        className={`group relative overflow-visible h-full w-full px-2 flex gap-[20px] ${
-          pinMode ? "ring-2" : ""
-        } z-10 rounded-t-[20px]`}
+        transition={{ type: "spring", stiffness: 260, damping: 22 }}
+        className={`group relative flex items-center justify-between overflow-hidden rounded-t-[12px] px-2 border-r border-gray-100
+          ${pinMode ? "ring-2 ring-[hsl(var(--primary))/0.3]" : ""}`}
         style={{
-          zIndex: isPinned ? 60 : 0,
-          background: isPinned ? "#fff" : undefined,
+          width: "150px",
+          minWidth: "150px",
+          maxWidth: "150px",
+          background: isPinned ? "#fff" : "transparent",
+          zIndex: isPinned ? 50 : 1,
         }}
       >
-        {/* Left Side — Icon + Name */}
+        {/* ---------- LEFT: Icon + Column Name ---------- */}
         <div className="flex items-center gap-2 overflow-hidden select-none">
           <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
 
@@ -98,14 +112,9 @@ function HeaderCell({
                 onTogglePin?.(header?.id);
               }}
               title={isPinned ? "Unpin column" : "Pin column"}
-              initial={{ opacity: 0, rotate: 0, scale: 0.9 }}
-              animate={{
-                opacity: 1,
-                rotate: isPinned ? 45 : 0,
-                scale: 1,
-              }}
-              whileHover={{ scale: 1.1, opacity: 0.9 }}
-              className="flex items-center justify-center cursor-pointer transition-colors"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="cursor-pointer"
             >
               <Pin
                 className={`w-3.5 h-3.5 ${
@@ -122,17 +131,19 @@ function HeaderCell({
               value={editValue}
               autoFocus
               onChange={(e) => setEditValue(e.target.value)}
-              onBlur={() => handleRename?.(header?.id)}
-              onKeyDown={(e) => e.key === "Enter" && handleRename?.(header?.id)}
-              className="h-7 text-sm px-1 border-none outline-none focus:ring-0"
+              onBlur={() => handleRename(header.id)}
+              onKeyDown={(e) => e.key === "Enter" && handleRename(header.id)}
+              className="h-7 text-sm px-1 border-none focus:ring-0 truncate"
+              style={{ width: "120px" }}
             />
           ) : (
             <span
-              className="font-semibold text-sm truncate cursor-pointer"
+              className="font-semibold text-sm truncate cursor-pointer max-w-[120px]"
+              title={header?.name}
               onDoubleClick={() => {
                 if (!pinMode) {
-                  setEditingId?.(header?.id);
-                  setEditValue?.(header?.name);
+                  setEditingId(header.id);
+                  setEditValue(header.name);
                 }
               }}
             >
@@ -141,18 +152,18 @@ function HeaderCell({
           )}
         </div>
 
-        {/* Right Side — Route Icon (if routed) + Dropdown */}
-        <div className="flex items-center gap-1 pr-[3px] text-muted-foreground">
-          {header?.is_routed && (
-            <Route
-              size={14}
-              strokeWidth={2}
+        {/* ---------- RIGHT: Route Icon + Dropdown ---------- */}
+        <div className="flex items-center gap-1 pr-[2px] relative">
+          {(isPrimary || isSecondary) && (
+            <Link
+              size={15}
+              strokeWidth={2.3}
               onClick={(e) => {
                 e.stopPropagation();
-                setActiveColumn(header);
-                setRouteInfoOpen(true);
+                onOpenRouteInfo?.(header);
               }}
-              className={`cursor-pointer opacity-80 hover:opacity-100 text-[hsl(var(--secondary))]`}
+              className={`cursor-pointer opacity-90 ${routeIconColor}`}
+              aria-label={isPrimary ? "Primary Route" : "Secondary Route"}
             />
           )}
 
@@ -161,7 +172,7 @@ function HeaderCell({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-primary transition"
+                className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
               >
                 <ChevronDown className="w-4 h-4" />
               </Button>
@@ -171,33 +182,25 @@ function HeaderCell({
               align="end"
               className="w-56 border border-gray-200 shadow-md"
             >
-              {/* ---------- SORT + FILTER ---------- */}
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDialogOpen(true);
-                }}
-              >
-                <Funnel className="w-4 h-4 mr-2" />
-                Sort & Filter...
+              {/* ---------- Sort ---------- */}
+              <DropdownMenuItem onClick={() => setDialogOpen(true)}>
+                <Funnel className="w-4 h-4 mr-2" /> Sort & Filter
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuSeparator />
 
-              {/* ---------- TYPE SETTINGS ---------- */}
+              {/* ---------- Edit Type ---------- */}
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
-                  <Settings2 className="w-4 h-4 mr-2" /> Edit column type
+                  <Settings2 className="w-4 h-4 mr-2" /> Edit Column Type
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {Object.keys(typeIcons || {}).map((type) => {
+                  {Object.keys(typeIcons).map((type) => {
                     const TypeIcon = typeIcons[type];
                     return (
                       <DropdownMenuItem
                         key={type}
-                        onClick={() =>
-                          handleChangeType?.(header?.id, type)
-                        }
+                        onClick={() => handleChangeType(header.id, type)}
                       >
                         <TypeIcon className="w-4 h-4 mr-2" /> {type}
                       </DropdownMenuItem>
@@ -206,85 +209,82 @@ function HeaderCell({
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
 
-              <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuSeparator />
 
-              {/* 🧩 Route Setup — Only if NOT routed */}
-              {!header?.is_routed && (
+              {/* ---------- Connect Route ---------- */}
+              {!isPrimary && !isSecondary && (
                 <>
                   <DropdownMenuItem
                     onClick={() => {
-                      setActiveColumn(header);
-                      setRouteSetupOpen(true);
+                      onOpenRouteConnect?.(header);
                     }}
                   >
-                    <Route className="w-4 h-4 mr-2" /> Route Column
+                    <Link className="w-4 h-4 mr-2" /> Connect Route
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-gray-200" />
+                  <DropdownMenuSeparator />
                 </>
               )}
 
-              {/* ---------- COLUMN ACTIONS ---------- */}
+              {/* ---------- Column Actions ---------- */}
               <DropdownMenuItem
                 onClick={() => {
-                  setEditingId?.(header?.id);
-                  setEditValue?.(header?.name);
+                  setEditingId(header.id);
+                  setEditValue(header.name);
                 }}
               >
-                <Pencil className="w-4 h-4 mr-2" /> Rename column
+                <Pencil className="w-4 h-4 mr-2" /> Rename Column
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => onTogglePin?.(header?.id)}>
+              <DropdownMenuItem onClick={() => onTogglePin?.(header.id)}>
                 <Pin className="w-4 h-4 mr-2" />
-                {isPinned ? "Unpin column" : "Pin column"}
+                {isPinned ? "Unpin Column" : "Pin Column"}
               </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => addAt?.(index + 1)}>
-                <Plus className="w-4 h-4 mr-2" /> Add new column
+              <DropdownMenuItem onClick={() => addAt(index + 1)}>
+                <Plus className="w-4 h-4 mr-2" /> Add Column
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="bg-gray-200" />
+              <DropdownMenuSeparator />
 
               <DropdownMenuItem
-                onClick={() => handleDelete?.(header?.id, header?.name)}
+                onClick={() => handleDelete(header.id, header.name)}
                 className="text-red-600 focus:text-red-600"
               >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete column
+                <Trash2 className="w-4 h-4 mr-2" /> Delete Column
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </motion.div>
 
-      {/* ---------- Sort & Filter Dialog ---------- */}
+      {/* ---------- Sort Dialog ---------- */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Sort & Filter</DialogTitle>
           </DialogHeader>
 
-          <div className="mt-3 mb-5 flex flex-col items-center text-center">
-            <h3 className="text-base font-semibold">{header?.name}</h3>
+          <div className="my-3 text-center">
+            <h3 className="text-base font-semibold">{header.name}</h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Choose a sort order or close to keep as-is
+              Choose a sort order or close to keep as-is.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 justify-center gap-1"
-              onClick={() => onSort?.(header?.id, "asc")}
+              onClick={() => onSort && onSort(header.id, "asc")}
             >
-              <ArrowUpNarrowWide className="w-4 h-4" /> Ascending
+              <ArrowUpNarrowWide className="w-4 h-4 mr-1" /> Ascending
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 justify-center gap-1"
-              onClick={() => onSort?.(header?.id, "desc")}
+              onClick={() => onSort && onSort(header.id, "desc")}
             >
-              <ArrowDownWideNarrow className="w-4 h-4" /> Descending
+              <ArrowDownWideNarrow className="w-4 h-4 mr-1" /> Descending
             </Button>
           </div>
 
@@ -295,39 +295,67 @@ function HeaderCell({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* 🧭 Route Dialogs */}
-      <RouteSetup
-        currentLedgerId={ledgerId}
-        open={routeSetupOpen}
-        onClose={() => setRouteSetupOpen(false)}
-        column={activeColumn}
-        onRouted={reloadHeaders}
-      />
-      <RouteInfo
-        open={routeInfoOpen}
-        onClose={() => setRouteInfoOpen(false)}
-        column={activeColumn}
-        onUpdated={reloadHeaders}
-      />
     </>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              MAIN COMPONENT                                */
+/*                                LedgerHeaders                               */
 /* -------------------------------------------------------------------------- */
+
 export default function LedgerHeaders({
   ledgerId,
   headers = [],
+  allHeaders = [],
   reloadHeaders,
   pinnedColumns = [],
   onTogglePin,
   pinMode = false,
   onSort,
+  routes = [],
+  reloadRoutes,
 }: any) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+
+  // active column for route dialogs
+  const [activeColumn, setActiveColumn] = useState<any | null>(null);
+  const [routeConnectOpen, setRouteConnectOpen] = useState(false);
+  const [routeInfoOpen, setRouteInfoOpen] = useState(false);
+
+  // Ledger name lookup for RouteConnect dropdowns
+  const [ledgerNames, setLedgerNames] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function loadLedgerNames() {
+      // Use allHeaders if available for global routing,
+      // otherwise fall back to the local headers array.
+      const source = (allHeaders && allHeaders.length > 0) ? allHeaders : headers;
+
+      if (!source || source.length === 0) return;
+
+      const ledgerIds = [...new Set(source.map((h: any) => h.ledger_id))] as string[];
+
+      if (ledgerIds.length === 0) return;
+
+      const { data, error } = await supabase
+        .from("ledgers")
+        .select("id, name")
+        .in("id", ledgerIds);
+
+      if (error) {
+        console.error("Failed to load ledger names:", error);
+        return;
+      }
+
+      const map: Record<string, string> = {};
+      for (const row of data) map[row.id] = row.name;
+
+      setLedgerNames(map);
+    }
+
+    loadLedgerNames();
+  }, [headers, allHeaders]);
 
   const typeIcons: Record<string, React.ElementType> = {
     text: Type,
@@ -337,94 +365,173 @@ export default function LedgerHeaders({
     time: Clock,
   };
 
-  const addAt = async (index: number) => {
-    try {
-      const { error } = await supabase.from("ledger_headers").insert([
-        {
-          ledger_id: ledgerId,
-          name: `Column ${headers?.length + 1}`,
-          type: "text",
-          is_locked: false,
-          options: [],
-          order_index: index,
-        },
-      ]);
-      if (error) throw error;
-      toast.success("Column added");
-      reloadHeaders?.();
-    } catch {
-      toast.error("Failed to add column");
-    }
-  };
+  /* ------------------------------ Add Column ------------------------------ */
+  const addAt = useCallback(
+    async (index: number) => {
+      try {
+        const { error } = await supabase.from("ledger_headers").insert([
+          {
+            ledger_id: ledgerId,
+            name: `Column ${headers.length + 1}`,
+            type: "text",
+            order_index: index,
+            options: [],
+            // route_class will use DB default ("independent")
+          },
+        ]);
+        if (error) throw error;
+        toast.success("Column added");
+        reloadHeaders();
+      } catch {
+        toast.error("Failed to add column");
+      }
+    },
+    [ledgerId, headers.length, reloadHeaders]
+  );
 
-  const handleRename = async (headerId: string) => {
-    if (!editValue.trim()) return;
-    try {
-      await supabase
-        .from("ledger_headers")
-        .update({ name: editValue })
-        .eq("id", headerId);
-      toast.success("Header renamed");
-      setEditingId(null);
-      reloadHeaders?.();
-    } catch {
-      toast.error("Failed to rename header");
-    }
-  };
+  /* ------------------------------ Rename Header ------------------------------ */
+  const handleRename = useCallback(
+    async (headerId: string) => {
+      if (!editValue.trim()) {
+        setEditingId(null);
+        return;
+      }
+      try {
+        const { error } = await supabase
+          .from("ledger_headers")
+          .update({ name: editValue })
+          .eq("id", headerId);
+        if (error) throw error;
+        toast.success("Header renamed");
+        setEditingId(null);
+        reloadHeaders();
+      } catch {
+        toast.error("Failed to rename header");
+      }
+    },
+    [editValue, reloadHeaders]
+  );
 
-  const handleDelete = async (headerId: string, name: string) => {
-    if (!confirm(`Delete column "${name}"?`)) return;
-    try {
-      await supabase.from("ledger_headers").delete().eq("id", headerId);
-      toast.success("Header deleted");
-      reloadHeaders?.();
-    } catch {
-      toast.error("Failed to delete header");
-    }
-  };
+  /* ------------------------------ Delete Header ------------------------------ */
+  const handleDelete = useCallback(
+    async (headerId: string, name: string) => {
+      if (!confirm(`Delete column "${name}"?`)) return;
+      try {
+        const { error } = await supabase
+          .from("ledger_headers")
+          .delete()
+          .eq("id", headerId);
+        if (error) throw error;
+        toast.success("Header deleted");
+        reloadHeaders();
+      } catch {
+        toast.error("Failed to delete header");
+      }
+    },
+    [reloadHeaders]
+  );
 
-  const handleChangeType = async (headerId: string, type: string) => {
-    try {
-      await supabase.from("ledger_headers").update({ type }).eq("id", headerId);
-      toast.success(`Column type set to ${type}`);
-      reloadHeaders?.();
-    } catch {
-      toast.error("Failed to update column type");
-    }
-  };
+  /* ------------------------------ Change Type ------------------------------ */
+  const handleChangeType = useCallback(
+    async (headerId: string, type: string) => {
+      try {
+        const { error } = await supabase
+          .from("ledger_headers")
+          .update({ type })
+          .eq("id", headerId);
+        if (error) throw error;
+        toast.success(`Type set to ${type}`);
+        reloadHeaders();
+      } catch {
+        toast.error("Failed to change type");
+      }
+    },
+    [reloadHeaders]
+  );
 
-  if (!Array.isArray(headers) || headers.length === 0) {
+  /* ------------------------------ Route Dialog Hooks ----------------------- */
+
+  const handleOpenRouteConnect = useCallback((header: any) => {
+    setActiveColumn(header);
+    setRouteConnectOpen(true);
+  }, []);
+
+  const handleOpenRouteInfo = useCallback((header: any) => {
+    setActiveColumn(header);
+    setRouteInfoOpen(true);
+  }, []);
+
+  /* ------------------------------ Render Headers --------------------------- */
+  if (!headers.length)
     return (
-      <div className="text-sm text-muted-foreground italic px-2 py-2">
+      <div className="text-sm text-muted-foreground italic p-2">
         No columns yet.
       </div>
     );
-  }
 
   return (
-    <div className="flex items-center gap-[1px]">
-      {headers.map((header: any, index: number) => (
-        <HeaderCell
-          key={header.id}
-          header={header}
-          index={index}
-          isEditing={editingId === header.id}
-          editValue={editValue}
-          setEditValue={setEditValue}
-          setEditingId={setEditingId}
-          handleRename={handleRename}
-          handleChangeType={handleChangeType}
-          handleDelete={handleDelete}
-          addAt={addAt}
-          typeIcons={typeIcons}
-          pinnedColumns={pinnedColumns}
-          onTogglePin={onTogglePin}
-          pinMode={pinMode}
-          onSort={onSort}
-          reloadHeaders={reloadHeaders}
-          ledgerId={ledgerId}
-        />
-      ))}
-    </div>
+    <>
+      <div className="flex items-center gap-[1px] overflow-x-auto">
+        {headers.map((header: any, index: number) => {
+          // ✅ New truth source: route_class from the header row
+          const isPrimary = header.route_class === "primary";
+          const isSecondary = header.route_class === "secondary";
+
+          return (
+            <HeaderCell
+              key={header.id}
+              header={{ ...header, isPrimary, isSecondary }}
+              index={index}
+              isEditing={editingId === header.id}
+              editValue={editValue}
+              setEditValue={setEditValue}
+              setEditingId={setEditingId}
+              handleRename={handleRename}
+              handleChangeType={handleChangeType}
+              handleDelete={handleDelete}
+              addAt={addAt}
+              typeIcons={typeIcons}
+              pinnedColumns={pinnedColumns}
+              onTogglePin={onTogglePin}
+              pinMode={pinMode}
+              onSort={onSort}
+              ledgerId={ledgerId}
+              routes={routes}
+              onOpenRouteConnect={handleOpenRouteConnect}
+              onOpenRouteInfo={handleOpenRouteInfo}
+            />
+          );
+        })}
+      </div>
+
+      {/* ---------- Route Connect Dialog (NEW SYSTEM) ---------- */}
+      <RouteConnect
+        open={routeConnectOpen}
+        onClose={() => setRouteConnectOpen(false)}
+        column={activeColumn}
+        headers={allHeaders || headers} // prefer global headers, fallback local
+        routes={routes}
+        ledgerNames={ledgerNames}
+        reloadHeaders={reloadHeaders}
+        reloadRoutes={reloadRoutes || (() => {})}
+      />
+
+      {/* ---------- Route Info Dialog (NEW SYSTEM) ---------- */}
+      <RouteInfo
+        open={routeInfoOpen}
+        onClose={() => setRouteInfoOpen(false)}
+        column={activeColumn}
+        ledgerNames={ledgerNames}
+        allHeaders={allHeaders || headers}
+        allRoutes={routes}
+        reloadHeaders={reloadHeaders}
+        reloadRoutes={reloadRoutes || (() => {})}
+        onUpdated={() => {
+          reloadHeaders();
+          reloadRoutes();
+        }}
+      />
+    </>
   );
 }
+ 

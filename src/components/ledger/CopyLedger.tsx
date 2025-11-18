@@ -75,6 +75,7 @@ export default function CopyLedger({ open, onOpenChange, ledgerId }: CopyLedgerP
             description: ledger.description || "",
             icon: ledger.icon || "ClipboardList",
             status: "active",
+            favorite: null, //!!!
           },
         ])
         .select()

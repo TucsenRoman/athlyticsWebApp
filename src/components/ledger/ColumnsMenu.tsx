@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import RouteSetup from "./RouteSetup";
+import RouteConnect from "./RouteConnect";
 import {
   Columns3,
   Plus,
@@ -11,7 +11,7 @@ import {
   Pin,
   SquareMousePointer,
   CircleX,
-  Route,
+  Link,
   Delete,
   CircleChevronUp,
 } from "lucide-react";
@@ -30,6 +30,10 @@ interface ColumnsMenuProps {
   open?: boolean;
   setOpen?: (val: boolean) => void;
   reloadHeaders?: () => void;
+
+  // 🔄 routing-related (used by LedgerSheet, kept optional)
+  routes?: any[];
+  reloadRoutes?: () => void;
 }
 
 export default function ColumnsMenu({
@@ -46,13 +50,14 @@ export default function ColumnsMenu({
   open,
   setOpen,
   reloadHeaders,
+  routes,        // currently unused, but accepted to satisfy parent
+  reloadRoutes,  // used after route connection
 }: ColumnsMenuProps) {
   const [submenu, setSubmenu] = useState<"routes" | null>(null);
-  const [pinActive, setPinActive] = useState(false); // ⬅️ new
-  const ICON_SIZE = 18;
+  const [pinActive, setPinActive] = useState(false);
   const [returningToRoot, setReturningToRoot] = useState(false);
   const [routeDialogOpen, setRouteDialogOpen] = useState(false);
-  const [activeColumn, setActiveColumn] = useState<any>(null);
+  const ICON_SIZE = 18;
 
   /* -------------------- MENU TREE -------------------- */
   const MENU_TREE = {
@@ -80,7 +85,6 @@ export default function ColumnsMenu({
           onExitBulk?.();
           setReturningToRoot(true);
           setSubmenu(null);
-          // Reset flag after render cycle so next open animates normally again
           setTimeout(() => setReturningToRoot(false), 200);
         },
       },
@@ -102,15 +106,13 @@ export default function ColumnsMenu({
         setOpen?.(false);
       },
     },
-    // {
-    //   icon: <SquareMousePointer size={ICON_SIZE} />,
-    //   label: "Select Mode",
-    //   action: onBulkMode,
-    // },
     {
-      icon: <Route size={ICON_SIZE} />,
-      label: "Create Route",
-      action: () => setRouteDialogOpen(true),
+      icon: <Link size={ICON_SIZE} />,
+      label: "Connect Route",
+      action: () => {
+        setRouteDialogOpen(true);
+        setOpen?.(false);
+      },
     },
     {
       icon: (
@@ -151,16 +153,11 @@ export default function ColumnsMenu({
         <motion.div
           key={i}
           initial={{ opacity: 0, x: 0, scale: 0 }}
-          animate={{
-            opacity: 1,
-            x: 0,
-            y: (i + 1) * spacing,
-            scale: 1,
-          }}
+          animate={{ opacity: 1, x: 0, y: (i + 1) * spacing, scale: 1 }}
           exit={
             returningToRoot
-              ? { opacity: 1, scale: 1, x: 0, y: 0 } // 👈 skip animation
-              : { opacity: 0, scale: 0 }              // 👈 normal exit anim
+              ? { opacity: 1, scale: 1, x: 0, y: 0 }
+              : { opacity: 0, scale: 0 }
           }
           transition={{
             duration: returningToRoot ? 0 : 0.25,
@@ -173,11 +170,9 @@ export default function ColumnsMenu({
             onClick={() => {
               a.action?.();
               if (a.label === "Exit Menu") {
-                // Only close the entire orb when explicitly exiting the main menu
                 setSubmenu(null);
                 setOpen?.(false);
               } else if (a.label.includes("Exit")) {
-                // For other exits (like "Exit Select Mode"), just go back to root menu
                 setSubmenu(null);
               }
             }}
@@ -186,8 +181,7 @@ export default function ColumnsMenu({
                 a.destructive
                   ? "bg-white hover:bg-[#f39ca3]"
                   : "bg-white hover:bg-white"
-              }`
-            }
+              }`}
           >
             <div
               className={`transition-colors duration-200 ${
@@ -241,90 +235,95 @@ export default function ColumnsMenu({
         size="icon"
         onClick={() => {
           if (bulkModeActive) {
-            // ✅ Toggle all columns when in bulk mode
             onSelectAll?.();
             return;
           }
 
           if (submenu === "routes") {
-            // ✅ Exit routes submenu
             setSubmenu(null);
             setOpen?.(false);
             return;
           }
 
           if (open) {
-            // ✅ Add a new column when plus icon is visible
             onAddColumn?.();
             setOpen?.(false);
             return;
           }
 
-          // ✅ Otherwise open the radial menu
           setOpen?.(true);
         }}
-      className={`h-8 w-8 p-0 rounded-full transition-all duration-300 relative ${
-        open || submenu === "routes"
-          ? "bg-[hsl(var(--primary))/0.25] ring-2 ring-[hsl(var(--primary))/0.6]"
-          : bulkModeActive
-          ? "bg-[hsl(var(--primary))/0.15] ring-2 ring-[hsl(var(--primary))/0.5]"
-          : "bg-card hover:bg-[hsl(var(--primary))/0.1]"
-      }`}
-    >
-      <motion.div
-        key={bulkModeActive ? "bulk" : open ? "plus" : "columns"}
-        initial={{ rotate: 0, scale: 0.8, opacity: 0 }}
-        animate={{ rotate: open ? 90 : 0, scale: 1, opacity: 1 }}
-        exit={{ scale: 0.8, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 260, damping: 18 }}
-        className="flex items-center justify-center"
+        className={`h-8 w-8 p-0 rounded-full transition-all duration-300 relative ${
+          open || submenu === "routes"
+            ? "bg-[hsl(var(--primary))/0.25] ring-2 ring-[hsl(var(--primary))/0.6]"
+            : bulkModeActive
+            ? "bg-[hsl(var(--primary))/0.15] ring-2 ring-[hsl(var(--primary))/0.5]"
+            : "bg-card hover:bg-[hsl(var(--primary))/0.1]"
+        }`}
       >
-        {bulkModeActive ? (
-          // ✅ clickable pseudo-checkbox
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectAll?.();
-            }}
-            className={`h-[14px] w-[14px] rounded-[4px] border-[1.5px] cursor-pointer flex items-center justify-center
-              ${
-                allSelected
-                  ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]"
-                  : "border-[hsl(var(--muted-foreground))] bg-transparent"
-              }`}
-          >
-            {allSelected && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                transition={{ duration: 0.15 }}
-                className="h-[6px] w-[6px] bg-white rounded-[1px]"
-              />
-            )}
-          </div>
-        ) : open ? (
-          <Plus className="text-[hsl(var(--primary))] transition-transform" size={20} />
-        ) : (
-          <Columns3 className="text-[hsl(var(--primary))] transition-transform" size={20} />
-        )}
-      </motion.div>
-    </Button>
+        <motion.div
+          key={bulkModeActive ? "bulk" : open ? "plus" : "columns"}
+          initial={{ rotate: 0, scale: 0.8, opacity: 0 }}
+          animate={{ rotate: open ? 90 : 0, scale: 1, opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 18 }}
+          className="flex items-center justify-center"
+        >
+          {bulkModeActive ? (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectAll?.();
+              }}
+              className={`h-[14px] w-[14px] rounded-[4px] border-[1.5px] cursor-pointer flex items-center justify-center
+                ${
+                  allSelected
+                    ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]"
+                    : "border-[hsl(var(--muted-foreground))] bg-transparent"
+                }`}
+            >
+              {allSelected && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="h-[6px] w-[6px] bg-white rounded-[1px]"
+                />
+              )}
+            </div>
+          ) : open ? (
+            <Plus
+              className="text-[hsl(var(--primary))] transition-transform"
+              size={20}
+            />
+          ) : (
+            <Columns3
+              className="text-[hsl(var(--primary))] transition-transform"
+              size={20}
+            />
+          )}
+        </motion.div>
+      </Button>
 
       {/* Expansions */}
       {bulkModeActive
-        ? renderLinear(MENU_TREE["Select"], 43) // 43 for 4 btns and 54 for 5 btns
+        ? renderLinear(MENU_TREE["Select"], 43)
         : submenu === "routes"
         ? renderRoutesShell()
         : open && renderLinear(ROOT_ACTIONS, 32)}
-        
-      <RouteSetup
-        currentLedgerId={ledgerId}
+
+      {/* 🔗 Route Connect Dialog */}
+      {/* <RouteConnect
         open={routeDialogOpen}
         onClose={() => setRouteDialogOpen(false)}
-        column={activeColumn}
-        onRouted={reloadHeaders}
-      />
+        onConnected={() => {
+          // keep previous behavior
+          reloadHeaders?.();
+          // also refresh routes for route badges / sync
+          reloadRoutes?.();
+        }}
+      /> */}
     </div>
   );
 }

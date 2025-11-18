@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -35,16 +35,25 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+/* -------------------------------------------------------------------------- */
+/*                              TYPES / INTERFACES                             */
+/* -------------------------------------------------------------------------- */
+
 interface LedgerCellProps {
   entryId: string;
   header: any;
   value: any;
   onChange: (val: any) => void;
+  routeSyncRef?: any;
+
+  // ✅ FIX: TypeScript was complaining. Add disabled here.
+  disabled?: boolean;
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Sortable Option Row                            */
+/*                             Sortable Option Row                            */
 /* -------------------------------------------------------------------------- */
+
 function SortableOption({
   id,
   value,
@@ -97,20 +106,29 @@ function SortableOption({
 }
 
 /* -------------------------------------------------------------------------- */
-/*                              Ledger Cell Main                              */
+/*                               Ledger Cell Main                              */
 /* -------------------------------------------------------------------------- */
-function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
+
+function LedgerCell({
+  entryId,
+  header,
+  value,
+  onChange,
+  routeSyncRef,
+  disabled = false, // ← default value
+}: LedgerCellProps) {
   const [localValue, setLocalValue] = useState(value ?? "");
   const [openOptionsEditor, setOpenOptionsEditor] = useState(false);
   const [options, setOptions] = useState<string[]>([]);
   const [editedOptions, setEditedOptions] = useState<string[]>([]);
+  const syncTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  /* ---------------------------- Sync External Value ---------------------------- */
+  /* -------------------------------- Sync external value -------------------------------- */
   useEffect(() => {
     setLocalValue(value ?? "");
   }, [value, header?.id]);
 
-  /* ---------------------------- Parse Dropdown Options ---------------------------- */
+  /* --------------------------- Extract dropdown options --------------------------- */
   useEffect(() => {
     try {
       if (!header) {
@@ -136,25 +154,58 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
     }
   }, [header]);
 
-  /* ---------------------------- Save Dropdown Options ---------------------------- */
+  /* --------------------------- Save dropdown options --------------------------- */
+
   const handleSaveOptions = async () => {
-    const cleanOptions = (editedOptions ?? []).filter((o) => o.trim() !== "");
+    const clean = (editedOptions ?? []).filter((o) => o.trim() !== "");
     try {
       const { error } = await supabase
         .from("ledger_headers")
-        .update({ options: cleanOptions })
+        .update({ options: clean })
         .eq("id", header.id);
       if (error) throw error;
+
+      setOptions(clean);
       toast.success("Dropdown options updated");
-      setOptions(cleanOptions);
       setOpenOptionsEditor(false);
     } catch (err) {
-      console.error("❌ Failed to update options:", err);
+      console.error("❌ Failed to update dropdown options:", err);
       toast.error("Failed to update options");
     }
   };
 
-  /* ---------------------------- Drag & Drop Setup ---------------------------- */
+  /* ------------------------------- Trigger route sync ------------------------------ */
+  const triggerSync = () => {
+    if (!routeSyncRef?.current?.runInitialSync) return;
+    if (syncTimeout.current) clearTimeout(syncTimeout.current);
+
+    syncTimeout.current = setTimeout(() => {
+      console.log("🔁 [LedgerCell] Running route sync");
+      routeSyncRef.current.runInitialSync();
+    }, 300);
+  };
+
+  /* -------------------------------- Save cell value -------------------------------- */
+  const saveValue = async (val: any) => {
+    if (disabled) return;
+
+    try {
+      const { error } = await supabase
+        .from("ledger_entries")
+        .update({ values: { [header.id]: val } })
+        .eq("id", entryId);
+      if (error) throw error;
+
+      console.log("💾 Saved cell value:", { entryId, col: header.name, val });
+      onChange(val);
+      triggerSync();
+    } catch (err) {
+      console.error("❌ Failed to save cell:", err);
+      toast.error("Failed to save");
+    }
+  };
+
+  /* ---------------------------- DnD setup for dropdown options ---------------------------- */
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragEnd = (event: any) => {
@@ -167,13 +218,22 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
     setEditedOptions((prev) => arrayMove(prev ?? [], oldIndex, newIndex));
   };
 
-  /* ---------------------------- Render Types ---------------------------- */
+  /* -------------------------------------------------------------------------- */
+  /*                                   RENDER                                   */
+  /* -------------------------------------------------------------------------- */
 
-  // 🧭 Dropdown cell
+  /* ------------------------------ Dropdown type ------------------------------ */
   if (header?.type === "dropdown") {
     return (
       <>
-        <Select value={localValue ?? ""} onValueChange={onChange}>
+        <Select
+          disabled={disabled}
+          value={localValue ?? ""}
+          onValueChange={(val) => {
+            setLocalValue(val);
+            saveValue(val);
+          }}
+        >
           <SelectTrigger className="h-7 text-sm bg-transparent border-none shadow-none focus:ring-0">
             <SelectValue placeholder="Select..." />
           </SelectTrigger>
@@ -185,15 +245,15 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
               </SelectItem>
             ))}
 
-            {(options ?? []).length > 0 && (
-              <div className="border-t my-1 border-border" />
-            )}
+            {(options ?? []).length > 0 && <div className="border-t my-1" />}
 
+            {/* Manage Options */}
             <div className="flex items-center justify-center py-1">
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-muted-foreground flex items-center gap-1"
+                disabled={disabled}
+                className="text-xs text-muted-foreground flex gap-1"
                 onClick={() => setOpenOptionsEditor(true)}
               >
                 <SquarePen className="w-3.5 h-3.5" />
@@ -203,7 +263,7 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
           </SelectContent>
         </Select>
 
-        {/* 🧭 Dropdown Options Editor Dialog */}
+        {/* Options Editor */}
         <Dialog open={openOptionsEditor} onOpenChange={setOpenOptionsEditor}>
           <DialogContent>
             <DialogHeader>
@@ -266,23 +326,30 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
     );
   }
 
-  // ☑️ Checkbox cell
+  /* ------------------------------- Checkbox type ------------------------------- */
   if (header?.type === "checkbox") {
     return (
       <div className="flex justify-center items-center">
         <input
           type="checkbox"
+          disabled={disabled}
           checked={!!localValue}
-          onChange={(e) => onChange(e.target.checked)}
-          className="w-4 h-4 cursor-pointer"
+          onChange={(e) => {
+            const val = e.target.checked;
+            setLocalValue(val);
+            saveValue(val);
+          }}
+          className="w-4 h-4 cursor-pointer disabled:opacity-50"
         />
       </div>
     );
   }
 
-  // ✏️ Text / number / time cell
+  /* -------------------------- Text / number / time -------------------------- */
+
   return (
     <Input
+      disabled={disabled}
       type={
         header?.type === "number"
           ? "number"
@@ -293,12 +360,19 @@ function LedgerCell({ entryId, header, value, onChange }: LedgerCellProps) {
       value={localValue ?? ""}
       onChange={(e) => setLocalValue(e.target.value)}
       onBlur={() => {
-        if (localValue !== value) onChange(localValue);
+        if (!disabled && localValue !== value) saveValue(localValue);
       }}
       onKeyDown={(e) => {
-        if (e.key === "Enter" && localValue !== value) e.currentTarget.blur();
+        if (
+          !disabled &&
+          (e.key === "Enter" || e.key === "Tab") &&
+          localValue !== value
+        ) {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
       }}
-      className="h-7 text-sm w-full border-none bg-transparent focus:ring-0 focus:outline-none"
+      className="h-7 text-sm w-full border-none bg-transparent focus:ring-0 disabled:opacity-50"
     />
   );
 }

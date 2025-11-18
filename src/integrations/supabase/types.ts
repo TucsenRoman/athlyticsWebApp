@@ -245,15 +245,9 @@ export type Database = {
           ledger_id: string;
           name: string;
           type: string | null;
-          is_locked: boolean;
           options: Json[] | null;
-          formula: string | null;
           order_index: number | null;
-          is_routed: boolean;
-          source_ledger_id: string | null;
-          source_column_id: string | null;
-          editable: boolean;
-          permission_level: "everyone" | "coach" | "locked";
+          route_class: "independent" | "primary" | "secondary";
         };
         Insert: {
           id?: string;
@@ -261,31 +255,19 @@ export type Database = {
           ledger_id: string;
           name: string;
           type?: string | null;
-          is_locked?: boolean;
           options?: Json[] | null;
-          formula?: string | null;
           order_index?: number | null;
-          is_routed?: boolean;
-          source_ledger_id?: string | null;
-          source_column_id?: string | null;
-          editable?: boolean;
-          permission_level?: "everyone" | "coach" | "locked";
+          route_class?: "independent" | "primary" | "secondary";
         };
         Update: {
           id?: string;
           created_at?: string;
-          ledger_id?: string;
-          name?: string;
+          ledger_id?: string | null;
+          name?: string | null;
           type?: string | null;
-          is_locked?: boolean;
           options?: Json[] | null;
-          formula?: string | null;
           order_index?: number | null;
-          is_routed?: boolean;
-          source_ledger_id?: string | null;
-          source_column_id?: string | null;
-          editable?: boolean;
-          permission_level?: "everyone" | "coach" | "locked";
+          route_class?: "independent" | "primary" | "secondary";
         };
         Relationships: [
           {
@@ -294,47 +276,35 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "ledgers";
             referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "ledger_headers_source_ledger_id_fkey";
-            columns: ["source_ledger_id"];
-            isOneToOne: false;
-            referencedRelation: "ledgers";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "ledger_headers_source_column_id_fkey";
-            columns: ["source_column_id"];
-            isOneToOne: false;
-            referencedRelation: "ledger_headers";
-            referencedColumns: ["id"];
           }
         ];
       };
       ledger_entries: {
         Row: {
           id: string;
-          created_st: string | null;
+          created_at: string | null;
           ledger_id: string;
-          entity_name: string;
+          entity_key: string;
           values: Json | null;
         };
         Insert: {
           id?: string;
-          created_st?: string | null;
+          created_at?: string | null;
           ledger_id: string;
-          entity_name: string;
+          entity_key: string;
           values?: Json | null;
         };
         Update: {
           id?: string;
-          created_st?: string | null;
+          created_at?: string | null;
           ledger_id?: string;
-          entity_name?: string;
+          entity_key?: string;
           values?: Json | null;
         };
         Relationships: [];
       };
+
+      // ------------------------------ ROUTES ------------------------------- //
       ledger_routes: {
         Row: {
           id: string;
@@ -342,9 +312,9 @@ export type Database = {
           source_column_id: string;
           target_ledger_id: string;
           target_column_id: string;
-          editable: boolean;
-          permission_level: "everyone" | "coach" | "locked";
           created_at: string;
+          updated_at: string | null;
+          active: boolean;
         };
         Insert: {
           id?: string;
@@ -352,9 +322,9 @@ export type Database = {
           source_column_id: string;
           target_ledger_id: string;
           target_column_id: string;
-          editable?: boolean;
-          permission_level?: "everyone" | "coach" | "locked";
           created_at?: string;
+          updated_at?: string | null;
+          active?: boolean;
         };
         Update: {
           id?: string;
@@ -362,9 +332,9 @@ export type Database = {
           source_column_id?: string;
           target_ledger_id?: string;
           target_column_id?: string;
-          editable?: boolean;
-          permission_level?: "everyone" | "coach" | "locked";
           created_at?: string;
+          updated_at?: string | null;
+          active?: boolean;
         };
         Relationships: [
           {
@@ -397,6 +367,90 @@ export type Database = {
           }
         ];
       };
+      route_permissions: {
+        Row: {
+          id: string;
+          route_id: string;
+          role: "coach" | "head_coach" | "assistant_coach" | "viewer" | "admin";
+          can_create: boolean;
+          can_read: boolean;
+          can_update: boolean;
+          can_delete: boolean;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          route_id: string;
+          role: "coach" | "head_coach" | "assistant_coach" | "viewer" | "admin";
+          can_create?: boolean;
+          can_read?: boolean;
+          can_update?: boolean;
+          can_delete?: boolean;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          route_id?: string;
+          role?: "coach" | "head_coach" | "assistant_coach" | "viewer" | "admin";
+          can_create?: boolean;
+          can_read?: boolean;
+          can_update?: boolean;
+          can_delete?: boolean;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "route_permissions_route_id_fkey";
+            columns: ["route_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_routes";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      route_sync_state: {
+        Row: {
+          id: string;
+          route_id: string;
+          last_source_version: number;
+          last_target_version: number;
+          pending_sync: boolean;
+          sync_attempts: number;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          route_id: string;
+          last_source_version?: number;
+          last_target_version?: number;
+          pending_sync?: boolean;
+          sync_attempts?: number;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          route_id?: string;
+          last_source_version?: number;
+          last_target_version?: number;
+          pending_sync?: boolean;
+          sync_attempts?: number;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "route_sync_state_route_id_fkey";
+            columns: ["route_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_routes";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      // ------------------------------ TEMPLATES ------------------------------- //
       ledger_templates: {
         Row: {
           id: string;

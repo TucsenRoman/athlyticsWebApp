@@ -147,7 +147,7 @@ export default function LedgerToolbar({
   return (
     <>
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-border/60 shadow-sm">
-        <div className="flex items-center justify-between h-10 px-2 sm:px-3 text-sm w-full">
+        <div className="flex items-center justify-between h-10 px-[8px] text-sm w-full">
           {/* ← LEFT SIDE */}
           <div className="flex items-center gap-1.5 min-w-0">
             <Button
@@ -155,18 +155,25 @@ export default function LedgerToolbar({
               size="icon"
               onClick={() => {
                 if (window.history.state && window.history.state.idx > 0) {
-                  navigate(-1);
+                  navigate("/");
                 } else {
-                  navigate("/"); // fallback route (e.g., dashboard)
+                  navigate("/");
                 }
               }}
-              className="text-gray-600 hover:text-[hsl(var(--primary))]"
+              className="
+                h-8 w-8
+                text-gray-600
+                hover:text-[hsl(var(--primary))]
+                rounded-full
+                hover:bg-primary/20
+                transition
+              "
               title="Back"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
 
-            {/* 🏫 Program */}
+            {/* Program */}
             {program && (
               <div className="pl-2 border-l border-border/60 flex flex-col leading-tight">
                 <span className="font-medium text-gray-800 text-[13px]">

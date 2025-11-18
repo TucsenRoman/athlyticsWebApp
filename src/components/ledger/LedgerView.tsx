@@ -20,15 +20,17 @@ export default function LedgerView() {
   const [ledger, setLedger] = useState<Ledger | null>(null);
   const [headers, setHeaders] = useState<LedgerHeader[]>([]);
   const [entries, setEntries] = useState<LedgerEntry[]>([]);
+  const [routes, setRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // refs and scroll state — declared early (hooks must always run)
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [thumb, setThumb] = useState({ height: 0, top: 0 });
 
-  /* ------------------------------ Load data ------------------------------ */
+  /* ------------------------------ Load core data ------------------------------ */
   useEffect(() => {
     if (!ledgerId) return;
+
     const loadData = async () => {
       setLoading(true);
       try {
@@ -61,8 +63,30 @@ export default function LedgerView() {
         setLoading(false);
       }
     };
+
     loadData();
+    loadRoutes(); // <-- NEW
+
   }, [ledgerId]);
+
+  /* ------------------------------ Load route graph ------------------------------ */
+  const loadRoutes = async () => {
+    if (!ledgerId) return;
+
+    const { data, error } = await supabase
+      .from("ledger_routes")
+      .select("*")
+      .or(`source_ledger_id.eq.${ledgerId},target_ledger_id.eq.${ledgerId}`)
+      .order("created_at", { ascending: true })
+
+    if (error) {
+      console.error("Failed to load routes:", error);
+      setRoutes([]); // always provide a safe value
+      return;
+    }
+
+    setRoutes(data || []);
+  };
 
   /* ------------------------------ Reloaders ------------------------------ */
   const reloadHeaders = async () => {
@@ -149,8 +173,11 @@ export default function LedgerView() {
           setEntries={setEntries}
           reloadHeaders={reloadHeaders}
           reloadEntries={reloadEntries}
+          routes={Array.isArray(routes) ? routes : []}
+          reloadRoutes={loadRoutes}
         />
       </div>
+
       {/* <LedgerFooter /> */}
     </div>
   );
