@@ -3,7 +3,7 @@ import { CalendarDays } from "lucide-react";
 
 export default function CalendarCard() {
   return (
-    <Card className="bg-card border-border shadow-sm">
+    <Card className="h-full bg-card border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CalendarDays className="w-5 h-5 text-primary" />

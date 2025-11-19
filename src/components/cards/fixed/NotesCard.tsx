@@ -21,7 +21,7 @@ export default function NotesCardUI(_: NotesCardProps) {
   ];
 
   return (
-    <Card className="bg-card border-border shadow-sm h-full">
+    <Card className="h-full bg-card border-border shadow-sm h-full">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center gap-2">

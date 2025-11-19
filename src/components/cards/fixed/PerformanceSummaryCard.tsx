@@ -3,7 +3,7 @@ import { Trophy } from "lucide-react";
 
 export default function PerformanceSummaryCard() {
   return (
-    <Card className="bg-card border-border shadow-sm">
+    <Card className="h-full bg-card border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="w-5 h-5 text-primary" />

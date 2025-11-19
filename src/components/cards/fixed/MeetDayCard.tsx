@@ -4,7 +4,7 @@ import { CalendarDays, MapPin, Clock, Users, ChevronRight } from "lucide-react";
 
 export default function MeetDayCard() {
   return (
-    <Card className="bg-card border-border shadow-sm">
+    <Card className="h-full bg-card border-border shadow-sm">
       {/* HEADER */}
       <CardHeader>
         <CardTitle className="flex items-center justify-between">

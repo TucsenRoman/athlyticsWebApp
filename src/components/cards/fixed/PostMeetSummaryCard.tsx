@@ -3,7 +3,7 @@ import { Flag } from "lucide-react";
 
 export default function PostMeetSummaryCard() {
   return (
-    <Card className="bg-card border-border shadow-sm">
+    <Card className="h-full bg-card border-border shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Flag className="w-5 h-5 text-primary" />

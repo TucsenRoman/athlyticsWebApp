@@ -1,15 +1,18 @@
+// components/cards/AttendanceCard.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { format } from "date-fns";
-import { Users, CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 
-interface AttendanceRow {
-  athlete_id: string;
-  status: "Present" | "Absent" | "Excused";
-}
+import CardFormatter from "@/components/cards/CardFormatter";
+
+import {
+  Users,
+  CheckCircle2,
+  XCircle,
+  MinusCircle,
+} from "lucide-react";
 
 export default function AttendanceCard() {
   const navigate = useNavigate();
@@ -23,7 +26,6 @@ export default function AttendanceCard() {
 
   const today = format(new Date(), "yyyy-MM-dd");
 
-  // Load athletes + attendance
   useEffect(() => {
     loadAttendance();
   }, [selectedProgramId]);
@@ -39,7 +41,6 @@ export default function AttendanceCard() {
         .eq("program_id", selectedProgramId);
 
       if (!athletes) return;
-
       setTotalAthletes(athletes.length);
 
       const { data: attendance } = await supabase
@@ -47,11 +48,9 @@ export default function AttendanceCard() {
         .select("athlete_id, status")
         .eq("date", today);
 
-      let present = 0;
-      let absent = 0;
-      let excused = 0;
+      let present = 0, absent = 0, excused = 0;
 
-      attendance?.forEach((row: AttendanceRow) => {
+      attendance?.forEach((row) => {
         if (row.status === "Present") present++;
         if (row.status === "Absent") absent++;
         if (row.status === "Excused") excused++;
@@ -60,8 +59,6 @@ export default function AttendanceCard() {
       setPresentCount(present);
       setAbsentCount(absent);
       setExcusedCount(excused);
-    } catch (err) {
-      console.error("Error loading attendance card:", err);
     } finally {
       setLoading(false);
     }
@@ -71,57 +68,49 @@ export default function AttendanceCard() {
     ? Math.round((presentCount / totalAthletes) * 100)
     : 0;
 
-  // color state
   const percentColor =
-    percent >= 90 ? "text-green-600"
-    : percent >= 75 ? "text-yellow-500"
-    : "text-red-500";
+    percent >= 90
+      ? "text-green-600"
+      : percent >= 75
+      ? "text-yellow-500"
+      : "text-red-500";
 
   return (
-    <Card
-      className="p-4 hover:bg-accent transition cursor-pointer"
+    <CardFormatter
+      title="Attendance"
+      icon={Users}
       onClick={() => navigate("/attendance")}
     >
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          Attendance
-        </CardTitle>
-      </CardHeader>
+      {loading ? (
+        <p className="text-sm text-neutral-500">Loading...</p>
+      ) : (
+        <>
+          <div className="text-3xl font-bold">
+            <span className={percentColor}>{percent}%</span>
+          </div>
 
-      <CardContent className="flex flex-col gap-3">
-        {loading ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        ) : (
-          <>
-            {/* Percent summary */}
-            <div className="text-3xl font-bold">
-              <span className={percentColor}>{percent}%</span>
+          <div className="flex items-center justify-between text-sm mt-2">
+            <div className="flex items-center gap-1">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              {presentCount} Present
             </div>
 
-            {/* Breakdown */}
-            <div className="flex items-center justify-between text-sm mt-2">
-              <div className="flex items-center gap-1">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                {presentCount} Present
-              </div>
-              <div className="flex items-center gap-1">
-                <XCircle className="w-4 h-4 text-red-600" />
-                {absentCount} Absent
-              </div>
-              <div className="flex items-center gap-1">
-                <MinusCircle className="w-4 h-4 text-yellow-600" />
-                {excusedCount} Excused
-              </div>
+            <div className="flex items-center gap-1">
+              <XCircle className="w-4 h-4 text-red-600" />
+              {absentCount} Absent
             </div>
 
-            {/* Total */}
-            <p className="text-xs text-muted-foreground mt-1">
-              {totalAthletes} total athletes
-            </p>
-          </>
-        )}
-      </CardContent>
-    </Card>
+            <div className="flex items-center gap-1">
+              <MinusCircle className="w-4 h-4 text-yellow-600" />
+              {excusedCount} Excused
+            </div>
+          </div>
+
+          <p className="text-xs text-neutral-500">
+            {totalAthletes} total athletes
+          </p>
+        </>
+      )}
+    </CardFormatter>
   );
 }
