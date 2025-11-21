@@ -86,7 +86,7 @@ export default function AuthForm() {
         bg-cover bg-center bg-no-repeat
       "
       style={{
-        backgroundImage: "url('public/AthlyticsFillerBg5.png')",
+        backgroundImage: "url('/AthlyticsFillerBg5.png')"
       }}
     >
       <Card

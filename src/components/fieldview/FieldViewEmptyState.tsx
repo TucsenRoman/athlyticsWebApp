@@ -18,8 +18,7 @@ export default function FieldViewEmptyState() {
           p-10 flex flex-col items-center
 
           bg-cover bg-center
-          bg-[url('public/AthlyticsFillerBg5.png')]
-          dark:bg-[url('/images/field-bg-dark.jpg')]
+          bg-[url('/AthlyticsFillerBg5.png')]
         "
       >
         {/* Blur + dim overlay */}

@@ -94,7 +94,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                   onClick={() => navigate("/")}
                   className="flex md:hidden items-center hover:opacity-80 transition"
                 >
-                  <img src="public/StopWatchLogo.png" className="w-8 h-8" />
+                  <img src="/StopWatchLogo.png" className="w-8 h-8" />
                 </button>
 
                 {/* Program Selector */}
@@ -112,7 +112,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                 onClick={() => navigate("/")}
                 className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2 hover:opacity-80 transition"
               >
-                <img src="public/StopWatchLogo.png" className="w-9 h-9" />
+                <img src="/StopWatchLogo.png" className="w-9 h-9" />
                 <h1 className="text-xl font-bold">Athlytics</h1>
               </button>
 
