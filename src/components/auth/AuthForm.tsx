@@ -9,11 +9,13 @@ import { toast } from "sonner";
 import { Trophy } from "lucide-react";
 import { z } from "zod";
 
-const passwordSchema = z.string()
-  .min(8, 'Password must be at least 8 characters')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(/[0-9]/, 'Password must contain at least one number');
+/* -------------------------- Password Strength Schema -------------------------- */
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number");
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,12 +25,12 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  /* ------------------------------ Submit Handler ------------------------------ */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Validate password strength for signup
       if (!isLogin) {
         const validation = passwordSchema.safeParse(password);
         if (!validation.success) {
@@ -39,40 +41,31 @@ export default function AuthForm() {
       }
 
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        toast.success("Welcome back!");
+
+        toast.success("Welcome back, Coach.");
         navigate("/");
       } else {
-        // --- SIGNUP FLOW ---
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              full_name: fullName,
-            },
+            data: { full_name: fullName },
           },
         });
-        if (error) throw error;
 
+        if (error) throw error;
         const user = data.user;
+
         if (user) {
-          // Auto-create a matching profile row
-          const { error: profileError } = await supabase.from("profiles").insert([
-            {
-              id: user.id,
-              full_name: fullName,
-            },
+          await supabase.from("profiles").insert([
+            { id: user.id, full_name: fullName }
           ]);
-          if (profileError) console.error("Profile insert error:", profileError);
         }
 
-        toast.success("Account created! Logging you in...");
+        toast.success("Account created. Logging you in…");
         navigate("/");
       }
     } catch (error: any) {
@@ -82,73 +75,117 @@ export default function AuthForm() {
     }
   };
 
+  /* -------------------------------------------------------------------------- */
+  /*  UI (ATHLYTICS STYLE)                                                      */
+  /* -------------------------------------------------------------------------- */
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-secondary to-accent p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4">
-          <div className="flex justify-center">
-            <div className="bg-gradient-to-br from-primary to-secondary p-3 rounded-2xl">
-              <Trophy className="w-8 h-8 text-primary-foreground" />
-            </div>
-          </div>
-          <CardTitle className="text-2xl text-center">
-            {isLogin ? "Welcome Back" : "Get Started"}
+    <div
+      className="
+        relative min-h-screen flex items-center justify-center p-6
+        bg-cover bg-center bg-no-repeat
+      "
+      style={{
+        backgroundImage: "url('public/AthlyticsFillerBg5.png')",
+      }}
+    >
+      <Card
+        className="
+          w-full max-w-md rounded-3xl overflow-hidden
+
+          /* translucent glass */
+          bg-white/35 dark:bg-neutral-900/40
+          backdrop-blur-2xl
+
+          /* separation */
+          shadow-xl shadow-black/30
+          shadow-inner shadow-black/10
+
+          border border-white/40 dark:border-white/10
+        "
+      >
+        <CardHeader className="space-y-6">
+          {/* Title */}
+        <CardTitle className="
+          text-center text-3xl font-bold tracking-tight 
+          text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]
+        ">
+            {isLogin ? "Welcome Back" : "Create Your Account"}
           </CardTitle>
-          <CardDescription className="text-center">
-            {isLogin ? "Sign in to manage your team" : "Create your coach account"}
+
+          {/* Subtitle */}
+          <CardDescription className="
+            text-center 
+            text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]
+          ">
+            {isLogin ? "Sign in to your coaching dashboard" : "Start building your program"}
           </CardDescription>
         </CardHeader>
+
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName" className="text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">Full Name</Label>
                 <Input
                   id="fullName"
                   type="text"
                   placeholder="Coach Name"
+                  className="rounded-xl"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  required={!isLogin}
+                  required
                 />
               </div>
             )}
+
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="coach@school.com"
+                className="rounded-xl"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">Password</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
+                className="rounded-xl"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
+
+            {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full"
               disabled={loading}
+              className="
+                w-full h-11 rounded-xl text-lg font-semibold
+                bg-[hsl(var(--primary))]
+                hover:bg-primary/30
+                transition-all
+              "
             >
-              {loading ? "Loading..." : isLogin ? "Sign In" : "Create Account"}
+              {loading ? "Processing…" : isLogin ? "Sign In" : "Create Account"}
             </Button>
           </form>
+
+          {/* Toggle */}
           <div className="mt-4 text-center text-sm">
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
+              className="text-neutral-800 hover:underline"
             >
               {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
             </button>

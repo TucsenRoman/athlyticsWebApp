@@ -1,34 +1,35 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import CardFormatter from "@/components/cards/CardFormatter";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, MapPin, Clock, Users, ChevronRight } from "lucide-react";
+import {
+  CalendarDays,
+  MapPin,
+  Clock,
+  Users,
+  ChevronRight,
+} from "lucide-react";
 
 export default function MeetDayCard() {
   return (
-    <Card className="h-full bg-card border-border shadow-sm">
-      {/* HEADER */}
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-primary" />
-            Meet Day
-          </span>
+    <CardFormatter
+      title="Meet Day"
+      icon={CalendarDays}
+      actions={
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-muted-foreground hover:text-foreground"
+        >
+          View All
+          <ChevronRight className="w-4 h-4 ml-1" />
+        </Button>
+      }
+      onClick={undefined} // not tappable as a whole card
+    >
+      <div className="w-full space-y-4">
 
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            View All
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
-        </CardTitle>
-      </CardHeader>
-
-      {/* CONTENT */}
-      <CardContent className="space-y-4">
         {/* Meet Shell */}
         <div className="p-4 rounded-lg bg-muted/40 border border-border flex flex-col gap-3">
-          
+
           {/* Meet Name */}
           <div>
             <p className="text-base font-semibold">No Meet Loaded</p>
@@ -58,7 +59,7 @@ export default function MeetDayCard() {
               <span className="text-sm text-muted-foreground">—</span>
             </div>
 
-            {/* Action Button */}
+            {/* Action */}
             <div className="col-span-2 pt-1">
               <Button variant="outline" disabled className="w-full text-sm">
                 Open Meet Dashboard (Coming Soon)
@@ -67,7 +68,7 @@ export default function MeetDayCard() {
 
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CardFormatter>
   );
 }

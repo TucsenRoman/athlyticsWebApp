@@ -35,22 +35,27 @@ export default function AttendanceCard() {
     try {
       if (!selectedProgramId) return;
 
-      const { data: athletes } = await supabase
-        .from("athletes")
-        .select("id")
-        .eq("program_id", selectedProgramId);
-
-      if (!athletes) return;
-      setTotalAthletes(athletes.length);
-
+      // Get today's attendance rows for this program
       const { data: attendance } = await supabase
         .from("attendance")
         .select("athlete_id, status")
+        .eq("program_id", selectedProgramId)
         .eq("date", today);
 
-      let present = 0, absent = 0, excused = 0;
+      if (!attendance) {
+        setTotalAthletes(0);
+        return;
+      }
 
-      attendance?.forEach((row) => {
+      // Total = number of unique athlete IDs
+      const uniqueAthletes = new Set(attendance.map((a) => a.athlete_id));
+      setTotalAthletes(uniqueAthletes.size);
+
+      let present = 0,
+        absent = 0,
+        excused = 0;
+
+      attendance.forEach((row) => {
         if (row.status === "Present") present++;
         if (row.status === "Absent") absent++;
         if (row.status === "Excused") excused++;

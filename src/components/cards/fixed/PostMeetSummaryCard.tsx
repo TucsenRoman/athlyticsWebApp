@@ -1,32 +1,30 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import CardFormatter from "@/components/cards/CardFormatter";
 import { Flag } from "lucide-react";
 
 export default function PostMeetSummaryCard() {
   return (
-    <Card className="h-full bg-card border-border shadow-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Flag className="w-5 h-5 text-primary" />
-          Post-Meet Summary
-        </CardTitle>
-      </CardHeader>
+    <CardFormatter
+      title="Post-Meet Summary"
+      icon={Flag}
+      onClick={undefined} // add navigation when feature is built
+    >
+      <div className="w-full space-y-4 text-sm text-muted-foreground">
 
-      <CardContent className="text-sm space-y-4 text-muted-foreground">
-        {/* Top line — meet name */}
-        <div className="h-5 bg-muted/50 rounded-md w-3/4"></div>
+        {/* Meet name skeleton */}
+        <div className="h-5 w-3/4 rounded-md bg-muted/50" />
 
         {/* Quick stats */}
         <div className="space-y-2">
-          <div className="h-4 bg-muted/50 rounded-md w-full"></div>
-          <div className="h-4 bg-muted/50 rounded-md w-4/5"></div>
+          <div className="h-4 w-full rounded-md bg-muted/50" />
+          <div className="h-4 w-4/5 rounded-md bg-muted/50" />
         </div>
 
-        {/* Highlight */}
-        <div className="h-4 bg-muted/50 rounded-md w-2/3"></div>
+        {/* Highlight bar */}
+        <div className="h-4 w-2/3 rounded-md bg-muted/50" />
 
-        {/* Button placeholder */}
-        <div className="h-9 bg-muted/40 rounded-md w-full"></div>
-      </CardContent>
-    </Card>
+        {/* Call-to-action button placeholder */}
+        <div className="h-9 w-full rounded-md bg-muted/40" />
+      </div>
+    </CardFormatter>
   );
 }

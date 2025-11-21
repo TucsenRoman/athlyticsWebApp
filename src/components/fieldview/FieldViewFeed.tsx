@@ -1,7 +1,7 @@
 "use client";
 
-import FixedCardCarousel from "@/components/cards/fixed/FixedCardCarousel";
-import { Trophy } from "lucide-react";
+import CardCarousel from "@/components/cards/fixed/CardCarousel";
+import { SearchX } from "lucide-react";
 import { motion } from "framer-motion";
 
 /* -------------------------------------------------------------------------- */
@@ -9,16 +9,16 @@ import { motion } from "framer-motion";
 /* -------------------------------------------------------------------------- */
 
 const FAIL_MESSAGES = [
-  "Nothing on the radar — scouts must be sleeping.",
-  "Wide left. Your search didn’t score.",
-  "Airball — results didn’t touch the net.",
-  "No matches… film study recommended.",
-  "Whiffed it. Try a cleaner search.",
-  "Locked up — defense shut this one down.",
-  "Benched. No results in the lineup.",
-  "Ran the wrong route — nothing here.",
-  "Shot clock expired — no plays found.",
-  "Off the mark — adjust your aim.",
+  "No results — time for the managers to do their job.",
+  "Wide left — no results matched that.",
+  "Airball — nothing came up for your search.",
+  "Play fizzled — zero hits on that query.",
+  "Big swing, total miss — no results found.",
+  "Benched — nothing matched what you typed.",
+  "Ran the route — no targets open for that search.",
+  "Clock hit zero — no results on the board.",
+  "He shoots! He scores! Oh, nevermind — no return.",
+  "Foul ball sndanifennfeinf???????????????",
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -74,7 +74,7 @@ export default function FieldViewFeed({
                 ease: "easeInOut",
               }}
             >
-              <Trophy size={40} className="text-neutral-500/80" />
+              <SearchX size={40} className="text-neutral-500/80" />
             </motion.div>
 
             {/* Message */}
@@ -87,7 +87,7 @@ export default function FieldViewFeed({
 
   return (
     <div className="relative w-full h-full bg-neutral-50 dark:bg-neutral-900">
-      <FixedCardCarousel />
+      <CardCarousel />
     </div>
   );
 }

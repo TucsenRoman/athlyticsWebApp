@@ -17,6 +17,8 @@ import {
   Share2,
   Users,
   Lock,
+  Minimize,
+  Expand,
   Link2,
   ScanEye,
   Pin,
@@ -27,8 +29,8 @@ import {
   XCircle,
   Save,
 } from "lucide-react";
-import CopyLedger from "./CopyLedger";
-import MoveLedger from "./MoveLedger";
+import CopyLedger from "../CopyLedger";
+import MoveLedger from "../MoveLedger";
 
 interface LedgerMenu {
   ledgerId: string;
@@ -59,6 +61,7 @@ export default function LedgerMenu({
   const [theme, setTheme] = useState<"light" | "dark">(
     document.documentElement.classList.contains("dark") ? "dark" : "light"
   );
+  const [fullscreen, setFullscreen] = useState(false);
 
   const ICON_SIZE = 18;
   const iconStyle = { width: ICON_SIZE, height: ICON_SIZE };
@@ -115,6 +118,14 @@ export default function LedgerMenu({
         action: toggleTheme,
         closeOnClick: false,
       },
+      {
+        icon: fullscreen
+          ? <Expand style={iconStyle} />   // or use Expand / Minimize icons if you prefer
+          : <Minimize style={iconStyle} />,
+        label: fullscreen ? "Exit Fullscreen" : "Fullscreen",
+        action: console.log("Fullscreen"),
+        closeOnClick: true,
+      }
     ],
     Export: [
       {

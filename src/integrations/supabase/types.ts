@@ -7,849 +7,793 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
-      athlete_custom_fields: {
+
+      /* -------------------------------------------------------------------------- */
+      /*  ledger_entries                                                            */
+      /* -------------------------------------------------------------------------- */
+      ledger_entries: {
         Row: {
-          athlete_id: string
-          coach_id: string
-          created_at: string
-          field_id: string
-          field_value: string | null
           id: string
-          program_id: string
-          updated_at: string
+          created_at: string
+          ledger_id: string
+          values: Json | null
+          entity_key: string | null
         }
         Insert: {
-          athlete_id: string
-          coach_id: string
-          created_at?: string
-          field_id: string
-          field_value?: string | null
           id?: string
-          program_id: string
-          updated_at?: string
+          created_at?: string
+          ledger_id: string
+          values?: Json | null
+          entity_key?: string | null
         }
         Update: {
-          athlete_id?: string
-          coach_id?: string
-          created_at?: string
-          field_id?: string
-          field_value?: string | null
           id?: string
-          program_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      athletes: {
-        Row: {
-          // achievements: string[] | null
-          // athlete_of_meet: boolean | null
-          // athlete_of_week: boolean | null
-          coach_id: string
-          created_at: string
-          // events: string[] | null
-          gender: string | null
-          grade: number | null
-          id: string
-          name: string
-          // personal_records: Json | null
-          program_id: string | null
-          team_position: string | null
-          updated_at: string
-        }
-        Insert: {
-          // achievements?: string[] | null
-          // athlete_of_meet?: boolean | null
-          // athlete_of_week?: boolean | null
-          coach_id: string
           created_at?: string
-          // events?: string[] | null
-          gender?: string | null
-          grade?: number | null
-          id?: string
-          name: string
-          // personal_records?: Json | null
-          program_id?: string | null
-          team_position?: string | null
-          updated_at?: string
-        }
-        Update: {
-          // achievements?: string[] | null
-          // athlete_of_meet?: boolean | null
-          // athlete_of_week?: boolean | null
-          coach_id?: string
-          created_at?: string
-          // events?: string[] | null
-          gender?: string | null
-          grade?: number | null
-          id?: string
-          name?: string
-          // personal_records?: Json | null
-          program_id?: string | null
-          team_position?: string | null
-          updated_at?: string
+          ledger_id?: string
+          values?: Json | null
+          entity_key?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "athletes_coach_id_fkey"
-            columns: ["coach_id"]
+            foreignKeyName: "ledger_entries_ledger_id_fkey"
+            columns: ["ledger_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "ledgers"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "athletes_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
+          }
         ]
       }
-      attendance: {
+
+      /* -------------------------------------------------------------------------- */
+      /*  ledger_headers                                                            */
+      /* -------------------------------------------------------------------------- */
+      ledger_headers: {
         Row: {
-          athlete_id: string
-          coach_id: string
-          created_at: string
-          date: string
           id: string
-          notes: string | null
-          program_id: string | null
-          status: string
+          created_at: string
+          ledger_id: string
+          name: string | null
+          type: string | null
+          order_index: number | null
+          route_class: "independent" | "primary" | "secondary"
+          options: any
           updated_at: string
+          locked: boolean
         }
         Insert: {
-          athlete_id: string
-          coach_id: string
-          created_at?: string
-          date: string
           id?: string
-          notes?: string | null
-          program_id?: string | null
-          status: string
+          created_at?: string
+          ledger_id: string
+          name?: string | null
+          type?: string | null
+          order_index?: number | null
+          route_class?: "independent" | "primary" | "secondary"
+          options?: any
           updated_at?: string
+          locked?: boolean
         }
         Update: {
-          athlete_id?: string
-          coach_id?: string
-          created_at?: string
-          date?: string
           id?: string
-          notes?: string | null
-          program_id?: string | null
-          status?: string
+          created_at?: string
+          ledger_id?: string
+          name?: string | null
+          type?: string | null
+          order_index?: number | null
+          route_class?: "independent" | "primary" | "secondary"
+          options?: any
           updated_at?: string
+          locked?: boolean
         }
         Relationships: [
           {
-            foreignKeyName: "attendance_athlete_id_fkey"
-            columns: ["athlete_id"]
+            foreignKeyName: "ledger_headers_ledger_id_fkey"
+            columns: ["ledger_id"]
             isOneToOne: false
-            referencedRelation: "athletes"
+            referencedRelation: "ledgers"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attendance_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
+          }
         ]
       }
-      attendance_submissions: {
-        Row: {
-          coach_id: string
-          date: string
-          program_id: string | null
-          submitted_at: string
-        }
-        Insert: {
-          coach_id: string
-          date: string
-          program_id?: string | null
-          submitted_at?: string
-        }
-        Update: {
-          coach_id?: string
-          date?: string
-          program_id?: string | null
-          submitted_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "attendance_submissions_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+
+      /* -------------------------------------------------------------------------- */
+      /*  ledgers                                                                   */
+      /* -------------------------------------------------------------------------- */
       ledgers: {
         Row: {
           id: string
-          coach_id: string
-          program_id: string
-          template_key: string | null
-          name: string
           created_at: string
-          updated_at: string
+          coach_id: string | null
+          program_id: number | null
+          template_key: string | null
+          name: string | null
+          updated_at: string | null
           status: string | null
           data: Json | null
           description: string | null
-          icon: string;
-          favorite: boolean;
+          icon: string | null
+          favorite: boolean | null
+          is_system: boolean
+          is_protected: boolean
+          protection_level: "none" | "basic" | "full"
         }
         Insert: {
           id?: string
-          coach_id: string
-          program_id: string
-          template_key?: string | null
-          name: string
           created_at?: string
-          updated_at?: string
+          coach_id?: string | null
+          program_id?: number | null
+          template_key?: string | null
+          name?: string | null
+          updated_at?: string | null
           status?: string | null
           data?: Json | null
           description?: string | null
-          icon: string;
-          favorite: boolean;
+          icon?: string | null
+          favorite?: boolean | null
+          is_system?: boolean
+          is_protected?: boolean
+          protection_level?: "none" | "basic" | "full"
         }
         Update: {
           id?: string
-          coach_id?: string
-          program_id?: string
-          template_key?: string | null
-          name?: string
           created_at?: string
-          updated_at?: string
+          coach_id?: string | null
+          program_id?: number | null
+          template_key?: string | null
+          name?: string | null
+          updated_at?: string | null
           status?: string | null
           data?: Json | null
           description?: string | null
-          icon: string;
-          favorite: boolean;
-        }
-        Relationships: []
-      },
-      ledger_headers: {
-        Row: {
-          id: string;
-          created_at: string;
-          ledger_id: string;
-          name: string;
-          type: string | null;
-          options: Json[] | null;
-          order_index: number | null;
-          route_class: "independent" | "primary" | "secondary";
-        };
-        Insert: {
-          id?: string;
-          created_at?: string;
-          ledger_id: string;
-          name: string;
-          type?: string | null;
-          options?: Json[] | null;
-          order_index?: number | null;
-          route_class?: "independent" | "primary" | "secondary";
-        };
-        Update: {
-          id?: string;
-          created_at?: string;
-          ledger_id?: string | null;
-          name?: string | null;
-          type?: string | null;
-          options?: Json[] | null;
-          order_index?: number | null;
-          route_class?: "independent" | "primary" | "secondary";
-        };
-        Relationships: [
-          {
-            foreignKeyName: "ledger_headers_ledger_id_fkey";
-            columns: ["ledger_id"];
-            isOneToOne: false;
-            referencedRelation: "ledgers";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      ledger_entries: {
-        Row: {
-          id: string;
-          created_at: string | null;
-          ledger_id: string;
-          entity_key: string;
-          values: Json | null;
-        };
-        Insert: {
-          id?: string;
-          created_at?: string | null;
-          ledger_id: string;
-          entity_key: string;
-          values?: Json | null;
-        };
-        Update: {
-          id?: string;
-          created_at?: string | null;
-          ledger_id?: string;
-          entity_key?: string;
-          values?: Json | null;
-        };
-        Relationships: [];
-      };
-
-      // ------------------------------ ROUTES ------------------------------- //
-      ledger_routes: {
-        Row: {
-          id: string;
-          source_ledger_id: string;
-          source_column_id: string;
-          target_ledger_id: string;
-          target_column_id: string;
-          created_at: string;
-          updated_at: string | null;
-          active: boolean;
-        };
-        Insert: {
-          id?: string;
-          source_ledger_id: string;
-          source_column_id: string;
-          target_ledger_id: string;
-          target_column_id: string;
-          created_at?: string;
-          updated_at?: string | null;
-          active?: boolean;
-        };
-        Update: {
-          id?: string;
-          source_ledger_id?: string;
-          source_column_id?: string;
-          target_ledger_id?: string;
-          target_column_id?: string;
-          created_at?: string;
-          updated_at?: string | null;
-          active?: boolean;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "ledger_routes_source_ledger_id_fkey";
-            columns: ["source_ledger_id"];
-            isOneToOne: false;
-            referencedRelation: "ledgers";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "ledger_routes_source_column_id_fkey";
-            columns: ["source_column_id"];
-            isOneToOne: false;
-            referencedRelation: "ledger_headers";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "ledger_routes_target_ledger_id_fkey";
-            columns: ["target_ledger_id"];
-            isOneToOne: false;
-            referencedRelation: "ledgers";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "ledger_routes_target_column_id_fkey";
-            columns: ["target_column_id"];
-            isOneToOne: false;
-            referencedRelation: "ledger_headers";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      route_permissions: {
-        Row: {
-          id: string;
-          route_id: string;
-          role: "coach" | "head_coach" | "assistant_coach" | "viewer" | "admin";
-          can_create: boolean;
-          can_read: boolean;
-          can_update: boolean;
-          can_delete: boolean;
-          created_at: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          route_id: string;
-          role: "coach" | "head_coach" | "assistant_coach" | "viewer" | "admin";
-          can_create?: boolean;
-          can_read?: boolean;
-          can_update?: boolean;
-          can_delete?: boolean;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          route_id?: string;
-          role?: "coach" | "head_coach" | "assistant_coach" | "viewer" | "admin";
-          can_create?: boolean;
-          can_read?: boolean;
-          can_update?: boolean;
-          can_delete?: boolean;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "route_permissions_route_id_fkey";
-            columns: ["route_id"];
-            isOneToOne: false;
-            referencedRelation: "ledger_routes";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      route_sync_state: {
-        Row: {
-          id: string;
-          route_id: string;
-          last_source_version: number;
-          last_target_version: number;
-          pending_sync: boolean;
-          sync_attempts: number;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          route_id: string;
-          last_source_version?: number;
-          last_target_version?: number;
-          pending_sync?: boolean;
-          sync_attempts?: number;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          route_id?: string;
-          last_source_version?: number;
-          last_target_version?: number;
-          pending_sync?: boolean;
-          sync_attempts?: number;
-          updated_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "route_sync_state_route_id_fkey";
-            columns: ["route_id"];
-            isOneToOne: false;
-            referencedRelation: "ledger_routes";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-
-      // ------------------------------ TEMPLATES ------------------------------- //
-      ledger_templates: {
-        Row: {
-          id: string;
-          name: string;
-          description: string | null;
-          icon: string | null;
-          coach_id: string | null;
-          visibility: string | null;
-          created_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          description?: string | null;
-          icon?: string | null;
-          coach_id?: string | null;
-          visibility?: string | null;
-          created_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          description?: string | null;
-          icon?: string | null;
-          coach_id?: string | null;
-          visibility?: string | null;
-          created_at?: string | null;
-        };
-        Relationships: [];
-      };
-
-      ledger_template_headers: {
-        Row: {
-          id: string;
-          template_id: string;
-          column_name: string;
-          column_type: string;
-          options: string[] | null;
-          created_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          template_id: string;
-          column_name: string;
-          column_type: string;
-          options?: string[] | null;
-          created_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          template_id?: string;
-          column_name?: string;
-          column_type?: string;
-          options?: string[] | null;
-          created_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "ledger_template_headers_template_id_fkey";
-            columns: ["template_id"];
-            isOneToOne: false;
-            referencedRelation: "ledger_templates";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      ledger_template_entries: {
-        Row: {
-          id: string;
-          template_id: string;
-          values: Json | null;
-          created_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          template_id: string;
-          values?: Json | null;
-          created_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          template_id?: string;
-          values?: Json | null;
-          created_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "ledger_template_entries_template_id_fkey";
-            columns: ["template_id"];
-            isOneToOne: false;
-            referencedRelation: "ledger_templates";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      profiles: {
-        Row: {
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
-      programs: {
-        Row: {
-          coach_id: string
-          created_at: string
-          gender: string
-          id: string
-          level: string
-          school: string
-          season_end_date: string | null
-          season_start_date: string | null
-          season_year: string
-          sport: string
-          updated_at: string
-        }
-        Insert: {
-          coach_id: string
-          created_at?: string
-          gender: string
-          id?: string
-          level: string
-          school?: string
-          season_end_date?: string | null
-          season_start_date?: string | null
-          season_year?: string
-          sport: string
-          updated_at?: string
-        }
-        Update: {
-          coach_id?: string
-          created_at?: string
-          gender?: string
-          id?: string
-          level?: string
-          school?: string
-          season_end_date?: string | null
-          season_start_date?: string | null
-          season_year?: string
-          sport?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      reminders: {
-        Row: {
-          coach_id: string
-          completed: boolean
-          created_at: string
-          description: string | null
-          due_date: string | null
-          id: string
-          program_id: string | null
-          recurrence: string | null
-          time: string | null
-          title: string
-        }
-        Insert: {
-          coach_id: string
-          completed?: boolean
-          created_at?: string
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          program_id?: string | null
-          recurrence?: string | null
-          time?: string | null
-          title: string
-        }
-        Update: {
-          coach_id?: string
-          completed?: boolean
-          created_at?: string
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          program_id?: string | null
-          recurrence?: string | null
-          time?: string | null
-          title?: string
+          icon?: string | null
+          favorite?: boolean | null
+          is_system?: boolean
+          is_protected?: boolean
+          protection_level?: "none" | "basic" | "full"
         }
         Relationships: [
           {
-            foreignKeyName: "reminders_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      results: {
-        Row: {
-          athlete_id: string
-          coach_id: string
-          created_at: string | null
-          event: string
-          id: string
-          is_pr: boolean | null
-          mark: string
-          meet_id: string
-          notes: string | null
-          place: number | null
-          program_id: string | null
-        }
-        Insert: {
-          athlete_id: string
-          coach_id: string
-          created_at?: string | null
-          event: string
-          id?: string
-          is_pr?: boolean | null
-          mark: string
-          meet_id: string
-          notes?: string | null
-          place?: number | null
-          program_id?: string | null
-        }
-        Update: {
-          athlete_id?: string
-          coach_id?: string
-          created_at?: string | null
-          event?: string
-          id?: string
-          is_pr?: boolean | null
-          mark?: string
-          meet_id?: string
-          notes?: string | null
-          place?: number | null
-          program_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "results_athlete_id_fkey"
-            columns: ["athlete_id"]
-            isOneToOne: false
-            referencedRelation: "athletes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "results_meet_id_fkey"
-            columns: ["meet_id"]
-            isOneToOne: false
-            referencedRelation: "meets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "results_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      uniforms: {
-        Row: {
-          assigned_to: string | null
-          athlete_id: string | null
-          bottom_id: string
-          coach_id: string
-          created_at: string
-          id: string
-          notes: string | null
-          program_id: string | null
-          status: string
-          top_id: string
-          updated_at: string
-        }
-        Insert: {
-          assigned_to?: string | null
-          athlete_id?: string | null
-          bottom_id: string
-          coach_id: string
-          created_at?: string
-          id?: string
-          notes?: string | null
-          program_id?: string | null
-          status?: string
-          top_id: string
-          updated_at?: string
-        }
-        Update: {
-          assigned_to?: string | null
-          athlete_id?: string | null
-          bottom_id?: string
-          coach_id?: string
-          created_at?: string
-          id?: string
-          notes?: string | null
-          program_id?: string | null
-          status?: string
-          top_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "uniforms_athlete_id_fkey"
-            columns: ["athlete_id"]
-            isOneToOne: false
-            referencedRelation: "athletes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "uniforms_coach_id_fkey"
+            foreignKeyName: "ledgers_coach_id_fkey"
             columns: ["coach_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "uniforms_program_id_fkey"
+            foreignKeyName: "ledgers_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
-      user_roles: {
+
+      /* -------------------------------------------------------------------------- */
+      /*  ledger_routes                                                             */
+      /* -------------------------------------------------------------------------- */
+      ledger_routes: {
         Row: {
-          created_at: string
           id: string
-          program_id: string | null
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          source_ledger_id: string
+          source_column_id: string
+          target_ledger_id: string
+          target_column_id: string
+          created_at: string | null
+          updated_at: string | null
+          active: boolean
         }
         Insert: {
-          created_at?: string
           id?: string
-          program_id?: string | null
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          source_ledger_id: string
+          source_column_id: string
+          target_ledger_id: string
+          target_column_id: string
+          created_at?: string | null
+          updated_at?: string | null
+          active?: boolean
         }
         Update: {
-          created_at?: string
           id?: string
-          program_id?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
+          source_ledger_id?: string
+          source_column_id?: string
+          target_ledger_id?: string
+          target_column_id?: string
+          created_at?: string | null
+          updated_at?: string | null
+          active?: boolean
         }
         Relationships: [
+          {
+            foreignKeyName: "ledger_routes_source_ledger_id_fkey"
+            columns: ["source_ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_routes_source_column_id_fkey"
+            columns: ["source_column_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_headers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_routes_target_ledger_id_fkey"
+            columns: ["target_ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_routes_target_column_id_fkey"
+            columns: ["target_column_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_headers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      /* -------------------------------------------------------------------------- */
+      /*  ledger_packages                                                           */
+      /* -------------------------------------------------------------------------- */
+      ledger_packages: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          created_at: string | null
+          coach_id: string | null
+          visibility: "private" | "global"
+          icon: string | null
+          is_system_package: boolean
+          sort_index: number
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          created_at?: string | null
+          coach_id?: string | null
+          visibility?: "private" | "global"
+          icon?: string | null
+          is_system_package?: boolean
+          sort_index?: number
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          created_at?: string | null
+          coach_id?: string | null
+          visibility?: "private" | "global"
+          icon?: string | null
+          is_system_package?: boolean
+          sort_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_packages_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      ledger_package_ledgers: {
+        Row: {
+          id: string
+          package_id: string
+          ledger_name: string
+          icon: string | null
+          protection_level: "none" | "basic" | "full"
+          is_system: boolean
+          installed_ledger_id: string | null
+        }
+        Insert: {
+          id?: string
+          package_id: string
+          ledger_name: string
+          icon?: string | null
+          protection_level?: "none" | "basic" | "full"
+          is_system?: boolean
+          installed_ledger_id: string | null
+        }
+        Update: {
+          id?: string
+          package_id?: string
+          ledger_name?: string
+          icon?: string | null
+          protection_level?: "none" | "basic" | "full"
+          is_system?: boolean
+          installed_ledger_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_package_ledgers_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_packages"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      ledger_package_headers: {
+        Row: {
+          id: string
+          package_ledger_id: string
+          column_name: string
+          column_type: string
+          options: Json | null
+          order_index: number
+          route_class: "independent" | "primary" | "secondary"
+          locked: boolean
+        }
+        Insert: {
+          id?: string
+          package_ledger_id: string
+          column_name: string
+          column_type: string
+          options?: Json | null
+          order_index?: number
+          route_class?: "independent" | "primary" | "secondary"
+          locked?: boolean
+        }
+        Update: {
+          id?: string
+          package_ledger_id?: string
+          column_name?: string
+          column_type?: string
+          options?: Json | null
+          order_index?: number
+          route_class?: "independent" | "primary" | "secondary"
+          locked?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_package_headers_package_ledger_id_fkey"
+            columns: ["package_ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_package_ledgers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      ledger_package_routes: {
+        Row: {
+          id: string
+          package_id: string
+          source_ledger_name: string
+          source_column_name: string
+          target_ledger_name: string
+          target_column_name: string
+          active: boolean
+        }
+        Insert: {
+          id?: string
+          package_id: string
+          source_ledger_name: string
+          source_column_name: string
+          target_ledger_name: string
+          target_column_name: string
+          active?: boolean
+        }
+        Update: {
+          id?: string
+          package_id?: string
+          source_ledger_name?: string
+          source_column_name?: string
+          target_ledger_name?: string
+          target_column_name?: string
+          active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_package_routes_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_packages"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      ledger_package_installs: {
+        Row: {
+          id: string;
+          program_id: number;
+          template_id: string;
+          installed_ledger_id: string;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          program_id: number;
+          template_id: string;
+          installed_ledger_id: string;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          program_id?: number;
+          template_id?: string;
+          installed_ledger_id?: string;
+          created_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ledger_package_installs_program_id_fkey";
+            columns: ["program_id"];
+            isOneToOne: false;
+            referencedRelation: "programs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ledger_package_installs_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "ledger_package_ledgers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ledger_package_installs_installed_ledger_id_fkey";
+            columns: ["installed_ledger_id"];
+            isOneToOne: false;
+            referencedRelation: "ledgers";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
+      /* -------------------------------------------------------------------------- */
+      /*  profiles                                                                  */
+      /* -------------------------------------------------------------------------- */
+      profiles: {
+        Row: {
+          id: string
+          full_name: string | null
+          avatar_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id: string
+          full_name?: string | null
+          avatar_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+
+      /* -------------------------------------------------------------------------- */
+      /*  programs                                                                  */
+      /* -------------------------------------------------------------------------- */
+      programs: {
+        Row: {
+          id: number
+          coach_id: string
+          description: string | null
+          created_at: string | null
+          school: string | null
+          sport: string | null
+          level: string | null
+          gender: string | null
+          season_year: string | null
+        }
+        Insert: {
+          id?: number
+          coach_id: string
+          description?: string | null
+          created_at?: string | null
+          school?: string | null
+          sport?: string | null
+          level?: string | null
+          gender?: string | null
+          season_year?: string | null
+        }
+        Update: {
+          id?: number
+          coach_id?: string
+          description?: string | null
+          created_at?: string | null
+          school?: string | null
+          sport?: string | null
+          level?: string | null
+          gender?: string | null
+          season_year?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_coach_id_fkey"
+            columns: ["coach_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      /* -------------------------------------------------------------------------- */
+      /*  user_roles                                                                */
+      /* -------------------------------------------------------------------------- */
+      user_roles: {
+        Row: {
+          id: number
+          user_id: string
+          program_id: number
+          role: "admin" | "head_coach" | "assistant_coach" | "viewer"
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          program_id: number
+          role: "admin" | "head_coach" | "assistant_coach" | "viewer"
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          program_id?: number
+          role?: "admin" | "head_coach" | "assistant_coach" | "viewer"
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_roles_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
-          },
+          }
         ]
       }
-    }
+
+      /* -------------------------------------------------------------------------- */
+      /*  route_permissions                                                         */
+      /* -------------------------------------------------------------------------- */
+      route_permissions: {
+        Row: {
+          id: string
+          route_id: string
+          role: "admin" | "head_coach" | "assistant_coach" | "viewer" | "coach"
+          can_create: boolean
+          can_read: boolean
+          can_update: boolean
+          can_delete: boolean
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          route_id: string
+          role: "admin" | "head_coach" | "assistant_coach" | "viewer" | "coach"
+          can_create?: boolean
+          can_read?: boolean
+          can_update?: boolean
+          can_delete?: boolean
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          route_id?: string
+          role?: "admin" | "head_coach" | "assistant_coach" | "viewer" | "coach"
+          can_create?: boolean
+          can_read?: boolean
+          can_update?: boolean
+          can_delete?: boolean
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_permissions_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_routes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      /* -------------------------------------------------------------------------- */
+      /*  route_sync_state                                                          */
+      /* -------------------------------------------------------------------------- */
+      route_sync_state: {
+        Row: {
+          id: string
+          route_id: string
+          last_source_version: number
+          last_target_version: number
+          pending_sync: boolean
+          sync_attempts: number
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          route_id: string
+          last_source_version?: number
+          last_target_version?: number
+          pending_sync?: boolean
+          sync_attempts?: number
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          route_id?: string
+          last_source_version?: number
+          last_target_version?: number
+          pending_sync?: boolean
+          sync_attempts?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "route_sync_state_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_routes"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      /* -------------------------------------------------------------------------- */
+      /*  Templates                                                                 */
+      /* -------------------------------------------------------------------------- */
+      ledger_templates: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          icon: string | null
+          coach_id: string | null
+          visibility: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          icon?: string | null
+          coach_id?: string | null
+          visibility?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          icon?: string | null
+          coach_id?: string | null
+          visibility?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+
+      ledger_template_headers: {
+        Row: {
+          id: string
+          template_id: string
+          column_name: string
+          column_type: string
+          options: string[] | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          template_id: string
+          column_name: string
+          column_type: string
+          options?: string[] | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          template_id?: string
+          column_name?: string
+          column_type?: string
+          options?: string[] | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_template_headers_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_templates"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
+      ledger_template_entries: {
+        Row: {
+          id: string
+          template_id: string
+          values: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          template_id: string
+          values?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          template_id?: string
+          values?: Json | null
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_template_entries_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_templates"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+    },
+
     Views: {
       [_ in never]: never
-    }
+    },
+
     Functions: {
       has_program_role: {
         Args: {
-          _program_id: string
-          _role: Database["public"]["Enums"]["app_role"]
+          _program_id: number
+          _role: "admin" | "head_coach" | "assistant_coach" | "viewer"
           _user_id: string
         }
         Returns: boolean
-      }
+      },
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
+          _role: "admin" | "head_coach" | "assistant_coach" | "viewer"
           _user_id: string
         }
         Returns: boolean
-      }
-
+      },
       shift_ledger_headers_order: {
-        Args: { p_ledger_id: string; p_start_index: number };
-        Returns: void;
-      };
-
+        Args: { p_ledger_id: string; p_start_index: number }
+        Returns: void
+      },
       compact_ledger_headers_order: {
-        Args: { p_ledger_id: string };
-        Returns: void;
-      };
-    }
+        Args: { p_ledger_id: string }
+        Returns: void
+      }
+    },
+
     Enums: {
       app_role: "admin" | "head_coach" | "assistant_coach" | "viewer"
-    }
+    },
+
     CompositeTypes: {
       [_ in never]: never
     }

@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import LedgerToolbar from "./LedgerToolbar";
-import LedgerSheet from "./LedgerSheet";
+import LedgerSheet from "./ledgerSheet/LedgerSheet";
 import LedgerFooter from "./LedgerFooter";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -44,7 +44,7 @@ export default function LedgerView() {
           .from("ledger_headers")
           .select("*")
           .eq("ledger_id", ledgerId)
-          .order("created_at");
+          .order("order_index", { ascending: true });
 
         const { data: entryData } = await supabase
           .from("ledger_entries")
@@ -94,7 +94,7 @@ export default function LedgerView() {
       .from("ledger_headers")
       .select("*")
       .eq("ledger_id", ledgerId)
-      .order("created_at");
+      .order("order_index", { ascending: true });
     setHeaders(data || []);
   };
 

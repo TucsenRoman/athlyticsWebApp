@@ -1,14 +1,14 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 interface ProgramContextType {
-  selectedProgramId: string | null;
-  setSelectedProgramId: (id: string) => void;
+  selectedProgramId: number | null;
+  setSelectedProgramId: (id: number | null) => void;
 }
 
 const ProgramContext = createContext<ProgramContextType | undefined>(undefined);
 
 export function ProgramProvider({ children }: { children: ReactNode }) {
-  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
+  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null);
 
   return (
     <ProgramContext.Provider value={{ selectedProgramId, setSelectedProgramId }}>

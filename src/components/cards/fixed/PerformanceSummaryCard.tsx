@@ -1,31 +1,30 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import CardFormatter from "@/components/cards/CardFormatter";
 import { Trophy } from "lucide-react";
 
 export default function PerformanceSummaryCard() {
   return (
-    <Card className="h-full bg-card border-border shadow-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-primary" />
-          Performance Spotlight
-        </CardTitle>
-      </CardHeader>
+    <CardFormatter
+      title="Performance Spotlight"
+      icon={Trophy}
+      onClick={undefined} // add navigation later if needed
+    >
+      <div className="w-full space-y-4 text-sm">
 
-      <CardContent className="text-sm space-y-4">
         {/* Featured athlete bubble */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-muted/40"></div>
-          <div>
-            <div className="h-4 bg-muted/50 rounded-md w-24"></div>
-            <div className="h-3 bg-muted/40 rounded-md w-16 mt-1"></div>
+          <div className="w-12 h-12 rounded-full bg-muted/40" />
+
+          <div className="flex flex-col gap-1">
+            <div className="h-4 w-24 rounded-md bg-muted/50" />
+            <div className="h-3 w-16 rounded-md bg-muted/40" />
           </div>
         </div>
 
-        {/* Stats placeholders */}
-        <div className="h-4 bg-muted/50 rounded-md w-full"></div>
-        <div className="h-4 bg-muted/50 rounded-md w-5/6"></div>
-        <div className="h-4 bg-muted/50 rounded-md w-3/4"></div>
-      </CardContent>
-    </Card>
+        {/* Stat lines */}
+        <div className="h-4 w-full rounded-md bg-muted/50" />
+        <div className="h-4 w-5/6 rounded-md bg-muted/50" />
+        <div className="h-4 w-3/4 rounded-md bg-muted/50" />
+      </div>
+    </CardFormatter>
   );
 }

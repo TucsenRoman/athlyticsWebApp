@@ -1,19 +1,14 @@
+import CardFormatter from "@/components/cards/CardFormatter";
 import { StickyNote, Plus, X } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 interface NotesCardProps {
-  // You can add real props tomorrow
+  // real props tomorrow
 }
 
 export default function NotesCardUI(_: NotesCardProps) {
-  // TEMP MOCK DATA — delete tomorrow
+  // TEMP MOCK DATA — replace tomorrow
   const mockExpanded = true;
   const mockNotes = [
     { id: "1", note: "Reminder: Update meet schedule." },
@@ -21,27 +16,23 @@ export default function NotesCardUI(_: NotesCardProps) {
   ];
 
   return (
-    <Card className="h-full bg-card border-border shadow-sm h-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            <StickyNote className="w-5 h-5 text-primary" />
-            Notes
-          </span>
+    <CardFormatter
+      title="Notes"
+      icon={StickyNote}
+      onClick={undefined} // notes card isn’t a navigation card
+      actions={
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-muted-foreground"
+        >
+          {mockExpanded ? "Collapse" : "Expand"}
+        </Button>
+      }
+    >
+      <div className="space-y-4 w-full">
 
-          {/* This will be hooked up later */}
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-muted-foreground"
-          >
-            {mockExpanded ? "Collapse" : "Expand"}
-          </Button>
-        </CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* NEW NOTE INPUT AREA (visible when expanded) */}
+        {/* NEW NOTE INPUT AREA */}
         {mockExpanded && (
           <div className="space-y-3">
             <Textarea
@@ -79,7 +70,7 @@ export default function NotesCardUI(_: NotesCardProps) {
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </CardFormatter>
   );
 }

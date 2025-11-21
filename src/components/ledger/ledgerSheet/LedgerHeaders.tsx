@@ -42,8 +42,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-import RouteConnect from "./RouteConnect";
-import RouteInfo from "./RouteInfo";
+import RouteConnect from "../RouteConnect";
+import RouteInfo from "../RouteInfo";
 
 /* -------------------------------------------------------------------------- */
 /*                                Header Cell                                 */
@@ -341,7 +341,7 @@ export default function LedgerHeaders({
       const { data, error } = await supabase
         .from("ledgers")
         .select("id, name")
-        .in("id", ledgerIds);
+        .in("id", ledgerIds)
 
       if (error) {
         console.error("Failed to load ledger names:", error);
@@ -360,7 +360,7 @@ export default function LedgerHeaders({
   const typeIcons: Record<string, React.ElementType> = {
     text: Type,
     number: Hash,
-    dropdown: List,
+    select: List,
     checkbox: CheckSquare,
     time: Clock,
   };
