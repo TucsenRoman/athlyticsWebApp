@@ -1,12 +1,14 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
 import { toast } from "sonner";
-import { Trophy } from "lucide-react";
 import { z } from "zod";
 
 /* -------------------------- Password Strength Schema -------------------------- */
@@ -18,178 +20,256 @@ const passwordSchema = z
   .regex(/[0-9]/, "Password must contain at least one number");
 
 export default function AuthForm() {
-  const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
-  /* ------------------------------ Submit Handler ------------------------------ */
-  const handleSubmit = async (e: React.FormEvent) => {
+  /* -------------------------------------------------------------------------- */
+  /*  DETERMINE ACTIVE TAB FROM ROUTE                                           */
+  /* -------------------------------------------------------------------------- */
+  const routeTab = location.pathname.includes("signup") ? "signup" : "login";
+  const [activeTab, setActiveTab] = useState(routeTab);
+
+  // Sync UI → Route
+  useEffect(() => {
+    if (activeTab !== routeTab) {
+      navigate(`/${activeTab}`, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // Sync Route → UI (browser nav)
+  useEffect(() => {
+    if (routeTab !== activeTab) {
+      setActiveTab(routeTab);
+    }
+  }, [routeTab]);
+
+  /* -------------------------------------------------------------------------- */
+  /*  LOGIN HANDLER                                                             */
+  /* -------------------------------------------------------------------------- */
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
     try {
-      if (!isLogin) {
-        const validation = passwordSchema.safeParse(password);
-        if (!validation.success) {
-          toast.error(validation.error.errors[0].message);
-          setLoading(false);
-          return;
-        }
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
 
-      if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-
-        toast.success("Welcome back, Coach.");
-        navigate("/");
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: { full_name: fullName },
-          },
-        });
-
-        if (error) throw error;
-        const user = data.user;
-
-        if (user) {
-          await supabase.from("profiles").insert([
-            { id: user.id, full_name: fullName }
-          ]);
-        }
-
-        toast.success("Account created. Logging you in…");
-        navigate("/");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Authentication failed");
+      toast.success("Welcome back, Coach.");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.message || "Authentication failed");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   /* -------------------------------------------------------------------------- */
-  /*  UI (ATHLYTICS STYLE)                                                      */
+  /*  SIGNUP HANDLER                                                            */
   /* -------------------------------------------------------------------------- */
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+
+    const validation = passwordSchema.safeParse(password);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: { full_name: fullName },
+        },
+      });
+
+      if (error) throw error;
+
+      const user = data.user;
+      if (user) {
+        await supabase.from("profiles").insert([{ id: user.id, full_name: fullName }]);
+      }
+
+      toast.success("Account created. Logging you in…");
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*  BACKGROUND CONTROL                                                        */
+  /* -------------------------------------------------------------------------- */
+  const showBg = location.pathname !== "/";
 
   return (
     <div
-      className="
+      className={`
         relative min-h-screen flex items-center justify-center p-6
-        bg-cover bg-center bg-no-repeat
-      "
-      style={{
-        backgroundImage: "url('/AthlyticsFillerBg5.png')"
-      }}
+        ${showBg ? "bg-cover bg-center bg-no-repeat" : "bg-transparent"}
+      `}
+      style={
+        showBg
+          ? { backgroundImage: "url('/AthlyticsFillerBg5.png')" }
+          : undefined
+      }
     >
+      <div className="absolute top-5 left-5">
+        <button
+          onClick={() => navigate("/")}
+          className="
+            px-4 py-2 rounded-lg
+            bg-black/20 backdrop-blur-md
+            text-white font-semibold
+            hover:bg-white/20
+            transition
+            shadow-lg shadow-black/20
+          "
+        >
+          Home
+        </button>
+      </div>
       <Card
         className="
           w-full max-w-md rounded-3xl overflow-hidden
-
-          /* translucent glass */
           bg-white/35 dark:bg-neutral-900/40
           backdrop-blur-2xl
-
-          /* separation */
           shadow-xl shadow-black/30
-          shadow-inner shadow-black/10
-
           border border-white/40 dark:border-white/10
         "
       >
-        <CardHeader className="space-y-6">
-          {/* Title */}
-        <CardTitle className="
-          text-center text-3xl font-bold tracking-tight 
-          text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]
-        ">
-            {isLogin ? "Welcome Back" : "Create Your Account"}
+        <CardHeader className="pb-0">
+          <CardTitle
+            className="
+              text-center text-3xl font-bold tracking-tight 
+              text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]
+            "
+          >
+            Athlytics
           </CardTitle>
-
-          {/* Subtitle */}
-          <CardDescription className="
-            text-center 
-            text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]
-          ">
-            {isLogin ? "Sign in to your coaching dashboard" : "Start building your program"}
-          </CardDescription>
         </CardHeader>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">Full Name</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="Coach Name"
-                  className="rounded-xl"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="coach@school.com"
-                className="rounded-xl"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="rounded-xl"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={loading}
+        <CardContent className="mt-4">
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as "login" | "signup")}
+            className="w-full"
+          >
+            <TabsList
               className="
-                w-full h-11 rounded-xl text-lg font-semibold
-                bg-[hsl(var(--primary))]
-                hover:bg-primary/30
-                transition-all
+                grid grid-cols-2 
+                bg-white/20 dark:bg-black/20 
+                backdrop-blur-sm
+                rounded-xl p-1
               "
             >
-              {loading ? "Processing…" : isLogin ? "Sign In" : "Create Account"}
-            </Button>
-          </form>
+              <TabsTrigger value="login">Log In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
 
-          {/* Toggle */}
-          <div className="mt-4 text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-neutral-800 hover:underline"
-            >
-              {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
-            </button>
-          </div>
+            {/* LOGIN FORM */}
+            <TabsContent value="login">
+              <form onSubmit={handleLogin} className="space-y-5 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-white/95">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="coach@school.com"
+                    className="rounded-xl"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-white/95">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="rounded-xl"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 rounded-xl text-lg font-semibold"
+                >
+                  {loading ? "Processing…" : "Sign In"}
+                </Button>
+              </form>
+            </TabsContent>
+
+            {/* SIGNUP FORM */}
+            <TabsContent value="signup">
+              <form onSubmit={handleSignup} className="space-y-5 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-white/95">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Coach Name"
+                    className="rounded-xl"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-white/95">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="coach@school.com"
+                    className="rounded-xl"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-white/95">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="rounded-xl"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 rounded-xl text-lg font-semibold"
+                >
+                  {loading ? "Processing…" : "Create Account"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

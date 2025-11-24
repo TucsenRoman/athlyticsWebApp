@@ -1,12 +1,13 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import { AuthProvider } from "@/contexts/AuthContext";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
 import HeaderLayout from "@/components/header/HeaderLayout";
 
 import Home from "./pages/Home";
@@ -18,59 +19,66 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
 
-        <BrowserRouter>
-          <Routes>
-            {/* Public */}
-            <Route path="/" element={<Home />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/login" element={<Navigate to="/auth" replace />} />
+          <BrowserRouter>
+            <Routes>
 
-            {/* FieldView (main app hub) */}
-            <Route
-              path="/fieldview"
-              element={
-                <HeaderLayout>
-                  <FieldViewScreen />
-                </HeaderLayout>
-              }
-            />
+              {/* PUBLIC ROUTES ------------------------------------------------ */}
+              <Route path="/" element={<Home />} />
 
-            {/* Alias: /app → /fieldview */}
-            <Route path="/app" element={<Navigate to="/fieldview" replace />} />
+              {/* AUTH ROUTES NOW SPLIT -------------------------------------- */}
+              <Route path="/login" element={<Auth />} />
+              <Route path="/signup" element={<Auth />} />
 
-            {/* Ledger */}
-            <Route
-              path="/ledger"
-              element={
-                <HeaderLayout>
-                  <LedgerPage />
-                </HeaderLayout>
-              }
-            />
+              {/* PROTECTED ROUTES ------------------------------------------- */}
+              <Route
+                path="/fieldview"
+                element={
+                  <ProtectedRoute>
+                    <HeaderLayout>
+                      <FieldViewScreen />
+                    </HeaderLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/ledgers/:ledgerId"
-              element={
-                <HeaderLayout>
-                  <LedgerView />
-                </HeaderLayout>
-              }
-            />
+              <Route
+                path="/ledger"
+                element={
+                  <ProtectedRoute>
+                    <HeaderLayout>
+                      <LedgerPage />
+                    </HeaderLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+              <Route
+                path="/ledgers/:ledgerId"
+                element={
+                  <ProtectedRoute>
+                    <HeaderLayout>
+                      <LedgerView />
+                    </HeaderLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-export default App;
+              {/* CATCH-ALL -------------------------------------------------- */}
+              <Route path="*" element={<NotFound />} />
+
+            </Routes>
+          </BrowserRouter>
+
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+}

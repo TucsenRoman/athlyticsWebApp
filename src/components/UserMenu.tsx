@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,6 +14,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
@@ -38,12 +41,18 @@ import {
   MonitorSmartphone,
 } from "lucide-react";
 
-interface UserDropdownShellProps {
-  onSignOut: () => void | Promise<void>;
-}
+// No props anymore
+interface UserDropdownShellProps {}
 
-export default function UserDropdownShell({ onSignOut }: UserDropdownShellProps) {
+export default function UserDropdownShell(_: UserDropdownShellProps) {
   const [open, setOpen] = useState(false);
+
+  // 🔥 Pull logout from AuthContext instead of getting passed down
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut(); // AuthContext handles redirect
+  };
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -130,9 +139,15 @@ export default function UserDropdownShell({ onSignOut }: UserDropdownShellProps)
               <MonitorSmartphone className="h-4 w-4 text-primary" /> Theme
             </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
-              <DropdownMenuItem className="gap-2 hover:bg-primary/20"><Sun className="h-4 w-4 text-primary" /> Light</DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 hover:bg-primary/20"><Moon className="h-4 w-4 text-primary" /> Dark</DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 hover:bg-primary/20"><MonitorSmartphone className="h-4 w-4 text-primary" /> System</DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 hover:bg-primary/20">
+                <Sun className="h-4 w-4 text-primary" /> Light
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 hover:bg-primary/20">
+                <Moon className="h-4 w-4 text-primary" /> Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem className="gap-2 hover:bg-primary/20">
+                <MonitorSmartphone className="h-4 w-4 text-primary" /> System
+              </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
 
@@ -157,7 +172,7 @@ export default function UserDropdownShell({ onSignOut }: UserDropdownShellProps)
 
         {/* LOGOUT */}
         <DropdownMenuItem
-          onClick={onSignOut}
+          onClick={handleSignOut}
           className="gap-2 text-red-400 focus:text-red-500 hover:bg-red-500/10"
         >
           <LogOut className="h-4 w-4" /> Log out

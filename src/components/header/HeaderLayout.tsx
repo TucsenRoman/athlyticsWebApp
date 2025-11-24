@@ -1,16 +1,14 @@
 // src/components/header/HeaderLayout.tsx
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
 
-import { User2, LayoutDashboard, ClipboardList } from "lucide-react";
+import { LayoutDashboard, ClipboardList } from "lucide-react";
 
 import ProgramSelector from "@/components/program/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { EditModeContext } from "@/contexts/EditModeContext";
-import UserDropdownShell from "@/components/UserMenu"
+import Usermenu from "@/components/UserMenu";
 
 interface HeaderLayoutProps {
   children: React.ReactNode;
@@ -23,39 +21,12 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
   const hideHeader = location.pathname.startsWith("/ledgers/");
 
   /* -------------------------------------------------------------------------- */
-  /* AUTH                                                                       */
-  /* -------------------------------------------------------------------------- */
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!loading && !user) navigate("/auth");
-  }, [loading, user, navigate]);
-
-  /* -------------------------------------------------------------------------- */
-  /* PROGRAM CONTEXT (just ID)                                                  */
+  /* PROGRAM CONTEXT                                                            */
   /* -------------------------------------------------------------------------- */
   const { selectedProgramId, setSelectedProgramId } = useProgramContext();
 
   /* -------------------------------------------------------------------------- */
-  /* EDIT MODE (Header controls only)                                           */
+  /* EDIT MODE                                                                   */
   /* -------------------------------------------------------------------------- */
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -63,15 +34,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
   /* FIELDVIEW ↔ LEDGER ROUTING                                                 */
   /* -------------------------------------------------------------------------- */
   const onLedger = location.pathname.startsWith("/ledger");
-  const toggleView = () => navigate(onLedger ? "/" : "/ledger");
-
-  /* -------------------------------------------------------------------------- */
-  /* LOGOUT                                                                     */
-  /* -------------------------------------------------------------------------- */
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
+  const toggleView = () => navigate(onLedger ? "/fieldview" : "/ledger");
 
   /* -------------------------------------------------------------------------- */
   /* RENDER                                                                      */
@@ -82,7 +45,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
       <div className="min-h-screen bg-background overflow-hidden">
 
         {/* HEADER */}
-        {!hideHeader && user && (
+        {!hideHeader && (
           <header className="border-b bg-card/90 backdrop-blur-md h-16 flex items-center">
             <div className="container mx-auto px-4 w-full flex items-center justify-between relative">
 
@@ -91,7 +54,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
 
                 {/* Mobile Logo */}
                 <button
-                  onClick={() => navigate("/")}
+                  onClick={() => navigate("/fieldview")}
                   className="flex md:hidden items-center hover:opacity-80 transition"
                 >
                   <img src="/StopWatchLogo.png" className="w-8 h-8" />
@@ -109,7 +72,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
 
               {/* CENTER — Desktop Logo */}
               <button
-                onClick={() => navigate("/")}
+                onClick={() => navigate("/fieldview")}
                 className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2 hover:opacity-80 transition"
               >
                 <img src="/StopWatchLogo.png" className="w-9 h-9" />
@@ -132,7 +95,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                 </button>
 
                 {/* User Menu */}
-                <UserDropdownShell onSignOut={handleSignOut} />
+                <Usermenu />
               </div>
             </div>
           </header>
@@ -140,8 +103,9 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
 
         {/* PAGE CONTENT */}
         <main className="flex-1 h-[calc(100vh-4rem)] overflow-hidden">
-          {loading ? null : children}
+          {children}
         </main>
+
       </div>
     </EditModeContext.Provider>
   );
