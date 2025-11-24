@@ -167,15 +167,27 @@ export default function FixedCardsSystem() {
       </div>
 
       {/* PAGINATION */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+      <div
+        className="
+          sticky
+          bottom-4
+          z-30
+          w-full
+          flex
+          justify-center
+          pointer-events-none
+        "
+      >
         <div
           className="
+            pointer-events-auto
             flex items-center gap-2
-            p-3
+            px-4 py-2
             rounded-full
-            backdrop-blur-3xl backdrop-saturate-150
-            bg-accent/15 dark:bg-neutral-900/20
-            shadow-lg shadow-black/10
+            backdrop-blur-2xl
+            bg-neutral-200/80 dark:bg-neutral-800/70
+            border border-neutral-300/50 dark:border-neutral-700/50
+            shadow-lg
           "
         >
           {/* First */}
