@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgramContext } from "@/hooks/useProgramContext";
-import PackageDisplay from "@/components/packages/PackageDisplay";
+
+import PackageDisplay from "@/components/ledgersidebar/PackageDisplay";
+import NewLedger from "@/components/ledgersidebar/NewLegder";
+import LedgerMarketplace from "@/components/ledgercontent/ledgermarketplace";
+import Community from "@/components/ledgercontent/Community";
+import NoProgramState from "@/components/NoProgramState";
 
 import {
   ChevronDown,
@@ -55,13 +60,21 @@ export default function LedgerPage() {
   const { selectedProgramId } = useProgramContext();
 
   const [ledgers, setLedgers] = useState<AnyLedger[]>([]);
-  const [installedTemplateIds, setInstalledTemplateIds] = useState<Set<string>>(new Set());
+  const [installedTemplateIds, setInstalledTemplateIds] = useState<Set<string>>(
+    new Set()
+  );
   const [loading, setLoading] = useState(true);
-
   const [openOther, setOpenOther] = useState(true);
 
+  const [newLedgerOpen, setNewLedgerOpen] = useState(false);
+
+  // NEW: Marketplace vs Community tab
+  const [activeTab, setActiveTab] = useState<"marketplace" | "community">(
+    "marketplace"
+  );
+
   /* --------------------------------------- */
-  /* LOAD LEDGERS FOR THIS PROGRAM           */
+  /* LOAD LEDGERS                            */
   /* --------------------------------------- */
 
   useEffect(() => {
@@ -95,8 +108,7 @@ export default function LedgerPage() {
   }, [selectedProgramId]);
 
   /* --------------------------------------- */
-  /* LOAD INSTALLED TEMPLATE IDS             */
-  /* (needed to find ORPHAN ledgers)         */
+  /* INSTALLED TEMPLATE IDS                  */
   /* --------------------------------------- */
 
   useEffect(() => {
@@ -126,7 +138,7 @@ export default function LedgerPage() {
   }, [selectedProgramId, ledgers.length]);
 
   /* --------------------------------------- */
-  /* ORPHAN LEDGERS (not part of any package) */
+  /* ORPHAN LEDGERS                          */
   /* --------------------------------------- */
 
   const orphanLedgers = useMemo(() => {
@@ -139,122 +151,170 @@ export default function LedgerPage() {
   /* --------------------------------------- */
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <>
+    {!selectedProgramId ? (
+      <NoProgramState />
+    ) : (
+      <div className="flex h-full overflow-hidden">
 
-      {/* ------------------------- */}
-      {/* SIDEBAR                   */}
-      {/* ------------------------- */}
-      <aside
-        className="
-          w-72 shrink-0
-          border-r border-border
-          bg-card/30 backdrop-blur-xl
-          overflow-y-auto
-        "
-      >
-        <div className="p-4 text-xl font-bold">Ledgers</div>
-
-        {/* PACKAGES */}
-        <PackageDisplay
-          selectedProgramId={selectedProgramId}
-          ledgers={ledgers}
-        />
-
-        {/* OTHER LEDGERS SECTION */}
-        <div className="border-t border-border/40 pt-2">
-
+        {/* ------------------------- */}
+        {/* SIDEBAR                   */}
+        {/* ------------------------- */}
+        <aside
+          className="
+            w-72 shrink-0
+            border-r border-border
+            bg-card/30 backdrop-blur-xl
+            overflow-y-auto
+          "
+        >
           {/* HEADER */}
-          <button
-            type="button"
-            onClick={() => setOpenOther((o) => !o)}
-            className="
-              w-full flex items-center justify-between
-              px-3 py-2
-              text-xs font-semibold uppercase tracking-[0.08em]
-              text-muted-foreground hover:text-foreground
-              transition
-            "
-          >
-            <div className="flex items-center gap-2">
-              {openOther ? (
-                <ChevronDown className="w-4 h-4 opacity-70" />
-              ) : (
-                <ChevronRight className="w-4 h-4 opacity-70" />
-              )}
-              <span>Other Ledgers</span>
-            </div>
+          <div className="flex items-center justify-between p-4">
+            <div className="text-xl font-bold">Ledgers</div>
+          </div>
 
-            {orphanLedgers.length > 0 && (
-              <span className="text-[10px] text-muted-foreground">
-                {orphanLedgers.length}
-              </span>
-            )}
-          </button>
-
-          {/* LIST */}
-          {openOther && (
-            <div className="mt-1 space-y-1 pl-9 pr-2 pb-3">
-              {loading && (
-                <p className="text-xs text-muted-foreground">Loading…</p>
-              )}
-
-              {!loading && orphanLedgers.length === 0 && (
-                <p className="text-xs text-muted-foreground">None</p>
-              )}
-
-              {orphanLedgers.map((ledger) => {
-                const Icon = getIcon(ledger.icon);
-
-                return (
-                  <button
-                    key={ledger.id}
-                    onClick={() => navigate(`/ledgers/${ledger.id}`)}
-                    className="
-                      w-full flex items-center justify-between
-                      px-3 py-2 rounded-lg
-                      hover:bg-muted/40 transition
-                    "
-                  >
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="p-2 rounded-md border bg-background border-border">
-                        <Icon className="w-4 h-4 text-primary" />
-                      </div>
-
-                      <div className="flex flex-col overflow-hidden">
-                        <span className="text-sm font-medium truncate">
-                          {ledger.name}
-                        </span>
-                        {ledger.description && (
-                          <span className="text-xs text-muted-foreground truncate">
-                            {ledger.description}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <span className="text-[10px] text-muted-foreground">
-                      Open
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          {/* PACKAGE DISPLAY */}
+          {selectedProgramId && (
+            <PackageDisplay
+              selectedProgramId={selectedProgramId}
+              ledgers={ledgers}
+            />
           )}
-        </div>
-      </aside>
 
-      {/* ------------------------- */}
-      {/* MAIN CONTENT AREA         */}
-      {/* ------------------------- */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        <div>
-          Global tabs | Chatbot & Designer | | Global Routes | | Automations |
-        </div>
-        <div>
-          Package/Template/Ledger specific tabs | Notes & Comments | | Permissions |
-        </div>
-      </main>
+          {/* OTHER LEDGERS */}
+          <div className="border-t border-border/40 pt-2">
+            <button
+              type="button"
+              onClick={() => setOpenOther((o) => !o)}
+              className="
+                w-full flex items-center justify-between
+                px-3 py-2
+                text-xs font-semibold uppercase tracking-[0.08em]
+                text-muted-foreground hover:text-foreground
+                transition
+              "
+            >
+              <div className="flex items-center gap-2">
+                {openOther ? (
+                  <ChevronDown className="w-4 h-4 opacity-70" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 opacity-70" />
+                )}
+                <span>Other Ledgers</span>
+              </div>
 
-    </div>
+              {orphanLedgers.length > 0 && (
+                <span className="text-[10px] text-muted-foreground">
+                  {orphanLedgers.length}
+                </span>
+              )}
+            </button>
+
+            {openOther && (
+              <div className="mt-1 space-y-1 pl-9 pr-2 pb-3">
+                {loading && (
+                  <p className="text-xs text-muted-foreground">Loading…</p>
+                )}
+
+                {!loading && orphanLedgers.length === 0 && (
+                  <p className="text-xs text-muted-foreground">None</p>
+                )}
+
+                {orphanLedgers.map((ledger) => {
+                  const Icon = getIcon(ledger.icon);
+
+                  return (
+                    <button
+                      key={ledger.id}
+                      onClick={() => navigate(`/ledgers/${ledger.id}`)}
+                      className="
+                        w-full flex items-center justify-between
+                        px-3 py-2 rounded-lg
+                        hover:bg-muted/40 transition
+                      "
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="p-2 rounded-md border bg-background border-border">
+                          <Icon className="w-4 h-4 text-primary" />
+                        </div>
+
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="text-sm font-medium truncate">
+                            {ledger.name}
+                          </span>
+
+                          {ledger.description && (
+                            <span className="text-xs text-muted-foreground truncate">
+                              {ledger.description}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] text-muted-foreground">
+                        Open
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* ------------------------- */}
+        {/* MAIN CONTENT + TABS       */}
+        {/* ------------------------- */}
+        <main className="flex-1 overflow-hidden flex flex-col">
+
+          {/* TABS */}
+          <div className="flex gap-3 border-b border-border px-6 pt-4 pb-2 bg-card/60 backdrop-blur-xl">
+
+            <button
+              onClick={() => setActiveTab("marketplace")}
+              className={`
+                px-3 py-1.5 rounded-md text-sm font-medium transition
+                ${
+                  activeTab === "marketplace"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground"
+                }
+              `}
+            >
+              Marketplace
+            </button>
+
+            <button
+              onClick={() => setActiveTab("community")}
+              className={`
+                px-3 py-1.5 rounded-md text-sm font-medium transition
+                ${
+                  activeTab === "community"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground"
+                }
+              `}
+            >
+              Community
+            </button>
+
+          </div>
+
+          {/* CONTENT */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === "marketplace" && <LedgerMarketplace />}
+            {activeTab === "community" && <Community />}
+          </div>
+        </main>
+
+        {/* NEW LEDGER DIALOG */}
+        <NewLedger
+          open={newLedgerOpen}
+          onOpenChange={setNewLedgerOpen}
+          programId={selectedProgramId}
+        />
+      </div>
+    )}
+    </>
   );
 }

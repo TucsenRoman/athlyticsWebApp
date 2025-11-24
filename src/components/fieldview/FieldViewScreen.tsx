@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import FieldViewSearchBar from "./FieldViewSearchBar";
 import FieldViewFeed from "./FieldViewFeed";
-import FieldViewEmptyState from "./FieldViewEmptyState";
+import NoProgramState from "../NoProgramState";
 import { useProgramContext } from "@/hooks/useProgramContext";
 
 export default function FieldViewScreen() {
@@ -26,7 +26,7 @@ export default function FieldViewScreen() {
   if (!selectedProgramId) {
     return (
       <div className="w-full min-h-screen bg-white dark:bg-black">
-        <FieldViewEmptyState />
+        <NoProgramState />
       </div>
     );
   }

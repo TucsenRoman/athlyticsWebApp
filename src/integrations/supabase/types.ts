@@ -1,3 +1,6 @@
+// ------------------------------------------------------------
+// JSON TYPE
+// ------------------------------------------------------------
 export type Json =
   | string
   | number
@@ -6,16 +9,20 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// ------------------------------------------------------------
+// DATABASE
+// ------------------------------------------------------------
 export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+
   public: {
     Tables: {
 
-      /* -------------------------------------------------------------------------- */
-      /*  ledger_entries                                                            */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  LEDGER ENTRIES                                                        */
+      /* ====================================================================== */
       ledger_entries: {
         Row: {
           id: string
@@ -47,11 +54,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  ledger_headers                                                            */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  LEDGER HEADERS                                                        */
+      /* ====================================================================== */
       ledger_headers: {
         Row: {
           id: string
@@ -61,7 +68,7 @@ export type Database = {
           type: string | null
           order_index: number | null
           route_class: "independent" | "primary" | "secondary"
-          options: any
+          options: Json
           updated_at: string
           locked: boolean
         }
@@ -73,7 +80,7 @@ export type Database = {
           type?: string | null
           order_index?: number | null
           route_class?: "independent" | "primary" | "secondary"
-          options?: any
+          options?: Json
           updated_at?: string
           locked?: boolean
         }
@@ -85,7 +92,7 @@ export type Database = {
           type?: string | null
           order_index?: number | null
           route_class?: "independent" | "primary" | "secondary"
-          options?: any
+          options?: Json
           updated_at?: string
           locked?: boolean
         }
@@ -98,11 +105,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  ledgers                                                                   */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  LEDGERS (NO package_id ANYMORE)                                       */
+      /* ====================================================================== */
       ledgers: {
         Row: {
           id: string
@@ -171,11 +178,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  ledger_routes                                                             */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  LEDGER ROUTES                                                         */
+      /* ====================================================================== */
       ledger_routes: {
         Row: {
           id: string
@@ -237,11 +244,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  ledger_packages                                                           */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  LEDGER PACKAGES                                                       */
+      /* ====================================================================== */
       ledger_packages: {
         Row: {
           id: string
@@ -285,8 +292,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
+      /* ====================================================================== */
+      /*  LEDGER PACKAGE LEDGERS                                                */
+      /* ====================================================================== */
       ledger_package_ledgers: {
         Row: {
           id: string
@@ -304,7 +314,7 @@ export type Database = {
           icon?: string | null
           protection_level?: "none" | "basic" | "full"
           is_system?: boolean
-          installed_ledger_id: string | null
+          installed_ledger_id?: string | null
         }
         Update: {
           id?: string
@@ -313,7 +323,7 @@ export type Database = {
           icon?: string | null
           protection_level?: "none" | "basic" | "full"
           is_system?: boolean
-          installed_ledger_id: string | null
+          installed_ledger_id?: string | null
         }
         Relationships: [
           {
@@ -324,8 +334,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
+      /* ====================================================================== */
+      /*  LEDGER PACKAGE HEADERS                                                */
+      /* ====================================================================== */
       ledger_package_headers: {
         Row: {
           id: string
@@ -366,96 +379,118 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
-      ledger_package_routes: {
+      /* ====================================================================== */
+      /*  PACKAGE INSTALL INSTANCES (NEW TABLE)                                 */
+      /* ====================================================================== */
+      package_install_instances: {
         Row: {
           id: string
+          program_id: number
           package_id: string
-          source_ledger_name: string
-          source_column_name: string
-          target_ledger_name: string
-          target_column_name: string
-          active: boolean
+          name: string | null
+          tags: string[] | null
+          created_at: string | null
         }
         Insert: {
           id?: string
+          program_id: number
           package_id: string
-          source_ledger_name: string
-          source_column_name: string
-          target_ledger_name: string
-          target_column_name: string
-          active?: boolean
+          name?: string | null
+          tags?: string[] | null
+          created_at?: string | null
         }
         Update: {
           id?: string
+          program_id?: number
           package_id?: string
-          source_ledger_name?: string
-          source_column_name?: string
-          target_ledger_name?: string
-          target_column_name?: string
-          active?: boolean
+          name?: string | null
+          tags?: string[] | null
+          created_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "ledger_package_routes_package_id_fkey"
+            foreignKeyName: "package_install_instances_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_install_instances_package_id_fkey"
             columns: ["package_id"]
             isOneToOne: false
             referencedRelation: "ledger_packages"
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
+
+      /* ====================================================================== */
+      /*  LEDGER PACKAGE INSTALLS (NOW WITH install_instance_id)                */
+      /* ====================================================================== */
       ledger_package_installs: {
         Row: {
-          id: string;
-          program_id: number;
-          template_id: string;
-          installed_ledger_id: string;
-          created_at: string | null;
-        };
+          id: string
+          program_id: number
+          template_id: string
+          installed_ledger_id: string
+          created_at: string | null
+          install_instance_id: string | null
+        }
         Insert: {
-          id?: string;
-          program_id: number;
-          template_id: string;
-          installed_ledger_id: string;
-          created_at?: string | null;
-        };
+          id?: string
+          program_id: number
+          template_id: string
+          installed_ledger_id: string
+          created_at?: string | null
+          install_instance_id?: string | null
+        }
         Update: {
-          id?: string;
-          program_id?: number;
-          template_id?: string;
-          installed_ledger_id?: string;
-          created_at?: string | null;
-        };
+          id?: string
+          program_id?: number
+          template_id?: string
+          installed_ledger_id?: string
+          created_at?: string | null
+          install_instance_id?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: "ledger_package_installs_program_id_fkey";
-            columns: ["program_id"];
-            isOneToOne: false;
-            referencedRelation: "programs";
-            referencedColumns: ["id"];
+            foreignKeyName: "ledger_package_installs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ledger_package_installs_template_id_fkey";
-            columns: ["template_id"];
-            isOneToOne: false;
-            referencedRelation: "ledger_package_ledgers";
-            referencedColumns: ["id"];
+            foreignKeyName: "ledger_package_installs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_package_ledgers"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ledger_package_installs_installed_ledger_id_fkey";
-            columns: ["installed_ledger_id"];
-            isOneToOne: false;
-            referencedRelation: "ledgers";
-            referencedColumns: ["id"];
+            foreignKeyName: "ledger_package_installs_installed_ledger_id_fkey"
+            columns: ["installed_ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName:
+              "ledger_package_installs_install_instance_id_fkey"
+            columns: ["install_instance_id"]
+            isOneToOne: false
+            referencedRelation: "package_install_instances"
+            referencedColumns: ["id"]
           }
-        ];
-      };
+        ]
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  profiles                                                                  */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  PROFILES                                                              */
+      /* ====================================================================== */
       profiles: {
         Row: {
           id: string
@@ -476,11 +511,11 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
-      }
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  programs                                                                  */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  PROGRAMS                                                              */
+      /* ====================================================================== */
       programs: {
         Row: {
           id: number
@@ -524,11 +559,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  user_roles                                                                */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  USER ROLES                                                            */
+      /* ====================================================================== */
       user_roles: {
         Row: {
           id: number
@@ -567,11 +602,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  route_permissions                                                         */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  ROUTE PERMISSIONS                                                     */
+      /* ====================================================================== */
       route_permissions: {
         Row: {
           id: string
@@ -615,11 +650,11 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
+      },
 
-      /* -------------------------------------------------------------------------- */
-      /*  route_sync_state                                                          */
-      /* -------------------------------------------------------------------------- */
+      /* ====================================================================== */
+      /*  ROUTE SYNC STATE                                                      */
+      /* ====================================================================== */
       route_sync_state: {
         Row: {
           id: string
@@ -657,113 +692,19 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      }
-
-      /* -------------------------------------------------------------------------- */
-      /*  Templates                                                                 */
-      /* -------------------------------------------------------------------------- */
-      ledger_templates: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          icon: string | null
-          coach_id: string | null
-          visibility: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          icon?: string | null
-          coach_id?: string | null
-          visibility?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          icon?: string | null
-          coach_id?: string | null
-          visibility?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-
-      ledger_template_headers: {
-        Row: {
-          id: string
-          template_id: string
-          column_name: string
-          column_type: string
-          options: string[] | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          template_id: string
-          column_name: string
-          column_type: string
-          options?: string[] | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          template_id?: string
-          column_name?: string
-          column_type?: string
-          options?: string[] | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ledger_template_headers_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "ledger_templates"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-
-      ledger_template_entries: {
-        Row: {
-          id: string
-          template_id: string
-          values: Json | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          template_id: string
-          values?: Json | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          template_id?: string
-          values?: Json | null
-          created_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ledger_template_entries_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "ledger_templates"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
+      },
     },
 
+    /* ======================================================================== */
+    /*  Views (none)                                                            */
+    /* ======================================================================== */
     Views: {
       [_ in never]: never
     },
 
+    /* ======================================================================== */
+    /*  Functions                                                               */
+    /* ======================================================================== */
     Functions: {
       has_program_role: {
         Args: {
@@ -790,132 +731,42 @@ export type Database = {
       }
     },
 
+    /* ======================================================================== */
+    /*  Enums                                                                   */
+    /* ======================================================================== */
     Enums: {
       app_role: "admin" | "head_coach" | "assistant_coach" | "viewer"
     },
 
+    /* ======================================================================== */
+    /*  Composite Types (none)                                                  */
+    /* ======================================================================== */
     CompositeTypes: {
       [_ in never]: never
     }
   }
 }
 
+// Helper generic types
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals["public"]
 
 export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
+  TableName extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+> = (DefaultSchema["Tables"] & DefaultSchema["Views"])[TableName]["Row"]
 
 export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
+  TableName extends keyof DefaultSchema["Tables"]
+> = DefaultSchema["Tables"][TableName]["Insert"]
 
 export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
+  TableName extends keyof DefaultSchema["Tables"]
+> =
+  DefaultSchema["Tables"][TableName]["Update"]
 
 export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  EnumName extends keyof DefaultSchema["Enums"]
+> = DefaultSchema["Enums"][EnumName]
 
 export const Constants = {
   public: {

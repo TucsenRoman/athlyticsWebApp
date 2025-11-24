@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { installDefaultPackage } from "@/components/packages/installDefaultPackage";
+import { installDefaultPackage } from "@/components/ledgersidebar/installDefaultPackage";
 
 import {
   DropdownMenu,
@@ -213,6 +213,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     };
 
     const selectedProgram = programs.find((p) => p.id === selectedProgramId);
+    const noPrograms = programs.length === 0;
 
     const formatName = (p: Program) => `${p.sport} • ${p.season_year}`;
     const formatDetails = (p: Program) => p.school;
@@ -491,25 +492,38 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
               }
             `}
           >
-            {programs.map((p) => (
+            {/* ░░ SHOW ADD BUTTON IF NO PROGRAMS ░░ */}
+            {noPrograms ? (
               <DropdownMenuItem
-                key={p.id}
-                className="py-3 px-4 text-sm hover:bg-black/5"
-                onClick={() => handleProgramClick(p)}
+                className="py-3 px-4 text-sm font-medium text-primary hover:bg-primary/10 cursor-pointer"
+                onClick={() => {
+                  resetForm();
+                  setEditorMode("add");
+                  setEditorProgram(null);
+                }}
               >
-                <div className="flex flex-col min-w-0">
-                  <span className="font-medium text-sm truncate">
-                    {formatName(p)}
-                  </span>
-                  <span className="text-xs text-muted-foreground truncate">
-                    {formatDetails(p)}
-                  </span>
-                </div>
+                + Add Program
               </DropdownMenuItem>
-            ))}
+            ) : (
+              programs.map((p) => (
+                <DropdownMenuItem
+                  key={p.id}
+                  className="py-3 px-4 text-sm hover:bg-black/5"
+                  onClick={() => handleProgramClick(p)}
+                >
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-medium text-sm truncate">{formatName(p)}</span>
+                    <span className="text-xs text-muted-foreground truncate">
+                      {formatDetails(p)}
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              ))
+            )}
           </div>
 
-          {variant === "header" && (
+
+          {variant === "header" && !noPrograms && (
             <div className="sticky bottom-0 bg-card/90 backdrop-blur border-t py-2 pl-1 relative">
               <Button
                 variant="ghost"
@@ -531,14 +545,13 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                   className="flex items-center justify-center"
                 >
                   <Settings2
-                        className={`scale-[1.3] transition-colors
-                          ${isEditMode
-                            ? "text-[hsl(var(--primary))]"
-                            : "text-muted-foreground"}
-                        `}
-                      />
+                    className={`scale-[1.3] transition-colors
+                      ${isEditMode ? "text-[hsl(var(--primary))]" : "text-muted-foreground"}
+                    `}
+                  />
                 </motion.div>
               </Button>
+
               {renderActions()}
             </div>
           )}
