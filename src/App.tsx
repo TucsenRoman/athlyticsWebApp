@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 
 import HeaderLayout from "@/components/header/HeaderLayout";
 
+import Home from "./pages/Home";              // <-- NEW
 import Auth from "./pages/Auth";
 import LedgerPage from "./pages/LedgerPage";
 import LedgerView from "./components/ledger/LedgerView";
@@ -24,12 +25,14 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            {/* Public route */}
+
+            {/* Public routes */}
+            <Route path="/" element={<Home />} />     {/* <-- NEW HOME PAGE */}
             <Route path="/auth" element={<Auth />} />
 
-            {/* Authenticated routes all wrapped in HeaderLayout */}
+            {/* Authenticated routes */}
             <Route
-              path="/"
+              path="/fieldview"
               element={
                 <HeaderLayout>
                   <FieldViewScreen />

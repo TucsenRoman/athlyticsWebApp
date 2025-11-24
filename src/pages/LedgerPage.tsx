@@ -5,7 +5,7 @@ import { useProgramContext } from "@/hooks/useProgramContext";
 
 import PackageDisplay from "@/components/ledgersidebar/PackageDisplay";
 import NewLedger from "@/components/ledgersidebar/NewLegder";
-import LedgerMarketplace from "@/components/ledgercontent/ledgermarketplace";
+import Marketplace from "@/components/ledgercontent/Marketplace"
 import Community from "@/components/ledgercontent/Community";
 import NoProgramState from "@/components/NoProgramState";
 
@@ -302,7 +302,7 @@ export default function LedgerPage() {
 
           {/* CONTENT */}
           <div className="flex-1 overflow-hidden">
-            {activeTab === "marketplace" && <LedgerMarketplace />}
+            {activeTab === "marketplace" && <Marketplace />}
             {activeTab === "community" && <Community />}
           </div>
         </main>
