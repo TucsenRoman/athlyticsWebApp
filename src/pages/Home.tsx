@@ -96,7 +96,7 @@ export default function Home() {
 
       {/* APP DEMO */}
       <section className="py-24 bg-neutral-100 dark:bg-neutral-950">
-        <h2 className="text-center text-3xl font-bold mb-14">Explore Athlytics Live</h2>
+        <h2 className="text-center text-3xl font-bold mb-14">From the infield to the office, your workflow stays seamless.</h2>
         <div className="flex justify-center">
           <DemoAppPreview />
         </div>

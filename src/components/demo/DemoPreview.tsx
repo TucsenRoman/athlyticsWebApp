@@ -31,7 +31,7 @@ function BezelWrapper({ device, wrapperClass, children }) {
     return (
       <div className={`relative bg-black p-5 rounded-[3rem] shadow-2xl ${wrapperClass}`}>
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-b-3xl" />
-        <div className="rounded-[2rem] overflow-hidden bg-neutral-900 border-[10px] border-black">
+        <div className="rounded-[2rem] overflow-hidden bg-neutral-900 border-[1px] border-black">
           {children}
         </div>
       </div>
@@ -42,7 +42,7 @@ function BezelWrapper({ device, wrapperClass, children }) {
     return (
       <div className={`relative bg-black p-4 rounded-[2.5rem] shadow-2xl ${wrapperClass}`}>
         <div className="absolute top-4 left-1/2 -translate-x-1/2 w-3 h-3 bg-neutral-700 rounded-full" />
-        <div className="rounded-[2rem] overflow-hidden bg-neutral-900 border-[10px] border-black">
+        <div className="rounded-[2rem] overflow-hidden bg-neutral-900 border-[1px] border-black">
           {children}
         </div>
       </div>
@@ -53,9 +53,9 @@ function BezelWrapper({ device, wrapperClass, children }) {
     <div className={`rounded-xl bg-neutral-900 shadow-2xl border border-neutral-700 overflow-hidden ${wrapperClass}`}>
       <div className="flex items-center h-10 bg-neutral-800 px-4 border-b border-neutral-700">
         <div className="flex gap-2 mr-4">
-          <div className="w-3 h-3 bg-red-500 rounded-full" />
+          {/* <div className="w-3 h-3 bg-red-500 rounded-full" />
           <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-          <div className="w-3 h-3 bg-green-500 rounded-full" />
+          <div className="w-3 h-3 bg-green-500 rounded-full" /> */}
         </div>
         <div className="flex-1 h-6 rounded-md bg-neutral-700/70 text-xs px-3 text-neutral-300 flex items-center">
           https://athlytics.app/demo
