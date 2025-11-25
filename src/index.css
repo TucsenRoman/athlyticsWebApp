@@ -2,7 +2,9 @@
 /* stylelint-disable */
 
 /* -------------------------------------------------------------------------- */
-/*  ATHLYTICS DESIGN SYSTEM — LIGHT + TRUE BLACK DARK MODE                    */
+/*  ATHLYTICS DESIGN SYSTEM — SLATE-HEAVY ATHLETIC                             */
+/*  Light Mode = Cool Gray + Slate + Bright Orange                             */
+/*  Dark Mode  = True Black + Deep Slate + Orange                              */
 /* -------------------------------------------------------------------------- */
 
 @tailwind base;
@@ -15,47 +17,93 @@
 
 @layer base {
   :root {
-    /* ---------- LIGHT THEME ---------- */
-    --background: 0 0% 100%;
-    --foreground: 220 15% 15%;
+    /* ------------------------------------------------------ */
+    /* LIGHT THEME — Slate-Heavy Athletic                     */
+    /* ------------------------------------------------------ */
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
+    /* CORE SURFACES */
+    --background: 215 22% 96%;        /* cool-soft gray canvas */
+    --foreground: 220 22% 18%;        /* slate-rich text */
+
+    --card: 0 0% 100%;                /* clean white cards */
+    --card-foreground: 220 22% 18%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+    --popover-foreground: 220 22% 18%;
 
-    /* Athlytics Orange */
-    --primary: 22 94% 57%;
+    /* BRAND — ORANGE POWER */
+    --primary: 22 92% 57%;            /* bright vivid athletic orange */
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary navy tone */
-    --secondary: 220 65% 25%;
+    /* ATHLETIC SLATE ACCENTS (Option 1) */
+    --secondary: 220 35% 22%;         /* deep slate/navy */
     --secondary-foreground: 0 0% 100%;
 
-    /* Muted grays */
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 10% 45%;
+    /* COOL GRAYS FOR FILTERS, ROWS, MUTED SURFACES */
+    --muted: 220 14% 90%;             /* soft cool-gray */
+    --muted-foreground: 220 10% 44%;
 
-    /* Accent neutral */
-    --accent: 0 0% 60%;
+    /* SLATE NEUTRAL ACCENTS (icons) */
+    --accent: 220 12% 36%;            /* muted slate-gray */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    /* STATUS COLORS */
+    --destructive: 0 72% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 22 94% 57%;
+    /* STRUCTURE */
+    --border: 220 13% 82%;            /* stronger gray border */
+    --input: 220 13% 82%;
+    --ring: 22 92% 57%;               /* orange focus ring */
     --radius: 0.75rem;
 
-    /* Effects */
-    --shadow-athletic: 0 8px 24px -4px hsl(22 94% 57% / 0.25);
+    /* EFFECTS */
+    --shadow-athletic: 0 6px 24px -4px hsl(220 40% 20% / 0.18);
   }
 
-  /* ---------- BASE BODY STYLING ---------- */
+  /* ------------------------------------------------------ */
+  /* DARK THEME — TRUE BLACK + DEEP SLATE + ORANGE          */
+  /* ------------------------------------------------------ */
+
+  html.dark,
+  :root.dark,
+  .dark :root,
+  html.dark :root {
+    --background: 0 0% 0%;            /* pure black */
+    --foreground: 0 0% 94%;
+
+    --card: 0 0% 7%;                  /* deep panel */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 22 92% 57%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 18% 14%;         /* deep slate for dark mode */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 10% 16%;
+    --muted-foreground: 0 0% 78%;
+
+    --accent: 220 12% 46%;
+    --accent-foreground: 0 0% 100%;
+
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 22 92% 57%;
+  }
+
+  /* BASE BODY STYLING */
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
     transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  html.dark body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
 
@@ -64,32 +112,47 @@
 /* -------------------------------------------------------------------------- */
 
 @layer components {
-  /* Surfaces like cards, cells, panels */
+  /* SURFACES */
   .theme-surface {
     @apply bg-card text-card-foreground transition-colors duration-300;
   }
 
-  /* Primary (orange) actions */
+  .theme-surface-muted {
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* PRIMARY CTA BUTTON */
   .theme-primary {
     background-color: hsl(var(--primary));
     color: hsl(var(--primary-foreground));
-    @apply font-medium transition-all duration-300 hover:brightness-110 active:scale-95;
+    @apply font-medium rounded-lg transition-all duration-300;
+    @apply hover:brightness-110 active:scale-95;
   }
 
-  /* Secondary (toolbar / sidebar) */
+  /* OUTLINE CTA / FILTER PILLS */
+  .theme-primary-outline {
+    border: 1px solid hsl(var(--primary));
+    color: hsl(var(--primary));
+    background-color: transparent;
+    @apply rounded-full text-sm font-medium transition-colors duration-200;
+  }
+
+  /* SECONDARY (SLATE) BUTTON / TOOLBAR */
   .theme-secondary {
     background-color: hsl(var(--secondary));
     color: hsl(var(--secondary-foreground));
-    @apply font-medium transition-all duration-300;
+    @apply font-medium transition-colors duration-300;
   }
 
-  /* Muted rows or outlines */
+  /* MUTED ROWS */
   .theme-muted {
     background-color: hsl(var(--muted));
     color: hsl(var(--muted-foreground));
   }
 
-  /* White or orange icons */
+  /* ICONS */
   .theme-accent {
     color: hsl(var(--accent));
   }
@@ -98,6 +161,16 @@
     color: hsl(var(--muted-foreground));
   }
 
+  /* SIDEBAR ICON SYSTEM */
+  .sidebar-icon {
+    color: hsl(220 12% 46%);          /* slate gray */
+  }
+
+  .sidebar-icon-active {
+    color: hsl(var(--primary));       /* bright orange */
+  }
+
+  /* SHADOWS */
   .shadow-athletic {
     box-shadow: var(--shadow-athletic);
   }
@@ -108,10 +181,9 @@
 }
 
 /* -------------------------------------------------------------------------- */
-/*  GLOBAL BEHAVIOR & SCROLLBARS                                              */
+/*  SCROLLBARS & GLOBAL BEHAVIOR                                              */
 /* -------------------------------------------------------------------------- */
 
-/* Disable text selection */
 * {
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -132,12 +204,13 @@ textarea {
   width: 0;
   height: 0;
 }
+
 * {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
 
-/* Custom scrollbars when applied */
+/* Custom scrollbars (opt-in) */
 .custom-scrollbar {
   position: absolute;
   background: transparent;
@@ -146,62 +219,24 @@ textarea {
   opacity: 0.6;
   transition: opacity 0.3s ease-in-out;
 }
+
 .custom-scrollbar:hover {
   opacity: 1;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: hsl(var(--primary));
   border-radius: 9999px;
   transition: background 0.2s ease-in-out;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.8);
 }
 
 /* -------------------------------------------------------------------------- */
-/* DARK MODE (TRUE BLACK — ATHLYTICS REFINED)                                 */
+/*  FOCUS HANDLING                                                            */
 /* -------------------------------------------------------------------------- */
-html.dark,
-:root.dark,
-.dark :root,
-html.dark :root {
-  /* Core */
-  --background: 0 0% 0%;
-  --foreground: 0 0% 96%;
-
-  /* Panels / cards */
-  --card: 0 0% 6%;
-  --card-foreground: 0 0% 98%;
-
-  /* Toolbar / popovers */
-  --popover: 0 0% 7%;
-  --popover-foreground: 0 0% 95%;
-
-  /* Brand colors */
-  --primary: 22 94% 57%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 10% 12%;
-  --secondary-foreground: 0 0% 100%;
-
-  /* Muted cells / outlines */
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 80%;
-
-  /* Accent and text highlights */
-  --accent: 22 94% 57%;
-  --accent-foreground: 0 0% 100%;
-
-  /* Borders & rings */
-  --border: 0 0% 15%;
-  --input: 0 0% 15%;
-  --ring: 22 94% 57%;
-}
-
-/* Ensure body inherits correctly */
-html.dark body {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
 
 *,
 *:focus,

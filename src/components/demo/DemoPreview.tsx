@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 import { DemoContext } from "@/contexts/DemoContext";
 import FieldViewScreen from "@/components/fieldview/FieldViewScreen";
-import LedgerPage from "@/pages/LedgerPage";
+import LedgerPage from "@/pages/DiscoveryPage";
 
 /* -------------------------------------------------------------------------- */
 /*  DEVICE STYLE MAP                                                          */

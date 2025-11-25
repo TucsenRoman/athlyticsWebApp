@@ -29,12 +29,11 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false);
 
   /* -------------------------------------------------------------------------- */
-  /*  DETERMINE ACTIVE TAB FROM ROUTE                                           */
+  /*  DETERMINE TAB FROM ROUTE                                                  */
   /* -------------------------------------------------------------------------- */
   const routeTab = location.pathname.includes("signup") ? "signup" : "login";
   const [activeTab, setActiveTab] = useState(routeTab);
 
-  // Sync UI → Route
   useEffect(() => {
     if (activeTab !== routeTab) {
       navigate(`/${activeTab}`, { replace: true });
@@ -42,7 +41,6 @@ export default function AuthForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // Sync Route → UI (browser nav)
   useEffect(() => {
     if (routeTab !== activeTab) {
       setActiveTab(routeTab);
@@ -50,14 +48,18 @@ export default function AuthForm() {
   }, [routeTab]);
 
   /* -------------------------------------------------------------------------- */
-  /*  LOGIN HANDLER                                                             */
+  /*  LOGIN                                                                     */
   /* -------------------------------------------------------------------------- */
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) throw error;
 
       toast.success("Welcome back, Coach.");
@@ -70,7 +72,7 @@ export default function AuthForm() {
   }
 
   /* -------------------------------------------------------------------------- */
-  /*  SIGNUP HANDLER                                                            */
+  /*  SIGNUP                                                                    */
   /* -------------------------------------------------------------------------- */
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -97,7 +99,9 @@ export default function AuthForm() {
 
       const user = data.user;
       if (user) {
-        await supabase.from("profiles").insert([{ id: user.id, full_name: fullName }]);
+        await supabase.from("profiles").insert([
+          { id: user.id, full_name: fullName },
+        ]);
       }
 
       toast.success("Account created. Logging you in…");
@@ -126,21 +130,26 @@ export default function AuthForm() {
           : undefined
       }
     >
-      <div className="absolute top-5 left-5">
-        <button
-          onClick={() => navigate("/")}
-          className="
-            px-4 py-2 rounded-lg
-            bg-black/20 backdrop-blur-md
-            text-white font-semibold
-            hover:bg-white/20
-            transition
-            shadow-lg shadow-black/20
-          "
-        >
-          Home
-        </button>
-      </div>
+      {/* HOME BUTTON — HIDDEN ON "/" */}
+      {location.pathname !== "/" && (
+        <div className="absolute top-5 left-5">
+          <button
+            onClick={() => navigate("/")}
+            className="
+              px-4 py-2 rounded-lg
+              bg-black/20 backdrop-blur-md
+              text-white font-semibold
+              hover:bg-white/20
+              transition
+              shadow-lg shadow-black/20
+            "
+          >
+            Home
+          </button>
+        </div>
+      )}
+
+      {/* CARD */}
       <Card
         className="
           w-full max-w-md rounded-3xl overflow-hidden
@@ -183,7 +192,9 @@ export default function AuthForm() {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-5 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white/95">Email</Label>
+                  <Label htmlFor="email" className="text-white/95">
+                    Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -196,7 +207,9 @@ export default function AuthForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white/95">Password</Label>
+                  <Label htmlFor="password" className="text-white/95">
+                    Password
+                  </Label>
                   <Input
                     id="password"
                     type="password"
@@ -222,7 +235,9 @@ export default function AuthForm() {
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-5 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-white/95">Full Name</Label>
+                  <Label htmlFor="fullName" className="text-white/95">
+                    Full Name
+                  </Label>
                   <Input
                     id="fullName"
                     type="text"
@@ -235,7 +250,9 @@ export default function AuthForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white/95">Email</Label>
+                  <Label htmlFor="email" className="text-white/95">
+                    Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -248,7 +265,9 @@ export default function AuthForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-white/95">Password</Label>
+                  <Label htmlFor="password" className="text-white/95">
+                    Password
+                  </Label>
                   <Input
                     id="password"
                     type="password"

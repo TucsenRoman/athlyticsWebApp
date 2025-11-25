@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { installDefaultPackage } from "@/components/ledgersidebar/installDefaultPackage";
+import { installDefaultPackage } from "@/components/discovery/discoverylogic/installDefaultPackage";
 
 import {
   DropdownMenu,
@@ -417,38 +417,60 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     const renderHeaderTrigger = () => (
       <Button
         ref={triggerRef}
-        variant="ghost"
-        className="h-auto w-full md:w-auto px-3 py-2 hover:bg-muted/50 justify-between"
+        variant="outline"
+        className="
+          flex items-center gap-2
+          h-10 px-3
+          rounded-xl
+          bg-muted
+          transition-colors
+          text-muted-foreground
+        "
       >
-        <div className="flex w-full items-center justify-between gap-3">
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="flex justify-start font-medium text-base truncate">
-              Asst. Coach
-            </span>
-            {selectedProgram ? (
-              <span className="text-xs text-muted-foreground truncate">
-                {formatName(selectedProgram)}
-              </span>
-            ) : (
-              <span className="text-xs text-muted-foreground">Select a Program</span>
-            )}
-          </div>
+        {/* Text */}
+        <span className="font-medium text-sm truncate">
+          {selectedProgram
+            ? formatName(selectedProgram)
+            : "Select Program"}
+        </span>
 
-          <ChevronDown className="h-5 w-5 text-muted-foreground" />
-        </div>
+        {/* Chevron */}
+        <ChevronDown
+          size={16}
+          className="opacity-60 shrink-0"
+        />
       </Button>
     );
+
 
     const renderEmptyTrigger = () => (
       <Button
         ref={triggerRef}
         variant="ghost"
-        className="w-[190px] justify-between rounded-2xl px-4 py-3 shadow backdrop-blur-sm bg-white/80 text-base"
+        className="
+          h-[38px]
+          px-4
+          rounded-full
+          flex items-center gap-2
+          bg-white/70
+          hover:bg-white/90
+          shadow-sm
+          border border-white/40
+          backdrop-blur-sm
+          transition
+          text-muted-foreground
+        "
       >
-        <span className="truncate">
-          {selectedProgram ? formatName(selectedProgram) : "Select a Program"}
+        <span className="font-medium text-sm truncate">
+          {selectedProgram
+            ? formatName(selectedProgram)
+            : "Select Program"}
         </span>
-        <ChevronDown className="h-5 w-5 opacity-70" />
+
+        <ChevronDown
+          size={16}
+          className="opacity-60"
+        />
       </Button>
     );
 
@@ -508,7 +530,9 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
               programs.map((p) => (
                 <DropdownMenuItem
                   key={p.id}
-                  className="py-3 px-4 text-sm hover:bg-black/5"
+                  className="
+                    py-3 px-4 text-sm
+                  "
                   onClick={() => handleProgramClick(p)}
                 >
                   <div className="flex flex-col min-w-0">

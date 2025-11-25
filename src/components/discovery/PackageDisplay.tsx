@@ -12,26 +12,44 @@ import {
   Trophy,
   Activity,
   BarChart3,
+  CalendarDays,
+  Phone,
+  Shirt,
+  Lock,
   ChevronRight,
 } from "lucide-react";
 
 import PackageMenu from "./PackageMenu";
-import NewPackageOrLedgerDialog from "./NewLegder";
 
 /* --------------------------------------- */
 /* ICON MAP                                */
 /* --------------------------------------- */
+
 const ICON_MAP: Record<string, any> = {
+  Users,
+  ClipboardList,
+  Trophy,
+  Activity,
+  BarChart3,
+  Calendar: CalendarDays,
+  Phone,
+  Shirt,
+  lock: Lock,
+  Lock,
   file: FileText,
-  clipboard: ClipboardList,
-  team: Users,
-  performance: Activity,
-  chart: BarChart3,
-  trophy: Trophy,
+  FileText,
 };
 
-const getIcon = (key: string | null | undefined) =>
-  ICON_MAP[key ?? "file"] || FileText;
+const getIcon = (raw: string | null | undefined) => {
+  if (!raw) return FileText;
+  const cleaned = raw.trim();
+  return (
+    ICON_MAP[cleaned] ||
+    ICON_MAP[cleaned.toLowerCase()] ||
+    ICON_MAP[cleaned.toUpperCase()] ||
+    FileText
+  );
+};
 
 /* --------------------------------------- */
 /* TYPES                                   */
@@ -88,12 +106,12 @@ export default function PackageDisplay({
   const [instances, setInstances] = useState<PackageInstallInstance[]>([]);
   const [installs, setInstalls] = useState<InstallRecord[]>([]);
   const [open, setOpen] = useState<Record<string, boolean>>({});
-
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   /* --------------------------------------- */
-  /* LOAD PACKAGES                           */
+  /* LOAD DATA FROM SUPABASE                 */
   /* --------------------------------------- */
+
   useEffect(() => {
     supabase
       .from("ledger_packages")
@@ -101,13 +119,10 @@ export default function PackageDisplay({
       .order("sort_index", { ascending: true })
       .then(({ data, error }) => {
         if (error) console.error(error);
-        setPackages((data || []) as PackageRecord[]);
+        setPackages(data || []);
       });
   }, []);
 
-  /* --------------------------------------- */
-  /* LOAD INSTALL INSTANCES                  */
-  /* --------------------------------------- */
   useEffect(() => {
     if (!selectedProgramId) return setInstances([]);
 
@@ -117,13 +132,10 @@ export default function PackageDisplay({
       .eq("program_id", selectedProgramId)
       .then(({ data, error }) => {
         if (error) console.error(error);
-        setInstances((data || []) as PackageInstallInstance[]);
+        setInstances(data || []);
       });
   }, [selectedProgramId]);
 
-  /* --------------------------------------- */
-  /* LOAD LEDGER INSTALL LINKS               */
-  /* --------------------------------------- */
   useEffect(() => {
     if (!selectedProgramId) return setInstalls([]);
 
@@ -133,7 +145,7 @@ export default function PackageDisplay({
       .eq("program_id", selectedProgramId)
       .then(({ data, error }) => {
         if (error) console.error(error);
-        setInstalls((data || []) as InstallRecord[]);
+        setInstalls(data || []);
       });
   }, [selectedProgramId]);
 
@@ -149,9 +161,7 @@ export default function PackageDisplay({
         const pkgInstances = instances.filter((i) => i.package_id === pkg.id);
 
         const tagSet = new Set<string>();
-        pkgInstances.forEach((i) => {
-          (i.tags || []).forEach((t) => tagSet.add(t));
-        });
+        pkgInstances.forEach((i) => (i.tags || []).forEach((t) => tagSet.add(t)));
 
         const instanceIds = new Set(pkgInstances.map((i) => i.id));
         const seen = new Set<string>();
@@ -172,15 +182,9 @@ export default function PackageDisplay({
           (a.name || "").localeCompare(b.name || "")
         );
 
-        return {
-          pkg,
-          tags: Array.from(tagSet),
-          installedLedgers,
-        };
+        return { pkg, tags: Array.from(tagSet), installedLedgers };
       })
-      .filter((g) =>
-        selectedProgramId ? g.installedLedgers.length > 0 : true
-      );
+      .filter((g) => (selectedProgramId ? g.installedLedgers.length > 0 : true));
   }, [packages, instances, installs, ledgers, selectedProgramId]);
 
   /* --------------------------------------- */
@@ -192,12 +196,11 @@ export default function PackageDisplay({
     console.log("Manage tags:", instanceId);
   const onDuplicate = (instanceId: string) =>
     console.log("Duplicate package:", instanceId);
-  const onDelete = (instanceId: string) =>
-    console.log("Delete package:", instanceId);
+  const onDelete = (instanceId: string) => console.log("Delete:", instanceId);
   const onDismantle = (instanceId: string) =>
     console.log("Dismantle:", instanceId);
   const onEditLedgers = (instanceId: string) =>
-    console.log("Edit ledgers for:", instanceId);
+    console.log("Edit ledgers:", instanceId);
 
   /* --------------------------------------- */
   /* RENDER                                  */
@@ -205,19 +208,22 @@ export default function PackageDisplay({
 
   return (
     <div className="space-y-1">
-      {/* PACKAGES */}
+
       {packageGroups.map(({ pkg, tags, installedLedgers }) => {
         const isOpen = open[pkg.id] ?? true;
 
         return (
           <div key={pkg.id} className="w-full border-b border-border/40">
-            {/* HEADER */}
+
+            {/* ----------------------------------- */}
+            {/* PACKAGE HEADER                       */}
+            {/* ----------------------------------- */}
+
             <div
               className="
-                px-3 py-2
-                flex items-center justify-between
+                px-3 py-2 flex items-center justify-between
                 text-muted-foreground hover:text-foreground
-                transition
+                transition-colors
               "
             >
               <button
@@ -234,18 +240,17 @@ export default function PackageDisplay({
                   <ChevronRight
                     className={
                       isOpen
-                        ? "w-4 h-4 text-primary/80"
-                        : "w-4 h-4 text-muted-foreground/70"
+                        ? "w-4 h-4 text-primary"
+                        : "w-4 h-4 text-muted-foreground"
                     }
                   />
                 </motion.div>
 
-                <span className="text-xs font-semibold uppercase tracking-[0.07em]">
+                <span className="truncate text-xs font-semibold uppercase tracking-[0.07em] text-foreground">
                   {pkg.name}
                 </span>
               </button>
 
-              {/* TAGS + MENU */}
               <div className="flex items-center gap-2">
                 {tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
@@ -253,10 +258,9 @@ export default function PackageDisplay({
                       <span
                         key={tag}
                         className="
-                          px-2 py-[2px]
-                          rounded-full
-                          bg-primary/5
-                          text-[10px] text-primary/80
+                          px-2 py-[2px] rounded-full
+                          bg-secondary/10 text-secondary-foreground/90
+                          text-[10px] font-medium
                         "
                       >
                         {tag}
@@ -277,16 +281,18 @@ export default function PackageDisplay({
               </div>
             </div>
 
-            {/* LEDGERS */}
+            {/* ----------------------------------- */}
+            {/* LEDGERS INSIDE PACKAGE              */}
+            {/* ----------------------------------- */}
+
             <AnimatePresence initial={false}>
               {isOpen && (
                 <div
                   className="
-                    relative space-y-1
-                    pl-9 pr-2 py-2
+                    relative space-y-1 pl-9 pr-2 py-2
                     before:absolute before:left-[19px]
                     before:top-0 before:bottom-[10px]
-                    before:w-[1.5px] before:bg-primary/20
+                    before:w-[1.5px] before:bg-secondary/25
                   "
                 >
                   {selectedProgramId &&
@@ -300,16 +306,16 @@ export default function PackageDisplay({
                           className="
                             w-full flex items-center justify-between
                             px-3 py-2 rounded-lg
-                            hover:bg-muted/40 transition
+                            hover:bg-muted/30 transition
                           "
                         >
                           <div className="flex items-center gap-3 overflow-hidden">
-                            <div className="p-2 rounded-md bg-background border border-border">
+                            <div className="p-2 rounded-md bg-card border border-border">
                               <Icon className="w-4 h-4 text-primary" />
                             </div>
 
                             <div className="flex flex-col overflow-hidden">
-                              <span className="text-sm font-medium truncate">
+                              <span className="text-sm font-medium truncate text-foreground">
                                 {ledger.name}
                               </span>
 
@@ -334,19 +340,11 @@ export default function PackageDisplay({
         );
       })}
 
-      {/* EMPTY STATE */}
       {selectedProgramId && packageGroups.length === 0 && (
         <p className="px-3 py-2 text-xs text-muted-foreground">
           No packages installed in this program yet.
         </p>
       )}
-
-      {/* DIALOG */}
-      <NewPackageOrLedgerDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        programId={selectedProgramId}
-      />
     </div>
   );
 }

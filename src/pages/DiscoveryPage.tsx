@@ -6,21 +6,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
-import PackageDisplay from "@/components/ledgersidebar/PackageDisplay";
-import NewLedger from "@/components/ledgersidebar/NewLegder";
-import Marketplace from "@/components/ledgercontent/Marketplace";
-import Community from "@/components/ledgercontent/Community";
+import PackageDisplay from "@/components/discovery/PackageDisplay";
+import DiscoveryFeed from "@/components/discovery/DiscoveryFeed";
 import NoProgramState from "@/components/NoProgramState";
 
+import DiscoveryHeader from "@/components/discovery/DiscoveryHeader";
+
 import {
-  ChevronDown,
-  ChevronRight,
   ClipboardList,
   FileText,
   Users,
   Activity,
   BarChart3,
   Trophy,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 
 /* --------------------------------------- */
@@ -55,7 +55,7 @@ export type AnyLedger = {
 };
 
 /* --------------------------------------- */
-/* MAIN PAGE                               */
+/* PAGE                                    */
 /* --------------------------------------- */
 
 export default function LedgerPage() {
@@ -63,18 +63,27 @@ export default function LedgerPage() {
   const { selectedProgramId } = useProgramContext();
   const { demoMode } = useDemo();
 
+  /* --------------------------------------- */
+  /* UI STATE                                */
+  /* --------------------------------------- */
+
+  const [collapsed, setCollapsed] = useState(true);
+  const [openOther, setOpenOther] = useState(true);
+
+  // New unified header state
+  const [mode, setMode] = useState<"discover" | "social" | "following">("discover");
+  const [query, setQuery] = useState("");
+
+  // Ledger state
   const [ledgers, setLedgers] = useState<AnyLedger[]>([]);
   const [installedTemplateIds, setInstalledTemplateIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-
-  const [openOther, setOpenOther] = useState(true);
   const [newLedgerOpen, setNewLedgerOpen] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"marketplace" | "community">("marketplace");
+  /* --------------------------------------- */
+  /* DEMO LEDGERS                            */
+  /* --------------------------------------- */
 
-  /* -------------------------------------------------------------------------- */
-  /* DEMO MODE LEDGERS                                                          */
-  /* -------------------------------------------------------------------------- */
   const demoLedgers: AnyLedger[] = [
     {
       id: "demo1",
@@ -96,9 +105,10 @@ export default function LedgerPage() {
     },
   ];
 
-  /* -------------------------------------------------------------------------- */
-  /* LOAD REAL LEDGERS (SKIP IN DEMO MODE)                                      */
-  /* -------------------------------------------------------------------------- */
+  /* --------------------------------------- */
+  /* LOAD LEDGERS                            */
+  /* --------------------------------------- */
+
   useEffect(() => {
     if (demoMode) {
       setLedgers(demoLedgers);
@@ -106,13 +116,10 @@ export default function LedgerPage() {
       return;
     }
 
-    async function loadLedgers() {
+    async function load() {
       setLoading(true);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user || !selectedProgramId) {
         setLedgers([]);
         setLoading(false);
@@ -127,24 +134,19 @@ export default function LedgerPage() {
         .order("created_at", { ascending: false });
 
       if (error) console.error(error);
-
       setLedgers((data || []) as AnyLedger[]);
       setLoading(false);
     }
 
-    loadLedgers();
+    load();
   }, [demoMode, selectedProgramId]);
 
-  /* -------------------------------------------------------------------------- */
-  /* INSTALLED TEMPLATE IDS (SKIP IN DEMO MODE)                                 */
-  /* -------------------------------------------------------------------------- */
-  useEffect(() => {
-    if (demoMode) {
-      setInstalledTemplateIds(new Set());
-      return;
-    }
+  /* --------------------------------------- */
+  /* LOAD INSTALLED TEMPLATE IDS             */
+  /* --------------------------------------- */
 
-    if (!selectedProgramId) {
+  useEffect(() => {
+    if (demoMode || !selectedProgramId) {
       setInstalledTemplateIds(new Set());
       return;
     }
@@ -161,50 +163,46 @@ export default function LedgerPage() {
         }
 
         const set = new Set<string>();
-        data.forEach((row) => {
-          if (row.installed_ledger_id) set.add(row.installed_ledger_id);
-        });
-
+        data.forEach((row) => row.installed_ledger_id && set.add(row.installed_ledger_id));
         setInstalledTemplateIds(set);
       });
   }, [demoMode, selectedProgramId, ledgers.length]);
 
-  /* -------------------------------------------------------------------------- */
-  /* ORPHAN LEDGERS                                                             */
-  /* -------------------------------------------------------------------------- */
+  /* --------------------------------------- */
+  /* ORPHANS                                 */
+  /* --------------------------------------- */
+
   const orphanLedgers = useMemo(() => {
     if (demoMode) return demoLedgers;
     if (!installedTemplateIds.size) return ledgers;
     return ledgers.filter((l) => !installedTemplateIds.has(l.id));
   }, [demoMode, ledgers, installedTemplateIds]);
 
-  /* -------------------------------------------------------------------------- */
-  /* RENDER                                                                     */
-  /* -------------------------------------------------------------------------- */
+  /* --------------------------------------- */
+  /* NO PROGRAM                              */
+  /* --------------------------------------- */
 
-  if (!demoMode && !selectedProgramId) {
-    return <NoProgramState />;
-  }
+  if (!demoMode && !selectedProgramId) return <NoProgramState />;
+
+  /* --------------------------------------- */
+  /* RENDER                                  */
+  /* --------------------------------------- */
 
   return (
     <div className="flex h-full overflow-hidden">
 
-      {/* ------------------------- */}
-      {/* SIDEBAR                   */}
-      {/* ------------------------- */}
+      {/* SIDEBAR */}
       <aside
-        className="
-          w-72 shrink-0
-          border-r border-border
+        className={`
+          ${collapsed ? "w-0 opacity-0 pointer-events-none" : "w-72 opacity-100"}
+          shrink-0 border-r border-border
           bg-card/30 backdrop-blur-xl
-          overflow-y-auto
-        "
+          overflow-y-auto transition-all duration-300
+        `}
       >
-        <div className="flex items-center justify-between p-4">
-          <div className="text-xl font-bold">Ledgers</div>
-        </div>
+        {/* REMOVE SIDEBAR HEADER COMPLETELY */}
 
-        {/* PACKAGE DISPLAY (SKIPPED IN DEMO) */}
+        {/* PACKAGES */}
         {!demoMode && selectedProgramId && (
           <PackageDisplay selectedProgramId={selectedProgramId} ledgers={ledgers} />
         )}
@@ -216,10 +214,8 @@ export default function LedgerPage() {
             onClick={() => setOpenOther((o) => !o)}
             className="
               w-full flex items-center justify-between
-              px-3 py-2
-              text-xs font-semibold uppercase tracking-[0.08em]
-              text-muted-foreground hover:text-foreground
-              transition
+              px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em]
+              text-muted-foreground hover:text-foreground transition
             "
           >
             <div className="flex items-center gap-2">
@@ -232,18 +228,13 @@ export default function LedgerPage() {
             </div>
 
             {orphanLedgers.length > 0 && (
-              <span className="text-[10px] text-muted-foreground">
-                {orphanLedgers.length}
-              </span>
+              <span className="text-[10px] text-muted-foreground">{orphanLedgers.length}</span>
             )}
           </button>
 
           {openOther && (
             <div className="mt-1 space-y-1 pl-9 pr-2 pb-3">
-              {loading && (
-                <p className="text-xs text-muted-foreground">Loading…</p>
-              )}
-
+              {loading && <p className="text-xs text-muted-foreground">Loading…</p>}
               {!loading && orphanLedgers.length === 0 && (
                 <p className="text-xs text-muted-foreground">None</p>
               )}
@@ -254,15 +245,10 @@ export default function LedgerPage() {
                 return (
                   <button
                     key={ledger.id}
-                    onClick={() =>
-                      demoMode
-                        ? null
-                        : navigate(`/ledgers/${ledger.id}`)
-                    }
+                    onClick={() => (demoMode ? null : navigate(`/ledgers/${ledger.id}`))}
                     className="
                       w-full flex items-center justify-between
-                      px-3 py-2 rounded-lg
-                      hover:bg-muted/40 transition
+                      px-3 py-2 rounded-lg hover:bg-muted/40 transition
                     "
                   >
                     <div className="flex items-center gap-3 overflow-hidden">
@@ -271,10 +257,7 @@ export default function LedgerPage() {
                       </div>
 
                       <div className="flex flex-col overflow-hidden">
-                        <span className="text-sm font-medium truncate">
-                          {ledger.name}
-                        </span>
-
+                        <span className="text-sm font-medium truncate">{ledger.name}</span>
                         {ledger.description && (
                           <span className="text-xs text-muted-foreground truncate">
                             {ledger.description}
@@ -284,9 +267,7 @@ export default function LedgerPage() {
                     </div>
 
                     {!demoMode && (
-                      <span className="text-[10px] text-muted-foreground">
-                        Open
-                      </span>
+                      <span className="text-[10px] text-muted-foreground">Open</span>
                     )}
                   </button>
                 );
@@ -296,59 +277,25 @@ export default function LedgerPage() {
         </div>
       </aside>
 
-      {/* ------------------------- */}
-      {/* MAIN CONTENT + TABS       */}
-      {/* ------------------------- */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 overflow-hidden flex flex-col">
 
-        {/* TABS */}
-        <div className="flex gap-3 border-b border-border px-6 pt-4 pb-2 bg-card/60 backdrop-blur-xl">
+        {/* UNIFIED HEADER */}
+        <DiscoveryHeader
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+          mode={mode}
+          setMode={setMode}
+          query={query}
+          setQuery={setQuery}
+        />
 
-          <button
-            onClick={() => setActiveTab("marketplace")}
-            className={`
-              px-3 py-1.5 rounded-md text-sm font-medium transition
-              ${
-                activeTab === "marketplace"
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground"
-              }
-            `}
-          >
-            Marketplace
-          </button>
-
-          <button
-            onClick={() => setActiveTab("community")}
-            className={`
-              px-3 py-1.5 rounded-md text-sm font-medium transition
-              ${
-                activeTab === "community"
-                  ? "text-primary bg-primary/10"
-                  : "text-muted-foreground hover:text-foreground"
-              }
-            `}
-          >
-            Community
-          </button>
-
-        </div>
-
-        {/* CONTENT */}
+        {/* CONTENT SECTION */}
         <div className="flex-1 overflow-hidden">
-          {activeTab === "marketplace" && <Marketplace />}
-          {activeTab === "community" && <Community />}
+          <DiscoveryFeed mode={mode} query={query} />
         </div>
       </main>
-
-      {/* NEW LEDGER DIALOG (DISABLED IN DEMO MODE) */}
-      {!demoMode && (
-        <NewLedger
-          open={newLedgerOpen}
-          onOpenChange={setNewLedgerOpen}
-          programId={selectedProgramId}
-        />
-      )}
     </div>
   );
 }
+ 

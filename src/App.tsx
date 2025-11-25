@@ -1,18 +1,25 @@
+// src/App.tsx
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
-import HeaderLayout from "@/components/header/HeaderLayout";
+import HeaderLayout from "@/components/navigation/HeaderLayout";
 
-import Home from "./pages/Home";
+import Home from "./pages/HomePage";
 import Auth from "./pages/Auth";
-import LedgerPage from "./pages/LedgerPage";
+import DiscoveryPage from "./pages/DiscoveryPage";
 import LedgerView from "./components/ledger/LedgerView";
 import FieldViewScreen from "./components/fieldview/FieldViewScreen";
 import NotFound from "./pages/NotFound";
@@ -29,17 +36,16 @@ export default function App() {
 
           <BrowserRouter>
             <Routes>
-
               {/* PUBLIC ROUTES ------------------------------------------------ */}
               <Route path="/" element={<Home />} />
 
-              {/* AUTH ROUTES NOW SPLIT -------------------------------------- */}
+              {/* AUTH ROUTES -------------------------------------------------- */}
               <Route path="/login" element={<Auth />} />
               <Route path="/signup" element={<Auth />} />
 
               {/* PROTECTED ROUTES ------------------------------------------- */}
               <Route
-                path="/fieldview"
+                path="/field"
                 element={
                   <ProtectedRoute>
                     <HeaderLayout>
@@ -50,16 +56,29 @@ export default function App() {
               />
 
               <Route
-                path="/ledger"
+                path="/discovery"
                 element={
                   <ProtectedRoute>
                     <HeaderLayout>
-                      <LedgerPage />
+                      <DiscoveryPage />
                     </HeaderLayout>
                   </ProtectedRoute>
                 }
               />
 
+              {/* For now, Study shares the same page as Discovery */}
+              <Route
+                path="/workspace"
+                element={
+                  <ProtectedRoute>
+                    <HeaderLayout>
+                      Sup
+                    </HeaderLayout>
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Ledger detail (Study detail view) -------------------------- */}
               <Route
                 path="/ledgers/:ledgerId"
                 element={
@@ -71,12 +90,20 @@ export default function App() {
                 }
               />
 
+              {/* LEGACY ROUTE REDIRECTS ------------------------------------- */}
+              <Route
+                path="/field"
+                element={<Navigate to="/field" replace />}
+              />
+              <Route
+                path="/ledger"
+                element={<Navigate to="/discovery" replace />}
+              />
+
               {/* CATCH-ALL -------------------------------------------------- */}
               <Route path="*" element={<NotFound />} />
-
             </Routes>
           </BrowserRouter>
-
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

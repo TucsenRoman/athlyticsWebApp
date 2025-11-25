@@ -57,9 +57,9 @@ export default function UserDropdownShell(_: UserDropdownShellProps) {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger className="flex items-center h-[2.375rem] w-[2.375rem]">
-        <Avatar className="h-full w-full hover:bg-primary/30 border border-primary/40 transition-all select-none">
+        <Avatar className="h-full w-full hover:bg-primary/30 transition-all select-none">
           <AvatarImage src="public/IMG_0136.jpg" className="rounded-sm" />
-          <AvatarFallback className="bg-primary/40 text-primary-foreground rounded-sm">TR</AvatarFallback>
+          <AvatarFallback className="bg-primary text-primary-foreground rounded-sm">TR</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 

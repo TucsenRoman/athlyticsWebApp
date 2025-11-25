@@ -127,8 +127,8 @@ export default function FixedCardsSystem() {
     <div className="relative w-full h-full">
 
       {/* GRADIENT EDGES */}
-      <div className="pointer-events-none absolute left-0 top-0 h-full w-10 bg-gradient-to-r from-white to-transparent z-30" />
-      <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-white to-transparent z-30" />
+      {/* <div className="pointer-events-none absolute left-0 top-0 h-full w-10 bg-gradient-to-r from-white to-transparent z-30" />
+      <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-white to-transparent z-30" /> */}
 
       {/* SCROLL AREA */}
       <div
@@ -170,7 +170,7 @@ export default function FixedCardsSystem() {
       <div
         className="
           sticky
-          bottom-4
+          bottom-[150px]
           z-30
           w-full
           flex

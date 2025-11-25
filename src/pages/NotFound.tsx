@@ -15,11 +15,11 @@ const FAIL_MESSAGES = [
   "Wrong lane. This page doesn’t exist.",
   "Off the trail — better circle back.",
   "The page took a DNF today.",
-  "Page got subbed out. Not available.",
+  "Page got benched out. Not available.",
   "Red card — page doesn’t exist.",
   "Timeout — this page didn’t show up.",
   "Hit a hurdle — page didn’t clear.",
-  "Shot clock violation — nothing loaded.",
+  "Shot clock violation — nothing loaded in time.",
   "Missed the mark. Try another route.",
 ];
 
@@ -67,15 +67,16 @@ const NotFound = () => {
 
           {/* Buttons */}
           <div className="flex flex-col gap-3 w-full mt-4">
-            <Link to="/">
-              <Button className="w-full bg-primary text-white hover:bg-primary/90">
-                Go to FieldView
-              </Button>
-            </Link>
+            <Button
+              className="w-full bg-primary text-white hover:bg-primary/90"
+              onClick={() => window.history.back()}
+            >
+              Go Back
+            </Button>
 
-            <Link to="/ledger">
+            <Link to="/">
               <Button variant="outline" className="w-full">
-                Go to Ledger
+                Back to Home
               </Button>
             </Link>
           </div>
