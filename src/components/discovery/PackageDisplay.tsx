@@ -19,7 +19,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import PackageMenu from "./PackageMenu";
+import PackageMenu from "../projectmanager/ProjectMenu";
 
 /* -------------------------------------------------------------------------- */
 /* ICON MAP                                                                   */

@@ -1,30 +1,34 @@
 /* =========================================================================
    ROUTE ENGINE — ATHLYTICS
-   Clean implementation for new routing system (1 primary → N secondaries)
    ========================================================================= */
+
+import type { Tables } from "@/integrations/supabase/types";
+
+export type LedgerHeader = Tables<"ledger_headers">;
+export type LedgerRouteRecord = Tables<"ledger_routes">;
 
 export type RouteClass = "independent" | "primary" | "secondary";
 
-export interface LedgerHeader {
-  id: string;
-  ledger_id: string;
-  name: string;
-  type: string;
-  options?: any[];
-  order_index: number;
-  route_class: RouteClass | null | undefined;
-}
+// export interface LedgerHeader {
+//   id: string;
+//   ledger_id: string;
+//   name: string;
+//   type: string;
+//   options?: any[];
+//   order_index: number;
+//   route_class: RouteClass | null | undefined;
+// }
 
-export interface LedgerRouteRecord {
-  id: string;
-  source_ledger_id: string;
-  source_column_id: string;
-  target_ledger_id: string;
-  target_column_id: string;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+// export interface LedgerRouteRecord {
+//   id: string;
+//   source_ledger_id: string;
+//   source_column_id: string;
+//   target_ledger_id: string;
+//   target_column_id: string;
+//   active: boolean;
+//   created_at: string;
+//   updated_at: string;
+// }
 
 /* =========================================================================
    CHAIN MODELS

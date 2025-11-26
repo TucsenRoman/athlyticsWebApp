@@ -1,46 +1,96 @@
 "use client";
 
-import { Pencil, Save, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import {
+  Pencil,
+  Save,
+  ChevronDown,
+  MoreVertical,
+} from "lucide-react";
+import { useState, useEffect } from "react";
 
-export default function WorkspaceMenu() {
+export default function WorkspaceMenu({ menuOpen, setMenuOpen }) {
   const [editMode, setEditMode] = useState(false);
 
+  // close on ESC
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [setMenuOpen]);
+
   return (
-    <div className="h-14 border-b border-[--border] bg-[--surface-1] flex items-center justify-between px-6">
-      
-      {/* LEFT SIDE: Ledger Name */}
-      <div className="flex items-center gap-2">
-        <h1 className="text-lg font-semibold">Roster</h1>
-
-        <button
-          onClick={() => setEditMode(!editMode)}
-          className="text-sm text-[--text-muted] hover:text-[--text-strong] flex items-center gap-1"
+    <>
+      {/* ------------------------------------------------------------------ */}
+      {/* GLOBAL DIALOG OVERLAY                                              */}
+      {/* ------------------------------------------------------------------ */}
+      {menuOpen && (
+        <div
+          className="
+            fixed inset-0 z-[9999]
+            bg-black/40 backdrop-blur-sm
+            flex items-center justify-center
+          "
+          onClick={() => setMenuOpen(false)}
         >
-          <Pencil className="w-4 h-4" />
-          {editMode ? "Editing…" : "Edit"}
-        </button>
-      </div>
+          {/* STOP BUBBLE */}
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="
+              w-full max-w-sm
+              rounded-2xl
+              bg-[hsl(var(--gray-300))] border border-[--border]
+              shadow-[0_20px_60px_-10px_rgba(0,0,0,0.35)]
+              p-6
+            "
+          >
+            <div className="text-lg font-semibold mb-4 text-[--text-strong]">
+              Ledger Actions
+            </div>
 
-      {/* RIGHT SIDE: Save + Routes */}
-      <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2">
+              {[
+                "Open Ledger",
+                "Create New Ledger",
+                "Close Ledger",
+                "Delete Ledger",
+                "Style",
+              ].map((action) => (
+                <button
+                  key={action}
+                  className="
+                    w-full text-left px-4 py-3
+                    rounded-xl
+                    bg-[--surface-2] hover:bg-[--surface-3]
+                    border border-[--border]
+                    text-[--text-strong]
+                    transition
+                  "
+                  onClick={() => {
+                    console.log(`Action: ${action}`);
+                    setMenuOpen(false);
+                  }}
+                >
+                  {action}
+                </button>
+              ))}
+            </div>
 
-        {/* Route selector */}
-        <button className="px-3 py-1 text-sm bg-[--surface-2] rounded-md flex items-center gap-1">
-          Default Route
-          <ChevronDown className="w-4 h-4 opacity-70" />
-        </button>
-
-        {/* Save (only in edit mode) */}
-        {editMode && (
-          <button className="px-3 py-1 rounded-md bg-[--brand-primary] text-white flex items-center gap-1">
-            <Save className="w-4 h-4" />
-            Save
-          </button>
-        )}
-
-      </div>
-
-    </div>
+            {/* Close */}
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="
+                mt-4 w-full py-2 rounded-xl
+                bg-[--surface-2] hover:bg-[--surface-3]
+                text-[--text-muted] hover:text-[--text-strong]
+              "
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

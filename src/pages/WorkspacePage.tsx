@@ -1,201 +1,227 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useProgramContext } from "@/hooks/useProgramContext";
+
+import { MoreVertical, FileSpreadsheet, X } from "lucide-react";
+
+import WorkspaceMenu from "@/components/workspace/WorkspaceMenu";
+import ProjectSidebar from "@/components/projectmanager/ProjectSidebar";
+import WorkspaceOverview from "@/components/workspace/WorkspaceOverview";
+import WorkspaceEditor from "@/components/workspace/WorkspaceEditor";
+import RouteManager from "@/components/workspace/WorkspaceRouteManager";
+import WorkspaceProjectPerms from "@/components/workspace/WorkspaceProjectPerms";
+
+const TOP_TABS = ["Overview", "Editor", "Routes", "Permissions"] as const;
+type TopTab = (typeof TOP_TABS)[number];
+
 export default function WorkspacePage() {
+  const { selectedProgramId } = useProgramContext();
+
+  /* ---------------------------------------------------------------------- */
+  /* LEDGERS                                                                */
+  /* ---------------------------------------------------------------------- */
+
+  const [ledgers, setLedgers] = useState<any[]>([]);
+  const [loadingLedgers, setLoadingLedgers] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      if (!selectedProgramId) {
+        setLedgers([]);
+        setLoadingLedgers(false);
+        return;
+      }
+
+      const { data } = await supabase
+        .from("ledgers")
+        .select("*")
+        .eq("program_id", selectedProgramId)
+        .order("created_at", { ascending: false });
+
+      setLedgers(data || []);
+      setLoadingLedgers(false);
+    }
+
+    load();
+  }, [selectedProgramId]);
+
+  /* ---------------------------------------------------------------------- */
+  /* WORKSPACE TAB / STATE                                                  */
+  /* ---------------------------------------------------------------------- */
+
+  const [openTabs, setOpenTabs] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [topTab, setTopTab] = useState<TopTab>("Overview");
+
+  const activeLedger =
+    openTabs.find((t) => t.id === activeTab) ?? null;
+
+  /* ---------------------------------------------------------------------- */
+  /* OPEN ITEM (LEDGER)                                                     */
+  /* ---------------------------------------------------------------------- */
+
+  const openItem = (item: any) => {
+    const exists = openTabs.some((t) => t.id === item.id);
+
+    if (!exists) {
+      setOpenTabs((prev) => [...prev, item]);
+    }
+
+    setActiveTab(item.id);
+    setTopTab("Editor");
+  };
+
+  /* ---------------------------------------------------------------------- */
+  /* CLOSE TAB                                                              */
+  /* ---------------------------------------------------------------------- */
+
+  const closeTab = (id: string) => {
+    const remaining = openTabs.filter((t) => t.id !== id);
+    setOpenTabs(remaining);
+
+    if (activeTab === id) {
+      const newActive = remaining.length
+        ? remaining[remaining.length - 1].id
+        : null;
+
+      setActiveTab(newActive);
+
+      if (!newActive) {
+        setTopTab("Overview");
+      }
+    }
+  };
+
+  /* ---------------------------------------------------------------------- */
+  /* MAIN CONTENT SWITCH                                                    */
+  /* ---------------------------------------------------------------------- */
+
+  const renderContent = () => {
+    switch (topTab) {
+      case "Overview":
+        return <WorkspaceOverview activeLedger={activeLedger} />;
+
+      case "Editor":
+        return (
+          <WorkspaceEditor
+            activeTab={activeTab}
+            openTabs={openTabs}
+          />
+        );
+
+      case "Routes":
+        return <RouteManager activeLedger={activeLedger} />;
+
+      case "Permissions":
+        return <WorkspaceProjectPerms activeLedger={activeLedger} />;
+
+      default:
+        return null;
+    }
+  };
+
+  /* ---------------------------------------------------------------------- */
+  /* LAYOUT                                                                 */
+  /* ---------------------------------------------------------------------- */
+
   return (
-    <div
-      className="
-        flex h-full w-full overflow-hidden 
-        bg-[--surface-0] text-[--text-1]
-        backdrop-blur-2xl
-        selection:bg-white/10
-      "
-    >
-      {/* ------------------------------------------------------------------ */}
-      {/* LEFT SIDEBAR — premium glass panel */}
-      {/* ------------------------------------------------------------------ */}
-      <aside
-        className="
-          w-64 h-full flex flex-col gap-10 p-7
-          rounded-r-[2rem]
-          bg-white/30 dark:bg-white/5 
-          backdrop-blur-3xl
-          border border-white/40 dark:border-white/10
-          shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)]
-        "
-      >
-        {/* Current Ledger */}
-        <section>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-60 mb-4">
-            Current Ledger
-          </div>
+    <div className="flex h-full w-full overflow-hidden bg-[--surface-1] text-[--text-1]">
 
-          <div className="flex flex-col gap-3.5">
-            {Array.from({ length: 8 }, (_, i) => `L1R${i + 1}`).map((item) => (
+      {/* LEFT SIDEBAR */}
+      <ProjectSidebar
+        selectedProgramId={selectedProgramId}
+        ledgers={ledgers}
+        openItem={openItem}
+      />
+
+      {/* MAIN COLUMN */}
+      <main className="flex flex-col flex-1 overflow-hidden bg-[--surface-0]">
+
+        {/* TOP MENU */}
+        <WorkspaceMenu
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+        />
+
+        {/* TOP TABS */}
+        <div className="flex border-b border-[--border-2] bg-[--surface-0] px-2">
+          {TOP_TABS.map((tab) => {
+            const selected = topTab === tab;
+
+            return (
               <button
-                key={item}
-                className="
-                  group w-full
-                  p-3 rounded-2xl text-left
-                  bg-white/55 dark:bg-white/10
-                  border border-white/30 dark:border-white/5
-                  backdrop-blur-xl
-                  shadow-[0_8px_24px_rgba(0,0,0,0.12)]
-                  transition-all
-                  hover:shadow-[0_12px_28px_rgba(0,0,0,0.18)]
-                  hover:bg-white/65 dark:hover:bg-white/20 
-                  hover:translate-x-[2px]
-                "
+                key={tab}
+                onClick={() => setTopTab(tab)}
+                className={`
+                  px-8 py-3 text-sm rounded-t-lg transition-all whitespace-nowrap
+                  border-r border-[--border-2]
+                  ${
+                    selected
+                      ? "bg-[--surface-2] font-semibold text-[--text-1]"
+                      : "hover:bg-[--surface-1] text-[--text-2]"
+                  }
+                `}
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-[13px] tracking-wide">
-                    {item}
-                  </span>
-                  <span className="text-[11px] opacity-50 group-hover:opacity-70">
-                    Open
-                  </span>
-                </div>
+                {tab}
               </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Other Ledgers */}
-        <section>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-60 mb-4">
-            Other Ledgers
-          </div>
-
-          <div
-            className="
-              p-5 rounded-2xl text-sm
-              bg-white/35 dark:bg-white/10
-              border border-white/20 dark:border-white/5
-              backdrop-blur-xl
-              shadow-[0_6px_18px_rgba(0,0,0,0.08)]
-              opacity-60
-            "
-          >
-            None
-          </div>
-        </section>
-      </aside>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* MAIN CONTENT — airy, cinematic layout */}
-      {/* ------------------------------------------------------------------ */}
-      <main className="flex flex-col flex-1 overflow-hidden px-16 py-12">
-
-        {/* Header Tabs */}
-        <div className="flex gap-4 mb-14">
-          {["L1H1", "L1H2", "L1H3", "L1H4", "L1H5"].map((header) => (
-            <button
-              key={header}
-              className="
-                px-7 py-2.5 rounded-full 
-                bg-white/40 dark:bg-white/10
-                backdrop-blur-xl
-                border border-white/30 dark:border-white/10
-                shadow-[0_8px_24px_rgba(0,0,0,0.14)]
-                text-[13px] font-medium tracking-wide
-                transition-all
-                hover:bg-white/55 dark:hover:bg-white/20
-                hover:shadow-[0_12px_32px_rgba(0,0,0,0.20)]
-                hover:scale-[1.05]
-              "
-            >
-              {header}
-            </button>
-          ))}
+            );
+          })}
         </div>
 
-        {/* FOOTER */}
-        <footer className="mt-16">
+        {/* MAIN CONTENT */}
+        <div className="flex-1 overflow-auto min-h-0">
+          {renderContent()}
+        </div>
 
-          {/* L1–L4 grid */}
-          <div className="grid grid-cols-4 gap-5 mb-14">
-            {["L1", "L2", "L3", "L4"].map((item) => (
-              <button
-                key={item}
-                className="
-                  p-5 rounded-2xl
-                  text-[14px] font-semibold tracking-wide
-                  bg-white/45 dark:bg-white/10
-                  border border-white/30 dark:border-white/10
-                  backdrop-blur-xl
-                  shadow-[0_8px_22px_rgba(0,0,0,0.12)]
-                  transition-all
-                  hover:bg-white/60 dark:hover:bg-white/20
-                  hover:shadow-[0_12px_30px_rgba(0,0,0,0.20)]
-                  hover:scale-[1.04]
-                "
-              >
-                {item}
-              </button>
-            ))}
-          </div>
+        {/* BOTTOM TABS */}
+        <div className="flex items-center gap-2 border-t border-[--border-2] bg-[--surface-0] px-3 py-2 shadow-[0_-4px_14px_-6px_rgba(0,0,0,0.07)]">
 
-          {/* Bottom Glass Panel */}
-          <div
-            className="
-              max-w-2xl p-10 rounded-[2.2rem]
-              bg-white/40 dark:bg-white/10
-              backdrop-blur-2xl
-              border border-white/30 dark:border-white/10
-              shadow-[0_28px_70px_-12px_rgba(0,0,0,0.32)]
-              mx-auto
-            "
-          >
-            <div className="font-semibold mb-7 text-[13px] tracking-wider opacity-70">
-              Bottom Menu
-            </div>
+          <div className="flex-1 flex items-center gap-1 overflow-x-auto whitespace-nowrap">
+            {openTabs.map((tab) => {
+              const isActive = activeTab === tab.id;
 
-            <div className="grid grid-cols-2 gap-5 text-[14px] font-medium">
-              {[
-                "Open Ledger",
-                "Create New Ledger",
-                "Manage Routes",
-                "Close Ledger",
-                "Delete Ledger",
-                "Permissions",
-              ].map((item) => (
-                <button
-                  key={item}
-                  className="
-                    p-5 rounded-2xl text-center
-                    bg-white/55 dark:bg-white/10
-                    border border-white/20 dark:border-white/10
-                    backdrop-blur-xl
-                    shadow-[0_10px_28px_rgba(0,0,0,0.15)]
-                    tracking-wide
-                    transition-all
-                    hover:bg-white/65 dark:hover:bg-white/20
-                    hover:shadow-[0_16px_40px_rgba(0,0,0,0.22)]
-                    hover:scale-[1.03]
-                  "
+              return (
+                <div
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setTopTab("Editor");
+                  }}
+                  className={`
+                    group flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-all select-none
+                    ${
+                      isActive
+                        ? "bg-[color-mix(in_oklab,var(--accent),transparent 86%)] border-[--accent] text-[--accent]"
+                        : "bg-[--surface-1] border-[--border-2] hover:bg-[--surface-2]"
+                    }
+                  `}
                 >
-                  {item}
-                </button>
-              ))}
+                  <FileSpreadsheet className="h-4 w-4 opacity-60" />
+                  <span className="text-sm">{tab.name}</span>
 
-              <button
-                className="
-                  col-span-2 p-5 rounded-2xl text-center
-                  bg-white/55 dark:bg-white/10
-                  border border-white/20 dark:border-white/10
-                  backdrop-blur-xl
-                  shadow-[0_10px_28px_rgba(0,0,0,0.15)]
-                  tracking-wide
-                  transition-all
-                  hover:bg-white/65 dark:hover:bg-white/20
-                  hover:shadow-[0_16px_40px_rgba(0,0,0,0.22)]
-                  hover:scale-[1.03]
-                "
-              >
-                Style
-              </button>
-            </div>
+                  <X
+                    className="h-3.5 w-3.5 opacity-40 hover:opacity-80 transition"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      closeTab(tab.id);
+                    }}
+                  />
+                </div>
+              );
+            })}
           </div>
-        </footer>
+
+          {/* MENU BUTTON */}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="p-2 rounded-lg border border-[--border-2] bg-[--surface-0] hover:bg-[--surface-1] transition"
+          >
+            <MoreVertical className="h-5 w-5 opacity-70" />
+          </button>
+        </div>
       </main>
     </div>
   );

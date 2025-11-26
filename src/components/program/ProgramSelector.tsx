@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { installDefaultPackage } from "@/components/discovery/discoverylogic/installDefaultPackage";
+import { installDefaultPackage } from "@/components/projectmanager/installlogic/installDefaultPackage";
 
 import {
   DropdownMenu,

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
-import PackageDisplay from "@/components/discovery/PackageDisplay";
+import ProjectSidebar from "@/components/projectmanager/ProjectSidebar";
 import DiscoveryFeed from "@/components/discovery/DiscoveryFeed";
 import NoProgramState from "@/components/NoProgramState";
 
@@ -203,9 +203,9 @@ export default function LedgerPage() {
         {/* REMOVE SIDEBAR HEADER COMPLETELY */}
 
         {/* PACKAGES */}
-        {!demoMode && selectedProgramId && (
-          <PackageDisplay selectedProgramId={selectedProgramId} ledgers={ledgers} />
-        )}
+        {/* {!demoMode && selectedProgramId && (
+          <ProjectSidebar selectedProgramId={selectedProgramId} ledgers={ledgers} />
+        )} */}
 
         {/* OTHER LEDGERS */}
         <div className="border-t border-border/40 pt-2">
