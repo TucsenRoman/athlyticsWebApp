@@ -20,6 +20,7 @@ import HeaderLayout from "@/components/navigation/HeaderLayout";
 import Home from "./pages/HomePage";
 import Auth from "./pages/Auth";
 import DiscoveryPage from "./pages/DiscoveryPage";
+import WorkspacePage from "./pages/WorkspacePage";
 import LedgerView from "./components/ledger/LedgerView";
 import FieldViewScreen from "./components/fieldview/FieldViewScreen";
 import NotFound from "./pages/NotFound";
@@ -36,14 +37,15 @@ export default function App() {
 
           <BrowserRouter>
             <Routes>
-              {/* PUBLIC ROUTES ------------------------------------------------ */}
-              <Route path="/" element={<Home />} />
 
-              {/* AUTH ROUTES -------------------------------------------------- */}
+              {/* PUBLIC -------------------------------------------------------- */}
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<Auth />} />
               <Route path="/signup" element={<Auth />} />
 
-              {/* PROTECTED ROUTES ------------------------------------------- */}
+              {/* PROTECTED ----------------------------------------------------- */}
+
+              {/* FIELD */}
               <Route
                 path="/field"
                 element={
@@ -55,6 +57,7 @@ export default function App() {
                 }
               />
 
+              {/* DISCOVERY */}
               <Route
                 path="/discovery"
                 element={
@@ -66,19 +69,19 @@ export default function App() {
                 }
               />
 
-              {/* For now, Study shares the same page as Discovery */}
+              {/* WORKSPACE (NEW) */}
               <Route
                 path="/workspace"
                 element={
                   <ProtectedRoute>
                     <HeaderLayout>
-                      Sup
+                      <WorkspacePage />
                     </HeaderLayout>
                   </ProtectedRoute>
                 }
               />
 
-              {/* Ledger detail (Study detail view) -------------------------- */}
+              {/* LEDGER DETAIL */}
               <Route
                 path="/ledgers/:ledgerId"
                 element={
@@ -90,18 +93,15 @@ export default function App() {
                 }
               />
 
-              {/* LEGACY ROUTE REDIRECTS ------------------------------------- */}
-              <Route
-                path="/field"
-                element={<Navigate to="/field" replace />}
-              />
+              {/* LEGACY REDIRECTS --------------------------------------------- */}
               <Route
                 path="/ledger"
                 element={<Navigate to="/discovery" replace />}
               />
 
-              {/* CATCH-ALL -------------------------------------------------- */}
+              {/* CATCH-ALL ----------------------------------------------------- */}
               <Route path="*" element={<NotFound />} />
+
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

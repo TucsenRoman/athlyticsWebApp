@@ -71,7 +71,7 @@ export default function LedgerPage() {
   const [openOther, setOpenOther] = useState(true);
 
   // New unified header state
-  const [mode, setMode] = useState<"discover" | "social" | "following">("discover");
+  const [mode, setMode] = useState<"discover" | "social">("discover");
   const [query, setQuery] = useState("");
 
   // Ledger state

@@ -15,7 +15,7 @@ export default function Home() {
 
   /* AUTO-REDIRECT WHEN USER LOGS IN */
   useEffect(() => {
-    if (user) navigate("/fieldview");
+    if (user) navigate("/field");
   }, [user, navigate]);
 
   /* ---------------------------------------------------------------------- */

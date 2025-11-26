@@ -2,17 +2,13 @@
 
 import { useMemo, useState } from "react";
 import {
-  Sparkles,
-  Star,
   LayoutTemplate,
   Package,
-  Flame,
   Tag,
   MessageCircle,
   Download,
   GitBranch,
   Crown,
-  Users,
 } from "lucide-react";
 
 /* -------------------------------------------------------------------------- */
@@ -49,7 +45,7 @@ interface CommunityItem {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Mock Data                                                                  */
+/* MOCK DATA                                                                  */
 /* -------------------------------------------------------------------------- */
 
 const MOCK_ITEMS: CommunityItem[] = [
@@ -87,72 +83,10 @@ const MOCK_ITEMS: CommunityItem[] = [
     createdAt: "2025-06-20",
     tags: ["meets", "entries", "results"],
   },
-  {
-    id: "basketball-practice-template",
-    name: "Basketball Practice Plan Template",
-    description:
-      "Blocks for warm-up, skill work, small-sided games, and scrimmage tracking with auto-totals.",
-    sport: "basketball",
-    type: "template",
-    creator: { id: "coach-3", name: "Coach Davis", role: "Varsity Basketball" },
-    installs: 97,
-    comments: 6,
-    forks: 3,
-    createdAt: "2025-07-10",
-    tags: ["practice", "session plan"],
-  },
-  {
-    id: "football-install-package",
-    name: "Football Install Package",
-    description:
-      "Practice scripts, install checklists, and position group attendance ledgers wired together.",
-    sport: "football",
-    type: "package",
-    creator: { id: "coach-4", name: "Coach Johnson", role: "OC · HS" },
-    installs: 131,
-    comments: 9,
-    forks: 4,
-    createdAt: "2025-07-05",
-    tags: ["install", "practice", "positions"],
-  },
-  {
-    id: "multi-performance-package",
-    name: "Performance Tracking Package",
-    description:
-      "Universal PR/SB, testing, and progression ledgers usable across any sport or level.",
-    sport: "multi",
-    type: "package",
-    badge: "Multi-sport",
-    isFeatured: true,
-    creator: {
-      id: "coach-5",
-      name: "Coach Rivera",
-      role: "Performance · HS/Club",
-    },
-    installs: 211,
-    comments: 18,
-    forks: 9,
-    createdAt: "2025-06-28",
-    tags: ["performance", "testing", "PR / SB"],
-  },
-  {
-    id: "notes-comments-template",
-    name: "Notes & Reflections Template",
-    description:
-      "Coach notes, athlete reflections, and follow-up flags linked to any roster or performance ledger.",
-    sport: "multi",
-    type: "template",
-    creator: { id: "coach-6", name: "Coach Taylor", role: "Multi-sport" },
-    installs: 88,
-    comments: 5,
-    forks: 2,
-    createdAt: "2025-07-12",
-    tags: ["notes", "reflections", "follow-up"],
-  },
 ];
 
 /* -------------------------------------------------------------------------- */
-/* DiscoverMode (Marketplace Shell)                                           */
+/* MAIN — DISCOVER MODE                                                       */
 /* -------------------------------------------------------------------------- */
 
 export default function DiscoverMode({
@@ -165,8 +99,6 @@ export default function DiscoverMode({
   const [activeSport] = useState<SportId>("all");
   const [activeType] = useState<"all" | ItemType>("all");
   const [sort] = useState<SortId>("trending");
-
-  /* FILTER + SORT ---------------------------------------------------------- */
 
   const filteredItems = useMemo(() => {
     const base = MOCK_ITEMS.filter((item) => {
@@ -186,10 +118,7 @@ export default function DiscoverMode({
 
     const sorted = [...base].sort((a, b) => {
       if (sort === "new") {
-        return (
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
-        );
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
 
       if (sort === "top") {
@@ -210,53 +139,49 @@ export default function DiscoverMode({
   const templates = filteredItems.filter((i) => i.type === "template");
   const packages = filteredItems.filter((i) => i.type === "package");
 
-  /* -------------------------------------------------------------------------- */
-  /* RENDER                                                                     */
-  /* -------------------------------------------------------------------------- */
-
   return (
-    <div className="h-full w-full overflow-hidden bg-background">
+    <div className="h-full w-full bg-[hsl(var(--background))]">
       <div className="h-full w-full overflow-y-auto px-6 lg:px-8 py-6 space-y-10">
 
-        {/* NON-DISCOVER MODES */}
+        {/* NON-DISCOVER MODES ------------------------------------------------ */}
         {mode !== "discover" && (
-          <div className="flex flex-col items-center justify-center py-20 text-sm text-muted-foreground gap-3">
-            <Package className="h-7 w-7 text-[hsl(var(--secondary))]" />
+          <div className="flex flex-col items-center justify-center py-20 text-sm text-[hsl(var(--gray-500))] gap-3">
+            <Package className="h-7 w-7 text-[hsl(var(--gray-400))]" />
             <p className="font-medium">
               {mode === "social"
                 ? "Your social hub will appear here."
                 : "Templates from coaches you follow will appear here."}
             </p>
-            <p className="text-xs max-w-sm text-center">
+            <p className="text-xs max-w-sm text-center text-[hsl(var(--gray-500))]">
               This view uses the same cards and filters as Discover.
             </p>
           </div>
         )}
 
-        {/* DISCOVER MODE */}
+        {/* DISCOVER MODE ----------------------------------------------------- */}
         {mode === "discover" && (
           <>
-            {/* FEATURED */}
+            {/* FEATURED ------------------------------------------------------ */}
             {featured.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-sm font-semibold text-[hsl(var(--secondary))]">
+                  <h2 className="text-sm font-semibold text-[hsl(var(--accent))]">
                     Trending for your filters
                   </h2>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-[hsl(var(--gray-500))]">
                     {featured.length} item{featured.length !== 1 && "s"}
                   </span>
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
                   {featured.map((item) => (
-                    <CommunityCard key={item.id} item={item} accent="featured" />
+                    <CommunityCard key={item.id} item={item} featured />
                   ))}
                 </div>
               </section>
             )}
 
-            {/* TEMPLATES */}
+            {/* TEMPLATES ------------------------------------------------------ */}
             {templates.length > 0 && (
               <section className="space-y-3">
                 <SectionHeader
@@ -271,7 +196,7 @@ export default function DiscoverMode({
               </section>
             )}
 
-            {/* PACKAGES */}
+            {/* PACKAGES ------------------------------------------------------- */}
             {packages.length > 0 && (
               <section className="space-y-3 pb-12">
                 <SectionHeader
@@ -286,12 +211,12 @@ export default function DiscoverMode({
               </section>
             )}
 
-            {/* EMPTY */}
+            {/* EMPTY ---------------------------------------------------------- */}
             {filteredItems.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-sm text-muted-foreground gap-2">
-                <Tag className="h-6 w-6 text-[hsl(var(--secondary))]" />
+              <div className="flex flex-col items-center justify-center py-12 text-sm text-[hsl(var(--gray-500))] gap-2">
+                <Tag className="h-6 w-6 text-[hsl(var(--gray-400))]" />
                 <p>No community items match that combo yet.</p>
-                <p className="text-xs max-w-xs text-center">
+                <p className="text-xs max-w-xs text-center text-[hsl(var(--gray-500))]">
                   Try clearing the search or switching filters.
                 </p>
               </div>
@@ -304,26 +229,30 @@ export default function DiscoverMode({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Supporting Components                                                      */
+/* SECTION HEADER                                                             */
 /* -------------------------------------------------------------------------- */
 
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <h2 className="text-sm font-semibold text-[hsl(var(--secondary))]">
+      <h2 className="text-sm font-semibold text-[hsl(var(--accent))]">
         {title}
       </h2>
-      <p className="text-xs text-muted-foreground max-w-md">{subtitle}</p>
+      <p className="text-xs text-[hsl(var(--gray-500))] max-w-md">{subtitle}</p>
     </div>
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* COMMUNITY CARD                                                             */
+/* -------------------------------------------------------------------------- */
+
 function CommunityCard({
   item,
-  accent,
+  featured,
 }: {
   item: CommunityItem;
-  accent?: "featured";
+  featured?: boolean;
 }) {
   const isTemplate = item.type === "template";
 
@@ -331,22 +260,22 @@ function CommunityCard({
     <button
       type="button"
       className={`
-        group flex flex-col gap-2 rounded-2xl bg-card px-4 py-3 text-left transition
+        group flex flex-col gap-2 rounded-2xl
+        bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]
+        px-4 py-3 text-left transition
         border border-[hsl(var(--border))]
-        shadow-sm hover:shadow-[0_4px_18px_rgba(20,30,60,0.15)]
-        ${accent === "featured" ? "ring-1 ring-[hsl(var(--secondary))]/20" : ""}
+        ${featured ? "ring-1 ring-[hsl(var(--accent))]" : "hover:shadow-lg"}
       `}
     >
+      {/* TOP ROW */}
       <div className="flex items-start gap-3">
+        {/* ICON */}
         <div
-          className={`
-            h-9 w-9 flex items-center justify-center rounded-2xl
-            ${
-              isTemplate
-                ? "bg-primary/10 text-primary"
-                : "bg-secondary/20 text-secondary"
-            }
-          `}
+          className="
+            h-9 w-9 flex items-center justify-center rounded-xl
+            bg-[hsl(var(--gray-200))]
+            text-[hsl(var(--gray-700))]
+          "
         >
           {isTemplate ? (
             <LayoutTemplate className="h-4 w-4" />
@@ -355,18 +284,20 @@ function CommunityCard({
           )}
         </div>
 
+        {/* NAME + METADATA */}
         <div className="flex-1 space-y-1">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-foreground leading-snug line-clamp-1">
+            <p className="text-sm font-semibold text-[hsl(var(--foreground))] leading-snug line-clamp-1">
               {item.name}
             </p>
 
             {item.isOfficial && (
               <span
                 className="
-                  inline-flex items-center gap-1 rounded-full
-                  bg-primary/10 px-2 py-0.5
-                  text-[10px] font-medium uppercase tracking-wide text-primary
+                  inline-flex items-center gap-1 rounded-full px-2 py-0.5
+                  text-[10px] font-medium uppercase tracking-wide
+                  bg-[hsl(var(--gray-200))]
+                  text-[hsl(var(--gray-700))]
                 "
               >
                 <Crown className="h-3 w-3" />
@@ -377,8 +308,10 @@ function CommunityCard({
             {item.badge && (
               <span
                 className="
-                  rounded-full bg-secondary/20 px-2 py-0.5
-                  text-[10px] font-semibold uppercase tracking-wide text-secondary
+                  rounded-full px-2 py-0.5 text-[10px]
+                  font-semibold uppercase tracking-wide
+                  bg-[hsl(var(--gray-200))]
+                  text-[hsl(var(--gray-700))]
                 "
               >
                 {item.badge}
@@ -386,69 +319,85 @@ function CommunityCard({
             )}
           </div>
 
-          <p className="text-xs text-muted-foreground line-clamp-2">
+          <p className="text-xs text-[hsl(var(--gray-600))] line-clamp-2">
             {item.description}
           </p>
 
-          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          {/* CREATOR */}
+          <div className="flex items-center gap-2 text-[11px] text-[hsl(var(--gray-600))]">
             <div className="flex items-center gap-1">
               <div
                 className="
-                  h-5 w-5 rounded-full bg-secondary text-white text-[10px]
+                  h-5 w-5 rounded-full text-[10px]
                   flex items-center justify-center font-semibold
+                  bg-[hsl(var(--gray-200))]
+                  text-[hsl(var(--gray-700))]
                 "
               >
                 {item.creator.name.charAt(0)}
               </div>
-              <span className="font-medium text-foreground">
+
+              <span className="font-medium text-[hsl(var(--foreground))]">
                 {item.creator.name}
               </span>
             </div>
-            <span className="text-[10px] line-clamp-1">{item.creator.role}</span>
+
+            <span className="text-[10px] line-clamp-1 text-[hsl(var(--gray-600))]">
+              {item.creator.role}
+            </span>
           </div>
         </div>
       </div>
 
+      {/* TAGS */}
       {item.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-1">
           {item.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
               className="
-                inline-flex items-center rounded-full bg-secondary/20
-                px-2 py-0.5 text-[10px] text-secondary
+                inline-flex items-center rounded-full px-2 py-0.5
+                text-[10px]
+                bg-[hsl(var(--gray-100))]
+                text-[hsl(var(--gray-700))]
               "
             >
               #{tag}
             </span>
           ))}
           {item.tags.length > 3 && (
-            <span className="text-[10px] text-muted-foreground/80">
+            <span className="text-[10px] text-[hsl(var(--gray-500))]">
               +{item.tags.length - 3} more
             </span>
           )}
         </div>
       )}
 
+      {/* FOOTER */}
       <div className="mt-2 flex items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-[11px] text-[hsl(var(--gray-600))]">
           <span
             className="
-              inline-flex items-center gap-1 rounded-full bg-secondary/20
-              text-secondary px-2 py-0.5
+              inline-flex items-center gap-1 rounded-full px-2 py-0.5
+              bg-[hsl(var(--gray-200))]
+              text-[hsl(var(--gray-700))]
             "
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            <span className="capitalize">{item.sport.replace("_", " ")}</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--gray-700))]" />
+            <span className="capitalize">
+              {item.sport.replace("_", " ")}
+            </span>
           </span>
 
-          <span className="hidden sm:inline text-[10px] uppercase tracking-wide">
+          <span className="hidden sm:inline text-[10px] uppercase tracking-wide text-[hsl(var(--gray-500))]">
             {item.type === "template" ? "Template" : "Package"}
           </span>
         </div>
 
+        {/* INSTALL */}
         <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-2 text-[10px] text-muted-foreground">
+          {/* Stats */}
+          <div className="hidden sm:flex items-center gap-2 text-[10px] text-[hsl(var(--gray-500))]">
             <span className="inline-flex items-center gap-1">
               <Download className="h-3 w-3" />
               {item.installs}
@@ -465,9 +414,11 @@ function CommunityCard({
 
           <span
             className="
-              inline-flex items-center justify-center rounded-full
-              bg-secondary/20 px-3 py-1 text-[11px] font-medium text-secondary
-              transition hover:bg-primary hover:text-primary-foreground
+              inline-flex items-center justify-center rounded-full px-3 py-1
+              text-[11px] font-medium transition
+              bg-[hsl(var(--accent))]/20
+              text-[hsl(var(--accent))]
+              hover:bg-[hsl(var(--accent))]/30
             "
           >
             Install

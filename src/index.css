@@ -1,253 +1,120 @@
-/* eslint-disable */
-/* stylelint-disable */
-
-/* -------------------------------------------------------------------------- */
-/*  ATHLYTICS DESIGN SYSTEM — SLATE-HEAVY ATHLETIC                             */
-/*  Light Mode = Cool Gray + Slate + Bright Orange                             */
-/*  Dark Mode  = True Black + Deep Slate + Orange                              */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
+/*  ATHLYTICS DESIGN SYSTEM — BLACK / WHITE / GREY + SINGLE ACCENT            */
+/* ========================================================================== */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* -------------------------------------------------------------------------- */
-/*  GLOBAL COLOR TOKENS (HSL ONLY)                                            */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
+/*  COLOR TOKENS (ONLY WHAT YOU REQUESTED)                                    */
+/* ========================================================================== */
 
 @layer base {
   :root {
-    /* ------------------------------------------------------ */
-    /* LIGHT THEME — Slate-Heavy Athletic                     */
-    /* ------------------------------------------------------ */
+    /* CORE */
+    --white: 0 0% 100%;
+    --black: 0 0% 0%;
 
-    /* CORE SURFACES */
-    --background: 215 22% 96%;        /* cool-soft gray canvas */
-    --foreground: 220 22% 18%;        /* slate-rich text */
+    /* GREY SCALE */
+    --gray-50: 0 0% 98%;
+    --gray-100: 0 0% 96%;
+    --gray-200: 0 0% 92%;
+    --gray-300: 0 0% 86%;
+    --gray-400: 0 0% 70%;
+    --gray-500: 0 0% 55%;
+    --gray-600: 0 0% 40%;
+    --gray-700: 0 0% 28%;
+    --gray-800: 0 0% 15%;
+    --gray-900: 0 0% 7%;
 
-    --card: 0 0% 100%;                /* clean white cards */
-    --card-foreground: 220 22% 18%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 22% 18%;
-
-    /* BRAND — ORANGE POWER */
-    --primary: 22 92% 57%;            /* bright vivid athletic orange */
-    --primary-foreground: 0 0% 100%;
-
-    /* ATHLETIC SLATE ACCENTS (Option 1) */
-    --secondary: 220 35% 22%;         /* deep slate/navy */
-    --secondary-foreground: 0 0% 100%;
-
-    /* COOL GRAYS FOR FILTERS, ROWS, MUTED SURFACES */
-    --muted: 220 14% 90%;             /* soft cool-gray */
-    --muted-foreground: 220 10% 44%;
-
-    /* SLATE NEUTRAL ACCENTS (icons) */
-    --accent: 220 12% 36%;            /* muted slate-gray */
+    /* BRAND ACCENT — SINGLE COLOR */
+    --accent: 22 94% 57%;
     --accent-foreground: 0 0% 100%;
 
-    /* STATUS COLORS */
-    --destructive: 0 72% 58%;
-    --destructive-foreground: 0 0% 100%;
+    /* FUNCTION COLORS */
+    --success: 140 60% 45%;
+    --warning: 45 100% 50%;
+    --danger: 0 80% 55%;
+    --info: 210 85% 55%;
 
-    /* STRUCTURE */
-    --border: 220 13% 82%;            /* stronger gray border */
-    --input: 220 13% 82%;
-    --ring: 22 92% 57%;               /* orange focus ring */
+    /* RADIUS */
     --radius: 0.75rem;
 
-    /* EFFECTS */
-    --shadow-athletic: 0 6px 24px -4px hsl(220 40% 20% / 0.18);
+    /* BASE MAPPINGS */
+    --background: var(--white);
+    --foreground: var(--black);
+
+    --card: var(--white);
+    --card-foreground: var(--black);
+
+    --border: var(--gray-200);
+    --input: var(--gray-200);
+    --ring: var(--accent);
   }
 
-  /* ------------------------------------------------------ */
-  /* DARK THEME — TRUE BLACK + DEEP SLATE + ORANGE          */
-  /* ------------------------------------------------------ */
-
-  html.dark,
-  :root.dark,
-  .dark :root,
-  html.dark :root {
-    --background: 0 0% 0%;            /* pure black */
-    --foreground: 0 0% 94%;
-
-    --card: 0 0% 7%;                  /* deep panel */
-    --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 96%;
-
-    --primary: 22 92% 57%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 220 18% 14%;         /* deep slate for dark mode */
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 220 10% 16%;
-    --muted-foreground: 0 0% 78%;
-
-    --accent: 220 12% 46%;
-    --accent-foreground: 0 0% 100%;
-
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    --ring: 22 92% 57%;
-  }
-
-  /* BASE BODY STYLING */
   body {
-    @apply bg-background text-foreground antialiased;
-    transition: background-color 0.25s ease, color 0.25s ease;
-  }
-
-  html.dark body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
 /*  COMPONENT UTILITIES                                                       */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
 
 @layer components {
-  /* SURFACES */
   .theme-surface {
-    @apply bg-card text-card-foreground transition-colors duration-300;
+    background-color: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    @apply transition-colors duration-200;
   }
 
-  .theme-surface-muted {
-    background-color: hsl(var(--muted));
-    color: hsl(var(--muted-foreground));
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-
-  /* PRIMARY CTA BUTTON */
   .theme-primary {
-    background-color: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    @apply font-medium rounded-lg transition-all duration-300;
-    @apply hover:brightness-110 active:scale-95;
+    background-color: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    @apply font-medium transition-all hover:brightness-110 active:scale-95;
   }
 
-  /* OUTLINE CTA / FILTER PILLS */
-  .theme-primary-outline {
-    border: 1px solid hsl(var(--primary));
-    color: hsl(var(--primary));
-    background-color: transparent;
-    @apply rounded-full text-sm font-medium transition-colors duration-200;
-  }
-
-  /* SECONDARY (SLATE) BUTTON / TOOLBAR */
   .theme-secondary {
-    background-color: hsl(var(--secondary));
-    color: hsl(var(--secondary-foreground));
-    @apply font-medium transition-colors duration-300;
+    background-color: hsl(var(--gray-100));
+    color: hsl(var(--gray-700));
   }
 
-  /* MUTED ROWS */
-  .theme-muted {
-    background-color: hsl(var(--muted));
-    color: hsl(var(--muted-foreground));
+  .dark .theme-secondary {
+    background-color: hsl(var(--gray-800));
+    color: hsl(var(--gray-200));
   }
 
-  /* ICONS */
-  .theme-accent {
-    color: hsl(var(--accent));
-  }
-
-  .text-muted {
-    color: hsl(var(--muted-foreground));
-  }
-
-  /* SIDEBAR ICON SYSTEM */
-  .sidebar-icon {
-    color: hsl(220 12% 46%);          /* slate gray */
-  }
-
-  .sidebar-icon-active {
-    color: hsl(var(--primary));       /* bright orange */
-  }
-
-  /* SHADOWS */
-  .shadow-athletic {
-    box-shadow: var(--shadow-athletic);
-  }
-
-  .shadow-glow {
-    box-shadow: 0 0 10px hsl(var(--primary) / 0.4);
-  }
+  .theme-success { background-color: hsl(var(--success)); color: black; }
+  .theme-warning { background-color: hsl(var(--warning)); color: black; }
+  .theme-danger { background-color: hsl(var(--danger)); color: white; }
+  .theme-info { background-color: hsl(var(--info)); color: white; }
 }
 
-/* -------------------------------------------------------------------------- */
-/*  SCROLLBARS & GLOBAL BEHAVIOR                                              */
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
+/*  GLOBAL SCROLLBAR RULES (HIDDEN ALWAYS)                                    */
+/* ========================================================================== */
 
 * {
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
-button,
-a,
-input,
-textarea {
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  user-select: none;
-}
-
-/* Hide native scrollbars */
-::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
-
-* {
-  scrollbar-width: none;
   -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Custom scrollbars (opt-in) */
-.custom-scrollbar {
-  position: absolute;
-  background: transparent;
-  z-index: 50;
-  overflow: auto;
-  opacity: 0.6;
-  transition: opacity 0.3s ease-in-out;
+*::-webkit-scrollbar {
+  display: none;
 }
 
-.custom-scrollbar:hover {
-  opacity: 1;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(var(--primary));
-  border-radius: 9999px;
-  transition: background 0.2s ease-in-out;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--primary) / 0.8);
-}
-
-/* -------------------------------------------------------------------------- */
-/*  FOCUS HANDLING                                                            */
-/* -------------------------------------------------------------------------- */
-
-*,
-*:focus,
-*:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-}
+/* ========================================================================== */
+/*  FOCUS STATES                                                              */
+/* ========================================================================== */
 
 *:focus-visible {
-  --tw-ring-offset-width: 0 !important;
-  --tw-ring-color: transparent !important;
-  --tw-ring-offset-color: transparent !important;
-  --tw-ring-shadow: none !important;
+  outline: 2px solid hsl(var(--accent));
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
 }

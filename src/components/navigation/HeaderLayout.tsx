@@ -6,14 +6,13 @@ import {
   MapPinned,
   Sparkles,
   PencilRuler,
-  LayoutGrid,
 } from "lucide-react";
-import { motion } from "framer-motion";
 
+import { motion } from "framer-motion";
 import ProgramSelector from "@/components/program/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { EditModeContext } from "@/contexts/EditModeContext";
-import Usermenu from "@/components/UserMenu";
+import Usermenu from "./UserMenu";
 
 /* -------------------------------------------------------------------------- */
 
@@ -35,21 +34,26 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
 
   return (
     <EditModeContext.Provider value={{ isEditMode, setIsEditMode }}>
-      <div className="min-h-screen bg-background overflow-hidden flex flex-col">
+      <div className="min-h-screen bg-[hsl(var(--background))] flex flex-col overflow-hidden">
 
-        {/* ------------------------ HEADER (Mobile + Desktop) ------------------------ */}
+        {/* ------------------------------------------------------------------ */}
+        {/* HEADER (Mobile + Desktop)                                         */}
+        {/* ------------------------------------------------------------------ */}
         {!hideHeader && (
-          <header className="border-b bg-secondary h-16 flex items-center px-3 justify-between">
-
+          <header
+            className="
+              h-16 px-3 flex items-center justify-between
+              bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]
+              border-b border-[hsl(var(--border))]
+            "
+          >
             {/* LEFT — Logo + Program Selector */}
             <div className="flex items-center gap-3">
-
-              {/* Logo — visible on all sizes unless you want sm:hidden */}
               <button
                 onClick={() => navigate("/field")}
                 className="hover:opacity-80 transition"
               >
-                <img src="/AthlyticsLogo.png" className="w-[75px] h-[75px]" />
+                <img src="/AthlyticsLogo.png" className="w-[70px] h-[70px]" />
               </button>
 
               <ProgramSelector
@@ -59,11 +63,9 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
               />
             </div>
 
-            {/* RIGHT — Desktop Navigation + Usermenu */}
+            {/* RIGHT — Desktop Nav + User Menu */}
             <div className="hidden md:flex items-center gap-3">
-
-              {/* Desktop nav pill */}
-              <div className="flex bg-muted rounded-xl px-1 py-1 gap-1 items-center">
+              <DesktopNavPill>
                 <DesktopNavButton
                   icon={<MapPinned className="w-4 h-4" />}
                   label="Field"
@@ -84,25 +86,28 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                   active={activeDiscovery}
                   onClick={() => navigate("/discovery")}
                 />
-              </div>
+              </DesktopNavPill>
 
               <Usermenu />
             </div>
 
-            {/* Mobile Usermenu Only */}
+            {/* Mobile — User menu only */}
             <div className="md:hidden">
               <Usermenu />
             </div>
-
           </header>
         )}
 
-        {/* ----------------------------- PAGE CONTENT ----------------------------- */}
+        {/* ------------------------------------------------------------------ */}
+        {/* CONTENT                                                           */}
+        {/* ------------------------------------------------------------------ */}
         <main className="flex-1 overflow-hidden">
           {children}
         </main>
 
-        {/* ----------------------------- MOBILE BOTTOM BAR ----------------------------- */}
+        {/* ------------------------------------------------------------------ */}
+        {/* MOBILE BOTTOM NAV                                                 */}
+        {/* ------------------------------------------------------------------ */}
         {!hideHeader && (
           <MobileBottomBar
             activeField={activeField}
@@ -111,14 +116,32 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
             navigate={navigate}
           />
         )}
-
       </div>
     </EditModeContext.Provider>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* Desktop Nav Button                                                         */
+/* DESKTOP NAV PILL WRAPPER                                                   */
+/* -------------------------------------------------------------------------- */
+
+function DesktopNavPill({ children }) {
+  return (
+    <div
+      className="
+        flex items-center gap-1 px-1 py-1
+        rounded-xl
+        bg-[hsl(var(--gray-100))]
+        dark:bg-[hsl(var(--gray-800))]
+      "
+    >
+      {children}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* DESKTOP NAV BUTTON                                                          */
 /* -------------------------------------------------------------------------- */
 
 function DesktopNavButton({ icon, label, active, onClick }) {
@@ -126,22 +149,22 @@ function DesktopNavButton({ icon, label, active, onClick }) {
     <button
       onClick={onClick}
       className={`
-        flex items-center gap-2 h-8 rounded-xl px-3
-        transition-colors
-        ${active
-          ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-muted/30"
+        flex items-center gap-2 h-8 px-3 rounded-xl transition-colors
+        ${
+          active
+            ? "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))] font-bold"
+            : "text-[hsl(var(--gray-600))] hover:bg-[hsl(var(--gray-200))]"
         }
       `}
     >
       <span>{icon}</span>
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-sm">{label}</span>
     </button>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* MOBILE BOTTOM NAV BAR + CENTER FAB                                         */
+/* MOBILE NAV BAR                                                             */
 /* -------------------------------------------------------------------------- */
 
 function MobileBottomBar({
@@ -149,36 +172,39 @@ function MobileBottomBar({
   activeWorkspace,
   activeDiscovery,
   navigate,
-}: any) {
+}) {
   return (
-    <div className="md:hidden fixed bottom-0 inset-x-0 h-16 bg-secondary border-t flex items-center justify-around px-6">
-
-      {/* Field */}
+    <div
+      className="
+        md:hidden fixed bottom-0 inset-x-0 h-16
+        bg-[hsl(var(--card))] border-t border-[hsl(var(--border))]
+        flex items-center justify-around
+      "
+    >
       <MobileNavIcon
         icon={<MapPinned className="w-6 h-6" />}
         active={activeField}
         onClick={() => navigate("/field")}
       />
 
-      {/* Workspace */}
       <MobileNavIcon
         icon={<PencilRuler className="w-6 h-6" />}
         active={activeWorkspace}
         onClick={() => navigate("/workspace")}
       />
 
-      {/* Discovery */}
       <MobileNavIcon
         icon={<Sparkles className="w-6 h-6" />}
         active={activeDiscovery}
         onClick={() => navigate("/discovery")}
       />
-
-      {/* Overflow/Menu (optional) */}
-
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/* MOBILE NAV ICON                                                            */
+/* -------------------------------------------------------------------------- */
 
 function MobileNavIcon({ icon, active, onClick }) {
   return (
@@ -189,11 +215,15 @@ function MobileNavIcon({ icon, active, onClick }) {
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
       className={`
         flex flex-col items-center justify-center p-2 rounded-full
-        ${active ? "text-primary bg-primary/20" : "text-muted-foreground"}
+        ${
+          active
+            ? "text-[hsl(var(--accent))] bg-[hsl(var(--accent))]/20"
+            : "text-[hsl(var(--gray-600))]"
+        }
       `}
     >
       <motion.div
-        animate={active ? { rotate: 0, opacity: 1 } : { opacity: 0.75 }}
+        animate={active ? { opacity: 1 } : { opacity: 0.75 }}
         transition={{ duration: 0.15 }}
       >
         {icon}
