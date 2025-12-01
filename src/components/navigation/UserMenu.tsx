@@ -50,7 +50,7 @@ export default function UserDropdownShell() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       {/* TRIGGER ------------------------------------------------------------- */}
-      <DropdownMenuTrigger className="flex items-center h-8 w-8 rounded-full overflow-hidden">
+      <DropdownMenuTrigger className="flex items-center h-10 w-10 rounded-full overflow-hidden">
         <Avatar className="h-full w-full bg-[hsl(var(--gray-200))] hover:bg-[hsl(var(--gray-300))] transition">
           <AvatarImage src="public/IMG_0136.jpg" className="rounded-sm" />
           <AvatarFallback className="bg-[hsl(var(--accent))] text-white rounded-sm">

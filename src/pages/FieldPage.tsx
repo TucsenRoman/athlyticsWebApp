@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import FieldViewSearchBar from "./FieldViewSearchBar";
-import FieldViewFeed from "./FieldViewFeed";
-import NoProgramState from "../NoProgramState";
+import FieldSearchBar from "@/components/field/FieldSearchBar";
+import FieldFeed from "@/components/field/FieldFeed";
+import NoProgramState from "@/components/navigation/RequireProgram";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
@@ -37,23 +37,12 @@ export default function FieldViewScreen() {
   }, [query, demoMode]);
 
   /* ---------------------------------------------------------------------- */
-  /* NO PROGRAM SELECTED (SKIP IN DEMO MODE)                               */
-  /* ---------------------------------------------------------------------- */
-  if (!demoMode && !selectedProgramId) {
-    return (
-      <div className="w-full min-h-screen bg-white dark:bg-black">
-        <NoProgramState />
-      </div>
-    );
-  }
-
-  /* ---------------------------------------------------------------------- */
   /* FIELDVIEW UI                                                           */
   /* ---------------------------------------------------------------------- */
   return (
     <div className="w-full min-h-screen bg-white dark:bg-black">
-      <FieldViewSearchBar query={query} onChange={setQuery} />
-      <FieldViewFeed query={query} results={results} />
+      <FieldSearchBar query={query} onChange={setQuery} />
+      <FieldFeed query={query} results={results} />
     </div>
   );
 }

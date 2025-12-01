@@ -1,3 +1,5 @@
+"use client";
+
 import React, {
   useState,
   useEffect,
@@ -7,6 +9,7 @@ import React, {
 } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+
 import {
   ChevronDown,
   Settings2,
@@ -16,7 +19,7 @@ import {
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { installDefaultPackage } from "@/components/projectmanager/installlogic/installDefaultPackage";
+import { installDefaults } from "@/components/projectmanager/installlogic/installDefaults";
 
 import {
   DropdownMenu,
@@ -30,12 +33,11 @@ import { Button } from "@/components/ui/button";
 
 import {
   Dialog,
-  DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogContent,
 } from "@/components/ui/dialog";
 
-import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import { Input } from "@/components/ui/input";
 
 import {
@@ -49,16 +51,17 @@ import {
 import { useEditMode } from "@/contexts/EditModeContext";
 
 /* -------------------------------------------------------------------------- */
-/*  TYPES                                                                     */
+/* TYPES */
 /* -------------------------------------------------------------------------- */
 
-interface Program {
+export interface Program {
   id: number;
-  sport: string;
-  level: string;
-  gender: string;
-  school: string;
-  season_year: string;
+  user_id: string;
+  school: string | null;
+  sport: string | null;
+  level: string | null;
+  gender: string | null;
+  year: string | null;
 }
 
 export interface ProgramSelectorHandle {
@@ -69,12 +72,12 @@ type ProgramSelectorVariant = "header" | "empty";
 
 interface ProgramSelectorProps {
   selectedProgramId: number | null;
-  onProgramChange: (programId: number | null) => void;
+  onProgramChange: (id: number | null) => void;
   variant?: ProgramSelectorVariant;
 }
 
 /* -------------------------------------------------------------------------- */
-/*  STATIC OPTIONS                                                            */
+/* STATIC OPTIONS */
 /* -------------------------------------------------------------------------- */
 
 const SPORTS = [
@@ -107,36 +110,33 @@ const LEVEL_OPTIONS = [
 const GENDERS = ["Boys", "Girls", "Co-ed"];
 
 /* -------------------------------------------------------------------------- */
-/*  MAIN COMPONENT                                                            */
+/* COMPONENT */
 /* -------------------------------------------------------------------------- */
 
 const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
-  function ProgramSelector(
-    { selectedProgramId, onProgramChange, variant = "header" },
-    ref
-  ) {
-    /* -------------------------------- STATE -------------------------------- */
+  ({ selectedProgramId, onProgramChange, variant = "header" }, ref) => {
+    /* ---------------------------------------------------------------------- */
+    /* STATE */
+    /* ---------------------------------------------------------------------- */
 
     const [programs, setPrograms] = useState<Program[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Action modes
-    const [pendingAction, setPendingAction] = useState<"edit" | "delete" | null>(
-      null
-    );
+    const [pendingAction, setPendingAction] =
+      useState<"edit" | "delete" | null>(null);
 
     const [editorMode, setEditorMode] = useState<"add" | "edit" | null>(null);
     const [editorProgram, setEditorProgram] = useState<Program | null>(null);
 
     const [pendingDelete, setPendingDelete] = useState<Program | null>(null);
 
-    // Add/Edit Modal fields
+    // Form fields
     const [school, setSchool] = useState("");
     const [sport, setSport] = useState("");
     const [customSport, setCustomSport] = useState("");
     const [levels, setLevels] = useState<string[]>([]);
     const [gender, setGender] = useState("");
-    const [seasonYear, setSeasonYear] = useState("");
+    const [year, setYear] = useState("");
 
     const { isEditMode, setIsEditMode } = useEditMode();
 
@@ -146,13 +146,17 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       openPicker: () => triggerRef.current?.click(),
     }));
 
-    /* --------------------------- LOAD USER + PROGRAMS ---------------------- */
+    /* ---------------------------------------------------------------------- */
+    /* LOAD PROGRAMS */
+    /* ---------------------------------------------------------------------- */
 
     useEffect(() => {
       const load = async () => {
         try {
-          const { data: userData } = await supabase.auth.getUser();
-          const user = userData?.user;
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+
           if (!user) {
             setLoading(false);
             return;
@@ -161,7 +165,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           const { data } = await supabase
             .from("programs")
             .select("*")
-            .eq("coach_id", user.id);
+            .eq("user_id", user.id);
 
           setPrograms(data || []);
         } catch (err) {
@@ -175,18 +179,20 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     }, []);
 
     /* ---------------------------------------------------------------------- */
-    /* HELPERS                                                                */
+    /* HELPERS */
     /* ---------------------------------------------------------------------- */
 
     const refreshPrograms = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData?.user;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) return;
 
       const { data } = await supabase
         .from("programs")
         .select("*")
-        .eq("coach_id", user.id);
+        .eq("user_id", user.id);
 
       setPrograms(data || []);
     };
@@ -197,104 +203,92 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       setCustomSport("");
       setLevels([]);
       setGender("");
-      setSeasonYear("");
+      setYear("");
     };
 
-    const hydrateForm = (program: Program) => {
-      setSchool(program.school);
-      setSport(program.sport);
-      setCustomSport(program.sport === "Other" ? program.sport : "");
+    const hydrateForm = (p: Program) => {
+      setSchool(p.school ?? "");
+      setSport(p.sport ?? "");
+      setCustomSport(p.sport === "Other" ? p.sport : "");
       setLevels(
-        program.level ? program.level.split(",").map((s) => s.trim()) : []
+        p.level ? p.level.split(",").map((l) => l.trim()) : []
       );
-      setGender(program.gender);
-      setSeasonYear(program.season_year);
+      setGender(p.gender ?? "");
+      setYear(p.year ?? "");
     };
 
     const selectedProgram = programs.find((p) => p.id === selectedProgramId);
     const noPrograms = programs.length === 0;
 
-    const formatName = (p: Program) => `${p.sport} • ${p.season_year}`;
-    const formatDetails = (p: Program) => p.school;
+    const formattedName = (p: Program) =>
+      `${p.sport ?? "Unknown"} • ${p.year ?? "Year"}`;
+
+    const formattedDetails = (p: Program) =>
+      p.school ?? "No school";
 
     const effectiveSport =
       sport === "Other" ? customSport.trim() : sport.trim();
 
     /* ---------------------------------------------------------------------- */
-    /* PROGRAM CLICK HANDLING                                                 */
+    /* CLICK HANDLING */
     /* ---------------------------------------------------------------------- */
 
-    const handleProgramClick = (program: Program) => {
-      // EDIT MODE
+    const handleProgramClick = (p: Program) => {
       if (pendingAction === "edit") {
-        hydrateForm(program);
-        setEditorProgram(program);
+        hydrateForm(p);
+        setEditorProgram(p);
         setEditorMode("edit");
         setPendingAction(null);
         return;
       }
 
-      // DELETE MODE
       if (pendingAction === "delete") {
-        setPendingDelete(program);
+        setPendingDelete(p);
         setPendingAction(null);
         return;
       }
 
-      // NORMAL SELECT
-      onProgramChange(program.id);
+      onProgramChange(p.id);
     };
 
     /* ---------------------------------------------------------------------- */
-    /* ADD + EDIT SUBMIT HANDLING                                             */
+    /* SUBMIT HANDLING */
     /* ---------------------------------------------------------------------- */
 
     const handleSubmit = async () => {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       if (!user) return;
 
-      if (!school.trim() || !effectiveSport || !gender || !seasonYear) return;
+      if (!school.trim() || !effectiveSport || !gender || !year) return;
 
-      let createdProgramId: number | null = null;
-
-      /* ---------------------------------------------------------------------- */
-      /* ADD NEW PROGRAM                                                        */
-      /* ---------------------------------------------------------------------- */
+      /* CREATE */
       if (editorMode === "add") {
-        const { data: created, error: createErr } = await supabase
+        const { data: created, error } = await supabase
           .from("programs")
           .insert([
             {
-              coach_id: user.id,
+              user_id: user.id,
               school: school.trim(),
               sport: effectiveSport,
               level: levels.join(", "),
               gender,
-              season_year: seasonYear.trim(),
+              year: year.trim(),
             },
           ])
           .select()
           .single();
 
-        if (createErr || !created) {
-          console.error("Program creation failed:", createErr);
-          return;
-        }
-
-        createdProgramId = created.id;
-
-        // AUTO-INSTALL STARTER PACKAGE
-        const install = await installDefaultPackage(createdProgramId, user.id);
-        if (!install.success) {
-          console.error("Package install failed:", install.error);
+        if (!created || error) {
+          console.error("Creation failed:", error);
+        } else {
+          await installDefaults(created.id, user.id);
         }
       }
 
-      /* ---------------------------------------------------------------------- */
-      /* EDIT EXISTING PROGRAM                                                  */
-      /* ---------------------------------------------------------------------- */
+      /* EDIT */
       if (editorMode === "edit" && editorProgram) {
         await supabase
           .from("programs")
@@ -303,14 +297,12 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
             sport: effectiveSport,
             level: levels.join(", "),
             gender,
-            season_year: seasonYear.trim(),
+            year: year.trim(),
           })
           .eq("id", editorProgram.id);
       }
 
-      /* ---------------------------------------------------------------------- */
-      /* REFRESH + RESET UI                                                     */
-      /* ---------------------------------------------------------------------- */
+      /* REFRESH */
       await refreshPrograms();
 
       setEditorMode(null);
@@ -319,13 +311,16 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     };
 
     /* ---------------------------------------------------------------------- */
-    /* DELETE CONFIRM HANDLING                                                */
+    /* DELETE */
     /* ---------------------------------------------------------------------- */
 
     const handleConfirmDelete = async () => {
       if (!pendingDelete) return;
 
-      await supabase.from("programs").delete().eq("id", pendingDelete.id);
+      await supabase
+        .from("programs")
+        .delete()
+        .eq("id", pendingDelete.id);
 
       await refreshPrograms();
 
@@ -337,19 +332,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     };
 
     /* ---------------------------------------------------------------------- */
-    /* ROWSMENU-STYLE EXPANDING BUTTON BAR                                     */
+    /* EDIT ACTIONS (floating circle buttons) */
     /* ---------------------------------------------------------------------- */
 
     const renderActions = () => {
       const items = [
         {
           label: "Add",
-          icon: (
-            <Plus
-              size={20}
-              className="text-[hsl(var(--foreground))]"
-            />
-          ),
+          icon: <Plus size={20} className="text-[hsl(var(--foreground))]" />,
           action: () => {
             resetForm();
             setEditorMode("add");
@@ -358,12 +348,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         },
         {
           label: "Edit",
-          icon: (
-            <Pencil
-              size={20}
-              className="text-[var(--secondary-700)]/80"
-            />
-          ),
+          icon: <Pencil size={20} className="text-[var(--secondary-700)]/80" />,
           action: () =>
             setPendingAction((p) => (p === "edit" ? null : "edit")),
         },
@@ -406,7 +391,8 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                     e.stopPropagation();
                     a.action();
                   }}
-                  className={`h-8 w-8 flex items-center justify-center rounded-full shadow-md transition-all
+                  className={`
+                    h-8 w-8 flex items-center justify-center rounded-full shadow-md transition-all
                     ${
                       a.label === "Edit" && pendingAction === "edit"
                         ? "bg-[var(--primary-100)]"
@@ -425,26 +411,27 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     };
 
     /* ---------------------------------------------------------------------- */
-    /* TRIGGERS                                                               */
+    /* TRIGGERS — ORIGINAL VARIANT STYLING */
     /* ---------------------------------------------------------------------- */
 
     const renderHeaderTrigger = () => (
       <Button
         ref={triggerRef}
-        variant="outline"
+        tabIndex={-1}
         className="
           flex items-center gap-2
-          h-10 px-3
+          h-full px-3
           rounded-xl
-          bg-[hsl(var(--secondary))]/20
-          text-[hsl(var(--foreground))]
-          border border-[hsl(var(--border))]
+          bg-transparent
           transition-colors
-          hover:bg-[hsl(var(--secondary))]/30
+          hover:bg-transparent
+          backdrop-blur
+          focus:outline-none focus-visible:outline-none
+          focus-visible:ring-0 ring-0 focus-visible:ring-offset-0
         "
       >
-        <span className="font-medium text-sm truncate">
-          {selectedProgram ? formatName(selectedProgram) : "Select Program"}
+        <span className="text-sm font-bold truncate">
+          {selectedProgram ? formattedName(selectedProgram) : "Select Program"}
         </span>
 
         <ChevronDown
@@ -453,6 +440,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         />
       </Button>
     );
+
 
     const renderEmptyTrigger = () => (
       <Button
@@ -473,7 +461,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         "
       >
         <span className="font-medium text-sm truncate">
-          {selectedProgram ? formatName(selectedProgram) : "Select Program"}
+          {selectedProgram ? formattedName(selectedProgram) : "Select Program"}
         </span>
 
         <ChevronDown
@@ -484,7 +472,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     );
 
     /* ---------------------------------------------------------------------- */
-    /* DROPDOWN (with tinted scroll region)                                   */
+    /* DROPDOWN — ORIGINAL VARIANT STYLING */
     /* ---------------------------------------------------------------------- */
 
     const renderDropdown = () => (
@@ -497,7 +485,9 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         }}
       >
         <DropdownMenuTrigger asChild>
-          {variant === "empty" ? renderEmptyTrigger() : renderHeaderTrigger()}
+          {variant === "empty"
+            ? renderEmptyTrigger()
+            : renderHeaderTrigger()}
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
@@ -522,7 +512,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         >
           <div
             className={`
-              max-h-[260px] overflow-y-auto transition-all custom-scrollbar
+              max-h-[260px] overflow-y-auto custom-scrollbar
               ${
                 pendingAction === "edit"
                   ? "animate-pulse bg-[var(--primary-100)]/40"
@@ -561,10 +551,10 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                 >
                   <div className="flex flex-col min-w-0">
                     <span className="font-medium text-sm truncate">
-                      {formatName(p)}
+                      {formattedName(p)}
                     </span>
                     <span className="text-xs text-[hsl(var(--muted-foreground))] truncate">
-                      {formatDetails(p)}
+                      {formattedDetails(p)}
                     </span>
                   </div>
                 </DropdownMenuItem>
@@ -592,7 +582,11 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
               >
                 <motion.div
                   animate={{ rotate: isEditMode ? -90 : 0 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 20,
+                  }}
                   className="flex items-center justify-center"
                 >
                   <Settings2
@@ -616,7 +610,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     );
 
     /* ---------------------------------------------------------------------- */
-    /* RENDER                                                                  */
+    /* RENDER */
     /* ---------------------------------------------------------------------- */
 
     if (loading) {
@@ -644,7 +638,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         >
           <DialogContent className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
             <DialogHeader>
-              <DialogTitle className="text-[hsl(var(--foreground))]">
+              <DialogTitle>
                 {editorMode === "add" ? "Add Program" : "Edit Program"}
               </DialogTitle>
             </DialogHeader>
@@ -656,7 +650,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                 onChange={(e) => setSchool(e.target.value)}
               />
 
-              {/* Sport */}
               <Select value={sport} onValueChange={setSport}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Sport" />
@@ -687,8 +680,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                     className="
                       w-full justify-between
                       border-[hsl(var(--border))]
-                      bg-[hsl(var(--background))]
-                      hover:bg-[hsl(var(--muted))]/30
+                      bg-[hsl(var(--background))] hover:bg-[hsl(var(--muted))]/30
                     "
                   >
                     {levels.length === 0
@@ -719,7 +711,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Gender */}
               <Select value={gender} onValueChange={setGender}>
                 <SelectTrigger>
                   <SelectValue placeholder="Gender" />
@@ -733,11 +724,10 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                 </SelectContent>
               </Select>
 
-              {/* Season */}
               <Input
                 placeholder="Season / Year (e.g., 2024-2025)"
-                value={seasonYear}
-                onChange={(e) => setSeasonYear(e.target.value)}
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
               />
             </div>
 
@@ -768,7 +758,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           </DialogContent>
         </Dialog>
 
-        {/* DELETE CONFIRM MODAL */}
+        {/* DELETE CONFIRM */}
         <Dialog
           open={pendingDelete !== null}
           onOpenChange={(open) => {
@@ -777,15 +767,13 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         >
           <DialogContent className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
             <DialogHeader>
-              <DialogTitle className="text-[hsl(var(--foreground))]">
-                Delete Program?
-              </DialogTitle>
+              <DialogTitle>Delete Program?</DialogTitle>
             </DialogHeader>
 
             <p className="text-sm text-[hsl(var(--muted-foreground))]">
               Are you sure you want to delete{" "}
               <span className="font-semibold text-[var(--secondary-700)]">
-                {pendingDelete?.sport} • {pendingDelete?.season_year}
+                {pendingDelete?.sport} • {pendingDelete?.year}
               </span>
               ? This action cannot be undone.
             </p>

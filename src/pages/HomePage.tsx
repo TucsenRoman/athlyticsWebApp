@@ -75,8 +75,8 @@ export default function Home() {
         </motion.button>
       </section>
 
-      {/* DEMO PREVIEW */}
-      <section className="py-24 bg-neutral-100 dark:bg-neutral-950">
+      {/* DEMO PREVIEW — DESKTOP ONLY */}
+      <section className="hidden lg:block py-24 bg-neutral-100 dark:bg-neutral-950">
         <h2 className="text-center text-3xl font-bold mb-14">
           From the infield to the office, your workflow stays seamless.
         </h2>
@@ -85,6 +85,7 @@ export default function Home() {
           <DemoAppPreview />
         </div>
       </section>
+
 
       {/* AUTH MODAL */}
       <AnimatePresence>

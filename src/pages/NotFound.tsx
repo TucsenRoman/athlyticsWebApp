@@ -68,7 +68,7 @@ const NotFound = () => {
           {/* Buttons */}
           <div className="flex flex-col gap-3 w-full mt-4">
             <Button
-              className="w-full bg-primary text-white hover:bg-primary/90"
+              className="w-full bg-accent text-white hover:bg-accent/90"
               onClick={() => window.history.back()}
             >
               Go Back

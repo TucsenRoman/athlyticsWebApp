@@ -1,295 +1,212 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-
+import {
+  LayoutDashboard,
+  Edit3,
+  Star,
+  Filter,
+  Layers,
+  Search,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-import {
-  ArrowLeft,
-  Star,
-  UserLock,
-  UserPen,
-  UserCheck,
-  UserX,
-  UserCog,
-} from "lucide-react";
-
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState } from "react";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
 /* -------------------------------------------------------------------------- */
 
-interface LedgerToolbarProps {
-  ledgerId: string;
-  title: string;
-  setTitle: React.Dispatch<React.SetStateAction<string>>;
-}
+interface ToolbarProps {
+  mode: "manager" | "editor";
+  setMode: React.Dispatch<React.SetStateAction<"manager" | "editor">>;
+  path: string[];
 
-// FIXED: matches DB schema exactly
-interface Program {
-  id: number;
-  sport: string | null;
-  season_year: string | null;
-  school: string | null;
-}
+  /** Manager mode: search the page */
+  onManagerSearch?: (query: string) => void;
 
-type UserState = "locked" | "editing" | "confirmed" | "restricted" | "admin";
+  /** Editor mode: search inside the active ledger rows/columns */
+  onEditorSearch?: (query: string) => void;
+}
 
 /* -------------------------------------------------------------------------- */
-/* COMPONENT                                                                  */
+/* MODE TAB                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function ModeTab({
+  label,
+  active,
+  onClick,
+  icon,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        inline-flex items-center gap-1 px-3 py-1 rounded-full transition
+        ${
+          active
+            ? "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]"
+            : "text-[hsl(var(--gray-600))] hover:bg-[hsl(var(--gray-200))]"
+        }
+      `}
+    >
+      {icon}
+      <span className="text-sm">{label}</span>
+    </button>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* TOOLBAR                                                                    */
 /* -------------------------------------------------------------------------- */
 
 export default function LedgerToolbar({
-  ledgerId,
-  title,
-  setTitle,
-}: LedgerToolbarProps) {
-  const navigate = useNavigate();
+  mode,
+  setMode,
+  path,
+  onManagerSearch,
+  onEditorSearch,
+}: ToolbarProps) {
+  const [query, setQuery] = useState("");
 
-  const [editing, setEditing] = useState(false);
-  const [starred, setStarred] = useState(false);
-  const [pulse, setPulse] = useState(false);
-
-  const [program, setProgram] = useState<Program | null>(null);
-
-  const [userName, setUserName] = useState<string>("Unknown User");
-  const [userState, setUserState] = useState<UserState>("editing");
-
-  /* ---------------------------------------------------------------------- */
-  /* LOAD LEDGER + PROGRAM + USER                                           */
-  /* ---------------------------------------------------------------------- */
-
-  useEffect(() => {
-    if (!ledgerId) return;
-
-    const load = async () => {
-      /* ------------------- LEDGER -------------------- */
-      const { data: ledger, error: ledgerErr } = await supabase
-        .from("ledgers")
-        .select("favorite, program_id")
-        .eq("id", ledgerId)
-        .single();
-
-      if (ledgerErr) {
-        console.error("Ledger fetch error:", ledgerErr);
-        return;
-      }
-
-      setStarred(ledger.favorite ?? false);
-
-      /* ------------------- PROGRAM ------------------- */
-      if (ledger.program_id) {
-        const { data: prog, error: progErr } = await supabase
-          .from("programs")
-          .select("id, sport, season_year, school")
-          .eq("id", ledger.program_id)
-          .single();
-
-        if (!progErr && prog) setProgram(prog);
-      }
-
-      /* ------------------- USER ---------------------- */
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user?.id) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user.id)
-          .single();
-
-        if (profile?.full_name) setUserName(profile.full_name);
-      }
-    };
-
-    load();
-  }, [ledgerId]);
-
-  /* ---------------------------------------------------------------------- */
-  /* RENAME LEDGER                                                          */
-  /* ---------------------------------------------------------------------- */
-
-  const handleRename = async () => {
-    if (!title.trim()) return;
-
-    const { data: existing } = await supabase
-      .from("ledgers")
-      .select("icon, favorite")
-      .eq("id", ledgerId)
-      .single();
-
-    await supabase
-      .from("ledgers")
-      .update({
-        name: title,
-        icon: existing?.icon ?? "default-icon",
-        favorite: existing?.favorite ?? false,
-      })
-      .eq("id", ledgerId);
-
-    setEditing(false);
+  // context-aware search
+  const handleSearch = (value: string) => {
+    setQuery(value);
+    if (mode === "manager") onManagerSearch?.(value);
+    if (mode === "editor") onEditorSearch?.(value);
   };
-
-  /* ---------------------------------------------------------------------- */
-  /* FAVORITE LEDGER                                                        */
-  /* ---------------------------------------------------------------------- */
-
-  const toggleStar = async () => {
-    const newStar = !starred;
-    setStarred(newStar);
-
-    if (newStar) {
-      setPulse(true);
-      setTimeout(() => setPulse(false), 400);
-    }
-
-    const { data: existing, error: fetchErr } = await supabase
-      .from("ledgers")
-      .select("icon")
-      .eq("id", ledgerId)
-      .single();
-
-    if (fetchErr) {
-      console.error("Icon fetch failed:", fetchErr);
-      setStarred(!newStar);
-      return;
-    }
-
-    const { error } = await supabase
-      .from("ledgers")
-      .update({
-        favorite: newStar,
-        icon: existing?.icon ?? "default-icon",
-      })
-      .eq("id", ledgerId);
-
-    if (error) {
-      console.error("Star update failed:", error);
-      setStarred(!newStar);
-    }
-  };
-
-  /* ---------------------------------------------------------------------- */
-  /* BACK BUTTON (correct fallback behavior)                                */
-  /* ---------------------------------------------------------------------- */
-
-  const handleBack = () => {
-    // if browser history has entries, go back
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/");
-    }
-  };
-
-  /* ---------------------------------------------------------------------- */
-  /* UI                                                                      */
-  /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-border/60 shadow-sm">
-      <div className="flex items-center justify-between h-10 px-[8px] text-sm w-full">
+    <div
+      className="
+        sticky top-0 z-40 h-10 px-2
+        flex items-center justify-between
+        backdrop-blur bg-white/80
+        border-b border-border/60 shadow-sm
+        select-none
+      "
+    >
+      {/* LEFT SECTION ----------------------------------------------------- */}
+      <div className="flex items-center gap-3">
+        {/* MODE TOGGLE */}
+        <div
+          className="
+            flex items-center gap-1 px-1 py-[3px]
+            dark:bg-[hsl(var(--gray-800))] rounded-full
+          "
+        >
+          <ModeTab
+            label="Manager"
+            active={mode === "manager"}
+            onClick={() => setMode("manager")}
+            icon={<LayoutDashboard className="h-3 w-3" />}
+          />
+          <ModeTab
+            label="Editor"
+            active={mode === "editor"}
+            onClick={() => setMode("editor")}
+            icon={<Edit3 className="h-3 w-3" />}
+          />
+        </div>
+      </div>
 
-        {/* LEFT -------------------------------------------------------------- */}
-        <div className="flex items-center gap-1.5 min-w-0">
+      {/* CENTER SECTION — BREADCRUMB ------------------------------------- */}
+      <div className="flex-1 flex items-center justify-center pointer-events-none">
+        <div className="flex items-center gap-1 text-sm text-gray-700 font-medium">
+          <div className="flex-1 flex items-center justify-center">
+            {path.length === 0 ? null : (
+              <div className="flex items-center gap-1 text-sm text-gray-700 font-medium">
 
-          {/* Back */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleBack}
-            className="h-8 w-8 text-gray-600 hover:text-[hsl(var(--primary))] rounded-full hover:bg-primary/20 transition"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
+                {path.length === 1 ? (
+                  // Single segment: either orphan ledger OR "No Path"
+                  <span
+                    className={
+                      path[0] === "No Path"
+                        ? "text-gray-400 italic"
+                        : "text-gray-700" // orphan ledger = normal styling
+                    }
+                  >
+                    {path[0]}
+                  </span>
+                ) : (
+                  // Multi-segment: Package › Ledger
+                  path.map((segment, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <span>{segment}</span>
+                      {i < path.length - 1 && (
+                        <span className="text-gray-400">›</span>
+                      )}
+                    </div>
+                  ))
+                )}
 
-          {/* Program */}
-          {program && (
-            <div className="pl-2 border-l border-border/60 flex flex-col leading-tight">
-              <span className="font-medium text-gray-800 text-[13px]">
-                {program.sport ?? ""} • {program.season_year ?? ""}
-              </span>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
-          <div className="w-px h-4 bg-gray-300 mx-2" />
-
-          {/* Title */}
-          {editing ? (
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleRename}
-              onKeyDown={(e) => e.key === "Enter" && handleRename()}
-              autoFocus
-              className="w-44 h-7 text-sm px-2 py-1 bg-transparent 
-                         border border-border/60 rounded-sm
-                         focus-visible:ring-0 focus:border-[hsl(var(--primary))]
-                         font-semibold text-gray-800"
-            />
-          ) : (
-            <div
-              className="group flex items-center gap-1 cursor-pointer"
-              onDoubleClick={() => setEditing(true)}
-            >
-              <span className="font-semibold text-gray-800 truncate max-w-[180px] leading-none">
-                {title}
-              </span>
-            </div>
-          )}
-
-          {/* Star */}
-          <motion.button
-            onClick={toggleStar}
-            animate={{ scale: starred ? [1, 2, 1] : 1 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className={`relative ml-1 transition ${
-              starred
-                ? "text-[hsl(var(--primary))]"
-                : "text-gray-400 hover:text-[hsl(var(--primary))]"
-            }`}
-          >
-            <Star
-              className={`w-3.5 h-3.5 ${
-                starred ? "fill-[hsl(var(--primary))]" : ""
-              }`}
-            />
-            <AnimatePresence>
-              {pulse && (
-                <motion.span
-                  className="absolute inset-0 rounded-full"
-                  initial={{ opacity: 0.4, scale: 1 }}
-                  animate={{ opacity: 0, scale: 2 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  style={{
-                    background:
-                      "radial-gradient(circle, hsl(var(--primary)) 30%, transparent 70%)",
-                    filter: "blur(2px)",
-                    zIndex: -1,
-                  }}
-                />
-              )}
-            </AnimatePresence>
-          </motion.button>
+      {/* RIGHT SECTION ---------------------------------------------------- */}
+      <div className="flex items-center gap-2">
+        {/* SEARCH BAR — CONTEXT AWARE */}
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder={
+              mode === "manager"
+                ? "Search this page…"
+                : "Search ledger…"
+            }
+            className="
+              pl-8 h-8 w-48 text-sm rounded-full
+              bg-[hsl(var(--gray-100))] hover:bg-[hsl(var(--gray-200))]
+              transition
+            "
+          />
         </div>
 
-        {/* RIGHT ------------------------------------------------------------- */}
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 select-none">
-          <span className="truncate max-w-[140px]">{userName}</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="
+            h-8 w-8 rounded-full
+            text-gray-600 hover:text-yellow-500
+            hover:bg-yellow-500/10
+          "
+        >
+          <Star className="w-4 h-4" />
+        </Button>
 
-          {userState === "locked" && <UserLock className="w-4 h-4 text-gray-500" />}
-          {userState === "editing" && <UserPen className="w-4 h-4 text-gray-600" />}
-          {userState === "confirmed" && <UserCheck className="w-4 h-4 text-green-600" />}
-          {userState === "restricted" && <UserX className="w-4 h-4 text-red-500" />}
-          {userState === "admin" && <UserCog className="w-4 h-4 text-gray-600" />}
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="
+            h-8 w-8 rounded-full
+            text-gray-600 hover:text-[hsl(var(--primary))]
+            hover:bg-primary/20
+          "
+        >
+          <Filter className="w-4 h-4" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="
+            h-8 w-8 rounded-full
+            text-gray-600 hover:text-[hsl(var(--primary))]
+            hover:bg-primary/20
+          "
+        >
+          <Layers className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );

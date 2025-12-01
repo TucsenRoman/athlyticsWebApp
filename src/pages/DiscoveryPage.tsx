@@ -3,15 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
-import ProjectSidebar from "@/components/projectmanager/ProjectSidebar";
-import DiscoveryFeed from "@/components/discovery/DiscoveryFeed";
-import NoProgramState from "@/components/NoProgramState";
-
 import DiscoveryHeader from "@/components/discovery/DiscoveryHeader";
-
+import DiscoveryFeed from "@/components/discovery/DiscoveryFeed";
 import {
   ClipboardList,
   FileText,
@@ -23,9 +20,9 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-/* --------------------------------------- */
-/* ICON MAP                                */
-/* --------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* ICON MAP                                                                   */
+/* -------------------------------------------------------------------------- */
 
 const ICON_MAP: Record<string, any> = {
   file: FileText,
@@ -39,56 +36,48 @@ const ICON_MAP: Record<string, any> = {
 const getIcon = (key: string | null | undefined) =>
   ICON_MAP[key ?? "file"] || FileText;
 
-/* --------------------------------------- */
-/* TYPES                                   */
-/* --------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* TYPES                                                                      */
+/* -------------------------------------------------------------------------- */
 
 export type AnyLedger = {
   id: string;
-  coach_id: string;
-  program_id: number;
+  program_id: number | null;
+  user_id: string | null;
   name: string;
   description?: string | null;
   icon: string | null;
   status: string | null;
   created_at?: string | null;
+  template_key?: string | null;
 };
 
-/* --------------------------------------- */
-/* PAGE                                    */
-/* --------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* PAGE                                                                       */
+/* -------------------------------------------------------------------------- */
 
-export default function LedgerPage() {
+export default function DiscoveryPage() {
   const navigate = useNavigate();
   const { selectedProgramId } = useProgramContext();
   const { demoMode } = useDemo();
 
-  /* --------------------------------------- */
-  /* UI STATE                                */
-  /* --------------------------------------- */
-
+  /* UI STATE */
   const [collapsed, setCollapsed] = useState(true);
   const [openOther, setOpenOther] = useState(true);
-
-  // New unified header state
   const [mode, setMode] = useState<"discover" | "social">("discover");
   const [query, setQuery] = useState("");
 
-  // Ledger state
+  /* DATA STATE */
   const [ledgers, setLedgers] = useState<AnyLedger[]>([]);
-  const [installedTemplateIds, setInstalledTemplateIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [newLedgerOpen, setNewLedgerOpen] = useState(false);
+  const [installedLedgerIds, setInstalledLedgerIds] = useState<Set<string>>(new Set());
 
-  /* --------------------------------------- */
-  /* DEMO LEDGERS                            */
-  /* --------------------------------------- */
-
+  /* DEMO FALLBACK */
   const demoLedgers: AnyLedger[] = [
     {
       id: "demo1",
-      coach_id: "demo",
       program_id: 0,
+      user_id: "demo",
       name: "Sprint Results",
       description: "PRs, SBs, event results",
       icon: "performance",
@@ -96,8 +85,8 @@ export default function LedgerPage() {
     },
     {
       id: "demo2",
-      coach_id: "demo",
       program_id: 0,
+      user_id: "demo",
       name: "Attendance",
       description: "Practice attendance tracker",
       icon: "clipboard",
@@ -105,9 +94,9 @@ export default function LedgerPage() {
     },
   ];
 
-  /* --------------------------------------- */
-  /* LOAD LEDGERS                            */
-  /* --------------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* LOAD LEDGERS FOR PROGRAM                                               */
+  /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
     if (demoMode) {
@@ -119,8 +108,7 @@ export default function LedgerPage() {
     async function load() {
       setLoading(true);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !selectedProgramId) {
+      if (!selectedProgramId) {
         setLedgers([]);
         setLoading(false);
         return;
@@ -129,11 +117,10 @@ export default function LedgerPage() {
       const { data, error } = await supabase
         .from("ledgers")
         .select("*")
-        .eq("coach_id", user.id)
         .eq("program_id", selectedProgramId)
         .order("created_at", { ascending: false });
 
-      if (error) console.error(error);
+      if (error) console.error("Ledger fetch error:", error);
       setLedgers((data || []) as AnyLedger[]);
       setLoading(false);
     }
@@ -141,57 +128,52 @@ export default function LedgerPage() {
     load();
   }, [demoMode, selectedProgramId]);
 
-  /* --------------------------------------- */
-  /* LOAD INSTALLED TEMPLATE IDS             */
-  /* --------------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* LOAD LEDGERS THAT BELONG TO INSTALLED PACKAGES                         */
+  /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
     if (demoMode || !selectedProgramId) {
-      setInstalledTemplateIds(new Set());
+      setInstalledLedgerIds(new Set());
       return;
     }
 
-    supabase
-      .from("ledger_package_installs")
-      .select("installed_ledger_id")
-      .eq("program_id", selectedProgramId)
-      .then(({ data, error }) => {
-        if (error || !data) {
-          console.error(error);
-          setInstalledTemplateIds(new Set());
-          return;
-        }
+    async function loadInstalled() {
+      const { data, error } = await supabase
+        .from("package_items")
+        .select("ledger_id, packages!inner(program_id)")
+        .eq("packages.program_id", selectedProgramId);
 
-        const set = new Set<string>();
-        data.forEach((row) => row.installed_ledger_id && set.add(row.installed_ledger_id));
-        setInstalledTemplateIds(set);
-      });
-  }, [demoMode, selectedProgramId, ledgers.length]);
+      if (error) {
+        console.error("Package items error:", error);
+        return setInstalledLedgerIds(new Set());
+      }
 
-  /* --------------------------------------- */
-  /* ORPHANS                                 */
-  /* --------------------------------------- */
+      const set = new Set<string>(data?.map((row) => row.ledger_id));
+      setInstalledLedgerIds(set);
+    }
+
+    loadInstalled();
+  }, [demoMode, selectedProgramId]);
+
+  /* ---------------------------------------------------------------------- */
+  /* ORPHAN LEDGERS → (not from a package)                                  */
+  /* ---------------------------------------------------------------------- */
 
   const orphanLedgers = useMemo(() => {
     if (demoMode) return demoLedgers;
-    if (!installedTemplateIds.size) return ledgers;
-    return ledgers.filter((l) => !installedTemplateIds.has(l.id));
-  }, [demoMode, ledgers, installedTemplateIds]);
+    if (!installedLedgerIds.size) return ledgers;
+    return ledgers.filter((l) => !installedLedgerIds.has(l.id));
+  }, [demoMode, ledgers, installedLedgerIds]);
 
-  /* --------------------------------------- */
-  /* NO PROGRAM                              */
-  /* --------------------------------------- */
-
-  if (!demoMode && !selectedProgramId) return <NoProgramState />;
-
-  /* --------------------------------------- */
-  /* RENDER                                  */
-  /* --------------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* RENDER                                                                 */
+  /* ---------------------------------------------------------------------- */
 
   return (
     <div className="flex h-full overflow-hidden">
 
-      {/* SIDEBAR */}
+      {/* SIDEBAR — minimal, only orphans */}
       <aside
         className={`
           ${collapsed ? "w-0 opacity-0 pointer-events-none" : "w-72 opacity-100"}
@@ -200,14 +182,6 @@ export default function LedgerPage() {
           overflow-y-auto transition-all duration-300
         `}
       >
-        {/* REMOVE SIDEBAR HEADER COMPLETELY */}
-
-        {/* PACKAGES */}
-        {/* {!demoMode && selectedProgramId && (
-          <ProjectSidebar selectedProgramId={selectedProgramId} ledgers={ledgers} />
-        )} */}
-
-        {/* OTHER LEDGERS */}
         <div className="border-t border-border/40 pt-2">
           <button
             type="button"
@@ -228,7 +202,9 @@ export default function LedgerPage() {
             </div>
 
             {orphanLedgers.length > 0 && (
-              <span className="text-[10px] text-muted-foreground">{orphanLedgers.length}</span>
+              <span className="text-[10px] text-muted-foreground">
+                {orphanLedgers.length}
+              </span>
             )}
           </button>
 
@@ -241,11 +217,12 @@ export default function LedgerPage() {
 
               {orphanLedgers.map((ledger) => {
                 const Icon = getIcon(ledger.icon);
-
                 return (
                   <button
                     key={ledger.id}
-                    onClick={() => (demoMode ? null : navigate(`/ledgers/${ledger.id}`))}
+                    onClick={() =>
+                      demoMode ? null : navigate(`/ledgers/${ledger.id}`)
+                    }
                     className="
                       w-full flex items-center justify-between
                       px-3 py-2 rounded-lg hover:bg-muted/40 transition
@@ -257,7 +234,9 @@ export default function LedgerPage() {
                       </div>
 
                       <div className="flex flex-col overflow-hidden">
-                        <span className="text-sm font-medium truncate">{ledger.name}</span>
+                        <span className="text-sm font-medium truncate">
+                          {ledger.name}
+                        </span>
                         {ledger.description && (
                           <span className="text-xs text-muted-foreground truncate">
                             {ledger.description}
@@ -267,7 +246,9 @@ export default function LedgerPage() {
                     </div>
 
                     {!demoMode && (
-                      <span className="text-[10px] text-muted-foreground">Open</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Open
+                      </span>
                     )}
                   </button>
                 );
@@ -277,10 +258,8 @@ export default function LedgerPage() {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN */}
       <main className="flex-1 overflow-hidden flex flex-col">
-
-        {/* UNIFIED HEADER */}
         <DiscoveryHeader
           collapsed={collapsed}
           setCollapsed={setCollapsed}
@@ -290,7 +269,6 @@ export default function LedgerPage() {
           setQuery={setQuery}
         />
 
-        {/* CONTENT SECTION */}
         <div className="flex-1 overflow-hidden">
           <DiscoveryFeed mode={mode} query={query} />
         </div>
@@ -298,4 +276,3 @@ export default function LedgerPage() {
     </div>
   );
 }
- 

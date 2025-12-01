@@ -1,142 +1,169 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Apply a ledger package into a program.
+ * Clone an existing package into a program.
  *
- * FINAL VERSION — compatible with new schema:
+ * NEW FLOW FOR NEW SCHEMA:
  * ---------------------------------------------------------
- * 1. Create a new package_install_instance row
- * 2. Load template-ledgers in package
- * 3. For each template-ledger → create a real ledger
- * 4. Load template-headers for all template-ledgers
- * 5. Create real ledger_headers for each new ledger
- * 6. Insert ledger_package_installs records with install_instance_id
+ * 1. Load source package + package_items
+ * 2. Load all ledgers referenced by that package
+ * 3. Load headers for all those ledgers
+ * 4. Create a NEW package row for the target program
+ * 5. Duplicate each ledger (new id, new program_id)
+ * 6. Duplicate headers for each new ledger
+ * 7. Create package_items rows linking new package → new ledgers
  * ---------------------------------------------------------
  */
 export async function applyPackageToProgram(packageId: string, programId: number) {
-  // ------------------------------
+  // -----------------------------------------------------
   // 0. Auth
-  // ------------------------------
+  // -----------------------------------------------------
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) throw new Error("Not logged in");
-  const coachId = auth.user.id;
+  const userId = auth.user.id;
 
-  // ------------------------------
-  // 1. Load package template ledgers
-  // ------------------------------
-  const { data: pkgLedgers, error: pkgLedgersErr } = await supabase
-    .from("ledger_package_ledgers")
+  // -----------------------------------------------------
+  // 1. Get the source package
+  // -----------------------------------------------------
+  const { data: sourcePackage, error: pkgErr } = await supabase
+    .from("packages")
+    .select("*")
+    .eq("id", packageId)
+    .single();
+
+  if (pkgErr) throw pkgErr;
+
+  // -----------------------------------------------------
+  // 2. Load package_items
+  // -----------------------------------------------------
+  const { data: pkgItems, error: pkgItemsErr } = await supabase
+    .from("package_items")
     .select("*")
     .eq("package_id", packageId)
-    .order("ledger_name", { ascending: true });
+    .order("order_index", { ascending: true });
 
-  if (pkgLedgersErr) throw pkgLedgersErr;
-  if (!pkgLedgers || pkgLedgers.length === 0)
+  if (pkgItemsErr) throw pkgItemsErr;
+
+  if (!pkgItems || pkgItems.length === 0) {
     throw new Error("Package contains no ledgers.");
+  }
 
-  // ------------------------------
-  // 2. Create install instance for this program/package
-  // ------------------------------
-  const { data: installInstance, error: instErr } = await supabase
-    .from("package_install_instances")
+  const ledgerIds = pkgItems.map((pi) => pi.ledger_id);
+
+  // -----------------------------------------------------
+  // 3. Load source ledgers
+  // -----------------------------------------------------
+  const { data: sourceLedgers, error: ledErr } = await supabase
+    .from("ledgers")
+    .select("*")
+    .in("id", ledgerIds);
+
+  if (ledErr) throw ledErr;
+
+  // -----------------------------------------------------
+  // 4. Load source headers
+  // -----------------------------------------------------
+  const { data: sourceHeaders, error: headerErr } = await supabase
+    .from("ledger_headers")
+    .select("*")
+    .in(
+      "ledger_id",
+      sourceLedgers.map((l) => l.id)
+    )
+    .order("order_index", { ascending: true });
+
+  if (headerErr) throw headerErr;
+
+  // -----------------------------------------------------
+  // 5. Create a NEW package under this program
+  // -----------------------------------------------------
+  const { data: newPackage, error: newPkgErr } = await supabase
+    .from("packages")
     .insert([
       {
         program_id: programId,
-        package_id: packageId,
-        name: null,        // name editable in UI later
-        tags: null,        // tags editable later
+        name: sourcePackage.name,
+        description: sourcePackage.description,
+        icon: sourcePackage.icon,
       },
     ])
     .select()
     .single();
 
-  if (instErr) throw instErr;
-  const installInstanceId = installInstance.id;
+  if (newPkgErr) throw newPkgErr;
 
-  // ------------------------------
-  // 3. Create real ledgers
-  // ------------------------------
-  const createdLedgerMap: Record<string, string> = {};
+  const newPackageId = newPackage.id;
 
-  for (const template of pkgLedgers) {
-    const { data: ledger, error: createLedgerErr } = await supabase
+  // -----------------------------------------------------
+  // 6. Duplicate all ledgers
+  // -----------------------------------------------------
+  const oldToNewLedgerMap: Record<string, string> = {};
+
+  for (const oldLedger of sourceLedgers) {
+    const { data: newLedger, error: insertErr } = await supabase
       .from("ledgers")
       .insert([
         {
-          coach_id: coachId,
+          user_id: userId,
           program_id: programId,
-          name: template.ledger_name,
-          icon: template.icon,
-          is_system: template.is_system,
-          is_protected: true,
-          protection_level: template.protection_level,
-          template_key: `pkg_${packageId}_${template.id}`,
+          name: oldLedger.name,
+          description: oldLedger.description,
+          icon: oldLedger.icon,
           status: "active",
+          data: oldLedger.data,
+          is_system: false,
+          is_protected: false,
+          protection_level: "none",
         },
       ])
       .select()
       .single();
 
-    if (createLedgerErr || !ledger) throw createLedgerErr;
+    if (insertErr || !newLedger) throw insertErr;
 
-    createdLedgerMap[template.id] = ledger.id;
+    oldToNewLedgerMap[oldLedger.id] = newLedger.id;
   }
 
-  // ------------------------------
-  // 4. Load all template headers
-  // ------------------------------
-  const { data: pkgHeaders, error: pkgHeadersErr } = await supabase
-    .from("ledger_package_headers")
-    .select("*")
-    .in(
-      "package_ledger_id",
-      pkgLedgers.map((l) => l.id),
-    )
-    .order("order_index", { ascending: true });
-
-  if (pkgHeadersErr) throw pkgHeadersErr;
-
-  // ------------------------------
-  // 5. Insert real ledger_headers
-  // ------------------------------
-  const headersPayload = pkgHeaders.map((h) => ({
-    ledger_id: createdLedgerMap[h.package_ledger_id],
-    name: h.column_name,
-    type: h.column_type,
-    options: h.options,
-    order_index: h.order_index,
-    route_class: h.route_class,
-    locked: h.locked,
+  // -----------------------------------------------------
+  // 7. Duplicate ledger headers
+  // -----------------------------------------------------
+  const headerPayload = sourceHeaders.map((hdr) => ({
+    ledger_id: oldToNewLedgerMap[hdr.ledger_id],
+    name: hdr.name,
+    type: hdr.type,
+    order_index: hdr.order_index,
+    route_class: hdr.route_class,
+    options: hdr.options,
+    locked: hdr.locked,
   }));
 
   const { error: insertHeadersErr } = await supabase
     .from("ledger_headers")
-    .insert(headersPayload);
+    .insert(headerPayload);
 
   if (insertHeadersErr) throw insertHeadersErr;
 
-  // ------------------------------
-  // 6. Insert ledger_package_installs (one per ledger)
-  // ------------------------------
-  const installsPayload = pkgLedgers.map((template) => ({
-    program_id: programId,
-    template_id: template.id,
-    installed_ledger_id: createdLedgerMap[template.id],
-    install_instance_id: installInstanceId,
+  // -----------------------------------------------------
+  // 8. Create package_items for new package
+  // -----------------------------------------------------
+  const newPkgItemsPayload = pkgItems.map((pi) => ({
+    package_id: newPackageId,
+    ledger_id: oldToNewLedgerMap[pi.ledger_id],
+    order_index: pi.order_index,
   }));
 
-  const { error: installsErr } = await supabase
-    .from("ledger_package_installs")
-    .insert(installsPayload);
+  const { error: newPkgItemsErr } = await supabase
+    .from("package_items")
+    .insert(newPkgItemsPayload);
 
-  if (installsErr) throw installsErr;
+  if (newPkgItemsErr) throw newPkgItemsErr;
 
-  // ------------------------------
-  // 7. Return instance + created ledgers
-  // ------------------------------
+  // -----------------------------------------------------
+  // DONE
+  // -----------------------------------------------------
   return {
     success: true,
-    install_instance_id: installInstanceId,
-    ledgers: createdLedgerMap,
+    new_package_id: newPackageId,
+    ledgers: oldToNewLedgerMap,
   };
 }

@@ -108,7 +108,7 @@ export default function DiscoveryHeader({
               flex items-center gap-1 px-1 py-1 rounded-full
               bg-[hsl(var(--gray-100))] 
               dark:bg-[hsl(var(--gray-800))]
-              text-base font-semibold shadow-sm
+              text-base font-semibold shadow-lg
             "
           >
             <ModeTab
@@ -200,7 +200,7 @@ function ModeTab({
     <button
       onClick={onClick}
       className={`
-        inline-flex items-center gap-1 px-3 py-1 rounded-full text-base transition
+        inline-flex items-center gap-1 px-3 py-1 rounded-full text-base transition shadow-lg
         ${
           active
             ? "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))] font-semibold"

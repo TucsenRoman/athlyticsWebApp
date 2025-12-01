@@ -43,49 +43,80 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
           <header
             className="
               h-16 px-3 flex items-center justify-between
-              bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]
               border-b border-[hsl(var(--border))]
             "
           >
             {/* LEFT — Logo + Program Selector */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => navigate("/field")}
-                className="hover:opacity-80 transition"
-              >
-                <img src="/AthlyticsLogo.png" className="w-[70px] h-[70px]" />
-              </button>
-
-              <ProgramSelector
-                variant="header"
-                selectedProgramId={selectedProgramId}
-                onProgramChange={setSelectedProgramId}
-              />
-            </div>
-
-            {/* RIGHT — Desktop Nav + User Menu */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="flex justify-between items-center gap-2 w-min-content">
               <DesktopNavPill>
-                <DesktopNavButton
-                  icon={<MapPinned className="w-4 h-4" />}
-                  label="Field"
-                  active={activeField}
-                  onClick={() => navigate("/field")}
-                />
+                {/* LOGO BUTTON */}
+                <button
+                  onClick={() => navigate("/")}
+                  className="
+                    flex items-center justify-center
+                    rounded-xl
+                    h-8 px-3
+                    transition-all
+                    hover:bg-[hsl(var(--accent))]/10
+                  "
+                >
+                  <img
+                    src="/StopWatchLogo.png"
+                    className="w-7 h-7"
+                  />
+                </button>
+              </DesktopNavPill>
 
-                <DesktopNavButton
-                  icon={<PencilRuler className="w-4 h-4" />}
-                  label="Workspace"
-                  active={activeWorkspace}
-                  onClick={() => navigate("/workspace")}
-                />
+              <DesktopNavPill>
+                {/* PROGRAM SELECTOR */}
+                <div
+                  className="
+                    group
+                    flex items-center
+                    rounded-xl 
+                    h-8
+                    transition-all
+                    text-[hsl(var(--gray-600))]
+                    hover:bg-[hsl(var(--accent))]/10
+                    hover:text-[hsl(var(--accent))]
+                    cursor-pointer
+                  "
+                >
+                  <ProgramSelector
+                    variant="header"
+                    selectedProgramId={selectedProgramId}
+                    onProgramChange={setSelectedProgramId}
+                  />
+                </div>
+              </DesktopNavPill>
+            </div>
+            
+            {/* RIGHT — Desktop Nav + User Menu */}
+            <div className="hidden md:flex justify-between items-center gap-2 w-min-content">
+              <DesktopNavPill>
+                  <DesktopNavButton
+                    icon={<MapPinned className="w-4 h-4" />}
+                    label="Field"
+                    active={activeField}
+                    onClick={() => navigate("/field")}
+                    widthClass="w-[80px]"
+                  />
 
-                <DesktopNavButton
-                  icon={<Sparkles className="w-4 h-4" />}
-                  label="Discovery"
-                  active={activeDiscovery}
-                  onClick={() => navigate("/discovery")}
-                />
+                  <DesktopNavButton
+                    icon={<PencilRuler className="w-4 h-4" />}
+                    label="Workspace"
+                    active={activeWorkspace}
+                    onClick={() => navigate("/workspace")}
+                    widthClass="w-[120px]"
+                  />
+
+                  <DesktopNavButton
+                    icon={<Sparkles className="w-4 h-4" />}
+                    label="Discovery"
+                    active={activeDiscovery}
+                    onClick={() => navigate("/discovery")}
+                    widthClass="w-[120px]"
+                  />
               </DesktopNavPill>
 
               <Usermenu />
@@ -101,7 +132,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
         {/* ------------------------------------------------------------------ */}
         {/* CONTENT                                                           */}
         {/* ------------------------------------------------------------------ */}
-        <main className="flex-1 overflow-hidden">
+        <main className="flex flex-col flex-1 min-h-0 overflow-auto">
           {children}
         </main>
 
@@ -129,7 +160,8 @@ function DesktopNavPill({ children }) {
   return (
     <div
       className="
-        flex items-center gap-1 px-1 py-1
+        flex items-center gap-1 
+        h-10 w-full px-1 py-1
         rounded-xl
         bg-[hsl(var(--gray-100))]
         dark:bg-[hsl(var(--gray-800))]
@@ -144,12 +176,28 @@ function DesktopNavPill({ children }) {
 /* DESKTOP NAV BUTTON                                                          */
 /* -------------------------------------------------------------------------- */
 
-function DesktopNavButton({ icon, label, active, onClick }) {
+interface DesktopNavButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  widthClass?: string; // 👈 ADD THIS
+}
+
+function DesktopNavButton({
+  icon,
+  label,
+  active,
+  onClick,
+  widthClass = "",
+}: DesktopNavButtonProps) {
   return (
     <button
       onClick={onClick}
       className={`
-        flex items-center gap-2 h-8 px-3 rounded-xl transition-colors
+        flex justify-center items-center gap-2 
+        h-8 px-3 rounded-xl transition-colors
+        ${widthClass}   /* 👈 NOW VALID */
         ${
           active
             ? "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))] font-bold"
@@ -157,7 +205,7 @@ function DesktopNavButton({ icon, label, active, onClick }) {
         }
       `}
     >
-      <span>{icon}</span>
+      {icon}
       <span className="text-sm">{label}</span>
     </button>
   );

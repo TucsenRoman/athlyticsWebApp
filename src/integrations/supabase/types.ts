@@ -1,6 +1,6 @@
-// ------------------------------------------------------------
+// ============================================================================
 // JSON TYPE
-// ------------------------------------------------------------
+// ============================================================================
 export type Json =
   | string
   | number
@@ -9,16 +9,106 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-// ------------------------------------------------------------
+// ============================================================================
 // DATABASE
-// ------------------------------------------------------------
+// ============================================================================
+
 export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
 
   public: {
+    // =========================================================================
+    // TABLES
+    // =========================================================================
     Tables: {
+      /* ====================================================================== */
+      /*  ITEM SHARES                                                           */
+      /* ====================================================================== */
+      item_shares: {
+        Row: {
+          id: string
+          ledger_id: string | null
+          package_id: string | null
+          shared_with_user_id: string | null
+          shared_with_program_id: number | null
+          shared_with_role:
+            | "admin"
+            | "head_coach"
+            | "assistant_coach"
+            | "viewer"
+            | null
+          can_view: "inherit" | "allow" | "deny"
+          can_edit: "inherit" | "allow" | "deny"
+          can_manage: "inherit" | "allow" | "deny"
+          can_share: "inherit" | "allow" | "deny"
+        }
+        Insert: {
+          id?: string
+          ledger_id?: string | null
+          package_id?: string | null
+          shared_with_user_id?: string | null
+          shared_with_program_id?: number | null
+          shared_with_role?:
+            | "admin"
+            | "head_coach"
+            | "assistant_coach"
+            | "viewer"
+            | null
+          can_view?: "inherit" | "allow" | "deny"
+          can_edit?: "inherit" | "allow" | "deny"
+          can_manage?: "inherit" | "allow" | "deny"
+          can_share?: "inherit" | "allow" | "deny"
+        }
+        Update: {
+          id?: string
+          ledger_id?: string | null
+          package_id?: string | null
+          shared_with_user_id?: string | null
+          shared_with_program_id?: number | null
+          shared_with_role?:
+            | "admin"
+            | "head_coach"
+            | "assistant_coach"
+            | "viewer"
+            | null
+          can_view?: "inherit" | "allow" | "deny"
+          can_edit?: "inherit" | "allow" | "deny"
+          can_manage?: "inherit" | "allow" | "deny"
+          can_share?: "inherit" | "allow" | "deny"
+        }
+        Relationships: [
+          {
+            foreignKeyName: "item_shares_ledger_id_fkey"
+            columns: ["ledger_id"]
+            isOneToOne: false
+            referencedRelation: "ledgers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_shares_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_shares_shared_with_user_id_fkey"
+            columns: ["shared_with_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "item_shares_shared_with_program_id_fkey"
+            columns: ["shared_with_program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
 
       /* ====================================================================== */
       /*  LEDGER ENTRIES                                                        */
@@ -108,13 +198,13 @@ export type Database = {
       },
 
       /* ====================================================================== */
-      /*  LEDGERS (NO package_id ANYMORE)                                       */
+      /*  LEDGERS                                                               */
       /* ====================================================================== */
       ledgers: {
         Row: {
           id: string
           created_at: string
-          coach_id: string | null
+          user_id: string | null
           program_id: number | null
           template_key: string | null
           name: string | null
@@ -131,7 +221,7 @@ export type Database = {
         Insert: {
           id?: string
           created_at?: string
-          coach_id?: string | null
+          user_id?: string | null
           program_id?: number | null
           template_key?: string | null
           name?: string | null
@@ -148,7 +238,7 @@ export type Database = {
         Update: {
           id?: string
           created_at?: string
-          coach_id?: string | null
+          user_id?: string | null
           program_id?: number | null
           template_key?: string | null
           name?: string | null
@@ -164,17 +254,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "ledgers_coach_id_fkey"
-            columns: ["coach_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "ledgers_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledgers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]
@@ -247,242 +337,128 @@ export type Database = {
       },
 
       /* ====================================================================== */
-      /*  LEDGER PACKAGES                                                       */
+      /*  PACKAGE ITEMS                                                         */
       /* ====================================================================== */
-      ledger_packages: {
-        Row: {
-          id: string
-          name: string
-          description: string | null
-          created_at: string | null
-          coach_id: string | null
-          visibility: "private" | "global"
-          icon: string | null
-          is_system_package: boolean
-          sort_index: number
-        }
-        Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          created_at?: string | null
-          coach_id?: string | null
-          visibility?: "private" | "global"
-          icon?: string | null
-          is_system_package?: boolean
-          sort_index?: number
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          created_at?: string | null
-          coach_id?: string | null
-          visibility?: "private" | "global"
-          icon?: string | null
-          is_system_package?: boolean
-          sort_index?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ledger_packages_coach_id_fkey"
-            columns: ["coach_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
-      },
-
-      /* ====================================================================== */
-      /*  LEDGER PACKAGE LEDGERS                                                */
-      /* ====================================================================== */
-      ledger_package_ledgers: {
+      package_items: {
         Row: {
           id: string
           package_id: string
-          ledger_name: string
-          icon: string | null
-          protection_level: "none" | "basic" | "full"
-          is_system: boolean
-          installed_ledger_id: string | null
-        }
-        Insert: {
-          id?: string
-          package_id: string
-          ledger_name: string
-          icon?: string | null
-          protection_level?: "none" | "basic" | "full"
-          is_system?: boolean
-          installed_ledger_id?: string | null
-        }
-        Update: {
-          id?: string
-          package_id?: string
-          ledger_name?: string
-          icon?: string | null
-          protection_level?: "none" | "basic" | "full"
-          is_system?: boolean
-          installed_ledger_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ledger_package_ledgers_package_id_fkey"
-            columns: ["package_id"]
-            isOneToOne: false
-            referencedRelation: "ledger_packages"
-            referencedColumns: ["id"]
-          }
-        ]
-      },
-
-      /* ====================================================================== */
-      /*  LEDGER PACKAGE HEADERS                                                */
-      /* ====================================================================== */
-      ledger_package_headers: {
-        Row: {
-          id: string
-          package_ledger_id: string
-          column_name: string
-          column_type: string
-          options: Json | null
+          ledger_id: string
           order_index: number
-          route_class: "independent" | "primary" | "secondary"
-          locked: boolean
         }
         Insert: {
           id?: string
-          package_ledger_id: string
-          column_name: string
-          column_type: string
-          options?: Json | null
+          package_id: string
+          ledger_id: string
           order_index?: number
-          route_class?: "independent" | "primary" | "secondary"
-          locked?: boolean
         }
         Update: {
           id?: string
-          package_ledger_id?: string
-          column_name?: string
-          column_type?: string
-          options?: Json | null
-          order_index?: number
-          route_class?: "independent" | "primary" | "secondary"
-          locked?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ledger_package_headers_package_ledger_id_fkey"
-            columns: ["package_ledger_id"]
-            isOneToOne: false
-            referencedRelation: "ledger_package_ledgers"
-            referencedColumns: ["id"]
-          }
-        ]
-      },
-
-      /* ====================================================================== */
-      /*  PACKAGE INSTALL INSTANCES (NEW TABLE)                                 */
-      /* ====================================================================== */
-      package_install_instances: {
-        Row: {
-          id: string
-          program_id: number
-          package_id: string
-          name: string | null
-          tags: string[] | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          program_id: number
-          package_id: string
-          name?: string | null
-          tags?: string[] | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          program_id?: number
           package_id?: string
-          name?: string | null
-          tags?: string[] | null
-          created_at?: string | null
+          ledger_id?: string
+          order_index?: number
         }
         Relationships: [
           {
-            foreignKeyName: "package_install_instances_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "package_install_instances_package_id_fkey"
+            foreignKeyName: "package_items_package_id_fkey"
             columns: ["package_id"]
             isOneToOne: false
-            referencedRelation: "ledger_packages"
-            referencedColumns: ["id"]
-          }
-        ]
-      },
-
-      /* ====================================================================== */
-      /*  LEDGER PACKAGE INSTALLS (NOW WITH install_instance_id)                */
-      /* ====================================================================== */
-      ledger_package_installs: {
-        Row: {
-          id: string
-          program_id: number
-          template_id: string
-          installed_ledger_id: string
-          created_at: string | null
-          install_instance_id: string | null
-        }
-        Insert: {
-          id?: string
-          program_id: number
-          template_id: string
-          installed_ledger_id: string
-          created_at?: string | null
-          install_instance_id?: string | null
-        }
-        Update: {
-          id?: string
-          program_id?: number
-          template_id?: string
-          installed_ledger_id?: string
-          created_at?: string | null
-          install_instance_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "ledger_package_installs_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "ledger_package_installs_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "ledger_package_ledgers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ledger_package_installs_installed_ledger_id_fkey"
-            columns: ["installed_ledger_id"]
+            foreignKeyName: "package_items_ledger_id_fkey"
+            columns: ["ledger_id"]
             isOneToOne: false
             referencedRelation: "ledgers"
             referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
+      /*  PACKAGES                                                              */
+      /* ====================================================================== */
+      packages: {
+        Row: {
+          id: string
+          created_at: string
+          program_id: number
+          name: string
+          description: string | null
+          icon: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          program_id: number
+          name: string
+          description?: string | null
+          icon?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          program_id?: number
+          name?: string
+          description?: string | null
+          icon?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packages_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
+      /*  PERMISSION OVERRIDES                                                  */
+      /* ====================================================================== */
+      permission_overrides: {
+        Row: {
+          id: string
+          user_id: string
+          package_id: string
+          can_view: "inherit" | "allow" | "deny"
+          can_edit: "inherit" | "allow" | "deny"
+          can_manage: "inherit" | "allow" | "deny"
+          can_share: "inherit" | "allow" | "deny"
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          package_id: string
+          can_view?: "inherit" | "allow" | "deny"
+          can_edit?: "inherit" | "allow" | "deny"
+          can_manage?: "inherit" | "allow" | "deny"
+          can_share?: "inherit" | "allow" | "deny"
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          package_id?: string
+          can_view?: "inherit" | "allow" | "deny"
+          can_edit?: "inherit" | "allow" | "deny"
+          can_manage?: "inherit" | "allow" | "deny"
+          can_share?: "inherit" | "allow" | "deny"
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permission_overrides_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName:
-              "ledger_package_installs_install_instance_id_fkey"
-            columns: ["install_instance_id"]
+            foreignKeyName: "permission_overrides_package_id_fkey"
+            columns: ["package_id"]
             isOneToOne: false
-            referencedRelation: "package_install_instances"
+            referencedRelation: "packages"
             referencedColumns: ["id"]
           }
         ]
@@ -514,57 +490,9 @@ export type Database = {
       },
 
       /* ====================================================================== */
-      /*  PROGRAMS                                                              */
+      /*  PROGRAM ROLES                                                         */
       /* ====================================================================== */
-      programs: {
-        Row: {
-          id: number
-          coach_id: string
-          description: string | null
-          created_at: string | null
-          school: string | null
-          sport: string | null
-          level: string | null
-          gender: string | null
-          season_year: string | null
-        }
-        Insert: {
-          id?: number
-          coach_id: string
-          description?: string | null
-          created_at?: string | null
-          school?: string | null
-          sport?: string | null
-          level?: string | null
-          gender?: string | null
-          season_year?: string | null
-        }
-        Update: {
-          id?: number
-          coach_id?: string
-          description?: string | null
-          created_at?: string | null
-          school?: string | null
-          sport?: string | null
-          level?: string | null
-          gender?: string | null
-          season_year?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "programs_coach_id_fkey"
-            columns: ["coach_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
-      },
-
-      /* ====================================================================== */
-      /*  USER ROLES                                                            */
-      /* ====================================================================== */
-      user_roles: {
+      program_roles: {
         Row: {
           id: number
           user_id: string
@@ -588,14 +516,14 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "user_roles_user_id_fkey"
+            foreignKeyName: "program_roles_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "user_roles_program_id_fkey"
+            foreignKeyName: "program_roles_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
@@ -605,13 +533,200 @@ export type Database = {
       },
 
       /* ====================================================================== */
-      /*  ROUTE PERMISSIONS                                                     */
+      /*  PROGRAMS                                                              */
+      /* ====================================================================== */
+      programs: {
+        Row: {
+          id: number
+          user_id: string
+          description: string | null
+          created_at: string | null
+          school: string | null
+          sport: string | null
+          level: string | null
+          gender: string | null
+          year: string | null
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          description?: string | null
+          created_at?: string | null
+          school?: string | null
+          sport?: string | null
+          level?: string | null
+          gender?: string | null
+          year?: string | null
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          description?: string | null
+          created_at?: string | null
+          school?: string | null
+          sport?: string | null
+          level?: string | null
+          gender?: string | null
+          year?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
+      /*  ROLE PERMISSIONS                                                      */
+      /* ====================================================================== */
+      role_permissions: {
+        Row: {
+          id: number
+          program_id: number
+          role: "admin" | "head_coach" | "assistant_coach" | "viewer"
+          can_view: "inherit" | "allow" | "deny"
+          can_edit: "inherit" | "allow" | "deny"
+          can_manage: "inherit" | "allow" | "deny"
+          can_share: "inherit" | "allow" | "deny"
+        }
+        Insert: {
+          id?: number
+          program_id: number
+          role: "admin" | "head_coach" | "assistant_coach" | "viewer"
+          can_view?: "inherit" | "allow" | "deny"
+          can_edit?: "inherit" | "allow" | "deny"
+          can_manage?: "inherit" | "allow" | "deny"
+          can_share?: "inherit" | "allow" | "deny"
+        }
+        Update: {
+          id?: number
+          program_id?: number
+          role?: "admin" | "head_coach" | "assistant_coach" | "viewer"
+          can_view?: "inherit" | "allow" | "deny"
+          can_edit?: "inherit" | "allow" | "deny"
+          can_manage?: "inherit" | "allow" | "deny"
+          can_share?: "inherit" | "allow" | "deny"
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
+      /*  TEMPLATE SHARES                                                       */
+      /* ====================================================================== */
+      template_shares: {
+        Row: {
+          id: string
+          template_id: string
+          shared_with_user_id: string | null
+          shared_with_program_id: number | null
+          can_install: "allow" | "deny"
+        }
+        Insert: {
+          id?: string
+          template_id: string
+          shared_with_user_id?: string | null
+          shared_with_program_id?: number | null
+          can_install?: "allow" | "deny"
+        }
+        Update: {
+          id?: string
+          template_id?: string
+          shared_with_user_id?: string | null
+          shared_with_program_id?: number | null
+          can_install?: "allow" | "deny"
+        }
+        Relationships: [
+          {
+            foreignKeyName: "template_shares_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_shares_shared_with_user_id_fkey"
+            columns: ["shared_with_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "template_shares_shared_with_program_id_fkey"
+            columns: ["shared_with_program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
+      /*  TEMPLATES                                                             */
+      /* ====================================================================== */
+      templates: {
+        Row: {
+          id: string
+          created_at: string
+          created_by: string
+          visibility: "private" | "global"
+          name: string
+          description: string | null
+          ledger_json: Json
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          created_by: string
+          visibility?: "private" | "global"
+          name: string
+          description?: string | null
+          ledger_json: Json
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          created_by?: string
+          visibility?: "private" | "global"
+          name?: string
+          description?: string | null
+          ledger_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "templates_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
+      /*  ROUTE PERMISSIONS (KEEPING FROM OLD SCHEMA IF YOU STILL USE IT)      */
       /* ====================================================================== */
       route_permissions: {
         Row: {
           id: string
           route_id: string
-          role: "admin" | "head_coach" | "assistant_coach" | "viewer" | "coach"
+          role:
+            | "admin"
+            | "head_coach"
+            | "assistant_coach"
+            | "viewer"
+            | "coach"
           can_create: boolean
           can_read: boolean
           can_update: boolean
@@ -622,7 +737,12 @@ export type Database = {
         Insert: {
           id?: string
           route_id: string
-          role: "admin" | "head_coach" | "assistant_coach" | "viewer" | "coach"
+          role:
+            | "admin"
+            | "head_coach"
+            | "assistant_coach"
+            | "viewer"
+            | "coach"
           can_create?: boolean
           can_read?: boolean
           can_update?: boolean
@@ -633,7 +753,12 @@ export type Database = {
         Update: {
           id?: string
           route_id?: string
-          role?: "admin" | "head_coach" | "assistant_coach" | "viewer" | "coach"
+          role?:
+            | "admin"
+            | "head_coach"
+            | "assistant_coach"
+            | "viewer"
+            | "coach"
           can_create?: boolean
           can_read?: boolean
           can_update?: boolean
@@ -653,7 +778,7 @@ export type Database = {
       },
 
       /* ====================================================================== */
-      /*  ROUTE SYNC STATE                                                      */
+      /*  ROUTE SYNC STATE (KEEPING FROM OLD SCHEMA IF YOU STILL USE IT)       */
       /* ====================================================================== */
       route_sync_state: {
         Row: {
@@ -692,19 +817,19 @@ export type Database = {
             referencedColumns: ["id"]
           }
         ]
-      },
-    },
+      }
+    }
 
-    /* ======================================================================== */
-    /*  Views (none)                                                            */
-    /* ======================================================================== */
+    // =========================================================================
+    // VIEWS
+    // =========================================================================
     Views: {
       [_ in never]: never
-    },
+    }
 
-    /* ======================================================================== */
-    /*  Functions                                                               */
-    /* ======================================================================== */
+    // =========================================================================
+    // FUNCTIONS
+    // =========================================================================
     Functions: {
       has_program_role: {
         Args: {
@@ -713,41 +838,44 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
-      },
+      }
       has_role: {
         Args: {
           _role: "admin" | "head_coach" | "assistant_coach" | "viewer"
           _user_id: string
         }
         Returns: boolean
-      },
+      }
       shift_ledger_headers_order: {
         Args: { p_ledger_id: string; p_start_index: number }
         Returns: void
-      },
+      }
       compact_ledger_headers_order: {
         Args: { p_ledger_id: string }
         Returns: void
       }
-    },
+    }
 
-    /* ======================================================================== */
-    /*  Enums                                                                   */
-    /* ======================================================================== */
+    // =========================================================================
+    // ENUMS
+    // =========================================================================
     Enums: {
       app_role: "admin" | "head_coach" | "assistant_coach" | "viewer"
-    },
+    }
 
-    /* ======================================================================== */
-    /*  Composite Types (none)                                                  */
-    /* ======================================================================== */
+    // =========================================================================
+    // COMPOSITE TYPES
+    // =========================================================================
     CompositeTypes: {
       [_ in never]: never
     }
   }
 }
 
-// Helper generic types
+// ============================================================================
+// HELPER GENERIC TYPES
+// ============================================================================
+
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 type DefaultSchema = DatabaseWithoutInternals["public"]
 
@@ -761,8 +889,7 @@ export type TablesInsert<
 
 export type TablesUpdate<
   TableName extends keyof DefaultSchema["Tables"]
-> =
-  DefaultSchema["Tables"][TableName]["Update"]
+> = DefaultSchema["Tables"][TableName]["Update"]
 
 export type Enums<
   EnumName extends keyof DefaultSchema["Enums"]
@@ -771,7 +898,7 @@ export type Enums<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "head_coach", "assistant_coach", "viewer"],
+      app_role: ["admin", "athletic_director", "head_coach", "asst_coach", "manager", "captain", "custom"],
     },
   },
 } as const
