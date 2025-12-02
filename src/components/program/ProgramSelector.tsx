@@ -20,7 +20,7 @@ import {
 
 import { motion, AnimatePresence } from "framer-motion";
 import ProgramFormModal from "./ProgramFormModal"
-import { packageInstaller } from "@/components/projectmanager/packageInstaller";
+import { projectInstaller } from "@/integrations/supabase/projectInstaller";
 
 import {
   DropdownMenu,
@@ -260,7 +260,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
         // 🔥 Run installer *after* modal closes → async & non-blocking
         setTimeout(async () => {
-          await packageInstaller(newId);
+          await projectInstaller(newId);
           notifyProgramUpdated(newId);
         }, 0);
 
