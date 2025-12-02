@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { installDefaults } from "@/components/projectmanager/installlogic/installDefaults";
+import ProgramFormModal from "./ProgramFormModal"
+import { packageInstaller } from "@/components/projectmanager/packageInstaller";
 
 import {
   DropdownMenu,
@@ -130,13 +131,10 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
     const [pendingDelete, setPendingDelete] = useState<Program | null>(null);
 
-    // Form fields
-    const [school, setSchool] = useState("");
-    const [sport, setSport] = useState("");
-    const [customSport, setCustomSport] = useState("");
-    const [levels, setLevels] = useState<string[]>([]);
-    const [gender, setGender] = useState("");
-    const [year, setYear] = useState("");
+    // External modal state
+    const [formOpen, setFormOpen] = useState(false);
+    const [formMode, setFormMode] = useState<"add" | "edit">("add");
+    const [formProgram, setFormProgram] = useState<Program | null>(null);
 
     const { isEditMode, setIsEditMode } = useEditMode();
 
@@ -197,26 +195,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       setPrograms(data || []);
     };
 
-    const resetForm = () => {
-      setSchool("");
-      setSport("");
-      setCustomSport("");
-      setLevels([]);
-      setGender("");
-      setYear("");
-    };
-
-    const hydrateForm = (p: Program) => {
-      setSchool(p.school ?? "");
-      setSport(p.sport ?? "");
-      setCustomSport(p.sport === "Other" ? p.sport : "");
-      setLevels(
-        p.level ? p.level.split(",").map((l) => l.trim()) : []
-      );
-      setGender(p.gender ?? "");
-      setYear(p.year ?? "");
-    };
-
     const selectedProgram = programs.find((p) => p.id === selectedProgramId);
     const noPrograms = programs.length === 0;
 
@@ -226,8 +204,94 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     const formattedDetails = (p: Program) =>
       p.school ?? "No school";
 
-    const effectiveSport =
-      sport === "Other" ? customSport.trim() : sport.trim();
+    // 🔔 Notify other components that the program has new data (packages, ledgers, etc.)
+    const notifyProgramUpdated = (id: number) => {
+      window.dispatchEvent(
+        new CustomEvent("program-updated", { detail: { programId: id } })
+      );
+    };
+
+
+    // Helpers to open modal
+    const openAddProgram = () => {
+      setFormMode("add");
+      setFormProgram(null);
+      setFormOpen(true);
+    };
+
+    const openEditProgram = (p: Program) => {
+      setFormMode("edit");
+      setFormProgram(p);
+      setFormOpen(true);
+    };
+
+    // Submit handler for external modal (non-blocking for installer)
+    const handleExternalFormSubmit = async (data) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return 0;
+
+      /* -------------------------------------------------------------- */
+      /* ADD MODE                                                       */
+      /* -------------------------------------------------------------- */
+      if (formMode === "add") {
+        const { data: created, error } = await supabase
+          .from("programs")
+          .insert([{
+            user_id: user.id,
+            school: data.school,
+            sport: data.sport,
+            level: data.levels.join(", "),
+            gender: data.gender,
+            year: data.seasonYear,
+          }])
+          .select()
+          .single();
+
+        if (!created || error) {
+          console.error("Program create error:", error);
+          return 0;
+        }
+
+        const newId = created.id;
+
+        // Update UI immediately
+        await refreshPrograms();
+        onProgramChange(newId);
+
+        // 🔥 Run installer *after* modal closes → async & non-blocking
+        setTimeout(async () => {
+          await packageInstaller(newId);
+          notifyProgramUpdated(newId);
+        }, 0);
+
+        return newId;
+      }
+
+      /* -------------------------------------------------------------- */
+      /* EDIT MODE                                                      */
+      /* -------------------------------------------------------------- */
+      if (formMode === "edit" && formProgram) {
+        await supabase
+          .from("programs")
+          .update({
+            school: data.school,
+            sport: data.sport,
+            level: data.levels.join(", "),
+            gender: data.gender,
+            year: data.seasonYear,
+          })
+          .eq("id", formProgram.id);
+
+        await refreshPrograms();
+
+        // Notify other components — name/order might have changed
+        notifyProgramUpdated(formProgram.id);
+
+        return formProgram.id;
+      }
+
+      return 0;
+    };
 
     /* ---------------------------------------------------------------------- */
     /* CLICK HANDLING */
@@ -235,9 +299,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
     const handleProgramClick = (p: Program) => {
       if (pendingAction === "edit") {
-        hydrateForm(p);
-        setEditorProgram(p);
-        setEditorMode("edit");
+        openEditProgram(p);
         setPendingAction(null);
         return;
       }
@@ -249,65 +311,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       }
 
       onProgramChange(p.id);
-    };
-
-    /* ---------------------------------------------------------------------- */
-    /* SUBMIT HANDLING */
-    /* ---------------------------------------------------------------------- */
-
-    const handleSubmit = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-
-      if (!school.trim() || !effectiveSport || !gender || !year) return;
-
-      /* CREATE */
-      if (editorMode === "add") {
-        const { data: created, error } = await supabase
-          .from("programs")
-          .insert([
-            {
-              user_id: user.id,
-              school: school.trim(),
-              sport: effectiveSport,
-              level: levels.join(", "),
-              gender,
-              year: year.trim(),
-            },
-          ])
-          .select()
-          .single();
-
-        if (!created || error) {
-          console.error("Creation failed:", error);
-        } else {
-          await installDefaults(created.id, user.id);
-        }
-      }
-
-      /* EDIT */
-      if (editorMode === "edit" && editorProgram) {
-        await supabase
-          .from("programs")
-          .update({
-            school: school.trim(),
-            sport: effectiveSport,
-            level: levels.join(", "),
-            gender,
-            year: year.trim(),
-          })
-          .eq("id", editorProgram.id);
-      }
-
-      /* REFRESH */
-      await refreshPrograms();
-
-      setEditorMode(null);
-      setEditorProgram(null);
-      resetForm();
     };
 
     /* ---------------------------------------------------------------------- */
@@ -339,16 +342,12 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       const items = [
         {
           label: "Add",
-          icon: <Plus size={20} className="text-[hsl(var(--foreground))]" />,
-          action: () => {
-            resetForm();
-            setEditorMode("add");
-            setEditorProgram(null);
-          },
+          icon: <Plus size={20} className="text-[hsl(var(--gray-700))]" />,
+          action: () => openAddProgram(),
         },
         {
           label: "Edit",
-          icon: <Pencil size={20} className="text-[var(--secondary-700)]/80" />,
+          icon: <Pencil size={20} className="text-[hsl(var(--edit))]" />,
           action: () =>
             setPendingAction((p) => (p === "edit" ? null : "edit")),
         },
@@ -357,7 +356,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           icon: (
             <Trash2
               size={20}
-              className="text-[hsl(var(--destructive))]"
+              className="text-[hsl(var(--danger))]"
             />
           ),
           destructive: true,
@@ -394,11 +393,11 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                   className={`
                     h-8 w-8 flex items-center justify-center rounded-full shadow-md transition-all
                     ${
-                      a.label === "Edit" && pendingAction === "edit"
-                        ? "bg-[var(--primary-100)]"
+                      a.label === "Edit"
+                        ? "bg-[hsl(var(--background))] hover:bg-[hsl(var(--edit))]/10"
                         : a.destructive
-                        ? "bg-[hsl(var(--background))] hover:bg-[hsl(var(--destructive))]/15"
-                        : "bg-[hsl(var(--background))] hover:bg-[hsl(var(--muted))]/40"
+                        ? "bg-[hsl(var(--background))] hover:bg-[hsl(var(--danger))]/10"
+                        : "bg-[hsl(var(--background))] hover:bg-[hsl(var(--gray-700))]/10"
                     }
                   `}
                 >
@@ -423,8 +422,8 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           h-full px-3
           rounded-xl
           bg-transparent
-          transition-colors
           hover:bg-transparent
+          transition-colors
           backdrop-blur
           focus:outline-none focus-visible:outline-none
           focus-visible:ring-0 ring-0 focus-visible:ring-offset-0
@@ -436,7 +435,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
         <ChevronDown
           size={16}
-          className="opacity-70 shrink-0 text-[var(--primary-500)]"
+          className="opacity-70 shrink-0 text-[hsl(var(--gray-800))]"
         />
       </Button>
     );
@@ -445,15 +444,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     const renderEmptyTrigger = () => (
       <Button
         ref={triggerRef}
-        variant="ghost"
         className="
           h-[38px]
           px-4
           rounded-full
           flex items-center gap-2
-          bg-[hsl(var(--background))]/70
-          hover:bg-[hsl(var(--background))]/90
-          border border-[hsl(var(--border))]/70
+          bg-[hsl(var(--background))]
+          hover:bg-[hsl(var(--background))]
+          border border-[hsl(var(--border))]
           shadow-athletic
           backdrop-blur-sm
           transition
@@ -466,7 +464,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
         <ChevronDown
           size={16}
-          className="opacity-70 text-[var(--primary-500)]"
+          className="opacity-70 text-[hsl(var(--gray-800))]"
         />
       </Button>
     );
@@ -496,15 +494,15 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           className={
             variant === "empty"
               ? `
-                w-[190px] rounded-3xl overflow-hidden
-                bg-[hsl(var(--background))]/95
+                min-w-[155px] rounded-3xl overflow-hidden
+                bg-[hsl(var(--background))]
                 border border-[hsl(var(--border))]
                 backdrop-blur-xl
-                p-0 shadow-athletic
+                p-0
               `
               : `
-                w-fit rounded-xl relative
-                bg-[hsl(var(--background))]/98
+                min-w-[180px] rounded-xl relative
+                bg-[hsl(var(--background))]
                 border border-[hsl(var(--border))]
                 shadow-xl backdrop-blur
               `
@@ -512,28 +510,21 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         >
           <div
             className={`
-              max-h-[260px] overflow-y-auto custom-scrollbar
-              ${
-                pendingAction === "edit"
-                  ? "animate-pulse bg-[var(--primary-100)]/40"
-                  : pendingAction === "delete"
-                  ? "animate-pulse bg-[hsl(var(--destructive))]/12"
-                  : ""
-              }
+              m-1 max-h-[260px] overflow-y-auto custom-scrollbar relative rounded-sm
+              ${pendingAction === "edit" ? "flash-edit" : ""}
+              ${pendingAction === "delete" ? "flash-delete" : ""}
             `}
           >
             {noPrograms ? (
               <DropdownMenuItem
                 className="
                   py-3 px-4 text-sm font-medium
-                  text-[var(--primary-500)]
-                  hover:bg-[var(--primary-500)]/12
+                  text-[hsl(var(--accent))]
+                  hover:!bg-[hsl(var(--accent))]/10
                   cursor-pointer
                 "
                 onClick={() => {
-                  resetForm();
-                  setEditorMode("add");
-                  setEditorProgram(null);
+                  openAddProgram();
                 }}
               >
                 + Add Program
@@ -542,18 +533,29 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
               programs.map((p) => (
                 <DropdownMenuItem
                   key={p.id}
+                  data-selected={selectedProgramId === p.id}
                   className="
-                    py-3 px-4 text-sm
-                    hover:bg-[var(--primary-100)]/10
+                    relative
+                    flex justify-start items-center
+                    m-1 py-1 px-3
+                    gap-2
+                    text-sm
+                    hover:!bg-[hsl(var(--accent))]/10
                     cursor-pointer
+                    pl-3
+
+                    before:absolute before:left-0 
+                    before:top-[10px] before:bottom-[10px]
+                    before:w-1 before:bg-[hsl(var(--accent))] before:rounded-full
+                    before:opacity-0 data-[selected=true]:before:opacity-50
                   "
                   onClick={() => handleProgramClick(p)}
                 >
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-medium text-sm truncate">
+                  <div className="flex flex-col min-w-0 truncate">
+                    <span className="font-medium text-sm text-[hsl(var(--gray-700))]">
                       {formattedName(p)}
                     </span>
-                    <span className="text-xs text-[hsl(var(--muted-foreground))] truncate">
+                    <span className="text-xs text-[hsl(var(--gray-500))]">
                       {formattedDetails(p)}
                     </span>
                   </div>
@@ -563,15 +565,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           </div>
 
           {variant === "header" && !noPrograms && (
-            <div className="sticky bottom-0 bg-transparent backdrop-blur border-t border-[hsl(var(--border))] py-2 pl-1">
+            <div className="sticky bottom-0 bg-transparent backdrop-blur border-t border-[hsl(var(--border))] py-2 px-1">
               <Button
-                variant="ghost"
                 className={`
-                  h-9 w-9 rounded-full transition-all relative z-50
+                  h-9 w-9 rounded-full transition-all relative z-50 bg-[hsl(var(--background))]
                   ${
                     isEditMode
-                      ? "bg-[hsl(var(--primary))]/25 ring-2 ring-[hsl(var(--primary))]/60"
-                      : "bg-transparent hover:bg-[hsl(var(--muted))]/40"
+                      ? "hover:bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] shadow-lg"
+                      : "hover:bg-[hsl(var(--gray-700))]/10 text-[hsl(var(--gray-700))] shadow-sm"
                   }
                 `}
                 onClick={(e) => {
@@ -589,16 +590,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                   }}
                   className="flex items-center justify-center"
                 >
-                  <Settings2
-                    className={`
-                      scale-[1.3] transition-colors
-                      ${
-                        isEditMode
-                          ? "text-[hsl(var(--primary))]"
-                          : "text-[hsl(var(--muted-foreground))]"
-                      }
-                    `}
-                  />
+                  <Settings2 className="scale-[1.3]" />
                 </motion.div>
               </Button>
 
@@ -624,140 +616,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     return (
       <>
         {renderDropdown()}
-
-        {/* ADD / EDIT MODAL */}
-        <Dialog
-          open={editorMode !== null}
-          onOpenChange={(open) => {
-            if (!open) {
-              setEditorMode(null);
-              setEditorProgram(null);
-              resetForm();
-            }
-          }}
-        >
-          <DialogContent className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
-            <DialogHeader>
-              <DialogTitle>
-                {editorMode === "add" ? "Add Program" : "Edit Program"}
-              </DialogTitle>
-            </DialogHeader>
-
-            <div className="space-y-4 py-2">
-              <Input
-                placeholder="School (e.g., Zimmerman High School)"
-                value={school}
-                onChange={(e) => setSchool(e.target.value)}
-              />
-
-              <Select value={sport} onValueChange={setSport}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Sport" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SPORTS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {sport === "Other" && (
-                <Input
-                  className="mt-1"
-                  placeholder="Custom Sport"
-                  value={customSport}
-                  onChange={(e) => setCustomSport(e.target.value)}
-                />
-              )}
-
-              {/* Level multi-select */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="
-                      w-full justify-between
-                      border-[hsl(var(--border))]
-                      bg-[hsl(var(--background))] hover:bg-[hsl(var(--muted))]/30
-                    "
-                  >
-                    {levels.length === 0
-                      ? "Select Levels"
-                      : levels.length > 2
-                      ? `${levels.length} levels selected`
-                      : levels.join(", ")}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-[hsl(var(--background))]/98 border border-[hsl(var(--border))] shadow-md">
-                  {LEVEL_OPTIONS.map((lvl) => (
-                    <DropdownMenuCheckboxItem
-                      key={lvl}
-                      checked={levels.includes(lvl)}
-                      onCheckedChange={(checked) => {
-                        setLevels((prev) =>
-                          checked
-                            ? [...prev, lvl]
-                            : prev.filter((v) => v !== lvl)
-                        );
-                      }}
-                      onSelect={(e) => e.preventDefault()}
-                      className="cursor-pointer data-[state=checked]:bg-[var(--primary-500)]/10"
-                    >
-                      {lvl}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENDERS.map((g) => (
-                    <SelectItem key={g} value={g}>
-                      {g}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Input
-                placeholder="Season / Year (e.g., 2024-2025)"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 pt-1">
-              <Button
-                className="
-                  bg-[var(--primary-500)]
-                  hover:bg-[var(--primary-500)]/90
-                  text-[var(--primary-foreground)]
-                "
-                onClick={handleSubmit}
-              >
-                {editorMode === "add" ? "Create Program" : "Save Changes"}
-              </Button>
-
-              <Button
-                variant="outline"
-                className="border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/20"
-                onClick={() => {
-                  setEditorMode(null);
-                  setEditorProgram(null);
-                  resetForm();
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
         {/* DELETE CONFIRM */}
         <Dialog
           open={pendingDelete !== null}
@@ -772,8 +630,8 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
             <p className="text-sm text-[hsl(var(--muted-foreground))]">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-[var(--secondary-700)]">
-                {pendingDelete?.sport} • {pendingDelete?.year}
+              <span className="font-semibold text-[hsl(var(--accent))]">
+                {pendingDelete?.school} {pendingDelete?.sport}, {pendingDelete?.year}
               </span>
               ? This action cannot be undone.
             </p>
@@ -789,7 +647,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
               <Button
                 variant="outline"
-                className="border-[hsl(var(--border))] hover:bg-[hsl(var(--muted))]/20"
                 onClick={() => setPendingDelete(null)}
               >
                 Cancel
@@ -797,6 +654,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
             </div>
           </DialogContent>
         </Dialog>
+
+        <ProgramFormModal
+          mode={formMode}
+          open={formOpen}
+          program={formProgram}
+          onClose={() => setFormOpen(false)}
+          onSubmit={handleExternalFormSubmit}
+        />
       </>
     );
   }

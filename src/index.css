@@ -35,6 +35,7 @@
     /* FUNCTION COLORS */
     --success: 140 60% 45%;
     --warning: 45 100% 50%;
+    --edit: 210 80% 60%;
     --danger: 0 80% 55%;
     --info: 210 85% 55%;
 
@@ -51,6 +52,20 @@
     --border: var(--gray-200);
     --input: var(--gray-200);
     --ring: var(--accent);
+
+    /* UI COMPONENTS */
+    --primary: var(--accent);
+    /* --primary-foreground: var(--accent-foreground); */
+
+    --muted: var(--gray-100);
+    --muted-foreground: var(--gray-600);
+
+    --destructive: var(--danger);
+    --destructive-foreground: var(--white);
+
+    --info-color: var(--info);
+    --success-color: var(--success);
+    --warning-color: var(--warning);
   }
 
   body {
@@ -117,4 +132,24 @@
 
 *:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* FLASHING ANIMATION */
+@layer utilities {
+  .flash-edit {
+    animation: editFlash 1.2s infinite;
+  }
+  .flash-delete {
+    animation: deleteFlash 1.2s infinite;
+  }
+
+  @keyframes editFlash {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: hsl(var(--edit) / 0.15); }
+  }
+
+  @keyframes deleteFlash {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: hsl(var(--danger) / 0.15); }
+  }
 }

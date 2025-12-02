@@ -1,12 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Users,
-  Trash2,
-  Database,
-} from "lucide-react";
+import { Trash2 } from "lucide-react";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
@@ -35,17 +31,6 @@ interface LedgerEntryMeta {
   ledger_id: string;
   created_at: string;
   entity_key: string | null;
-}
-
-interface LargestLedgerStat {
-  ledgerId: string;
-  ledgerName: string;
-  rowCount: number;
-}
-
-interface RecentlyActiveAthlete {
-  key: string;
-  lastActive: string;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -78,6 +63,34 @@ function Collapsible({
   );
 }
 
+function Empty({ message }: { message: string }) {
+  return (
+    <div className="text-sm text-muted-foreground p-3 border rounded-lg bg-muted/20">
+      {message}
+    </div>
+  );
+}
+
+function Section({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count?: number;
+  children: React.ReactNode;
+}) {
+  const label = typeof count === "number" ? `${title} (${count})` : title;
+
+  return (
+    <Collapsible title={label} defaultOpen={false}>
+      <div className="flex flex-col gap-2">{children}</div>
+    </Collapsible>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* MAIN COMPONENT                                                             */
 /* -------------------------------------------------------------------------- */
 
 export default function ProjectManager({ programId }: ProjectManagerProps) {
@@ -86,89 +99,113 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
   const [ledgers, setLedgers] = useState<LedgerRow[]>([]);
   const [packages, setPackages] = useState<PackageRow[]>([]);
   const [packageItems, setPackageItems] = useState<PackageItemRow[]>([]);
-
   const [entries, setEntries] = useState<LedgerEntryMeta[]>([]);
-  const [headerCount, setHeaderCount] = useState<number>(0);
+  const [headerCount, setHeaderCount] = useState(0);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  /* ---------------------------------------------------------------------- */
-  /* LOAD PROGRAM + DATA                                                   */
-  /* ---------------------------------------------------------------------- */
+  /* ==========================================================================
+     1) LOAD ALL PROGRAM DATA (LEDGERS, PACKAGES, ENTRIES, HEADERS)
+     ========================================================================== */
 
-  useEffect(() => {
+  const loadAll = useCallback(async () => {
     if (!programId) return;
 
-    const load = async () => {
-      const { data: p } = await supabase
-        .from("programs")
-        .select("sport, year")
-        .eq("id", programId)
-        .maybeSingle();
+    console.log("📂 ProjectManager: loading program data…");
 
-      if (p) {
-        setProgramName(`${p.sport ?? "Program"} ${p.year ?? ""}`.trim());
-      }
+    /* -----------------  PROGRAM NAME ----------------- */
+    const { data: p } = await supabase
+      .from("programs")
+      .select("sport, year")
+      .eq("id", programId)
+      .maybeSingle();
 
-      const [{ data: l }, { data: pkgs }] = await Promise.all([
+    if (p) {
+      setProgramName(`${p.sport ?? "Program"} ${p.year ?? ""}`.trim());
+    }
+
+    /* -----------------  LEDGERS + PACKAGES  ----------------- */
+    const [{ data: l }, { data: pkgs }] = await Promise.all([
+      supabase
+        .from("ledgers")
+        .select("id, name")
+        .eq("program_id", programId)
+        .order("created_at", { ascending: true }),
+
+      supabase
+        .from("packages")
+        .select("id, name")
+        .eq("program_id", programId)
+        .order("created_at", { ascending: true }),
+    ]);
+
+    const ledgerRows = (l ?? []) as LedgerRow[];
+    const packageRows = (pkgs ?? []) as PackageRow[];
+
+    setLedgers(ledgerRows);
+    setPackages(packageRows);
+
+    const ledgerIds = ledgerRows.map((lg) => lg.id);
+    const packageIds = packageRows.map((pkg) => pkg.id);
+
+    /* -----------------  HEADERS + ENTRIES ----------------- */
+    if (ledgerIds.length > 0) {
+      const [{ data: headers }, { data: entryRows }] = await Promise.all([
         supabase
-          .from("ledgers")
-          .select("id, name")
-          .eq("program_id", programId)
-          .order("created_at", { ascending: true }),
+          .from("ledger_headers")
+          .select("id, ledger_id")
+          .in("ledger_id", ledgerIds),
+
         supabase
-          .from("packages")
-          .select("id, name")
-          .eq("program_id", programId)
-          .order("created_at", { ascending: true }),
+          .from("ledger_entries")
+          .select("ledger_id, created_at, entity_key")
+          .in("ledger_id", ledgerIds),
       ]);
 
-      const ledgersData = (l ?? []) as LedgerRow[];
-      const packagesData = (pkgs ?? []) as PackageRow[];
+      setHeaderCount(headers?.length ?? 0);
+      setEntries((entryRows ?? []) as LedgerEntryMeta[]);
+    } else {
+      setHeaderCount(0);
+      setEntries([]);
+    }
 
-      setLedgers(ledgersData);
-      setPackages(packagesData);
+    /* -----------------  PACKAGE ITEMS  ----------------- */
+    if (packageIds.length > 0) {
+      const { data: items } = await supabase
+        .from("package_items")
+        .select("package_id, ledger_id")
+        .in("package_id", packageIds);
 
-      const ledgerIds = ledgersData.map((lg) => lg.id);
-      const packageIds = packagesData.map((pkg) => pkg.id);
+      setPackageItems((items ?? []) as PackageItemRow[]);
+    } else {
+      setPackageItems([]);
+    }
 
-      if (ledgerIds.length > 0) {
-        const [{ data: headers }, { data: entryRows }] = await Promise.all([
-          supabase
-            .from("ledger_headers")
-            .select("id, ledger_id")
-            .in("ledger_id", ledgerIds),
-          supabase
-            .from("ledger_entries")
-            .select("ledger_id, created_at, entity_key")
-            .in("ledger_id", ledgerIds),
-        ]);
-
-        setHeaderCount(headers?.length ?? 0);
-        setEntries((entryRows ?? []) as LedgerEntryMeta[]);
-      } else {
-        setHeaderCount(0);
-        setEntries([]);
-      }
-
-      if (packageIds.length > 0) {
-        const { data: items } = await supabase
-          .from("package_items")
-          .select("package_id, ledger_id")
-          .in("package_id", packageIds);
-
-        setPackageItems((items ?? []) as PackageItemRow[]);
-      } else {
-        setPackageItems([]);
-      }
-    };
-
-    load();
+    console.log("📂 ProjectManager: load complete.");
   }, [programId]);
 
-  /* ---------------------------------------------------------------------- */
-  /* DERIVED: PACKAGES → LEDGERS                                           */
-  /* ---------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------------ */
+  /* INITIAL LOAD + EVENT RESUBSCRIBE                                         */
+  /* ------------------------------------------------------------------------ */
+
+  useEffect(() => {
+    loadAll();
+  }, [loadAll]);
+
+  // Auto-refresh when installer fires event
+  useEffect(() => {
+    const handler = () => {
+      console.log("🔄 ProjectManager: program-updated → refreshing");
+      loadAll();
+    };
+
+    window.addEventListener("program-updated", handler);
+    return () => window.removeEventListener("program-updated", handler);
+  }, [loadAll]);
+
+  /* ==========================================================================
+     2) PACKAGE → LEDGER MAPPING
+     ========================================================================== */
 
   const packageMap = new Map<string, LedgerRow[]>();
   packages.forEach((pkg) => packageMap.set(pkg.id, []));
@@ -186,66 +223,9 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
     (p) => (packageMap.get(p.id)?.length ?? 0) === 0
   );
 
-  /* ---------------------------------------------------------------------- */
-  /* DERIVED: STORAGE + ATHLETES                                           */
-  /* ---------------------------------------------------------------------- */
-
-  const totalRows = entries.length;
-
-  const rowsByLedger = new Map<string, number>();
-  entries.forEach((e) => {
-    rowsByLedger.set(e.ledger_id, (rowsByLedger.get(e.ledger_id) ?? 0) + 1);
-  });
-
-  const largestLedgers: LargestLedgerStat[] = [...rowsByLedger.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([ledgerId, rowCount]) => ({
-      ledgerId,
-      ledgerName:
-        ledgers.find((l) => l.id === ledgerId)?.name ?? "Untitled Ledger",
-      rowCount,
-    }));
-
-  const allKeys = entries
-    .map((e) => e.entity_key)
-    .filter((k): k is string => !!k && k.trim() !== "");
-
-  const uniqueAthletes = new Set(allKeys);
-  const totalAthletes = uniqueAthletes.size;
-
-  const now = Date.now();
-  const DAY = 1000 * 60 * 60 * 24;
-
-  const active7 = new Set<string>();
-  const active30 = new Set<string>();
-  const lastActivity = new Map<string, number>();
-
-  entries.forEach((e) => {
-    if (!e.entity_key) return;
-
-    const key = e.entity_key.trim();
-    const ts = new Date(e.created_at).getTime();
-    const delta = now - ts;
-
-    if (delta <= 7 * DAY) active7.add(key);
-    if (delta <= 30 * DAY) active30.add(key);
-
-    const prev = lastActivity.get(key);
-    if (!prev || ts > prev) lastActivity.set(key, ts);
-  });
-
-  const recentlyActive: RecentlyActiveAthlete[] = [...lastActivity.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([key, ts]) => ({
-      key,
-      lastActive: new Date(ts).toISOString(),
-    }));
-
-  /* ---------------------------------------------------------------------- */
-  /* SELECTION                                                              */
-  /* ---------------------------------------------------------------------- */
+  /* ==========================================================================
+     3) SELECTION & DELETE
+     ========================================================================== */
 
   const toggleSelect = (key: string) => {
     setSelected((prev) => {
@@ -273,16 +253,22 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
       .filter((k) => k.startsWith("led:"))
       .map((k) => k.slice(4));
 
-    if (pkgIds.length > 0)
+    if (pkgIds.length > 0) {
       await supabase.from("packages").delete().in("id", pkgIds);
+    }
 
-    if (ledgerIds.length > 0)
+    if (ledgerIds.length > 0) {
       await supabase.from("ledgers").delete().in("id", ledgerIds);
+    }
 
     clearAll();
+    loadAll();
   };
 
-  /* ---------------------------------------------------------------------- */
+  /* ==========================================================================
+     RENDER
+     ========================================================================== */
+
   return (
     <div className="w-full h-full overflow-auto p-6 flex flex-col gap-6">
       {/* HEADER */}
@@ -300,27 +286,7 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
         )}
       </div>
 
-      {/* STORAGE + ATHLETES */}
-      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Collapsible title="Storage Usage" defaultOpen={false}>
-          <StorageUsageCard
-            totalRows={totalRows}
-            headerCount={headerCount}
-            largestLedgers={largestLedgers}
-          />
-        </Collapsible>
-
-        <Collapsible title="Athletes" defaultOpen={false}>
-          <AthleteUsageCard
-            totalAthletes={totalAthletes}
-            active7={active7.size}
-            active30={active30.size}
-            recentlyActive={recentlyActive}
-          />
-        </Collapsible>
-      </div> */}
-
-      {/* SELECTION */}
+      {/* SELECTOR BAR */}
       <div className="flex items-center gap-3 text-sm">
         <button className="underline" onClick={selectAll}>
           Select All
@@ -428,177 +394,4 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
       </Section>
     </div>
   );
-}
-
-/* -------------------------------------------------------------------------- */
-/* SECTION — now fully collapsible                                            */
-/* -------------------------------------------------------------------------- */
-
-function Section({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count?: number;
-  children: React.ReactNode;
-}) {
-  const label =
-    typeof count === "number" ? `${title} (${count})` : title;
-
-  return (
-    <Collapsible title={label} defaultOpen={false}>
-      <div className="flex flex-col gap-2">{children}</div>
-    </Collapsible>
-  );
-}
-
-function Empty({ message }: { message: string }) {
-  return (
-    <div className="text-sm text-muted-foreground p-3 border rounded-lg bg-muted/20">
-      {message}
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* STORAGE CARD                                                               */
-/* -------------------------------------------------------------------------- */
-
-function StorageUsageCard({
-  totalRows,
-  headerCount,
-  largestLedgers,
-}: {
-  totalRows: number;
-  headerCount: number;
-  largestLedgers: LargestLedgerStat[];
-}) {
-  const estimatedBytes = estimateStorageBytes(totalRows, headerCount);
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-3 gap-4 text-sm">
-        <Stat label="Rows" value={totalRows} />
-        <Stat label="Columns" value={headerCount} />
-        <Stat label="Est. Storage" value={formatBytes(estimatedBytes)} />
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground mb-1">
-          Largest Ledgers
-        </p>
-
-        {largestLedgers.length === 0 && (
-          <p className="text-xs text-muted-foreground">None</p>
-        )}
-
-        {largestLedgers.map((l) => (
-          <div
-            key={l.ledgerId}
-            className="flex justify-between items-center text-xs border rounded-lg px-3 py-2 bg-muted/20 mb-1"
-          >
-            <span className="truncate max-w-[60%]">{l.ledgerName}</span>
-            <span className="text-muted-foreground">{l.rowCount} rows</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* ATHLETE CARD                                                               */
-/* -------------------------------------------------------------------------- */
-
-function AthleteUsageCard({
-  totalAthletes,
-  active7,
-  active30,
-  recentlyActive,
-}: {
-  totalAthletes: number;
-  active7: number;
-  active30: number;
-  recentlyActive: RecentlyActiveAthlete[];
-}) {
-  const inactive = Math.max(totalAthletes - active30, 0);
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-3 gap-4 text-sm">
-        <Stat label="Active (7d)" value={active7} />
-        <Stat label="Active (30d)" value={active30} />
-        <Stat label="Inactive" value={inactive} />
-      </div>
-
-      <div>
-        <p className="text-xs font-semibold text-muted-foreground mb-1">
-          Recently Active
-        </p>
-
-        {recentlyActive.length === 0 && (
-          <p className="text-xs text-muted-foreground">None</p>
-        )}
-
-        {recentlyActive.map((a) => (
-          <div
-            key={a.key}
-            className="flex justify-between items-center text-xs border rounded-lg px-3 py-2 bg-muted/20 mb-1"
-          >
-            <span className="truncate max-w-[60%]">{a.key}</span>
-            <span className="text-muted-foreground">
-              {formatDateShort(a.lastActive)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* HELPERS                                                                    */
-/* -------------------------------------------------------------------------- */
-
-function Stat({
-  label,
-  value,
-}: {
-  label: string;
-  value: number | string;
-}) {
-  return (
-    <div className="p-3 rounded-lg border bg-muted/20">
-      <p className="text-xs uppercase text-muted-foreground">{label}</p>
-      <p className="text-lg font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function estimateStorageBytes(rows: number, headers: number): number {
-  const BYTES_PER_ROW = 150;
-  const BYTES_PER_HEADER = 300;
-  return rows * BYTES_PER_ROW + headers * BYTES_PER_HEADER;
-}
-
-function formatBytes(bytes: number): string {
-  if (!bytes) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  let value = bytes;
-  let i = 0;
-  while (value >= 1024 && i < units.length - 1) {
-    value /= 1024;
-    i++;
-  }
-  return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[i]}`;
-}
-
-function formatDateShort(iso: string) {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
 }

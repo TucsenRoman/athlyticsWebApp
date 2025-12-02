@@ -8,6 +8,10 @@ import EditorFooter from "./EditorFooter";
 
 import type { Tables } from "@/integrations/supabase/types";
 
+/* -------------------------------------------------------------------------- */
+/* TYPES                                                                      */
+/* -------------------------------------------------------------------------- */
+
 interface ProjectEditorProps {
   ledgerId: string;
   setLedgerId: React.Dispatch<React.SetStateAction<string>>;
@@ -17,6 +21,10 @@ interface ProjectEditorProps {
 type Ledger = Tables<"ledgers">;
 type LedgerHeader = Tables<"ledger_headers">;
 type LedgerEntry = Tables<"ledger_entries">;
+
+/* -------------------------------------------------------------------------- */
+/* MAIN COMPONENT                                                             */
+/* -------------------------------------------------------------------------- */
 
 export default function ProjectEditor({
   ledgerId,
@@ -29,11 +37,31 @@ export default function ProjectEditor({
   const [routes, setRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  /* ALL LEDGERS for program (DB) */
   const [ledgers, setLedgers] = useState<{ id: string; name: string }[]>([]);
 
+  /* OPEN TABS (UI STATE) */
+  const [openLedgers, setOpenLedgers] = useState<
+    { id: string; name: string }[]
+  >([]);
+
   /* ---------------------------------------------------------------------- */
-  /* SCROLLBAR THUMB                                                        */
+  /* SYNC ACTIVE LEDGER → OPEN TABS                                         */
   /* ---------------------------------------------------------------------- */
+  useEffect(() => {
+    if (!ledgerId) return;
+    const found = ledgers.find((l) => l.id === ledgerId);
+    if (!found) return;
+
+    setOpenLedgers((prev) =>
+      prev.some((l) => l.id === found.id) ? prev : [...prev, found]
+    );
+  }, [ledgerId, ledgers]);
+
+  /* ---------------------------------------------------------------------- */
+  /* CUSTOM SCROLLBAR                                                       */
+  /* ---------------------------------------------------------------------- */
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const [thumb, setThumb] = useState({ height: 0, top: 0 });
 
@@ -43,6 +71,7 @@ export default function ProjectEditor({
 
     const update = () => {
       const { scrollTop, scrollHeight, clientHeight } = el;
+
       const ratio = clientHeight / scrollHeight;
       const height = Math.max(30, clientHeight * ratio);
       const maxScroll = scrollHeight - clientHeight;
@@ -62,26 +91,27 @@ export default function ProjectEditor({
   }, [headers.length, entries.length]);
 
   /* ---------------------------------------------------------------------- */
-  /* LOAD ALL LEDGERS FOR THIS PROGRAM                                      */
+  /* LOAD ALL LEDGERS FOR PROGRAM                                           */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
     if (!programId) return;
 
-    const load = async () => {
-      const { data } = await supabase
+    async function load() {
+      const { data, error } = await supabase
         .from("ledgers")
         .select("id, name")
         .eq("program_id", programId)
         .order("created_at");
 
+      if (error) return console.error(error);
       setLedgers(data ?? []);
-    };
+    }
 
     load();
   }, [programId]);
 
   /* ---------------------------------------------------------------------- */
-  /* LOAD ACTIVE LEDGER + HEADERS + ENTRIES                                 */
+  /* LOAD ACTIVE LEDGER DATA                                                */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
     if (!ledgerId) {
@@ -91,7 +121,7 @@ export default function ProjectEditor({
       return;
     }
 
-    const load = async () => {
+    async function load() {
       setLoading(true);
 
       const { data: ledgerData } = await supabase
@@ -115,10 +145,10 @@ export default function ProjectEditor({
       setLedger(ledgerData);
       setHeaders(headerData || []);
       setEntries(entryData || []);
+      await loadRoutes();
 
-      loadRoutes();
       setLoading(false);
-    };
+    }
 
     load();
   }, [ledgerId]);
@@ -126,6 +156,7 @@ export default function ProjectEditor({
   /* ---------------------------------------------------------------------- */
   /* ROUTES                                                                 */
   /* ---------------------------------------------------------------------- */
+
   const loadRoutes = async () => {
     if (!ledgerId) return;
 
@@ -139,8 +170,9 @@ export default function ProjectEditor({
   };
 
   /* ---------------------------------------------------------------------- */
-  /* RELOAD HELPERS                                                         */
+  /* CRUD: HEADERS + ENTRIES                                                */
   /* ---------------------------------------------------------------------- */
+
   const reloadHeaders = async () => {
     const { data } = await supabase
       .from("ledger_headers")
@@ -162,7 +194,7 @@ export default function ProjectEditor({
   };
 
   /* ---------------------------------------------------------------------- */
-  /* CRUD: CREATE + DELETE LEDGERS                                          */
+  /* CREATE LEDGER                                                          */
   /* ---------------------------------------------------------------------- */
   const handleCreateLedger = async () => {
     if (!programId) return;
@@ -180,10 +212,13 @@ export default function ProjectEditor({
 
     if (error) return console.error(error);
 
-    setLedgers((prev) => [...prev, data]);
-    setLedgerId(data.id);
+    setLedgers((prev) => [...prev, data!]);
+    setLedgerId(data!.id);
   };
 
+  /* ---------------------------------------------------------------------- */
+  /* DELETE LEDGER (REAL DELETE)                                            */
+  /* ---------------------------------------------------------------------- */
   const handleDeleteLedger = async (id: string) => {
     if (!id) return;
 
@@ -192,18 +227,41 @@ export default function ProjectEditor({
     const remaining = ledgers.filter((l) => l.id !== id);
     setLedgers(remaining);
 
-    setLedgerId(remaining[0]?.id || "");
+    // Close tab as well
+    setOpenLedgers((prev) => prev.filter((l) => l.id !== id));
+
+    // If deleting active ledger → move to next one
+    const next = remaining[remaining.length - 1];
+    setLedgerId(next?.id || "");
+  };
+
+  /* ---------------------------------------------------------------------- */
+  /* CLOSE TAB (NO DELETE)                                                  */
+  /* ---------------------------------------------------------------------- */
+  const handleCloseTab = (id: string) => {
+    setOpenLedgers((prev) => {
+      const filtered = prev.filter((l) => l.id !== id);
+
+      if (ledgerId === id) {
+        const next = filtered[filtered.length - 1];
+        setLedgerId(next?.id || "");
+      }
+
+      return filtered;
+    });
   };
 
   /* ---------------------------------------------------------------------- */
   /* UI STATE FLAGS                                                         */
   /* ---------------------------------------------------------------------- */
+
   const noLedgerSelected = !ledgerId;
   const ledgerMissing = ledgerId && !ledger && !loading;
 
   /* ---------------------------------------------------------------------- */
   /* RENDER                                                                 */
   /* ---------------------------------------------------------------------- */
+
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-background">
 
@@ -237,14 +295,15 @@ export default function ProjectEditor({
         )}
       </div>
 
-      {/* FOOTER ALWAYS RENDERS */}
+      {/* FOOTER */}
       <EditorFooter
-        openLedgers={ledgers}
+        openLedgers={openLedgers}
         activeLedgerId={ledgerId}
         setActiveLedgerId={setLedgerId}
         onCreateLedger={handleCreateLedger}
         onManageRoutes={() => console.log("manage routes")}
         onSettings={() => console.log("settings")}
+        onCloseTab={handleCloseTab}
         onDelete={handleDeleteLedger}
         programId={programId}
       />

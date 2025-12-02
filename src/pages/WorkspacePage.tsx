@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgramContext } from "@/hooks/useProgramContext";
 
@@ -15,105 +15,138 @@ export default function WorkspacePage() {
   const [ledgerId, setLedgerId] = useState<string>("");
   const [path, setPath] = useState<string[]>([]);
 
-  /* ---------------------------------------------------------------------- */
-  /* LOAD FIRST LEDGER ON PROGRAM CHANGE                                    */
-  /* ---------------------------------------------------------------------- */
-  useEffect(() => {
+  /* ==========================================================================
+     1) Load FIRST ledger — reusable + callable (needed for event refresh)
+     ========================================================================== */
+  const loadFirstLedger = useCallback(async () => {
     if (!selectedProgramId) return;
 
-    const loadFirst = async () => {
-      const { data } = await supabase
-        .from("ledgers")
-        .select("id")
-        .eq("program_id", selectedProgramId)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle();
+    const { data } = await supabase
+      .from("ledgers")
+      .select("id")
+      .eq("program_id", selectedProgramId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
 
-      if (data?.id) setLedgerId(data.id);
-      else setLedgerId("");
-    };
-
-    loadFirst();
+    if (data?.id) setLedgerId(data.id);
+    else setLedgerId("");
   }, [selectedProgramId]);
 
-  /* ---------------------------------------------------------------------- */
-  /* BREADCRUMB PATH                                                        */
-  /* ---------------------------------------------------------------------- */
-    useEffect(() => {
-    // MANAGER: hide path
+  /* ------------------------------------------------------------------------ */
+  /* Load first ledger whenever PROGRAM CHANGES                               */
+  /* ------------------------------------------------------------------------ */
+  useEffect(() => {
+    loadFirstLedger();
+  }, [loadFirstLedger]);
+
+  /* ==========================================================================
+     2) Load breadcrumb path
+     ========================================================================== */
+  const loadPath = useCallback(async () => {
     if (mode === "manager") {
       setPath([]);
       return;
     }
 
-    // EDITOR but no ledger selected
     if (!ledgerId) {
       setPath(["No Path"]);
       return;
     }
 
-    const loadPath = async () => {
-      // --- Load the ledger ---
-      const { data: ledger, error: ledgerErr } = await supabase
-        .from("ledgers")
-        .select("name")
-        .eq("id", ledgerId)
-        .maybeSingle();
+    // 1) Load ledger name
+    const { data: ledger } = await supabase
+      .from("ledgers")
+      .select("name")
+      .eq("id", ledgerId)
+      .maybeSingle();
 
-      if (ledgerErr || !ledger) {
-        setPath(["No Path"]);
-        return;
-      }
+    if (!ledger) {
+      setPath(["No Path"]);
+      return;
+    }
 
-      // --- Look for a package_items record linking ledger → package ---
-      const { data: link } = await supabase
-        .from("package_items")
-        .select("package_id")
-        .eq("ledger_id", ledgerId)
-        .maybeSingle();
+    // 2) Check if ledger belongs to a package
+    const { data: link } = await supabase
+      .from("package_items")
+      .select("package_id")
+      .eq("ledger_id", ledgerId)
+      .maybeSingle();
 
-      // Orphan ledger → just ledger name
-      if (!link?.package_id) {
-        setPath([ledger.name ?? "Ledger"]);
-        return;
-      }
+    if (!link?.package_id) {
+      setPath([ledger.name ?? "Ledger"]);
+      return;
+    }
 
-      // --- Load package name ---
-      const { data: pkg } = await supabase
-        .from("packages")
-        .select("name")
-        .eq("id", link.package_id)
-        .maybeSingle();
+    // 3) Load package name
+    const { data: pkg } = await supabase
+      .from("packages")
+      .select("name")
+      .eq("id", link.package_id)
+      .maybeSingle();
 
-      if (!pkg) {
-        setPath([ledger.name ?? "Ledger"]);
-        return;
-      }
+    if (!pkg) {
+      setPath([ledger.name ?? "Ledger"]);
+      return;
+    }
 
-      // Package → Ledger
-      setPath([pkg.name, ledger.name ?? "Ledger"]);
-    };
-
-    loadPath();
+    setPath([pkg.name, ledger.name ?? "Ledger"]);
   }, [mode, ledgerId]);
 
-  /* ---------------------------------------------------------------------- */
-  /* RENDER (PERSISTENT MOUNT — ZERO RELOAD)                                 */
-  /* ---------------------------------------------------------------------- */
+  /* ------------------------------------------------------------------------ */
+  /* Run breadcrumb loader                                                     */
+  /* ------------------------------------------------------------------------ */
+  useEffect(() => {
+    loadPath();
+  }, [loadPath]);
+
+  /* ==========================================================================
+     3) GLOBAL EVENT LISTENER: refresh UI after installer finishes
+        (fired by ProgramSelector)
+     ========================================================================== */
+  useEffect(() => {
+    const handler = () => {
+      console.log("🔄 WorkspacePage: program-updated → refreshing UI");
+
+      // Reload first ledger (new ledgers may now exist)
+      loadFirstLedger();
+
+      // Force recalculation of breadcrumb
+      loadPath();
+
+      // Force children to reconsider programId/ledgerId
+      setMode((m) => m);
+      setLedgerId((id) => id);
+    };
+
+    window.addEventListener("program-updated", handler);
+    return () => window.removeEventListener("program-updated", handler);
+  }, [loadFirstLedger, loadPath]);
+
+  /* ==========================================================================
+     RENDER
+     ========================================================================== */
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
       <LedgerToolbar mode={mode} setMode={setMode} path={path} />
 
-      {/* MANAGER stays mounted (hidden when inactive) */}
-      <div className={mode === "manager" ? "flex flex-col flex-1 min-h-0" : "hidden"}>
+      {/* Manager View */}
+      <div
+        className={
+          mode === "manager" ? "flex flex-col flex-1 min-h-0" : "hidden"
+        }
+      >
         {selectedProgramId && (
           <ProjectManager programId={selectedProgramId} />
         )}
       </div>
 
-      {/* EDITOR stays mounted (hidden when inactive) */}
-      <div className={mode === "editor" ? "flex flex-col flex-1 min-h-0" : "hidden"}>
+      {/* Editor View */}
+      <div
+        className={
+          mode === "editor" ? "flex flex-col flex-1 min-h-0" : "hidden"
+        }
+      >
         {selectedProgramId && (
           <ProjectEditor
             programId={selectedProgramId}

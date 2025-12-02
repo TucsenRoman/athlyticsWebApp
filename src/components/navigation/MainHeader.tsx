@@ -49,7 +49,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
             {/* LEFT — Logo + Program Selector */}
             <div className="flex justify-between items-center gap-2 w-min-content">
               <DesktopNavPill>
-                {/* LOGO BUTTON */}
+              {/* LOGO BUTTON */}
                 <button
                   onClick={() => navigate("/")}
                   className="
@@ -68,7 +68,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
               </DesktopNavPill>
 
               <DesktopNavPill>
-                {/* PROGRAM SELECTOR */}
+              {/* PROGRAM SELECTOR */}
                 <div
                   className="
                     group
@@ -83,7 +83,6 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                   "
                 >
                   <ProgramSelector
-                    variant="header"
                     selectedProgramId={selectedProgramId}
                     onProgramChange={setSelectedProgramId}
                   />
@@ -92,36 +91,37 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
             </div>
             
             {/* RIGHT — Desktop Nav + User Menu */}
-            <div className="hidden md:flex justify-between items-center gap-2 w-min-content">
-              <DesktopNavPill>
-                  <DesktopNavButton
-                    icon={<MapPinned className="w-4 h-4" />}
-                    label="Field"
-                    active={activeField}
-                    onClick={() => navigate("/field")}
-                    widthClass="w-[80px]"
-                  />
+            <div className="hidden md:flex gap-2">
+              <div className="flex justify-between items-center w-min-content">
+                <DesktopNavPill>
+                    <DesktopNavButton
+                      icon={<MapPinned className="w-4 h-4" />}
+                      label="Field"
+                      active={activeField}
+                      onClick={() => navigate("/field")}
+                      widthClass="w-[80px]"
+                    />
 
-                  <DesktopNavButton
-                    icon={<PencilRuler className="w-4 h-4" />}
-                    label="Workspace"
-                    active={activeWorkspace}
-                    onClick={() => navigate("/workspace")}
-                    widthClass="w-[120px]"
-                  />
+                    <DesktopNavButton
+                      icon={<PencilRuler className="w-4 h-4" />}
+                      label="Workspace"
+                      active={activeWorkspace}
+                      onClick={() => navigate("/workspace")}
+                      widthClass="w-[120px]"
+                    />
 
-                  <DesktopNavButton
-                    icon={<Sparkles className="w-4 h-4" />}
-                    label="Discovery"
-                    active={activeDiscovery}
-                    onClick={() => navigate("/discovery")}
-                    widthClass="w-[120px]"
-                  />
-              </DesktopNavPill>
+                    <DesktopNavButton
+                      icon={<Sparkles className="w-4 h-4" />}
+                      label="Discovery"
+                      active={activeDiscovery}
+                      onClick={() => navigate("/discovery")}
+                      widthClass="w-[120px]"
+                    />
+                </DesktopNavPill>
 
+              </div>
               <Usermenu />
             </div>
-
             {/* Mobile — User menu only */}
             <div className="md:hidden">
               <Usermenu />
@@ -164,7 +164,6 @@ function DesktopNavPill({ children }) {
         h-10 w-full px-1 py-1
         rounded-xl
         bg-[hsl(var(--gray-100))]
-        dark:bg-[hsl(var(--gray-800))]
       "
     >
       {children}
@@ -197,10 +196,10 @@ function DesktopNavButton({
       className={`
         flex justify-center items-center gap-2 
         h-8 px-3 rounded-xl transition-colors
-        ${widthClass}   /* 👈 NOW VALID */
+        ${widthClass}
         ${
           active
-            ? "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))] font-bold"
+            ? "bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] font-bold"
             : "text-[hsl(var(--gray-600))] hover:bg-[hsl(var(--gray-200))]"
         }
       `}

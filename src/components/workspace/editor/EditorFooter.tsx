@@ -32,6 +32,7 @@ interface EditorFooterProps {
   onManageRoutes?: () => void;
   onSettings?: () => void;
   onDelete?: (id: string) => void;
+  onCloseTab?: (id: string) => void;
 
   programId: number; // needed for package-ledgers
 }
@@ -48,6 +49,7 @@ export default function EditorFooter({
   onManageRoutes,
   onSettings,
   onDelete,
+  onCloseTab,
   programId,
 }: EditorFooterProps) {
   const activeLedger = openLedgers.find((l) => l.id === activeLedgerId);
@@ -149,7 +151,7 @@ export default function EditorFooter({
 
               {/* CLOSE TAB */}
               <button
-                onClick={() => onDelete?.(ledger.id)}
+                onClick={() => onCloseTab?.(ledger.id)}
                 className="
                   ml-2 p-1 rounded-full
                   hover:bg-black/10
