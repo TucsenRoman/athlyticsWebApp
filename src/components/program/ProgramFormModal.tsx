@@ -23,7 +23,7 @@ import {
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
 
-import { packageInstaller } from "@/integrations/supabase/installProject";
+import { projectInstaller } from "@/integrations/supabase/projectInstaller";
 
 interface Program {
   id: number;

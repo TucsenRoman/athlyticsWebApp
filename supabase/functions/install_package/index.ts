@@ -110,11 +110,8 @@ serve(async (req) => {
             description: oldLedger.description,
             icon: oldLedger.icon,
             status: "active",
-            data: oldLedger.data,
-            is_system: false,
-            is_protected: false,
-            protection_level: "none",
-          },
+            data: oldLedger.data
+          }
         ])
         .select()
         .single();
