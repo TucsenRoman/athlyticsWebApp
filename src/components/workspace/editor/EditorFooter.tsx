@@ -1,26 +1,22 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import {
-  ChevronDown,
-  MoreHorizontal,
-  Trash2,
-  Route,
-  Settings,
-  X,
-  Plus,
-} from "lucide-react";
+import { X, Route, Settings, Trash2 } from "lucide-react";
 
-import AddTabMenu from "@/components/menus/AddTabMenu";
+import EditorFooterMenu from "@/components/menus/EditorFooterMenu";
 import { fetchPackageLedgers } from "@/utils/fetchPackageLedgers";
 
-/* -------------------------------------------------------------------------- */
-/* TYPES                                                                      */
-/* -------------------------------------------------------------------------- */
+/* TYPES ------------------------------------------------------------------- */
 
 interface LedgerTab {
   id: string;
   name: string;
+}
+
+interface PackageLedgerGroup {
+  packageName: string;
+  packageId: string;
+  ledgers: LedgerTab[];
 }
 
 interface EditorFooterProps {
@@ -34,189 +30,157 @@ interface EditorFooterProps {
   onDelete?: (id: string) => void;
   onCloseTab?: (id: string) => void;
 
-  programId: number; // needed for package-ledgers
+  onSelectLedger?: (id: string) => void; // <— FIXED
+
+  programId: number;
 }
 
-/* -------------------------------------------------------------------------- */
-/* COMPONENT                                                                  */
-/* -------------------------------------------------------------------------- */
+/* HOOK: click outside ----------------------------------------------------- */
+
+function useClickOutside(
+  refs: React.RefObject<HTMLElement>[],
+  handler: () => void
+) {
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      const target = e.target as Node;
+      const inside = refs.some((r) => r.current?.contains(target));
+      if (!inside) handler();
+    };
+
+    window.addEventListener("mousedown", fn);
+    return () => window.removeEventListener("mousedown", fn);
+  }, [refs, handler]);
+}
+
+/* COMPONENT --------------------------------------------------------------- */
 
 export default function EditorFooter({
   openLedgers,
   activeLedgerId,
   setActiveLedgerId,
+
   onCreateLedger,
   onManageRoutes,
   onSettings,
   onDelete,
   onCloseTab,
+  onSelectLedger,
+
   programId,
 }: EditorFooterProps) {
   const activeLedger = openLedgers.find((l) => l.id === activeLedgerId);
 
-  /* ---------------------------------------------------------------------- */
-  /* STATE                                                                  */
-  /* ---------------------------------------------------------------------- */
+  const [addOpen, setAddOpen] = useState(false);
+  const [showOverflow, setShowOverflow] = useState(false);
 
-  const [showAddMenu, setShowAddMenu] = useState(false);
-  const [showOverflowMenu, setShowOverflowMenu] = useState(false);
-
-  const [packageLedgers, setPackageLedgers] = useState<
-    { packageName: string; packageId: string; ledgers: LedgerTab[] }[]
-  >([]);
+  const [packageLedgers, setPackageLedgers] = useState<PackageLedgerGroup[]>([]);
 
   const addRef = useRef<HTMLDivElement>(null);
   const overflowRef = useRef<HTMLDivElement>(null);
 
-  /* ---------------------------------------------------------------------- */
-  /* FETCH PACKAGE → LEDGERS                                                */
-  /* ---------------------------------------------------------------------- */
-
+  /* LOAD PACKAGE → LEDGERS ------------------------------------------------ */
   useEffect(() => {
-    async function loadPkgLedgers() {
+    async function load() {
       const data = await fetchPackageLedgers(programId);
       setPackageLedgers(data);
     }
-    loadPkgLedgers();
+    load();
   }, [programId]);
 
-  /* ---------------------------------------------------------------------- */
-  /* CLICK OUTSIDE TO CLOSE MENUS                                           */
-  /* ---------------------------------------------------------------------- */
+  /* CLICK OUTSIDE HANDLER ------------------------------------------------- */
+  useClickOutside([addRef, overflowRef], () => {
+    setAddOpen(false);
+    setShowOverflow(false);
+  });
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        addRef.current &&
-        !addRef.current.contains(e.target as Node) &&
-        overflowRef.current &&
-        !overflowRef.current.contains(e.target as Node)
-      ) {
-        setShowAddMenu(false);
-        setShowOverflowMenu(false);
-      }
-    };
-    window.addEventListener("mousedown", handler);
-    return () => window.removeEventListener("mousedown", handler);
-  }, []);
-
-  /* ---------------------------------------------------------------------- */
-  /* RENDER                                                                  */
-  /* ---------------------------------------------------------------------- */
+  /* RENDER --------------------------------------------------------------- */
 
   return (
     <div
       className="
-        h-14 
-        border-t border-[hsl(var(--gray-200))]
+        h-14 flex items-center justify-between
+        px-3 border-t border-[hsl(var(--gray-200))]
         bg-[hsl(var(--background))]
-        flex items-center justify-between
-        px-3
         select-none
       "
     >
-      {/* TABS + ADD BUTTON */}
+      {/* LEFT: OPEN TABS --------------------------------------------------- */}
       <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-2">
         {openLedgers.map((ledger) => {
           const active = ledger.id === activeLedgerId;
-
           return (
-            <div
+            <button
               key={ledger.id}
+              onClick={() => setActiveLedgerId(ledger.id)}
               className={`
-                flex items-center
-                rounded-full cursor-pointer
-                px-3 py-1.5
-                whitespace-nowrap
-                transition
-
+                relative shrink-0 flex items-center gap-1
+                pl-3 pr-2 py-1 h-6 rounded-full
+                text-sm whitespace-nowrap transition
                 ${
                   active
-                    ? "bg-[hsl(var(--accent)/0.2)] text-[hsl(var(--accent))] shadow-inner font-medium"
-                    : "bg-[hsl(var(--gray-100))] text-[hsl(var(--gray-700))] hover:bg-[hsl(var(--gray-200))]"
+                    ? "bg-[hsl(var(--accent)/0.2)] text-[hsl(var(--accent))] shadow-md font-medium"
+                    : "bg-[hsl(var(--gray-100))] text-[hsl(var(--gray-700))] hover:bg-[hsl(var(--gray-200))] shadow hover:shadow-inner"
                 }
               `}
             >
-              <button
-                onClick={() => setActiveLedgerId(ledger.id)}
-                className="flex items-center gap-2"
-              >
-                <span>{ledger.name}</span>
-                <ChevronDown
-                  className={`w-3.5 h-3.5 transition ${
-                    active ? "opacity-80" : "opacity-40"
-                  }`}
-                />
-              </button>
+              <span className="-translate-y-[1px]">{ledger.name}</span>
 
-              {/* CLOSE TAB */}
-              <button
-                onClick={() => onCloseTab?.(ledger.id)}
-                className="
-                  ml-2 p-1 rounded-full
-                  hover:bg-black/10
-                  text-[hsl(var(--gray-600))]
-                  hover:text-[hsl(var(--danger))]
-                  transition
-                "
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCloseTab?.(ledger.id);
+                }}
+                className={`
+                  p-1 rounded-full cursor-pointer transition
+                  ${
+                    active
+                      ? "hover:bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]"
+                      : "hover:bg-[hsl(var(--gray-300))] text-[hsl(var(--gray-700))]"
+                  }
+                `}
               >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
+                <X className="w-3 h-3" />
+              </span>
+            </button>
           );
         })}
 
-        {/* ADD TAB MENU (ORB) */}
-        <div className="relative" ref={addRef}>
-          <AddTabMenu
+        {/* ADD TAB MENU ---------------------------------------------------- */}
+        <div className="relative shrink-0" ref={addRef}>
+          <EditorFooterMenu
+            open={addOpen}
+            setOpen={setAddOpen}
             existingLedgers={openLedgers}
             packageLedgers={packageLedgers}
             onCreateLedger={() => {
-              setShowAddMenu(false);
+              setAddOpen(false);
               onCreateLedger?.();
             }}
             onSelectLedger={(id) => {
-              setShowAddMenu(false);
-              setActiveLedgerId(id);
+              setAddOpen(false);
+              onSelectLedger?.(id);
+              setActiveLedgerId(id); // optional fallback
             }}
-            open={showAddMenu}
-            setOpen={setShowAddMenu}
           />
         </div>
       </div>
 
-      {/* OVERFLOW MENU */}
+      {/* RIGHT: OVERFLOW MENU --------------------------------------------- */}
       <div className="relative" ref={overflowRef}>
-        <button
-          onClick={() => setShowOverflowMenu((v) => !v)}
-          className="
-            p-2 rounded-full
-            bg-[hsl(var(--gray-100))]
-            text-[hsl(var(--gray-600))]
-            hover:bg-[hsl(var(--gray-200))]
-            transition
-          "
-        >
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
-
-        {showOverflowMenu && (
+        {showOverflow && (
           <div
             className="
-              absolute right-0 bottom-12
-              w-48
-              bg-[hsl(var(--white))]
+              absolute right-0 bottom-12 z-50
+              w-48 bg-[hsl(var(--white))]
               border border-[hsl(var(--gray-200))]
-              rounded-xl shadow-xl
-              py-1
-              z-50
+              rounded-xl shadow-xl py-1
             "
           >
-            {/* ACTIVE LEDGER LABEL */}
             {activeLedger && (
               <div
                 className="
-                  px-3 py-1.5 text-xs font-medium 
+                  px-3 py-1.5 text-xs font-medium
                   text-[hsl(var(--gray-500))]
                   border-b border-[hsl(var(--gray-200))]
                 "
@@ -225,32 +189,30 @@ export default function EditorFooter({
               </div>
             )}
 
-            {/* ROUTES */}
             <button
               onClick={() => {
-                setShowOverflowMenu(false);
+                setShowOverflow(false);
                 onManageRoutes?.();
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
-                hover:bg-[hsl(var(--gray-100))]
                 text-[hsl(var(--gray-700))]
+                hover:bg-[hsl(var(--gray-100))]
               "
             >
               <Route className="w-4 h-4" />
               Manage Routes
             </button>
 
-            {/* SETTINGS */}
             <button
               onClick={() => {
-                setShowOverflowMenu(false);
+                setShowOverflow(false);
                 onSettings?.();
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
-                hover:bg-[hsl(var(--gray-100))]
                 text-[hsl(var(--gray-700))]
+                hover:bg-[hsl(var(--gray-100))]
               "
             >
               <Settings className="w-4 h-4" />
@@ -259,10 +221,9 @@ export default function EditorFooter({
 
             <div className="my-1 border-t border-[hsl(var(--gray-200))]" />
 
-            {/* DELETE ACTIVE TAB */}
             <button
               onClick={() => {
-                setShowOverflowMenu(false);
+                setShowOverflow(false);
                 onDelete?.(activeLedgerId);
               }}
               className="

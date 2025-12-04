@@ -24,6 +24,51 @@ export type Database = {
     // =========================================================================
     Tables: {
       /* ====================================================================== */
+      /*  ATTENDANCE                                                            */
+      /* ====================================================================== */
+      attendance: {
+        Row: {
+          id: string
+          program_id: number
+          date: string
+          athlete_key: string | null
+          status: "present" | "absent" | "late" | "excused" | "all_present"
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          program_id: number
+          date: string
+          athlete_key?: string | null
+          status: "present" | "absent" | "late" | "excused" | "all_present"
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          program_id?: number
+          date?: string
+          athlete_key?: string | null
+          status?: "present" | "absent" | "late" | "excused" | "all_present"
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
       /*  ITEM SHARES                                                           */
       /* ====================================================================== */
       item_shares: {
@@ -715,7 +760,7 @@ export type Database = {
       },
 
       /* ====================================================================== */
-      /*  ROUTE PERMISSIONS (KEEPING FROM OLD SCHEMA IF YOU STILL USE IT)      */
+      /*  ROUTE PERMISSIONS                                                     */
       /* ====================================================================== */
       route_permissions: {
         Row: {
@@ -778,7 +823,7 @@ export type Database = {
       },
 
       /* ====================================================================== */
-      /*  ROUTE SYNC STATE (KEEPING FROM OLD SCHEMA IF YOU STILL USE IT)       */
+      /*  ROUTE SYNC STATE                                                      */
       /* ====================================================================== */
       route_sync_state: {
         Row: {
@@ -898,7 +943,15 @@ export type Enums<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "athletic_director", "head_coach", "asst_coach", "manager", "captain", "custom"],
+      app_role: [
+        "admin",
+        "athletic_director",
+        "head_coach",
+        "asst_coach",
+        "manager",
+        "captain",
+        "custom"
+      ],
     },
   },
 } as const

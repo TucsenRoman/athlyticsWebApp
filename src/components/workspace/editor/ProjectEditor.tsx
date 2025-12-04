@@ -16,6 +16,7 @@ interface ProjectEditorProps {
   ledgerId: string;
   setLedgerId: React.Dispatch<React.SetStateAction<string>>;
   programId: number;
+  searchQuery: string;
 }
 
 type Ledger = Tables<"ledgers">;
@@ -30,6 +31,7 @@ export default function ProjectEditor({
   ledgerId,
   setLedgerId,
   programId,
+  searchQuery,
 }: ProjectEditorProps) {
   const [ledger, setLedger] = useState<Ledger | null>(null);
   const [headers, setHeaders] = useState<LedgerHeader[]>([]);
@@ -290,6 +292,7 @@ export default function ProjectEditor({
               reloadEntries={reloadEntries}
               routes={routes}
               reloadRoutes={loadRoutes}
+              searchQuery={searchQuery}
             />
           </div>
         )}

@@ -8,9 +8,9 @@ import React, {
 import { supabase } from "@/integrations/supabase/client";
 import LedgerHeaders from "./LedgerHeaders";
 import LedgerCell from "./LedgerCell";
-import LedgerMenu from "./LedgerMenu";
-import ColumnsMenu from "./ColumnsMenu";
-import RowsMenu from "./RowsMenu";
+import LedgerMenu from "@/components/menus/LedgerMenu";
+import ColumnsMenu from "@/components/menus/ColumnsMenu";
+import RowsMenu from "@/components/menus/RowsMenu";
 import {
   repairRouteClasses,
   LedgerHeader,
@@ -25,7 +25,9 @@ interface LedgerSheetProps {
   setEntries: React.Dispatch<React.SetStateAction<any[]>>;
   reloadHeaders: () => void | Promise<void>;
   reloadEntries: () => void | Promise<void>;
-  // routes / reloadRoutes may still be passed from parent; they are ignored safely
+
+  searchQuery?: string; 
+
   routes?: LedgerRouteRecord[];
   reloadRoutes?: () => void | Promise<void>;
 }
@@ -37,6 +39,7 @@ export default function LedgerSheet({
   setEntries,
   reloadHeaders,
   reloadEntries,
+  searchQuery,
 }: LedgerSheetProps) {
   /* ----------------------------- Local State ----------------------------- */
   const [allHeaders, setAllHeaders] = useState<LedgerHeader[]>([]);
@@ -699,6 +702,7 @@ export default function LedgerSheet({
                         );
                         updateValueLocal(entry.id, h.id, val);
                       }}
+                      searchQuery={searchQuery}
                     />
                   </div>
                 ))}
@@ -799,6 +803,7 @@ export default function LedgerSheet({
                       );
                       updateValueLocal(entry.id, h.id, val);
                     }}
+                    searchQuery={searchQuery}
                   />
                 </div>
               ))}

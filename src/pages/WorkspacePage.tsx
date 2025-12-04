@@ -8,16 +8,22 @@ import LedgerToolbar from "@/components/ledger/LedgerToolbar";
 import ProjectManager from "@/components/workspace/manager/ProjectManager";
 import ProjectEditor from "@/components/workspace/editor/ProjectEditor";
 
+import AttendanceView from "@/components/workspace/attendance/AttendanceView"
+
 export default function WorkspacePage() {
   const { selectedProgramId } = useProgramContext();
 
-  const [mode, setMode] = useState<"manager" | "editor">("manager");
+  const [mode, setMode] = useState<
+    "manager" | "editor" | "attendance" | "schedule"
+  >("manager");
+
+  const [searchQuery, setSearchQuery] = useState("");
   const [ledgerId, setLedgerId] = useState<string>("");
   const [path, setPath] = useState<string[]>([]);
 
-  /* ==========================================================================
-     1) Load FIRST ledger — reusable + callable (needed for event refresh)
-     ========================================================================== */
+  /* ========================================================================== */
+  /* 1) Load FIRST ledger — reusable + callable (needed for event refresh)      */
+  /* ========================================================================== */
   const loadFirstLedger = useCallback(async () => {
     if (!selectedProgramId) return;
 
@@ -33,19 +39,21 @@ export default function WorkspacePage() {
     else setLedgerId("");
   }, [selectedProgramId]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Load first ledger whenever PROGRAM CHANGES                               */
-  /* ------------------------------------------------------------------------ */
   useEffect(() => {
     loadFirstLedger();
   }, [loadFirstLedger]);
 
-  /* ==========================================================================
-     2) Load breadcrumb path
-     ========================================================================== */
+  /* ========================================================================== */
+  /* 2) Load breadcrumb path                                                    */
+  /* ========================================================================== */
   const loadPath = useCallback(async () => {
     if (mode === "manager") {
       setPath([]);
+      return;
+    }
+
+    if (mode === "attendance" || mode === "schedule") {
+      setPath([mode === "attendance" ? "Attendance" : "Schedule"]);
       return;
     }
 
@@ -54,7 +62,6 @@ export default function WorkspacePage() {
       return;
     }
 
-    // 1) Load ledger name
     const { data: ledger } = await supabase
       .from("ledgers")
       .select("name")
@@ -66,7 +73,6 @@ export default function WorkspacePage() {
       return;
     }
 
-    // 2) Check if ledger belongs to a package
     const { data: link } = await supabase
       .from("package_items")
       .select("package_id")
@@ -78,7 +84,6 @@ export default function WorkspacePage() {
       return;
     }
 
-    // 3) Load package name
     const { data: pkg } = await supabase
       .from("packages")
       .select("name")
@@ -93,28 +98,18 @@ export default function WorkspacePage() {
     setPath([pkg.name, ledger.name ?? "Ledger"]);
   }, [mode, ledgerId]);
 
-  /* ------------------------------------------------------------------------ */
-  /* Run breadcrumb loader                                                     */
-  /* ------------------------------------------------------------------------ */
   useEffect(() => {
     loadPath();
   }, [loadPath]);
 
-  /* ==========================================================================
-     3) GLOBAL EVENT LISTENER: refresh UI after installer finishes
-        (fired by ProgramSelector)
-     ========================================================================== */
+  /* ========================================================================== */
+  /* 3) GLOBAL EVENT LISTENER: refresh UI after installer finishes              */
+  /* ========================================================================== */
   useEffect(() => {
     const handler = () => {
       console.log("🔄 WorkspacePage: program-updated → refreshing UI");
-
-      // Reload first ledger (new ledgers may now exist)
       loadFirstLedger();
-
-      // Force recalculation of breadcrumb
       loadPath();
-
-      // Force children to reconsider programId/ledgerId
       setMode((m) => m);
       setLedgerId((id) => id);
     };
@@ -123,37 +118,43 @@ export default function WorkspacePage() {
     return () => window.removeEventListener("program-updated", handler);
   }, [loadFirstLedger, loadPath]);
 
-  /* ==========================================================================
-     RENDER
-     ========================================================================== */
+  /* ========================================================================== */
+  /* RENDER                                                                     */
+  /* ========================================================================== */
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
-      <LedgerToolbar mode={mode} setMode={setMode} path={path} />
+      <LedgerToolbar
+        mode={mode}
+        setMode={setMode}
+        path={path}
+        onEditorSearch={setSearchQuery}
+      />
 
       {/* Manager View */}
-      <div
-        className={
-          mode === "manager" ? "flex flex-col flex-1 min-h-0" : "hidden"
-        }
-      >
-        {selectedProgramId && (
-          <ProjectManager programId={selectedProgramId} />
-        )}
+      <div className={mode === "manager" ? "flex flex-col flex-1 min-h-0" : "hidden"}>
+        {selectedProgramId && <ProjectManager programId={selectedProgramId} />}
       </div>
 
       {/* Editor View */}
-      <div
-        className={
-          mode === "editor" ? "flex flex-col flex-1 min-h-0" : "hidden"
-        }
-      >
+      <div className={mode === "editor" ? "flex flex-col flex-1 min-h-0" : "hidden"}>
         {selectedProgramId && (
           <ProjectEditor
             programId={selectedProgramId}
             ledgerId={ledgerId}
             setLedgerId={setLedgerId}
+            searchQuery={searchQuery}
           />
         )}
+      </div>
+
+      {/* Attendance View */}
+      <div className={mode === "attendance" ? "flex flex-col flex-1 min-h-0" : "hidden"}>
+        {selectedProgramId && <AttendanceView />}
+      </div>
+
+      {/* Schedule View */}
+      <div className={mode === "schedule" ? "flex flex-col flex-1 min-h-0" : "hidden"}>
+        {/* {selectedProgramId && <ProgramSchedule programId={selectedProgramId} />} */}
       </div>
     </div>
   );

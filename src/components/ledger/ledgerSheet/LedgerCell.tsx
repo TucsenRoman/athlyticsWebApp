@@ -19,6 +19,8 @@ import { SquarePen, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+import { searchHighlight } from "@/utils/searchHighlight";
+
 // 🧱 DND Kit imports
 import {
   DndContext,
@@ -45,6 +47,8 @@ interface LedgerCellProps {
   value: any;
   onChange: (val: any) => void;
   routeSyncRef?: any;
+
+  searchQuery?: string;
 
   // ✅ FIX: TypeScript was complaining. Add disabled here.
   disabled?: boolean;
@@ -115,7 +119,8 @@ function LedgerCell({
   value,
   onChange,
   routeSyncRef,
-  disabled = false, // ← default value
+  disabled = false,
+  searchQuery,
 }: LedgerCellProps) {
   const [localValue, setLocalValue] = useState(value ?? "");
   const [openOptionsEditor, setOpenOptionsEditor] = useState(false);
@@ -347,34 +352,47 @@ function LedgerCell({
 
   /* -------------------------- Text / number / time -------------------------- */
 
-  return (
-    <Input
-      disabled={disabled}
-      type={
-        header?.type === "number"
-          ? "number"
-          : header?.type === "time"
-          ? "time"
-          : "text"
-      }
-      value={localValue ?? ""}
-      onChange={(e) => setLocalValue(e.target.value)}
-      onBlur={() => {
-        if (!disabled && localValue !== value) saveValue(localValue);
-      }}
-      onKeyDown={(e) => {
-        if (
-          !disabled &&
-          (e.key === "Enter" || e.key === "Tab") &&
-          localValue !== value
-        ) {
-          e.preventDefault();
-          e.currentTarget.blur();
-        }
-      }}
-      className="h-7 text-sm w-full border-none bg-transparent focus:ring-0 disabled:opacity-50"
-    />
-  );
+  if (header?.type !== "select" && header?.type !== "checkbox") {
+    const isNumber = header?.type === "number";
+    const isTime = header?.type === "time";
+    const isEditing = routeSyncRef?.current?.editingCell === entryId;
+
+    // 🔍 Highlight mode (Ctrl+F style)
+    if (!isEditing && !isNumber && !isTime && searchQuery) {
+      return (
+        <div
+          className="h-7 text-sm w-full flex items-center px-2"
+          dangerouslySetInnerHTML={{
+            __html: searchHighlight(localValue ?? "", searchQuery),
+          }}
+        />
+      );
+    }
+
+    // ✏️ Editable input mode
+    return (
+      <Input
+        disabled={disabled}
+        type={isNumber ? "number" : isTime ? "time" : "text"}
+        value={localValue ?? ""}
+        onChange={(e) => setLocalValue(e.target.value)}
+        onBlur={() => {
+          if (!disabled && localValue !== value) saveValue(localValue);
+        }}
+        onKeyDown={(e) => {
+          if (
+            !disabled &&
+            (e.key === "Enter" || e.key === "Tab") &&
+            localValue !== value
+          ) {
+            e.preventDefault();
+            e.currentTarget.blur();
+          }
+        }}
+        className="h-7 text-sm w-full border-none bg-transparent focus:ring-0 disabled:opacity-50"
+      />
+    );
+  }
 }
 
 export default React.memo(LedgerCell);

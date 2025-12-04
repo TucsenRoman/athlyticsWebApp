@@ -28,9 +28,11 @@ import {
   Trash2,
   XCircle,
   Save,
+  Rows3,
+  Rows,
 } from "lucide-react";
-import CopyLedger from "../CopyLedger";
-import MoveLedger from "../MoveLedger";
+// import CopyLedger from "../CopyLedger";
+// import MoveLedger from "../MoveLedger";
 
 interface LedgerMenu {
   ledgerId: string;
@@ -58,6 +60,7 @@ export default function LedgerMenu({
   const [copyOpen, setCopyOpen] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
   const [pinActive, setPinActive] = useState(false);
+  const [useAlternateRows, setUseAlternateRows] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(
     document.documentElement.classList.contains("dark") ? "dark" : "light"
   );
@@ -119,11 +122,23 @@ export default function LedgerMenu({
         closeOnClick: false,
       },
       {
+        icon: useAlternateRows
+          ? <Rows style={iconStyle} />
+          : <Rows3 style={iconStyle} />,
+
+        label: useAlternateRows
+          ? "Disable Alternating Rows"
+          : "Enable Alternating Rows",
+
+        // action: () => setUseAlternateRows(prev => !prev),
+        closeOnClick: true,
+      },
+      {
         icon: fullscreen
           ? <Expand style={iconStyle} />   // or use Expand / Minimize icons if you prefer
           : <Minimize style={iconStyle} />,
         label: fullscreen ? "Exit Fullscreen" : "Fullscreen",
-        action: console.log("Fullscreen"),
+        // action: console.log("Fullscreen"),
         closeOnClick: true,
       }
     ],
@@ -290,8 +305,8 @@ export default function LedgerMenu({
       </Button>
 
       {/* Modals */}
-      <CopyLedger open={copyOpen} onOpenChange={setCopyOpen} ledgerId={ledgerId} />
-      <MoveLedger open={moveOpen} onOpenChange={setMoveOpen} ledgerId={ledgerId!} />
+      {/* <CopyLedger open={copyOpen} onOpenChange={setCopyOpen} ledgerId={ledgerId} /> */}
+      {/* <MoveLedger open={moveOpen} onOpenChange={setMoveOpen} ledgerId={ledgerId!} /> */}
 
       {/* Orbit menus */}
       {activeNest

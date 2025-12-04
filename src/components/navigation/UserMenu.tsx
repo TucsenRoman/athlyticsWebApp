@@ -37,6 +37,8 @@ import {
   Sun,
   Moon,
   Sparkles,
+  Trophy,
+  Box,
 } from "lucide-react";
 
 export default function UserDropdownShell() {
@@ -121,6 +123,8 @@ export default function UserDropdownShell() {
           {menuNavItem(<Gauge className="h-4 w-4" />, "VRP Mode")}
           {menuNavItem(<Activity className="h-4 w-4" />, "Live Meet Mode")}
           {menuNavItem(<ShieldCheck className="h-4 w-4" />, "Permissions")}
+          {menuNavItem(<Box className="h-4 w-4" />, "Storage")}
+          {menuNavItem(<Trophy className="h-4 w-4" />, "Trophies")}
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />

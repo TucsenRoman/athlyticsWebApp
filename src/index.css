@@ -38,6 +38,8 @@
     --edit: 210 80% 60%;
     --danger: 0 80% 55%;
     --info: 210 85% 55%;
+    --focus: 52 100% 94%;
+    --focus-foreground: 40 20% 22%;
 
     /* RADIUS */
     --radius: 0.75rem;
@@ -51,7 +53,6 @@
 
     --border: var(--gray-200);
     --input: var(--gray-200);
-    --ring: var(--accent);
 
     /* UI COMPONENTS */
     --primary: var(--accent);
@@ -125,13 +126,65 @@
 /*  FOCUS STATES                                                              */
 /* ========================================================================== */
 
-*:focus-visible {
-  outline: 2px solid hsl(var(--accent));
-  outline-offset: 2px;
-}
-
 *:focus:not(:focus-visible) {
   outline: none;
+  box-shadow: none;
+}
+
+*:focus-visible {
+  stroke: hsl(var(--focus-foreground));
+  fill: hsl(var(--focus-foreground));
+  color: hsl(var(--focus-foreground));
+  background: hsl(var(--focus));
+  outline: transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px transparent;
+}
+
+input.no-focus-yellow:focus,
+input.no-focus-yellow:focus-visible,
+.no-focus-yellow input:focus,
+.no-focus-yellow input:focus-visible {
+  background: hsl(var(--white)) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  fill: inherit !important;
+  stroke: inherit !important;
+}
+
+input:focus,
+input:focus-visible,
+input:-webkit-autofill:focus {
+  background-color: hsl(var(--white)) !important;
+  box-shadow: 0 0 0 1000px hsl(var(--white)) inset !important;
+  -webkit-box-shadow: 0 0 0 1000px hsl(var(--white)) inset !important;
+  outline: none !important;
+  border-color: hsl(var(--gray-300)) !important;
+}
+
+/* STOP CHROME'S ORANGE OUTLINE GLOW */
+input:focus-visible {
+  outline: none !important;
+}
+
+input::-webkit-focus-inner {
+  border: 0 !important;
+}
+
+/* NUKE AUTOFILL YELLOW */
+input:-webkit-autofill {
+  background-color: hsl(var(--white)) !important;
+  -webkit-text-fill-color: hsl(var(--gray-800)) !important;
+  box-shadow: 0 0 0px 1000px hsl(var(--white)) inset !important;
+  transition: background-color 9999s ease-out, color 9999s ease-out;
+}
+
+.search-highlight {
+  background: hsl(var(--focus));
+  color: hsl(var(--focus-foreground));
+  border-radius: 3px;
+  padding: 0;
 }
 
 /* FLASHING ANIMATION */

@@ -1,6 +1,6 @@
 // src/components/header/HeaderLayout.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   MapPinned,
@@ -32,6 +32,15 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
   const activeWorkspace = location.pathname.startsWith("/workspace");
   const activeDiscovery = location.pathname.startsWith("/discovery");
 
+  // Collapse/expand header toggle
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    const toggle = () => setCollapsed(prev => !prev);
+    window.addEventListener("toggle-header", toggle);
+    return () => window.removeEventListener("toggle-header", toggle);
+  }, []);
+
+
   return (
     <EditModeContext.Provider value={{ isEditMode, setIsEditMode }}>
       <div className="min-h-screen bg-[hsl(var(--background))] flex flex-col overflow-hidden">
@@ -39,7 +48,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
         {/* ------------------------------------------------------------------ */}
         {/* HEADER (Mobile + Desktop)                                         */}
         {/* ------------------------------------------------------------------ */}
-        {!hideHeader && (
+        {!hideHeader && !collapsed && (
           <header
             className="
               h-16 px-3 flex items-center justify-between
