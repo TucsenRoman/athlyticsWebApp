@@ -1,21 +1,80 @@
 // src/components/workspace/attendance/AttendanceStatusBanner.tsx
 
-export function AttendanceStatusBanner({ type }) {
-  if (type === "none") {
+interface AttendanceStatusBannerProps {
+  mode: "none" | "clean" | "dirty";
+  exceptionsCount: number;
+}
+
+export function AttendanceStatusBanner({
+  mode,
+  exceptionsCount,
+}: AttendanceStatusBannerProps) {
+  if (mode === "none") {
     return (
-      <div className="p-2 rounded-md bg-[hsl(var(--gray-100))] text-[hsl(var(--gray-700))]">
-        No session recorded for this date.
+      <div
+        className="
+          p-4 rounded-lg
+          bg-[var(--gray-100)]
+          border border-[var(--border)]
+          text-[var(--text)]
+          text-sm
+        "
+      >
+        <div className="font-medium text-[var(--text-dark)]">
+          No attendance recorded for this date.
+        </div>
+        <div className="text-xs mt-1 text-[var(--gray-600)]">
+          Start marking athletes to create a session, then submit when you’re
+          done.
+        </div>
       </div>
     );
   }
 
-  if (type === "all_present") {
+  if (mode === "dirty") {
     return (
-      <div className="p-2 rounded-md bg-[hsl(var(--accent))] text-white">
-        All athletes present.
+      <div
+        className="
+          p-4 rounded-lg
+          bg-[var(--fvr-yellow-bg)]
+          border border-[var(--fvr-yellow)]
+          text-[var(--text-dark)]
+          text-sm
+        "
+      >
+        <div className="font-medium">Taking attendance…</div>
+        <div className="text-xs mt-1">
+          {exceptionsCount > 0
+            ? `${exceptionsCount} exception${
+                exceptionsCount === 1 ? "" : "s"
+              } recorded.`
+            : "Changes not yet submitted."}
+        </div>
       </div>
     );
   }
 
-  return null; // exceptions → no banner needed
+  // clean
+  return (
+    <div
+      className="
+        p-4 rounded-lg
+        bg-[var(--accent-bg)]
+        border border-[var(--accent)]
+        text-[var(--text-dark)]
+        text-sm
+      "
+    >
+      <div className="font-medium text-[var(--accent)]">
+        Attendance submitted for this date.
+      </div>
+      <div className="text-xs mt-1 text-[var(--gray-700)]">
+        {exceptionsCount > 0
+          ? `${exceptionsCount} exception${
+              exceptionsCount === 1 ? "" : "s"
+            } recorded.`
+          : "Everyone marked present."}
+      </div>
+    </div>
+  );
 }

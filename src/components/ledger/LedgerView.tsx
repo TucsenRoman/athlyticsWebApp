@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-import LedgerToolbar from "./LedgerToolbar";
+import LedgerToolbar from "../workspace/Toolbar";
 import LedgerSheet from "./ledgerSheet/LedgerSheet";
 import LedgerFooter from "./LedgerFooter";
 

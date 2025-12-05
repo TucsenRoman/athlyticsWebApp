@@ -12,101 +12,79 @@
 
 @layer base {
   :root {
-    /* CORE */
-    --white: 0 0% 100%;
-    --black: 0 0% 0%;
-
     /* GREY SCALE */
-    --gray-50: 0 0% 98%;
-    --gray-100: 0 0% 96%;
-    --gray-200: 0 0% 92%;
-    --gray-300: 0 0% 86%;
-    --gray-400: 0 0% 70%;
-    --gray-500: 0 0% 55%;
-    --gray-600: 0 0% 40%;
-    --gray-700: 0 0% 28%;
-    --gray-800: 0 0% 15%;
-    --gray-900: 0 0% 7%;
+    --light: #ffffff;
+    --gray-50: #fafafa;
+    --gray-100: #f5f5f5;
+    --gray-200: #ebebeb;
+    --gray-300: #dcdcdc;
+    --gray-400: #b3b3b3;
+    --gray-500: #8c8c8c;
+    --gray-600: #666666;
+    --gray-700: #474747;
+    --gray-800: #262626;
+    --gray-900: #121212;
+    --dark: #000000;
 
-    /* BRAND ACCENT — SINGLE COLOR */
-    --accent: 22 94% 57%;
-    --accent-foreground: 0 0% 100%;
+    /* BRAND ACCENT */
+    --accent: rgb(248, 118, 42);
+    --accent-bg: rgba(248, 118, 42, 0.1);
+
+    /* TEXT */
+    --text-light: var(--light);
+    --text: var(--gray-600);
+    --text-dark: var(--gray-800);
+    --text-accent: var(--accent);
+
+    /* BACLGROUND */
+    /* use this to easily toggle light and dark mode */
+    --bg: var(--light);
+
+    /* BORDERS */
+    --border-light: var(--gray-50);
+    --border: var(--gray-200);
+    --border-dark: var(--gray-300);
+    /* --border: red; */
 
     /* FUNCTION COLORS */
-    --success: 140 60% 45%;
-    --warning: 45 100% 50%;
-    --edit: 210 80% 60%;
-    --danger: 0 80% 55%;
-    --info: 210 85% 55%;
-    --focus: 52 100% 94%;
-    --focus-foreground: 40 20% 22%;
+    --debug: red;
+    --success: rgb(87, 136, 64);
+    --success-bg: rgba(87, 136, 64, 0.1);
+    /* --warning: #ffb703; */
+    --edit: rgb(33, 158, 188);
+    --edit-bg: rgb(33, 158, 188, 0.1);
+    --danger: rgb(217, 4, 41);
+    --danger-bg: rgb(217, 4, 41, 0.1);
+    /* --info: #219ebc; */
 
-    /* RADIUS */
+    /* FLAVORS */
+    --fvr-blue: rgb(37, 99, 235);
+    --fvr-blue-bg: rgba(37, 99, 235, 0.10);
+
+    --fvr-purple: rgb(147, 51, 234);
+    --fvr-purple-bg: rgba(147, 51, 234, 0.10);
+
+    --fvr-yellow: rgb(234, 179, 8);
+    --fvr-yellow-bg: rgba(234, 179, 8, 0.10);
+
+    --fvr-red: rgb(239, 68, 68);
+    --fvr-red-bg: rgba(239, 68, 68, 0.10);
+
+    --fvr-green: rgb(22, 163, 74);
+    --fvr-green-bg: rgba(22, 163, 74, 0.10);
+
+    --fvr-indigo: rgb(79, 70, 229);
+    --fvr-indigo-bg: rgba(79, 70, 229, 0.10);
+
+    /* FOCUS */
+    /* --focus: #f0ffb3; */
+    /* --focus-foreground: #6b6b5a; */
+
+    /* OVERLAYS */
+    --black-overlay: rgb(0, 0, 0, 0.5);
+
     --radius: 0.75rem;
-
-    /* BASE MAPPINGS */
-    --background: var(--white);
-    --foreground: var(--black);
-
-    --card: var(--white);
-    --card-foreground: var(--black);
-
-    --border: var(--gray-200);
-    --input: var(--gray-200);
-
-    /* UI COMPONENTS */
-    --primary: var(--accent);
-    /* --primary-foreground: var(--accent-foreground); */
-
-    --muted: var(--gray-100);
-    --muted-foreground: var(--gray-600);
-
-    --destructive: var(--danger);
-    --destructive-foreground: var(--white);
-
-    --info-color: var(--info);
-    --success-color: var(--success);
-    --warning-color: var(--warning);
   }
-
-  body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
-    transition: background-color 0.2s ease, color 0.2s ease;
-  }
-}
-
-/* ========================================================================== */
-/*  COMPONENT UTILITIES                                                       */
-/* ========================================================================== */
-
-@layer components {
-  .theme-surface {
-    background-color: hsl(var(--card));
-    color: hsl(var(--card-foreground));
-    @apply transition-colors duration-200;
-  }
-
-  .theme-primary {
-    background-color: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
-    @apply font-medium transition-all hover:brightness-110 active:scale-95;
-  }
-
-  .theme-secondary {
-    background-color: hsl(var(--gray-100));
-    color: hsl(var(--gray-700));
-  }
-
-  .dark .theme-secondary {
-    background-color: hsl(var(--gray-800));
-    color: hsl(var(--gray-200));
-  }
-
-  .theme-success { background-color: hsl(var(--success)); color: black; }
-  .theme-warning { background-color: hsl(var(--warning)); color: black; }
-  .theme-danger { background-color: hsl(var(--danger)); color: white; }
-  .theme-info { background-color: hsl(var(--info)); color: white; }
 }
 
 /* ========================================================================== */
@@ -192,17 +170,18 @@ input:-webkit-autofill {
   .flash-edit {
     animation: editFlash 1.2s infinite;
   }
+
   .flash-delete {
     animation: deleteFlash 1.2s infinite;
   }
 
   @keyframes editFlash {
     0%, 100% { background-color: transparent; }
-    50% { background-color: hsl(var(--edit) / 0.15); }
+    50% { background-color: color-mix(in srgb, var(--edit) 15%, transparent); }
   }
 
   @keyframes deleteFlash {
     0%, 100% { background-color: transparent; }
-    50% { background-color: hsl(var(--danger) / 0.15); }
+    50% { background-color: color-mix(in srgb, var(--danger) 15%, transparent); }
   }
 }

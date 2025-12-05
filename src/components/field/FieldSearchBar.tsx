@@ -10,7 +10,7 @@ export default function FieldViewSearchBar({
   onChange,
 }: FieldViewSearchBarProps) {
   return (
-    <div className="w-full px-4 pt-4 pb-2 flex justify-center md:justify-start">
+    <div className="w-full min-h-content px-4 flex justify-center md:justify-start">
       <div className="relative">
         {/* INPUT */}
         <input
@@ -18,11 +18,12 @@ export default function FieldViewSearchBar({
           onChange={(e) => onChange(e.target.value)}
           placeholder="Search anything..."
           className="
-            w-[300px] h-12
+            w-full h-12
             rounded-2xl
             px-4 pr-12
-            bg-neutral-100 dark:bg-neutral-900
-            text-base text-black dark:text-white
+            bg-[var(--bg)]
+            border border-[var(--border-dark)]
+            text-base text-[var(--text)]
             outline-none
             transition
           "
@@ -35,11 +36,11 @@ export default function FieldViewSearchBar({
             className="
               absolute right-3 top-1/2 -translate-y-1/2
               p-1 rounded-full
-              hover:bg-neutral-300/50 dark:hover:bg-neutral-700/50
+              hover:bg-neutral-300/50
               transition
             "
           >
-            <X className="w-5 h-5 text-neutral-500 dark:text-neutral-400" />
+            <X className="w-5 h-5 text-[var(--text)]" />
           </button>
         )}
       </div>

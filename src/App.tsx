@@ -12,7 +12,7 @@ import {
 } from "react-router-dom";
 
 import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import MainHeader from "@/components/navigation/MainHeader";
 
 // RequireProgram wrapper
@@ -37,80 +37,83 @@ export default function App() {
           <Toaster />
           <Sonner />
 
-          <BrowserRouter>
-            <Routes>
+          <div className="h-[100vh] max-h-screen overflow-auto">
 
-              {/* PUBLIC -------------------------------------------------------- */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Auth />} />
-              <Route path="/signup" element={<Auth />} />
+            <BrowserRouter>
+              <Routes>
 
-              {/* PROTECTED ----------------------------------------------------- */}
+                {/* PUBLIC -------------------------------------------------------- */}
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Auth />} />
+                <Route path="/signup" element={<Auth />} />
 
-              {/* FIELD — needs program */}
-              <Route
-                path="/field"
-                element={
-                  <ProtectedRoute>
-                    <MainHeader>
-                      <RequireProgram>
-                        <FieldPage />
-                      </RequireProgram>
-                    </MainHeader>
-                  </ProtectedRoute>
-                }
-              />
+                {/* PROTECTED ----------------------------------------------------- */}
 
-              {/* DISCOVERY — does NOT need program */}
-              <Route
-                path="/discovery"
-                element={
-                  <ProtectedRoute>
-                    <MainHeader>
-                      <RequireProgram>
-                        <DiscoveryPage />
-                      </RequireProgram>
-                    </MainHeader>
-                  </ProtectedRoute>
-                }
-              />
+                {/* FIELD — needs program */}
+                <Route
+                  path="/field"
+                  element={
+                    <ProtectedRoute>
+                      <MainHeader>
+                        <RequireProgram>
+                          <FieldPage />
+                        </RequireProgram>
+                      </MainHeader>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* WORKSPACE — needs program */}
-              <Route
-                path="/workspace"
-                element={
-                  <ProtectedRoute>
-                    <MainHeader>
-                      <RequireProgram>
-                        <WorkspacePage />
-                      </RequireProgram>
-                    </MainHeader>
-                  </ProtectedRoute>
-                }
-              />
+                {/* DISCOVERY — does NOT need program */}
+                <Route
+                  path="/discovery"
+                  element={
+                    <ProtectedRoute>
+                      <MainHeader>
+                        <RequireProgram>
+                          <DiscoveryPage />
+                        </RequireProgram>
+                      </MainHeader>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* LEDGER DETAIL — needs program */}
-              <Route
-                path="/ledgers/:ledgerId"
-                element={
-                  <ProtectedRoute>
-                    <MainHeader>
-                      <RequireProgram>
-                        <LedgerView />
-                      </RequireProgram>
-                    </MainHeader>
-                  </ProtectedRoute>
-                }
-              />
+                {/* WORKSPACE — needs program */}
+                <Route
+                  path="/workspace"
+                  element={
+                    <ProtectedRoute>
+                      <MainHeader>
+                        <RequireProgram>
+                          <WorkspacePage />
+                        </RequireProgram>
+                      </MainHeader>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* LEGACY REDIRECTS */}
-              <Route path="/ledger" element={<Navigate to="/discovery" replace />} />
+                {/* LEDGER DETAIL — needs program */}
+                <Route
+                  path="/ledgers/:ledgerId"
+                  element={
+                    <ProtectedRoute>
+                      <MainHeader>
+                        <RequireProgram>
+                          <LedgerView />
+                        </RequireProgram>
+                      </MainHeader>
+                    </ProtectedRoute>
+                  }
+                />
 
-              {/* CATCH-ALL */}
-              <Route path="*" element={<NotFound />} />
+                {/* LEGACY REDIRECTS */}
+                <Route path="/ledger" element={<Navigate to="/discovery" replace />} />
 
-            </Routes>
-          </BrowserRouter>
+                {/* CATCH-ALL */}
+                <Route path="*" element={<NotFound />} />
+
+              </Routes>
+            </BrowserRouter>
+          </div>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

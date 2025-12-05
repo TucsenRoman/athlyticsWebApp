@@ -342,12 +342,12 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       const items = [
         {
           label: "Add",
-          icon: <Plus size={20} className="text-[hsl(var(--gray-700))]" />,
+          icon: <Plus size={20} className="text-[var(--text)]" />,
           action: () => openAddProgram(),
         },
         {
           label: "Edit",
-          icon: <Pencil size={20} className="text-[hsl(var(--edit))]" />,
+          icon: <Pencil size={20} className="text-[var(--edit)]" />,
           action: () =>
             setPendingAction((p) => (p === "edit" ? null : "edit")),
         },
@@ -356,7 +356,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           icon: (
             <Trash2
               size={20}
-              className="text-[hsl(var(--danger))]"
+              className="text-[var(--danger)]"
             />
           ),
           destructive: true,
@@ -394,10 +394,10 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                     h-8 w-8 flex items-center justify-center rounded-full shadow-md transition-all
                     ${
                       a.label === "Edit"
-                        ? "bg-[hsl(var(--background))] hover:bg-[hsl(var(--edit))]/10"
+                        ? "bg-[var(--bg)] hover:bg-[var(--edit-bg)]"
                         : a.destructive
-                        ? "bg-[hsl(var(--background))] hover:bg-[hsl(var(--danger))]/10"
-                        : "bg-[hsl(var(--background))] hover:bg-[hsl(var(--gray-700))]/10"
+                        ? "bg-[var(--bg)] hover:bg-[var(--danger-bg)]"
+                        : "bg-[var(--bg)] hover:bg-[var(--gray-200)]"
                     }
                   `}
                 >
@@ -414,15 +414,13 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     /* ---------------------------------------------------------------------- */
 
     const renderHeaderTrigger = () => (
-      <Button
+      <button
         ref={triggerRef}
         tabIndex={-1}
         className="
           flex items-center gap-2
           h-full px-3
           rounded-xl
-          bg-transparent
-          hover:bg-transparent
           transition-colors
           backdrop-blur
           focus:outline-none focus-visible:outline-none
@@ -435,9 +433,9 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
         <ChevronDown
           size={16}
-          className="opacity-70 shrink-0 text-[hsl(var(--gray-800))]"
+          className="opacity-70 shrink-0 text-[var(--text-dark)]"
         />
-      </Button>
+      </button>
     );
 
 
@@ -449,13 +447,12 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           px-4
           rounded-full
           flex items-center gap-2
-          bg-[hsl(var(--background))]
-          hover:bg-[hsl(var(--background))]
-          border border-[hsl(var(--border))]
-          shadow-athletic
+          bg-[var(--bg)]
+          hover:bg-[var(--bg)]
+          border border-[var(--border)]
           backdrop-blur-sm
           transition
-          text-[hsl(var(--foreground))]
+          text-[var(--foreground)]
         "
       >
         <span className="font-medium text-sm truncate">
@@ -464,7 +461,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
         <ChevronDown
           size={16}
-          className="opacity-70 text-[hsl(var(--gray-800))]"
+          className="opacity-70 text-[var(--text-dark)]"
         />
       </Button>
     );
@@ -495,15 +492,15 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
             variant === "empty"
               ? `
                 min-w-[155px] rounded-3xl overflow-hidden
-                bg-[hsl(var(--background))]
-                border border-[hsl(var(--border))]
+                bg-[var(--bg)]
+                border border-[var(--border)]
                 backdrop-blur-xl
                 p-0
               `
               : `
                 min-w-[180px] rounded-xl relative
-                bg-[hsl(var(--background))]
-                border border-[hsl(var(--border))]
+                bg-[var(--bg)]
+                border border-[var(--border)]
                 shadow-xl backdrop-blur
               `
           }
@@ -519,8 +516,8 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
               <DropdownMenuItem
                 className="
                   py-3 px-4 text-sm font-medium
-                  text-[hsl(var(--accent))]
-                  hover:!bg-[hsl(var(--accent))]/10
+                  text-[var(--accent)]
+                  hover:!bg-[var(--accent-bg)]
                   cursor-pointer
                 "
                 onClick={() => {
@@ -540,22 +537,22 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                     m-1 py-1 px-3
                     gap-2
                     text-sm
-                    hover:!bg-[hsl(var(--accent))]/10
+                    hover:!bg-[var(--accent-bg)]
                     cursor-pointer
                     pl-3
 
                     before:absolute before:left-0 
                     before:top-[10px] before:bottom-[10px]
-                    before:w-1 before:bg-[hsl(var(--accent))] before:rounded-full
+                    before:w-1 before:bg-[var(--accent)] before:rounded-full
                     before:opacity-0 data-[selected=true]:before:opacity-50
                   "
                   onClick={() => handleProgramClick(p)}
                 >
                   <div className="flex flex-col min-w-0 truncate">
-                    <span className="font-medium text-sm text-[hsl(var(--gray-700))]">
+                    <span className="font-medium text-sm text-[var(--text-dark)]">
                       {formattedName(p)}
                     </span>
-                    <span className="text-xs text-[hsl(var(--gray-500))]">
+                    <span className="text-xs text-[var(--text)]">
                       {formattedDetails(p)}
                     </span>
                   </div>
@@ -565,14 +562,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           </div>
 
           {variant === "header" && !noPrograms && (
-            <div className="sticky bottom-0 bg-transparent backdrop-blur border-t border-[hsl(var(--border))] py-2 px-1">
+            <div className="sticky bottom-0 bg-transparent backdrop-blur border-t border-[var(--border)] py-2 px-1">
               <Button
                 className={`
-                  h-9 w-9 rounded-full transition-all relative z-50 bg-[hsl(var(--background))]
+                  h-9 w-9 rounded-full transition-all relative z-50 bg-[var(--bg)]
                   ${
                     isEditMode
-                      ? "hover:bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] shadow-lg"
-                      : "hover:bg-[hsl(var(--gray-700))]/10 text-[hsl(var(--gray-700))] shadow-sm"
+                      ? "hover:bg-[var(--accent-bg)] text-[var(--accent)] shadow-lg"
+                      : "hover:bg-[var(--gray-300)] text-[var(--text)]"
                   }
                 `}
                 onClick={(e) => {
@@ -607,7 +604,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
     if (loading) {
       return (
-        <div className="text-sm text-[hsl(var(--muted-foreground))]">
+        <div className="text-sm text-[var(--muted-foreground)]">
           Loading…
         </div>
       );
@@ -623,14 +620,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
             if (!open) setPendingDelete(null);
           }}
         >
-          <DialogContent className="sm:max-w-md bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]">
+          <DialogContent className="sm:max-w-md bg-[var(--card)] text-[var(--card-foreground)]">
             <DialogHeader>
               <DialogTitle>Delete Program?</DialogTitle>
             </DialogHeader>
 
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+            <p className="text-sm text-[var(--muted-foreground)]">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-[hsl(var(--accent))]">
+              <span className="font-semibold text-[var(--accent)]">
                 {pendingDelete?.school} {pendingDelete?.sport}, {pendingDelete?.year}
               </span>
               ? This action cannot be undone.

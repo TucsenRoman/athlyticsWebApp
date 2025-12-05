@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -18,8 +20,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import {
-  User,
-  Settings,
   LogOut,
   MessageSquareHeart,
   Bell,
@@ -36,10 +36,14 @@ import {
   MonitorSmartphone,
   Sun,
   Moon,
-  Sparkles,
   Trophy,
   Box,
+  Settings,
 } from "lucide-react";
+
+/* ============================================================== */
+/* MAIN COMPONENT                                                 */
+/* ============================================================== */
 
 export default function UserDropdownShell() {
   const [open, setOpen] = useState(false);
@@ -51,43 +55,43 @@ export default function UserDropdownShell() {
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      {/* TRIGGER ------------------------------------------------------------- */}
+      {/* TRIGGER ----------------------------------------------------------- */}
       <DropdownMenuTrigger className="flex items-center h-10 w-10 rounded-full overflow-hidden">
-        <Avatar className="h-full w-full bg-[hsl(var(--gray-200))] hover:bg-[hsl(var(--gray-300))] transition">
+        <Avatar className="h-full w-full bg-[var(--gray-200)] hover:bg-[var(--gray-300)] transition">
           <AvatarImage src="public/IMG_0136.jpg" className="rounded-sm" />
-          <AvatarFallback className="bg-[hsl(var(--accent))] text-white rounded-sm">
+          <AvatarFallback className="bg-[var(--accent)] text-white rounded-sm">
             TR
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 
-      {/* CONTENT ------------------------------------------------------------- */}
+      {/* CONTENT ----------------------------------------------------------- */}
       <DropdownMenuContent
         align="end"
         sideOffset={10}
         className="
-          w-72 rounded-xl p-1 shadow-xl
-          bg-[hsl(var(--card))] 
-          text-[hsl(var(--card-foreground))]
-          border border-[hsl(var(--border))]
-          backdrop-blur-lg
+          w-72 rounded-xl p-1
+          bg-[var(--bg)]
+          text-[var(--text-dark)]
+          border border-[var(--border)]
+          backdrop-blur-xl
         "
       >
-        {/* PROFILE SUMMARY --------------------------------------------------- */}
+        {/* PROFILE --------------------------------------------------------- */}
         <div className="px-3 py-3 flex items-center gap-3">
           <Avatar className="h-11 w-11 rounded-xl">
             <AvatarImage src="public/IMG_0136.jpg" />
-            <AvatarFallback className="bg-[hsl(var(--gray-300))] text-[hsl(var(--gray-800))] rounded-xl">
+            <AvatarFallback className="bg-[var(--gray-300)] text-[var(--text-dark)] rounded-xl">
               U
             </AvatarFallback>
           </Avatar>
 
           <div className="min-w-0 flex flex-col">
-            <div className="font-semibold text-[hsl(var(--accent))] truncate">
+            <div className="font-semibold text-[var(--accent)] truncate">
               Tucsen Roman
             </div>
 
-            <div className="flex items-center gap-1 text-[10px] text-[hsl(var(--gray-500))]">
+            <div className="flex items-center gap-1 text-[10px] text-[var(--text)]">
               <span className="truncate">@tucsenroman129</span>
               <span className="opacity-40">•</span>
               <span className="truncate">57 Trophies</span>
@@ -98,69 +102,66 @@ export default function UserDropdownShell() {
         <DropdownMenuSeparator />
 
         {/* NAVIGATION ------------------------------------------------------- */}
-        <DropdownMenuLabel className="text-xs text-[hsl(var(--accent))] px-3">
+        <DropdownMenuLabel className="text-xs text-[var(--accent)] px-3">
           Navigation
         </DropdownMenuLabel>
 
         <DropdownMenuGroup>
-          {menuNavItem(<LayoutDashboard className="h-4 w-4" />, "Dashboard")}
-          {menuNavItem(<Users className="h-4 w-4" />, "Athletes")}
-          {menuNavItem(<ClipboardList className="h-4 w-4" />, "Meets & Events")}
-          {menuNavItem(<LineChart className="h-4 w-4" />, "Performance Analytics")}
-          {menuNavItem(<Dumbbell className="h-4 w-4" />, "Training Programs")}
-          {menuNavItem(<ListChecks className="h-4 w-4" />, "Rosters & Uniforms")}
-          {menuNavItem(<Database className="h-4 w-4" />, "Ledger Manager")}
+          {menuNavItem(<LayoutDashboard className="h-4 w-4 lucide-bold" />, "Dashboard")}
+          {menuNavItem(<Users className="h-4 w-4 lucide-bold" />, "Athletes")}
+          {menuNavItem(<ClipboardList className="h-4 w-4 lucide-bold" />, "Meets & Events")}
+          {menuNavItem(<LineChart className="h-4 w-4 lucide-bold" />, "Performance Analytics")}
+          {menuNavItem(<Dumbbell className="h-4 w-4 lucide-bold" />, "Training Programs")}
+          {menuNavItem(<ListChecks className="h-4 w-4 lucide-bold" />, "Rosters & Uniforms")}
+          {menuNavItem(<Database className="h-4 w-4 lucide-bold" />, "Ledger Manager")}
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
 
         {/* TOOLS ------------------------------------------------------------ */}
-        <DropdownMenuLabel className="text-xs text-[hsl(var(--accent))] px-3">
+        <DropdownMenuLabel className="text-xs text-[var(--accent)] px-3">
           Tools
         </DropdownMenuLabel>
 
         <DropdownMenuGroup>
-          {menuNavItem(<Gauge className="h-4 w-4" />, "VRP Mode")}
-          {menuNavItem(<Activity className="h-4 w-4" />, "Live Meet Mode")}
-          {menuNavItem(<ShieldCheck className="h-4 w-4" />, "Permissions")}
-          {menuNavItem(<Box className="h-4 w-4" />, "Storage")}
-          {menuNavItem(<Trophy className="h-4 w-4" />, "Trophies")}
+          {menuNavItem(<Gauge className="h-4 w-4 lucide-bold" />, "VRP Mode")}
+          {menuNavItem(<Activity className="h-4 w-4 lucide-bold" />, "Live Meet Mode")}
+          {menuNavItem(<ShieldCheck className="h-4 w-4 lucide-bold" />, "Permissions")}
+          {menuNavItem(<Box className="h-4 w-4 lucide-bold" />, "Storage")}
+          {menuNavItem(<Trophy className="h-4 w-4 lucide-bold" />, "Trophies")}
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
 
         {/* SETTINGS --------------------------------------------------------- */}
-        <DropdownMenuLabel className="text-xs text-[hsl(var(--accent))] px-3">
+        <DropdownMenuLabel className="text-xs text-[var(--accent)] px-3">
           App
         </DropdownMenuLabel>
 
         <DropdownMenuGroup>
-          {/* Theme Submenu */}
+          {/* Theme */}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger className="gap-2">
-              <MonitorSmartphone className="h-4 w-4 text-[hsl(var(--gray-600))]" />
+              <MonitorSmartphone className="h-4 w-4 text-[var(--text)]" />
               Theme
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="bg-[hsl(var(--card))] border border-[hsl(var(--border))]">
+
+            <DropdownMenuSubContent className="bg-[var(--bg)] border border-[var(--border)]">
               {themeItem(<Sun className="h-4 w-4" />, "Light")}
               {themeItem(<Moon className="h-4 w-4" />, "Dark")}
               {themeItem(<MonitorSmartphone className="h-4 w-4" />, "System")}
             </DropdownMenuSubContent>
           </DropdownMenuSub>
 
-          {menuNavItem(<Settings className="h-4 w-4" />, "Settings")}
-          {menuNavItem(
-            <Bell className="h-4 w-4 text-[hsl(var(--gray-600))]" />,
-            "Notifications",
-            "5"
-          )}
+          {menuNavItem(<Settings className="h-4 w-4 lucide-bold" />, "Settings")}
+          {menuNavItem(<Bell className="h-4 w-4 text-[var(--text)]" />, "Notifications", "5")}
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
 
         {/* SUPPORT ---------------------------------------------------------- */}
-        <DropdownMenuItem className="gap-2 hover:bg-[hsl(var(--gray-200))] transition">
-          <MessageSquareHeart className="h-4 w-4 text-[hsl(var(--gray-600))]" />
+        <DropdownMenuItem className="gap-2 hover:bg-[var(--gray-200)] transition">
+          <MessageSquareHeart className="h-4 w-4 text-[var(--text)]" />
           Help Center
         </DropdownMenuItem>
 
@@ -171,8 +172,8 @@ export default function UserDropdownShell() {
           onClick={handleSignOut}
           className="
             gap-2
-            text-[hsl(var(--danger))]
-            hover:bg-[hsl(var(--danger))]/10
+            text-[var(--danger)]
+            hover:bg-[var(--danger-bg)]
             transition
           "
         >
@@ -184,19 +185,21 @@ export default function UserDropdownShell() {
   );
 }
 
-/* HELPERS ================================================================== */
+/* ============================================================== */
+/* HELPERS                                                        */
+/* ============================================================== */
 
 function menuNavItem(icon: any, label: string, shortcut?: string) {
   return (
     <DropdownMenuItem
       className="
         gap-2
-        hover:bg-[hsl(var(--gray-200))]
-        text-[hsl(var(--gray-700))]
+        text-[var(--text-dark)]
+        hover:bg-[var(--gray-200)]
         transition
       "
     >
-      <span className="text-[hsl(var(--gray-600))]">{icon}</span>
+      <span className="text-[var(--text)]">{icon}</span>
       {label}
       {shortcut && <DropdownMenuShortcut>{shortcut}</DropdownMenuShortcut>}
     </DropdownMenuItem>
@@ -208,11 +211,11 @@ function themeItem(icon: any, label: string) {
     <DropdownMenuItem
       className="
         gap-2
-        hover:bg-[hsl(var(--gray-200))]
+        hover:bg-[var(--gray-200)]
         transition
       "
     >
-      <span className="text-[hsl(var(--gray-600))]">{icon}</span>
+      <span className="text-[var(--text)]">{icon}</span>
       {label}
     </DropdownMenuItem>
   );

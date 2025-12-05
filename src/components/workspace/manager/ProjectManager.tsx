@@ -49,13 +49,26 @@ function Collapsible({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border rounded-xl bg-card overflow-hidden">
+    <div
+      className="
+        border border-[var(--border)]
+        rounded-xl
+        bg-[var(--bg)]
+        overflow-hidden
+      "
+    >
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex justify-between items-center px-4 py-3 text-left"
+        className="
+          w-full flex justify-between items-center 
+          px-4 py-3 text-left
+          text-[var(--text-dark)]
+          hover:bg-[var(--gray-50)]
+          transition-colors
+        "
       >
         <span className="font-semibold">{title}</span>
-        <span className="text-muted-foreground">{open ? "−" : "+"}</span>
+        <span className="text-[var(--text)]">{open ? "−" : "+"}</span>
       </button>
 
       {open && <div className="px-4 pb-4">{children}</div>}
@@ -63,13 +76,28 @@ function Collapsible({
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* EMPTY STATE                                                                */
+/* -------------------------------------------------------------------------- */
+
 function Empty({ message }: { message: string }) {
   return (
-    <div className="text-sm text-muted-foreground p-3 border rounded-lg bg-muted/20">
+    <div
+      className="
+        text-sm text-[var(--text)]
+        p-3 rounded-lg
+        border border-[var(--border)]
+        bg-[var(--bg)]
+      "
+    >
       {message}
     </div>
   );
 }
+
+/* -------------------------------------------------------------------------- */
+/* SECTION WRAPPER                                                            */
+/* -------------------------------------------------------------------------- */
 
 function Section({
   title,
@@ -104,16 +132,15 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  /* ==========================================================================
-     1) LOAD ALL PROGRAM DATA (LEDGERS, PACKAGES, ENTRIES, HEADERS)
-     ========================================================================== */
+  /* ------------------------------------------------------------------------ */
+  /* LOAD ALL DATA                                                            */
+  /* ------------------------------------------------------------------------ */
 
   const loadAll = useCallback(async () => {
     if (!programId) return;
 
     console.log("📂 ProjectManager: loading program data…");
 
-    /* -----------------  PROGRAM NAME ----------------- */
     const { data: p } = await supabase
       .from("programs")
       .select("sport, year")
@@ -124,7 +151,6 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
       setProgramName(`${p.sport ?? "Program"} ${p.year ?? ""}`.trim());
     }
 
-    /* -----------------  LEDGERS + PACKAGES  ----------------- */
     const [{ data: l }, { data: pkgs }] = await Promise.all([
       supabase
         .from("ledgers")
@@ -148,7 +174,6 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
     const ledgerIds = ledgerRows.map((lg) => lg.id);
     const packageIds = packageRows.map((pkg) => pkg.id);
 
-    /* -----------------  HEADERS + ENTRIES ----------------- */
     if (ledgerIds.length > 0) {
       const [{ data: headers }, { data: entryRows }] = await Promise.all([
         supabase
@@ -169,7 +194,6 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
       setEntries([]);
     }
 
-    /* -----------------  PACKAGE ITEMS  ----------------- */
     if (packageIds.length > 0) {
       const { data: items } = await supabase
         .from("package_items")
@@ -185,14 +209,13 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
   }, [programId]);
 
   /* ------------------------------------------------------------------------ */
-  /* INITIAL LOAD + EVENT RESUBSCRIBE                                         */
+  /* INITIAL LOAD + EVENT SUBSCRIBE                                           */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     loadAll();
   }, [loadAll]);
 
-  // Auto-refresh when installer fires event
   useEffect(() => {
     const handler = () => {
       console.log("🔄 ProjectManager: program-updated → refreshing");
@@ -203,18 +226,16 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
     return () => window.removeEventListener("program-updated", handler);
   }, [loadAll]);
 
-  /* ==========================================================================
-     2) PACKAGE → LEDGER MAPPING
-     ========================================================================== */
+  /* ------------------------------------------------------------------------ */
+  /* PACKAGE → LEDGER MAPPING                                                 */
+  /* ------------------------------------------------------------------------ */
 
   const packageMap = new Map<string, LedgerRow[]>();
   packages.forEach((pkg) => packageMap.set(pkg.id, []));
 
   packageItems.forEach((rel) => {
     const ledger = ledgers.find((l) => l.id === rel.ledger_id);
-    if (ledger) {
-      packageMap.get(rel.package_id)!.push(ledger);
-    }
+    if (ledger) packageMap.get(rel.package_id)!.push(ledger);
   });
 
   const packagedLedgerIds = new Set(packageItems.map((i) => i.ledger_id));
@@ -223,9 +244,9 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
     (p) => (packageMap.get(p.id)?.length ?? 0) === 0
   );
 
-  /* ==========================================================================
-     3) SELECTION & DELETE
-     ========================================================================== */
+  /* ------------------------------------------------------------------------ */
+  /* SELECTION LOGIC                                                          */
+  /* ------------------------------------------------------------------------ */
 
   const toggleSelect = (key: string) => {
     setSelected((prev) => {
@@ -265,19 +286,26 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
     loadAll();
   };
 
-  /* ==========================================================================
-     RENDER
-     ========================================================================== */
+  /* ------------------------------------------------------------------------ */
+  /* RENDER                                                                    */
+  /* ------------------------------------------------------------------------ */
 
   return (
-    <div className="w-full h-full overflow-auto p-6 flex flex-col gap-6">
+    <div className="w-full h-full overflow-auto p-6 flex flex-col gap-6 bg-[var(--bg)] text-[var(--text-dark)]">
       {/* HEADER */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">{programName} Overview</h1>
+        <h1 className="text-xl font-semibold text-[var(--text-dark)]">
+          {programName} Overview
+        </h1>
 
         {selected.size > 0 && (
           <button
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm"
+            className="
+              flex items-center gap-2 
+              px-4 py-2 rounded-lg text-sm
+              bg-[var(--danger)] text-[var(--text-light)]
+              hover:opacity-80 transition
+            "
             onClick={deleteSelected}
           >
             <Trash2 className="w-4 h-4" />
@@ -286,8 +314,8 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
         )}
       </div>
 
-      {/* SELECTOR BAR */}
-      <div className="flex items-center gap-3 text-sm">
+      {/* SELECTION BAR */}
+      <div className="flex items-center gap-3 text-sm text-[var(--text)]">
         <button className="underline" onClick={selectAll}>
           Select All
         </button>
@@ -304,9 +332,14 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
           return (
             <div
               key={pkg.id}
-              className="p-3 rounded-lg border bg-card flex flex-col gap-2"
+              className="
+                p-3 rounded-lg 
+                border border-[var(--border)]
+                bg-[var(--bg)]
+                flex flex-col gap-2
+              "
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 text-[var(--text-dark)]">
                 <input
                   type="checkbox"
                   checked={selected.has(`pkg:${pkg.id}`)}
@@ -316,7 +349,14 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
               </div>
 
               {children.length === 0 && (
-                <div className="ml-6 p-2 rounded border bg-muted/20 text-sm text-muted-foreground">
+                <div
+                  className="
+                    ml-6 p-2 rounded 
+                    border border-[var(--border)]
+                    bg-[var(--bg)]
+                    text-sm text-[var(--text)]
+                  "
+                >
                   Empty package
                 </div>
               )}
@@ -324,7 +364,13 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
               {children.map((ledger) => (
                 <div
                   key={ledger.id}
-                  className="ml-6 p-2 rounded border bg-muted/20 flex items-center gap-3"
+                  className="
+                    ml-6 p-2 rounded 
+                    border border-[var(--border)]
+                    bg-[var(--bg)]
+                    flex items-center gap-3
+                    text-[var(--text-dark)]
+                  "
                 >
                   <input
                     type="checkbox"
@@ -348,7 +394,13 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
         {emptyPackages.map((pkg) => (
           <div
             key={pkg.id}
-            className="p-3 rounded-lg border bg-card flex items-center gap-3"
+            className="
+              p-3 rounded-lg 
+              border border-[var(--border)]
+              bg-[var(--bg)]
+              flex items-center gap-3
+              text-[var(--text-dark)]
+            "
           >
             <input
               type="checkbox"
@@ -365,14 +417,17 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
       </Section>
 
       {/* ORPHAN LEDGERS */}
-      <Section
-        title="Ledgers Without Packages"
-        count={orphanLedgers.length}
-      >
+      <Section title="Ledgers Without Packages" count={orphanLedgers.length}>
         {orphanLedgers.map((l) => (
           <div
             key={l.id}
-            className="p-3 rounded-lg border bg-card flex items-center justify-between"
+            className="
+              p-3 rounded-lg 
+              border border-[var(--border)]
+              bg-[var(--bg)]
+              flex items-center justify-between
+              text-[var(--text-dark)]
+            "
           >
             <div className="flex items-center gap-3">
               <input
@@ -382,7 +437,7 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
               />
               <span className="font-medium">{l.name ?? "Untitled Ledger"}</span>
             </div>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-[var(--text)]">
               Ledger ID: {l.id}
             </span>
           </div>

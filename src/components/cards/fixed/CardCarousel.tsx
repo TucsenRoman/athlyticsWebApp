@@ -20,14 +20,14 @@ import PerformanceSummaryCard from "@/components/cards/fixed/PerformanceSummaryC
 const ALL_CARDS = [
   { id: "attendance", element: <AttendanceCard /> },
   { id: "notes", element: <NotesCard /> },
-  { id: "meet", element: <MeetDayCard /> },
-  { id: "weather", element: <WeatherCard /> },
+  // { id: "meet", element: <MeetDayCard /> },
+  // { id: "weather", element: <WeatherCard /> },
   { id: "calendar", element: <CalendarCard /> },
-  { id: "postmeet", element: <PostMeetSummaryCard /> },
-  { id: "performance", element: <PerformanceSummaryCard /> },
+  // { id: "postmeet", element: <PostMeetSummaryCard /> },
+  // { id: "performance", element: <PerformanceSummaryCard /> },
 ];
 
-const CARD_HEIGHT = "h-[70vh]";
+const CARD_HEIGHT = "h-full";
 
 /* ------------------------------------------------------- */
 /* PIN BUTTON                                              */
@@ -37,12 +37,12 @@ function PinButton({ pinned, onToggle }: { pinned: boolean; onToggle: () => void
   return (
     <button
       onClick={onToggle}
-      className="absolute top-0 left-0 z-30 active:scale-90 transition p-2"
+      className="absolute top-[5px] left-[10px] z-30 active:scale-90 transition p-2"
     >
       <Pin
-        size={20}
+        size={22}
         className={`transition-all duration-200 ${
-          pinned ? "text-orange-400 rotate-45 fill-orange-400" : "text-neutral-300"
+          pinned ? "text-[var(--text-accent)] rotate-45 fill-[var(--accent-bg)]" : "text-[var(--gray-300)]"
         }`}
       />
     </button>
@@ -139,8 +139,7 @@ export default function FixedCardsSystem() {
           flex
           overflow-x-auto overflow-y-hidden
           snap-x snap-mandatory
-          scrollbar-none
-          py-4 px-4 pb-10
+          px-4
         "
       >
         {sortedCards.map((card) => {
@@ -170,7 +169,7 @@ export default function FixedCardsSystem() {
       <div
         className="
           sticky
-          bottom-[150px]
+          bottom-[5px]
           z-30
           w-full
           flex
@@ -184,9 +183,8 @@ export default function FixedCardsSystem() {
             flex items-center gap-2
             px-4 py-2
             rounded-full
-            backdrop-blur-2xl
-            bg-neutral-200/80 dark:bg-neutral-800/70
-            border border-neutral-300/50 dark:border-neutral-700/50
+            bg-[var(--bg)]
+            border border-[var(--border)]
             shadow-lg
           "
         >

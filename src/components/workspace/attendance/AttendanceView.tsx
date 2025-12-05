@@ -1,5 +1,4 @@
 // src/components/workspace/attendance/AttendanceView.tsx
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -8,135 +7,141 @@ import {
   markAllPresent,
   markException,
   markPresent,
-} from "./useAttendance";
-import { AttendanceHeader } from "./AttendanceHeader";
+} from "@/components/attendance/useAttendance";
 import { AttendanceStatusBanner } from "./AttendanceStatusBanner";
+import { AttendanceRosterList } from "./AttendanceRosterList";
+import type { RosterAthlete } from "./AttendanceRosterRow";
+import type { StatusOption } from "./StatusSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
-import { getRoster } from "./getRoster";
-import StatusSelector from "./StatusSelector";
+import { getRoster } from "@/components/attendance/getRoster";
+
+type AttendanceRow = {
+  id: string;
+  athlete_key: string | null;
+  status: string;
+};
 
 export default function AttendanceView() {
   const { selectedProgramId: programId } = useProgramContext();
-
-  const [roster, setRoster] = useState([]);
-  const [rows, setRows] = useState([]);
-  const [map, setMap] = useState({});
-  const [type, setType] = useState("none");
 
   const [date, setDate] = useState(() => {
     const d = new Date();
     return d.toISOString().slice(0, 10);
   });
 
-  /* ---------------------------------- ROSTER ---------------------------------- */
+  const [roster, setRoster] = useState<RosterAthlete[]>([]);
+  const [rows, setRows] = useState<AttendanceRow[]>([]);
+  const [statusMap, setStatusMap] = useState<
+    Record<string, StatusOption | null>
+  >({});
+  const [isDirty, setIsDirty] = useState(false);
+
+  /* ------------------------------- LOAD ROSTER ------------------------------- */
   useEffect(() => {
     if (!programId) return;
     getRoster(programId).then(setRoster);
   }, [programId]);
 
-  /* ----------------------------- ATTENDANCE ROWS ------------------------------ */
+  /* ---------------------------- LOAD ATTENDANCE ---------------------------- */
   async function loadAttendance() {
     if (!programId) return;
     const { data } = await fetchAttendance(programId, date);
-    setRows(data || []);
+    setRows((data as AttendanceRow[]) || []);
   }
 
   useEffect(() => {
+    if (!programId) return;
+    setIsDirty(false); // new date/program → reset dirty state
     loadAttendance();
   }, [programId, date]);
 
-  /* --------------------------- BUILD ATTENDANCE MAP --------------------------- */
+  /* ------------------------- BUILD STATUS MAP FROM DB ------------------------ */
   useEffect(() => {
-    if (!roster.length) return;
-
-    if (rows.length === 0) {
-      setType("none");
-      setMap({});
+    if (!roster.length) {
+      setStatusMap({});
       return;
     }
 
-    const allPresent = rows.some((r) => r.status === "all_present");
+    const map: Record<string, StatusOption | null> = {};
+    roster.forEach((a) => {
+      map[a.key] = null; // default = present
+    });
 
-    if (allPresent) {
-      setType("all_present");
+    rows.forEach((row) => {
+      if (!row.athlete_key) return;
 
-      const mp = {};
-      roster.forEach((a) => (mp[a.key] = null)); // default = present
-
-      rows.forEach((r) => {
-        if (r.athlete_key && r.status !== "all_present") {
-          mp[r.athlete_key] = r.status;
-        }
-      });
-
-      setMap(mp);
-      return;
-    }
-
-    // exception mode
-    setType("exceptions");
-
-    const mp = {};
-    roster.forEach((a) => (mp[a.key] = null)); // default = present
-
-    rows.forEach((r) => {
-      if (r.athlete_key) {
-        mp[r.athlete_key] = r.status;
+      // DB stores: absent | tardy | excused | other | all_present
+      if (
+        row.status === "absent" ||
+        row.status === "tardy" ||
+        row.status === "excused" ||
+        row.status === "other"
+      ) {
+        map[row.athlete_key] = row.status;
       }
     });
 
-    setMap(mp);
+    setStatusMap(map);
   }, [rows, roster]);
 
-  /* ---------------------------- STATUS CHANGE LOGIC --------------------------- */
-  async function handleStatusChange(athleteKey, newStatus) {
-    // UI "present" = null = remove exception
+  const hasSession = rows.length > 0;
+  const exceptionsCount = roster.reduce((count, athlete) => {
+    const s = statusMap[athlete.key];
+    return s && s !== "present" ? count + 1 : count;
+  }, 0);
+
+  const bannerMode: "none" | "clean" | "dirty" = !hasSession
+    ? "none"
+    : isDirty
+    ? "dirty"
+    : "clean";
+
+  /* --------------------------- STATUS CHANGE HANDLER ------------------------- */
+  async function handleStatusChange(
+    athleteKey: string,
+    newStatus: StatusOption | null
+  ) {
+    if (!programId) return;
+
+    // UI "present" = null = remove exception row
     if (newStatus === null || newStatus === "present") {
       await markPresent(programId, date, athleteKey);
     } else {
-      // allowed: absent | tardy | excused | other
       await markException(programId, date, athleteKey, newStatus);
     }
 
+    setIsDirty(true);
     await loadAttendance();
   }
 
-  /* ------------------------------ ALL PRESENT btn ----------------------------- */
-  async function handleAllPresent() {
-    await markAllPresent(programId, date);
-    await loadAttendance();
+  /* ------------------------------ SUBMIT HANDLER ----------------------------- */
+  async function handleSubmit() {
+    if (!programId) return;
+
+    // if there are NO exceptions at submit time:
+    // record an explicit all_present row so the session exists historically
+    const exceptions = Object.values(statusMap).filter(
+      (s) => s && s !== "present"
+    );
+
+    if (exceptions.length === 0) {
+      await markAllPresent(programId, date);
+      await loadAttendance();
+    }
+
+    setIsDirty(false);
   }
 
   /* ----------------------------------- UI ------------------------------------ */
   return (
-    <div className="p-4 space-y-4">
-      <AttendanceHeader
-        date={date}
-        setDate={setDate}
-        onAllPresent={handleAllPresent}
+    <div className="p-6 space-y-4">
+      <AttendanceStatusBanner mode={bannerMode} exceptionsCount={exceptionsCount} />
+
+      <AttendanceRosterList
+        roster={roster}
+        statusMap={statusMap}
+        onStatusChange={handleStatusChange}
       />
-
-      <AttendanceStatusBanner type={type} />
-
-      <div className="space-y-2">
-        {roster.map((ath) => {
-          const current = map[ath.key] ?? null; // null = default present
-
-          return (
-            <div
-              key={ath.key}
-              className="flex items-center justify-between px-3 py-2 border-b border-[hsl(var(--gray-200))]"
-            >
-              <div className="text-sm">{ath.name}</div>
-
-              <StatusSelector
-                current={current}
-                onChange={(status) => handleStatusChange(ath.key, status)}
-              />
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }

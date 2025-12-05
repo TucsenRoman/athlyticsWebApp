@@ -10,6 +10,17 @@ export default {
     "./src/**/*.{ts,tsx}",
   ],
 
+  safelist: [
+    {
+      // Matches: bg-[var(--something-bg)]
+      pattern: /bg-\[var\(--[a-zA-Z0-9-_]+-bg\)\]/,
+    },
+    {
+      // Matches: text-[var(--something)]
+      pattern: /text-\[var\(--[a-zA-Z0-9-_]+\)\]/,
+    },
+  ],
+
   prefix: "",
 
   theme: {
@@ -82,7 +93,7 @@ export default {
         },
 
         /* ========================================================== */
-        /*  REALTIME COLORS — SCALES                                  */
+        /*  REALTIME COLOR SCALES                                     */
         /* ========================================================== */
 
         textScale: {
@@ -156,18 +167,12 @@ export default {
         },
       },
 
-      /* ========================================================== */
-      /*  RADII                                                     */
-      /* ========================================================== */
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
 
-      /* ========================================================== */
-      /*  ANIMATIONS                                                */
-      /* ========================================================== */
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

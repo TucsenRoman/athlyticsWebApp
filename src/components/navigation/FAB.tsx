@@ -33,12 +33,12 @@ export default function ViewFab() {
         <button
           onClick={() => setOpen(!open)}
           className="
-            w-14 h-14 rounded-full bg-primary text-white shadow-xl
+            w-14 h-14 rounded-full bg-primary text-[var(--text-light)] shadow-xl
             flex items-center justify-center
             active:scale-95 transition
           "
         >
-          <MoreVertical className="w-6 h-6" />
+          {/* <MoreVertical className="w-6 h-6" /> */}
         </button>
       </div>
     </div>

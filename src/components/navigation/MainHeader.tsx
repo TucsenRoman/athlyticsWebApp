@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import {
-  MapPinned,
-  Sparkles,
-  PencilRuler,
-} from "lucide-react";
-
+import { MapPinned, Sparkles, PencilRuler } from "lucide-react";
 import { motion } from "framer-motion";
 import ProgramSelector from "@/components/program/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
@@ -40,57 +35,32 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
     return () => window.removeEventListener("toggle-header", toggle);
   }, []);
 
-
   return (
     <EditModeContext.Provider value={{ isEditMode, setIsEditMode }}>
-      <div className="min-h-screen bg-[hsl(var(--background))] flex flex-col overflow-hidden">
+      <div className="bg-[var(--bg)] flex flex-col">
+      {/* <div className="min-h-screen bg-[var(--bg)] flex flex-col overflow-hidden"> */}
 
         {/* ------------------------------------------------------------------ */}
         {/* HEADER (Mobile + Desktop)                                         */}
         {/* ------------------------------------------------------------------ */}
         {!hideHeader && !collapsed && (
-          <header
-            className="
-              h-16 px-3 flex items-center justify-between
-              border-b border-[hsl(var(--border))]
-            "
-          >
+          <header className="h-[8vh] px-3 flex items-center justify-between border-b border-[var(--border)]">
+
             {/* LEFT — Logo + Program Selector */}
             <div className="flex justify-between items-center gap-2 w-min-content">
-              <DesktopNavPill>
+              
               {/* LOGO BUTTON */}
+              <div className="flex items-center p-1 h-10 w-[50px] rounded-md hover:bg-[var(--accent-bg)] transition-all">
                 <button
                   onClick={() => navigate("/")}
-                  className="
-                    flex items-center justify-center
-                    rounded-xl
-                    h-8 px-3
-                    transition-all
-                    hover:bg-[hsl(var(--accent))]/10
-                  "
                 >
-                  <img
-                    src="/StopWatchLogo.png"
-                    className="w-7 h-7"
-                  />
+                  <img src="/StopWatchLogo.png" className="w-8 h-8" />
                 </button>
-              </DesktopNavPill>
+              </div>
 
               <DesktopNavPill>
-              {/* PROGRAM SELECTOR */}
-                <div
-                  className="
-                    group
-                    flex items-center
-                    rounded-xl 
-                    h-8
-                    transition-all
-                    text-[hsl(var(--gray-600))]
-                    hover:bg-[hsl(var(--accent))]/10
-                    hover:text-[hsl(var(--accent))]
-                    cursor-pointer
-                  "
-                >
+                {/* PROGRAM SELECTOR */}
+                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text)] hover:bg-[var(--accent-bg)] hover:text-[var(--accent)] cursor-pointer">
                   <ProgramSelector
                     selectedProgramId={selectedProgramId}
                     onProgramChange={setSelectedProgramId}
@@ -98,39 +68,39 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                 </div>
               </DesktopNavPill>
             </div>
-            
+
             {/* RIGHT — Desktop Nav + User Menu */}
             <div className="hidden md:flex gap-2">
               <div className="flex justify-between items-center w-min-content">
                 <DesktopNavPill>
-                    <DesktopNavButton
-                      icon={<MapPinned className="w-4 h-4" />}
-                      label="Field"
-                      active={activeField}
-                      onClick={() => navigate("/field")}
-                      widthClass="w-[80px]"
-                    />
+                  <DesktopNavButton
+                    icon={<MapPinned className="w-4 h-4" />}
+                    label="Field"
+                    active={activeField}
+                    onClick={() => navigate("/field")}
+                    widthClass="w-[80px]"
+                  />
 
-                    <DesktopNavButton
-                      icon={<PencilRuler className="w-4 h-4" />}
-                      label="Workspace"
-                      active={activeWorkspace}
-                      onClick={() => navigate("/workspace")}
-                      widthClass="w-[120px]"
-                    />
+                  <DesktopNavButton
+                    icon={<PencilRuler className="w-4 h-4" />}
+                    label="Workspace"
+                    active={activeWorkspace}
+                    onClick={() => navigate("/workspace")}
+                    widthClass="w-[120px]"
+                  />
 
-                    <DesktopNavButton
-                      icon={<Sparkles className="w-4 h-4" />}
-                      label="Discovery"
-                      active={activeDiscovery}
-                      onClick={() => navigate("/discovery")}
-                      widthClass="w-[120px]"
-                    />
+                  <DesktopNavButton
+                    icon={<Sparkles className="w-4 h-4" />}
+                    label="Discovery"
+                    active={activeDiscovery}
+                    onClick={() => navigate("/discovery")}
+                    widthClass="w-[120px]"
+                  />
                 </DesktopNavPill>
-
               </div>
               <Usermenu />
             </div>
+
             {/* Mobile — User menu only */}
             <div className="md:hidden">
               <Usermenu />
@@ -167,14 +137,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
 
 function DesktopNavPill({ children }) {
   return (
-    <div
-      className="
-        flex items-center gap-1 
-        h-10 w-full px-1 py-1
-        rounded-xl
-        bg-[hsl(var(--gray-100))]
-      "
-    >
+    <div className="flex items-center gap-1 h-10 w-full px-1 py-1 rounded-xl bg-[var(--gray-100)]">
       {children}
     </div>
   );
@@ -189,7 +152,7 @@ interface DesktopNavButtonProps {
   label: string;
   active: boolean;
   onClick: () => void;
-  widthClass?: string; // 👈 ADD THIS
+  widthClass?: string;
 }
 
 function DesktopNavButton({
@@ -203,13 +166,12 @@ function DesktopNavButton({
     <button
       onClick={onClick}
       className={`
-        flex justify-center items-center gap-2 
-        h-8 px-3 rounded-xl transition-colors
+        flex justify-center items-center gap-2 h-8 px-3 rounded-xl transition-colors
         ${widthClass}
         ${
           active
-            ? "bg-[hsl(var(--accent))]/10 text-[hsl(var(--accent))] font-bold"
-            : "text-[hsl(var(--gray-600))] hover:bg-[hsl(var(--gray-200))]"
+            ? "text-[var(--text-accent)] bg-[var(--accent-bg)] font-bold"
+            : "text-[var(--text)] hover:bg-[var(--gray-200)]"
         }
       `}
     >
@@ -223,32 +185,24 @@ function DesktopNavButton({
 /* MOBILE NAV BAR                                                             */
 /* -------------------------------------------------------------------------- */
 
-function MobileBottomBar({
-  activeField,
-  activeWorkspace,
-  activeDiscovery,
-  navigate,
-}) {
+function MobileBottomBar({ activeField, activeWorkspace, activeDiscovery, navigate }) {
   return (
-    <div
-      className="
-        md:hidden fixed bottom-0 inset-x-0 h-16
-        bg-[hsl(var(--card))] border-t border-[hsl(var(--border))]
-        flex items-center justify-around
-      "
-    >
+    <div className="
+      md:hidden fixed 
+      flex items-center justify-around
+      bottom-0 inset-x-0 
+      h-[10vh] bg-[var(--light)] shadow-inner 
+    ">
       <MobileNavIcon
         icon={<MapPinned className="w-6 h-6" />}
         active={activeField}
         onClick={() => navigate("/field")}
       />
-
       <MobileNavIcon
         icon={<PencilRuler className="w-6 h-6" />}
         active={activeWorkspace}
         onClick={() => navigate("/workspace")}
       />
-
       <MobileNavIcon
         icon={<Sparkles className="w-6 h-6" />}
         active={activeDiscovery}
@@ -271,11 +225,7 @@ function MobileNavIcon({ icon, active, onClick }) {
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
       className={`
         flex flex-col items-center justify-center p-2 rounded-full
-        ${
-          active
-            ? "text-[hsl(var(--accent))] bg-[hsl(var(--accent))]/20"
-            : "text-[hsl(var(--gray-600))]"
-        }
+        ${active ? "text-[var(--text-accent)] bg-[var(--accent-bg)]" : "text-[var(--text)]"}
       `}
     >
       <motion.div

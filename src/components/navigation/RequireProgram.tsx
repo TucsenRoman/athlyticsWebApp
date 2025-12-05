@@ -29,7 +29,7 @@ export default function RequireProgram({
           max-w-md w-full h-[400px]
           rounded-3xl overflow-hidden
 
-          shadow-2xl shadow-black/20 dark:shadow-black/40
+          shadow-2xl
           p-10 flex flex-col items-center
 
           bg-cover bg-center
@@ -37,27 +37,23 @@ export default function RequireProgram({
         "
       >
         {/* Blur overlay */}
-        <div className="absolute inset-0 bg-black/50 dark:bg-black/40 backdrop-blur-[8px]" />
+        <div className="absolute inset-0 bg-[var(--black-overlay)] backdrop-blur-[8px]" />
 
         {/* Content */}
         <div className="relative flex flex-col items-center justify-start gap-10 h-full">
           <div>
             <h2 className="
-              text-2xl font-semibold 
-              text-[#fefefe] 
-              drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]
-              dark:text-white 
-              dark:drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]
+              text-2xl font-semibold
+              text-[var(--text-light)] 
+              drop-shadow-[0_1px_2px_var(--black)]
             ">
               No Program Selected
             </h2>
 
             <p className="
               p-3 leading-relaxed max-w-xs
-              text-white/80 
-              drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]
-              dark:text-white/70 
-              dark:drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]
+              text-[var(--text-light)]
+              drop-shadow-[0_1px_2px_var(--black)]
             ">
               Pick or create a program to start managing your team.
             </p>

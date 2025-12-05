@@ -77,10 +77,11 @@ export default function EditorFooterMenu({
           className={`
             h-7 w-7 flex items-center justify-center rounded-full shadow
             transition-all duration-200
+
             ${
               open
-                ? "bg-transparent hover:bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]"
-                : "bg-[hsl(var(--white))] hover:bg-[hsl(var(--gray-200))] text-[hsl(var(--gray-600))]"
+                ? "bg-transparent hover:bg-[var(--accent-bg)] text-[var(--text-accent)]"
+                : "bg-[var(--bg)] hover:bg-[var(--gray-200)] text-[var(--text)]"
             }
           `}
         >
@@ -91,15 +92,9 @@ export default function EditorFooterMenu({
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="flex items-center justify-center"
           >
-            {open ? (
-              <X size={16} />
-            ) : (
-              <Menu size={16} />
-            )}
+            {open ? <X size={16} /> : <Menu size={16} />}
           </motion.div>
-
         </button>
-
 
         {/* EXPANDED MENU ORBS */}
         <AnimatePresence>
@@ -125,11 +120,11 @@ export default function EditorFooterMenu({
                   title={item.label}
                   className="
                     h-7 w-7 rounded-full shadow-md flex items-center justify-center
-                    bg-white hover:bg-[hsl(var(--gray-100))]
+                    bg-[var(--bg)] hover:bg-[var(--gray-100)]
                     transition-all duration-200
                   "
                 >
-                  <div className="text-[hsl(var(--gray-700))]">
+                  <div className="text-[var(--text-dark)]">
                     {item.icon}
                   </div>
                 </button>

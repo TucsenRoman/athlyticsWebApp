@@ -1,11 +1,14 @@
-// components/cards/CardFormatter.tsx
+"use client";
+
 import { cn } from "@/lib/utils";
+import { CardInfo } from "@/components/cards/CardInfo";
 
 export default function CardFormatter({
   title,
   icon: Icon,
   children,
   actions,
+  infoContent,      // ⬅ renamed + clearer meaning
   onClick,
   className,
 }: {
@@ -13,6 +16,7 @@ export default function CardFormatter({
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   actions?: React.ReactNode;
+  infoContent?: React.ReactNode;     // ⬅ accepts JSX, not objects
   onClick?: () => void;
   className?: string;
 }) {
@@ -22,37 +26,58 @@ export default function CardFormatter({
       className={cn(
         `
         h-full w-full
-        rounded-xl
-        bg-white dark:bg-neutral-900
-        p-4
-        shadow-sm shadow-black/5
-        flex flex-col gap-4
+        rounded-lg
+        border border-[var(--border-dark)]
+        bg-[var(--bg)]
+        p-4 pt-2
+        shadow-lg
+        flex flex-col gap-3
         transition
-        hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40
-        `,
+      `,
         onClick && "cursor-pointer",
         className
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-center gap-2">
-        <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-primary" />
-          <span className="text-lg font-semibold">{title}</span>
+      {/* -------------------------------------------------------------- */}
+      {/* Header                                                         */}
+      {/* -------------------------------------------------------------- */}
+      <div
+        className="
+          relative
+          flex items-center justify-center
+          border-b border-[var(--border)]
+          pb-2
+        "
+      >
+        {/* Centered Icon + Title */}
+        <div className="flex items-center gap-2 pointer-events-none">
+          <Icon className="w-5 h-5 text-[var(--text-dark)]" />
+          <span className="text-lg font-semibold text-[var(--text-dark)]">
+            {title}
+          </span>
         </div>
-      </div>
 
-      {/* Subheader */}
-      <div>
-        {actions && (
-          <div className="flex items-center gap-2">
-            {actions}
+        {/* Header Info Button (top-right) */}
+        {infoContent && (
+          <div className="absolute top-0 right-0">
+            <CardInfo content={infoContent} />
           </div>
         )}
       </div>
 
-      {/* Content */}
-      <div className="flex flex-col gap-3">
+      {/* -------------------------------------------------------------- */}
+      {/* Subheader (ACTIONS ONLY)                                       */}
+      {/* -------------------------------------------------------------- */}
+      {actions && (
+        <div className="flex justify-end items-center gap-2">
+          {actions}
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------- */}
+      {/* Content                                                        */}
+      {/* -------------------------------------------------------------- */}
+      <div className="relative flex flex-col gap-3 overflow-auto pb-5">
         {children}
       </div>
     </div>

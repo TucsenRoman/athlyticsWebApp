@@ -39,10 +39,10 @@ export default function ProjectEditor({
   const [routes, setRoutes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /* ALL LEDGERS for program (DB) */
+  /* All ledgers for program (DB) */
   const [ledgers, setLedgers] = useState<{ id: string; name: string }[]>([]);
 
-  /* OPEN TABS (UI STATE) */
+  /* UI: Open Tabs */
   const [openLedgers, setOpenLedgers] = useState<
     { id: string; name: string }[]
   >([]);
@@ -172,7 +172,7 @@ export default function ProjectEditor({
   };
 
   /* ---------------------------------------------------------------------- */
-  /* CRUD: HEADERS + ENTRIES                                                */
+  /* CRUD HELPERS                                                           */
   /* ---------------------------------------------------------------------- */
 
   const reloadHeaders = async () => {
@@ -195,9 +195,6 @@ export default function ProjectEditor({
     setEntries(data || []);
   };
 
-  /* ---------------------------------------------------------------------- */
-  /* CREATE LEDGER                                                          */
-  /* ---------------------------------------------------------------------- */
   const handleCreateLedger = async () => {
     if (!programId) return;
 
@@ -218,9 +215,6 @@ export default function ProjectEditor({
     setLedgerId(data!.id);
   };
 
-  /* ---------------------------------------------------------------------- */
-  /* DELETE LEDGER (REAL DELETE)                                            */
-  /* ---------------------------------------------------------------------- */
   const handleDeleteLedger = async (id: string) => {
     if (!id) return;
 
@@ -229,17 +223,12 @@ export default function ProjectEditor({
     const remaining = ledgers.filter((l) => l.id !== id);
     setLedgers(remaining);
 
-    // Close tab as well
     setOpenLedgers((prev) => prev.filter((l) => l.id !== id));
 
-    // If deleting active ledger → move to next one
     const next = remaining[remaining.length - 1];
     setLedgerId(next?.id || "");
   };
 
-  /* ---------------------------------------------------------------------- */
-  /* CLOSE TAB (NO DELETE)                                                  */
-  /* ---------------------------------------------------------------------- */
   const handleCloseTab = (id: string) => {
     setOpenLedgers((prev) => {
       const filtered = prev.filter((l) => l.id !== id);
@@ -254,7 +243,7 @@ export default function ProjectEditor({
   };
 
   /* ---------------------------------------------------------------------- */
-  /* UI STATE FLAGS                                                         */
+  /* UI FLAGS                                                                */
   /* ---------------------------------------------------------------------- */
 
   const noLedgerSelected = !ledgerId;
@@ -265,20 +254,20 @@ export default function ProjectEditor({
   /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 bg-background">
+    <div className="flex flex-col flex-1 min-h-0 bg-[var(--bg)] text-[var(--text-dark)]">
 
       {/* MAIN AREA */}
       <div className="flex-1 flex flex-col">
         {noLedgerSelected ? (
-          <div className="flex justify-center items-center flex-1 py-24 text-muted-foreground">
+          <div className="flex justify-center items-center flex-1 py-24 text-[var(--text)]">
             No ledger selected.
           </div>
         ) : loading ? (
-          <div className="flex justify-center items-center flex-1 py-24 text-muted-foreground">
+          <div className="flex justify-center items-center flex-1 py-24 text-[var(--text)]">
             Loading...
           </div>
         ) : ledgerMissing ? (
-          <div className="flex justify-center items-center flex-1 py-24 text-muted-foreground">
+          <div className="flex justify-center items-center flex-1 py-24 text-[var(--text)]">
             Ledger not found.
           </div>
         ) : (

@@ -1,120 +1,277 @@
-// components/cards/AttendanceCard.tsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useProgramContext } from "@/hooks/useProgramContext";
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 
 import CardFormatter from "@/components/cards/CardFormatter";
+import { CardInfo } from "@/components/cards/CardInfo";
 
 import {
-  Users,
-  CheckCircle2,
-  XCircle,
-  MinusCircle,
+  BadgeCheck,
+  BadgeX,
+  BadgeAlert,
+  BadgeHelp,
+  UsersRound,
+  ThumbsUp,
+  RotateCcw,
 } from "lucide-react";
 
+import { getRoster } from "@/components/attendance/getRoster";
+import {
+  fetchAttendance,
+  markPresent,
+  markException,
+} from "@/components/attendance/useAttendance";
+
+import {
+  fromDbStatus,
+  UiAttendanceStatus,
+} from "@/components/attendance/attendanceTypes";
+
+import { useProgramContext } from "@/hooks/useProgramContext";
+import { toast } from "sonner";
+
+/* -------------------------------------------------------------------------- */
+/*  COMPONENT                                                                  */
+/* -------------------------------------------------------------------------- */
+
 export default function AttendanceCard() {
-  const navigate = useNavigate();
   const { selectedProgramId } = useProgramContext();
 
   const [loading, setLoading] = useState(true);
-  const [presentCount, setPresentCount] = useState(0);
-  const [absentCount, setAbsentCount] = useState(0);
-  const [excusedCount, setExcusedCount] = useState(0);
-  const [totalAthletes, setTotalAthletes] = useState(0);
+  const [roster, setRoster] = useState<any[]>([]);
+  const [statusMap, setStatusMap] = useState<Record<string, UiAttendanceStatus>>({});
 
   const today = format(new Date(), "yyyy-MM-dd");
 
+  /* ------------------------------------------------------------------------ */
+  /*  LOAD DATA                                                               */
+  /* ------------------------------------------------------------------------ */
+
   useEffect(() => {
-    loadAttendance();
+    if (!selectedProgramId) return;
+    loadData();
   }, [selectedProgramId]);
 
-  const loadAttendance = async () => {
+  async function loadData() {
     setLoading(true);
-    try {
-      if (!selectedProgramId) return;
 
-      // Get today's attendance rows for this program
-      const { data: attendance } = await supabase
-        .from("attendance")
-        .select("athlete_id, status")
-        .eq("program_id", selectedProgramId)
-        .eq("date", today);
+    const rawRoster = await getRoster(selectedProgramId);
 
-      if (!attendance) {
-        setTotalAthletes(0);
-        return;
+    const cleaned = rawRoster.filter((ath) => {
+      if (!ath) return false;
+      const name = String(ath.name ?? "").trim();
+      if (!name) return false;
+      if (name === "null" || name === "undefined") return false;
+      if (name.startsWith("row_")) return false;
+      return name.length >= 2;
+    });
+
+    setRoster(cleaned);
+
+    const { data: rows } = await fetchAttendance(selectedProgramId, today);
+    const map: Record<string, UiAttendanceStatus> = {};
+
+    if (rows?.length) {
+      const hasAllPresent = rows.some((r) => r.status === "all_present");
+
+      if (!hasAllPresent) {
+        for (const row of rows) {
+          const ui = fromDbStatus(row.status);
+          if (ui && row.athlete_key) {
+            map[row.athlete_key] = ui;
+          }
+        }
       }
-
-      // Total = number of unique athlete IDs
-      const uniqueAthletes = new Set(attendance.map((a) => a.athlete_id));
-      setTotalAthletes(uniqueAthletes.size);
-
-      let present = 0,
-        absent = 0,
-        excused = 0;
-
-      attendance.forEach((row) => {
-        if (row.status === "Present") present++;
-        if (row.status === "Absent") absent++;
-        if (row.status === "Excused") excused++;
-      });
-
-      setPresentCount(present);
-      setAbsentCount(absent);
-      setExcusedCount(excused);
-    } finally {
-      setLoading(false);
     }
-  };
 
-  const percent = totalAthletes
-    ? Math.round((presentCount / totalAthletes) * 100)
-    : 0;
+    setStatusMap(map);
+    setLoading(false);
+  }
 
-  const percentColor =
-    percent >= 90
-      ? "text-green-600"
-      : percent >= 75
-      ? "text-yellow-500"
-      : "text-red-500";
+  /* ------------------------------------------------------------------------ */
+  /*  UPDATE STATUS                                                           */
+  /* ------------------------------------------------------------------------ */
+
+  async function updateStatus(athleteKey: string, status: UiAttendanceStatus) {
+    if (!selectedProgramId) return;
+
+    setStatusMap((prev) => ({
+      ...prev,
+      [athleteKey]: status === "present" ? undefined : status,
+    }));
+
+    // Backend calls commented out for now
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /*  SUBMIT                                                                  */
+  /* ------------------------------------------------------------------------ */
+
+  async function submitFinal() {
+    if (!selectedProgramId) return;
+    try {
+      toast.success("Attendance submitted");
+    } catch (err) {
+      toast.error("Submit failed");
+    }
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /*  PILL COMPONENT                                                          */
+  /* ------------------------------------------------------------------------ */
+
+  function Pill({ active, color, icon: Icon, onClick }) {
+    return (
+      <button
+        onClick={onClick}
+        className={`
+          h-8 w-8 rounded-full flex items-center justify-center transition
+          ${
+            active
+              ? `bg-[var(--${color}-bg)] text-[var(--${color})]`
+              : "text-[var(--text)]"
+          }
+        `}
+      >
+        <Icon size={22} strokeWidth={2} />
+      </button>
+    );
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /*  CARD INFO CALCULATIONS                                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const info = useMemo(() => {
+    const total = roster.length;
+    const present = roster.filter((ath) => !statusMap[ath.key]).length;
+    const absent = Object.values(statusMap).filter((s) => s === "absent").length;
+    const tardy = Object.values(statusMap).filter((s) => s === "tardy").length;
+    const other = Object.values(statusMap).filter((s) => s === "other").length;
+
+    return {
+      total,
+      present,
+      absent,
+      tardy,
+      other,
+    };
+  }, [roster, statusMap]);
+
+  /* ------------------------------------------------------------------------ */
+  /*  INFO KEY                                                              */
+  /* ------------------------------------------------------------------------ */
+
+  const attendanceInfoContent = (
+    <div className="space-y-2 text-sm text-[var(--text-dark)]">
+      <div className="flex items-center gap-2 pb-1 border-b border-[var(--border)]">
+        <UsersRound size={14} className="text-[var(--text-dark)]" />
+        <span>Total: {info.total}</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <BadgeCheck size={14} className="text-[var(--fvr-green)]" />
+        <span>Present: {info.present}</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <BadgeX size={14} className="text-[var(--fvr-red)]" />
+        <span>Absent: {info.absent}</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <BadgeAlert size={14} className="text-[var(--fvr-yellow)]" />
+        <span>Tardy: {info.tardy}</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <BadgeHelp size={14} className="text-[var(--fvr-indigo)]" />
+        <span>Other: {info.other}</span>
+      </div>
+    </div>
+  );
+
+  /* ------------------------------------------------------------------------ */
+  /*  RENDER                                                                  */
+  /* ------------------------------------------------------------------------ */
 
   return (
     <CardFormatter
       title="Attendance"
-      icon={Users}
-      onClick={() => navigate("/attendance")}
+      icon={UsersRound}
+      infoContent={attendanceInfoContent}
+      actions={
+        <div className="flex items-center gap-2">
+          {/* <button
+            onClick={submitFinal}
+            className="
+              flex items-center gap-2 px-3 py-1.5
+              rounded-md
+              bg-[var(--accent-bg)] text-[var(--text-dark)]
+              hover:bg-[var(--accent-bg-hover)] transition text-sm
+            "
+          >
+            <ThumbsUp size={18} strokeWidth={2} />
+            Looks Good
+          </button>
+          <button>
+            <RotateCcw />
+          </button> */}
+        </div>
+      }
     >
       {loading ? (
-        <p className="text-sm text-neutral-500">Loading...</p>
+        <p className="text-sm text-[var(--text)]">Loading…</p>
       ) : (
-        <>
-          <div className="text-3xl font-bold">
-            <span className={percentColor}>{percent}%</span>
-          </div>
+        <div className="flex flex-col gap-2 h-full overflow-y-auto">
+          {roster.map((athlete, i) => {
+            const name = athlete.name.trim();
+            const status = statusMap[athlete.key] ?? "present";
 
-          <div className="flex items-center justify-between text-sm mt-2">
-            <div className="flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
-              {presentCount} Present
-            </div>
+            return (
+              <div
+                key={athlete.key}
+                className={`
+                  flex items-center justify-between
+                  rounded-md px-3 py-2 h-12
+                  ${i % 2 === 0 ? "bg-[var(--gray-50)]" : "bg-[var(--gray-200)]"}
+                `}
+              >
+                <div className="font-medium text-[var(--text-dark)]">{name}</div>
 
-            <div className="flex items-center gap-1">
-              <XCircle className="w-4 h-4 text-red-600" />
-              {absentCount} Absent
-            </div>
-
-            <div className="flex items-center gap-1">
-              <MinusCircle className="w-4 h-4 text-yellow-600" />
-              {excusedCount} Excused
-            </div>
-          </div>
-
-          <p className="text-xs text-neutral-500">
-            {totalAthletes} total athletes
-          </p>
-        </>
+                <div className="flex items-center gap-1 p-1 h-10 
+                  border border-[var(--border-dark)] rounded-full"
+                >
+                  <Pill
+                    active={status === "present"}
+                    icon={BadgeCheck}
+                    color="fvr-green"
+                    onClick={() => updateStatus(athlete.key, "present")}
+                  />
+                  <Pill
+                    active={status === "absent"}
+                    icon={BadgeX}
+                    color="fvr-red"
+                    onClick={() => updateStatus(athlete.key, "absent")}
+                  />
+                  <Pill
+                    active={status === "tardy"}
+                    icon={BadgeAlert}
+                    color="fvr-yellow"
+                    onClick={() => updateStatus(athlete.key, "tardy")}
+                  />
+                  <Pill
+                    active={status === "other"}
+                    icon={BadgeHelp}
+                    color="fvr-indigo"
+                    onClick={() => updateStatus(athlete.key, "other")}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </CardFormatter>
   );

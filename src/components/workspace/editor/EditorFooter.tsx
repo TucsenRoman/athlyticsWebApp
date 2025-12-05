@@ -30,12 +30,11 @@ interface EditorFooterProps {
   onDelete?: (id: string) => void;
   onCloseTab?: (id: string) => void;
 
-  onSelectLedger?: (id: string) => void; // <— FIXED
-
+  onSelectLedger?: (id: string) => void;
   programId: number;
 }
 
-/* HOOK: click outside ----------------------------------------------------- */
+/* CLICK OUTSIDE ----------------------------------------------------------- */
 
 function useClickOutside(
   refs: React.RefObject<HTMLElement>[],
@@ -88,20 +87,23 @@ export default function EditorFooter({
     load();
   }, [programId]);
 
-  /* CLICK OUTSIDE HANDLER ------------------------------------------------- */
+  /* CLICK OUTSIDE --------------------------------------------------------- */
   useClickOutside([addRef, overflowRef], () => {
     setAddOpen(false);
     setShowOverflow(false);
   });
 
-  /* RENDER --------------------------------------------------------------- */
+  /* ----------------------------------------------------------------------- */
+  /* RENDER                                                                  */
+  /* ----------------------------------------------------------------------- */
 
   return (
     <div
       className="
         h-14 flex items-center justify-between
-        px-3 border-t border-[hsl(var(--gray-200))]
-        bg-[hsl(var(--background))]
+        px-3 border-t border-[var(--border)]
+        bg-[var(--bg)]
+        text-[var(--text-dark)]
         select-none
       "
     >
@@ -109,6 +111,7 @@ export default function EditorFooter({
       <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-2">
         {openLedgers.map((ledger) => {
           const active = ledger.id === activeLedgerId;
+
           return (
             <button
               key={ledger.id}
@@ -117,15 +120,17 @@ export default function EditorFooter({
                 relative shrink-0 flex items-center gap-1
                 pl-3 pr-2 py-1 h-6 rounded-full
                 text-sm whitespace-nowrap transition
+
                 ${
                   active
-                    ? "bg-[hsl(var(--accent)/0.2)] text-[hsl(var(--accent))] shadow-md font-medium"
-                    : "bg-[hsl(var(--gray-100))] text-[hsl(var(--gray-700))] hover:bg-[hsl(var(--gray-200))] shadow hover:shadow-inner"
+                    ? "bg-[var(--accent-bg)] text-[var(--text-accent)] shadow-md font-medium"
+                    : "bg-[var(--gray-100)] text-[var(--text-dark)] hover:bg-[var(--gray-200)] shadow"
                 }
               `}
             >
               <span className="-translate-y-[1px]">{ledger.name}</span>
 
+              {/* CLOSE TAB */}
               <span
                 onClick={(e) => {
                   e.stopPropagation();
@@ -135,8 +140,8 @@ export default function EditorFooter({
                   p-1 rounded-full cursor-pointer transition
                   ${
                     active
-                      ? "hover:bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))]"
-                      : "hover:bg-[hsl(var(--gray-300))] text-[hsl(var(--gray-700))]"
+                      ? "hover:bg-[var(--accent-bg)] text-[var(--text-accent)]"
+                      : "hover:bg-[var(--gray-300)] text-[var(--text-dark)]"
                   }
                 `}
               >
@@ -160,7 +165,7 @@ export default function EditorFooter({
             onSelectLedger={(id) => {
               setAddOpen(false);
               onSelectLedger?.(id);
-              setActiveLedgerId(id); // optional fallback
+              setActiveLedgerId(id);
             }}
           />
         </div>
@@ -172,17 +177,18 @@ export default function EditorFooter({
           <div
             className="
               absolute right-0 bottom-12 z-50
-              w-48 bg-[hsl(var(--white))]
-              border border-[hsl(var(--gray-200))]
+              w-48 bg-[var(--bg)]
+              border border-[var(--border)]
               rounded-xl shadow-xl py-1
+              text-[var(--text-dark)]
             "
           >
             {activeLedger && (
               <div
                 className="
                   px-3 py-1.5 text-xs font-medium
-                  text-[hsl(var(--gray-500))]
-                  border-b border-[hsl(var(--gray-200))]
+                  text-[var(--text)]
+                  border-b border-[var(--border)]
                 "
               >
                 {activeLedger.name}
@@ -196,8 +202,8 @@ export default function EditorFooter({
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
-                text-[hsl(var(--gray-700))]
-                hover:bg-[hsl(var(--gray-100))]
+                text-[var(--text-dark)]
+                hover:bg-[var(--gray-100)]
               "
             >
               <Route className="w-4 h-4" />
@@ -211,15 +217,15 @@ export default function EditorFooter({
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
-                text-[hsl(var(--gray-700))]
-                hover:bg-[hsl(var(--gray-100))]
+                text-[var(--text-dark)]
+                hover:bg-[var(--gray-100)]
               "
             >
               <Settings className="w-4 h-4" />
               Ledger Settings
             </button>
 
-            <div className="my-1 border-t border-[hsl(var(--gray-200))]" />
+            <div className="my-1 border-t border-[var(--border)]" />
 
             <button
               onClick={() => {
@@ -228,8 +234,8 @@ export default function EditorFooter({
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
-                text-[hsl(var(--danger))]
-                hover:bg-[hsl(var(--danger)/0.1)]
+                text-[var(--danger)]
+                hover:bg-[var(--danger-bg)]
               "
             >
               <Trash2 className="w-4 h-4" />

@@ -1,3 +1,4 @@
+// src/components/workspace/attendance/StatusSelector.tsx
 "use client";
 
 import { useState } from "react";
@@ -9,26 +10,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { ChevronDown } from "lucide-react";
-
-// UI options shown to the user
-export type StatusOption =
-  | "present"
-  | "absent"
-  | "tardy"
-  | "excused"
-  | "other";
+export type StatusOption = "present" | "absent" | "tardy" | "excused" | "other";
 
 interface StatusSelectorProps {
   current: StatusOption | null; // null = default present
   onChange: (status: StatusOption | null) => void;
 }
 
-export default function StatusSelector({ current, onChange }: StatusSelectorProps) {
+const STATUS_TRIGGER_STYLES: Record<StatusOption, string> = {
+  present:
+    "bg-[var(--gray-50)] text-[var(--text-dark)] border-[var(--border)]",
+  absent:
+    "bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]",
+  tardy:
+    "bg-[var(--fvr-yellow-bg)] text-[var(--fvr-yellow)] border-[var(--fvr-yellow)]",
+  excused:
+    "bg-[var(--fvr-blue-bg)] text-[var(--fvr-blue)] border-[var(--fvr-blue)]",
+  other:
+    "bg-[var(--gray-100)] text-[var(--text-dark)] border-[var(--border)]",
+};
+
+export default function StatusSelector({
+  current,
+  onChange,
+}: StatusSelectorProps) {
   const [open, setOpen] = useState(false);
 
-  // default: present (null)
-  const displayValue = current ?? "present";
+  const displayValue: StatusOption = current ?? "present";
+  const visualClass = STATUS_TRIGGER_STYLES[displayValue];
 
   return (
     <Select
@@ -41,13 +50,15 @@ export default function StatusSelector({ current, onChange }: StatusSelectorProp
       }}
     >
       <SelectTrigger
-        className="
-          w-[130px] h-8 px-3
+        className={`
+          w-[140px] h-9 px-3
           text-sm
           flex items-center justify-between
-          border border-[hsl(var(--gray-300))]
-          bg-[hsl(var(--white))]
-        "
+          rounded-md
+          border
+          transition-colors
+          ${visualClass}
+        `}
       >
         <SelectValue />
       </SelectTrigger>

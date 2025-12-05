@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgramContext } from "@/hooks/useProgramContext";
 
-import LedgerToolbar from "@/components/ledger/LedgerToolbar";
+import LedgerToolbar from "@/components/workspace/Toolbar";
 import ProjectManager from "@/components/workspace/manager/ProjectManager";
 import ProjectEditor from "@/components/workspace/editor/ProjectEditor";
 

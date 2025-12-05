@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import FieldSearchBar from "@/components/field/FieldSearchBar";
 import FieldFeed from "@/components/field/FieldFeed";
-import NoProgramState from "@/components/navigation/RequireProgram";
+import NoProgramState from "@/components/navigation/RequireProgram"; //why is this here?
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
@@ -24,7 +24,7 @@ export default function FieldViewScreen() {
     // --- DEMO MODE SEARCH ---
     if (demoMode) {
       const demo = [
-        <div key="demo1" className="p-4 bg-neutral-100 dark:bg-neutral-800 rounded-xl">
+        <div key="demo1" className="p-4 bg-[var(--danger-bg)]">
           Demo search result for: <b>{query}</b>
         </div>,
       ];
@@ -40,7 +40,7 @@ export default function FieldViewScreen() {
   /* FIELDVIEW UI                                                           */
   /* ---------------------------------------------------------------------- */
   return (
-    <div className="w-full min-h-screen bg-white dark:bg-black">
+    <div className="flex flex-col justify-between gap-2 w-full h-[82vh] md:h-[92vh] overflow-clip py-4 bg-[var(--bg)]">
       <FieldSearchBar query={query} onChange={setQuery} />
       <FieldFeed query={query} results={results} />
     </div>

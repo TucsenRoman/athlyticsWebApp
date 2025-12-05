@@ -63,7 +63,7 @@ export default function FieldViewFeed({
             <SearchResultCardShell key={i}>{node}</SearchResultCardShell>
           ))
         ) : (
-          <div className="flex flex-col items-center justify-center py-10 space-y-4 text-neutral-500">
+          <div className="flex flex-col items-center justify-center py-10 space-y-4 text-[var(--text)]">
             {/* Icon */}
             <motion.div
               initial={{ y: 0 }}
@@ -74,7 +74,7 @@ export default function FieldViewFeed({
                 ease: "easeInOut",
               }}
             >
-              <SearchX size={40} className="text-neutral-500/80" />
+              <SearchX size={40} className="text-[var(--text)]" />
             </motion.div>
 
             {/* Message */}
@@ -86,7 +86,7 @@ export default function FieldViewFeed({
   }
 
   return (
-    <div className="relative w-full h-full bg-neutral-50 dark:bg-neutral-900">
+    <div className="relative w-full h-[90%]">
       <CardCarousel />
     </div>
   );
