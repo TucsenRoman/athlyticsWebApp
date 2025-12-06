@@ -1,10 +1,21 @@
+// src/components/attendance/AttendanceCard.tsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 
+import {
+  fetchAttendance,
+  markPresent,
+  markException,
+  markAllPresent,
+  deleteAllPresent,
+  buildAttendanceMaps,
+} from "@/components/attendance/useAttendance";
+
 import CardFormatter from "@/components/cards/CardFormatter";
-import { CardInfo } from "@/components/cards/CardInfo";
+import AttendanceCover from "@/components/attendance/AttendanceCover";
+import StatusSelector from "@/components/attendance/StatusSelector";
 
 import {
   BadgeCheck,
@@ -12,24 +23,12 @@ import {
   BadgeAlert,
   BadgeHelp,
   UsersRound,
-  ThumbsUp,
-  RotateCcw,
+  CalendarDays,
 } from "lucide-react";
 
 import { getRoster } from "@/components/attendance/getRoster";
-import {
-  fetchAttendance,
-  markPresent,
-  markException,
-} from "@/components/attendance/useAttendance";
-
-import {
-  fromDbStatus,
-  UiAttendanceStatus,
-} from "@/components/attendance/attendanceTypes";
-
+import type { UiAttendanceStatus } from "@/components/attendance/attendanceTypes";
 import { useProgramContext } from "@/hooks/useProgramContext";
-import { toast } from "sonner";
 
 /* -------------------------------------------------------------------------- */
 /*  COMPONENT                                                                  */
@@ -38,135 +37,272 @@ import { toast } from "sonner";
 export default function AttendanceCard() {
   const { selectedProgramId } = useProgramContext();
 
-  const [loading, setLoading] = useState(true);
-  const [roster, setRoster] = useState<any[]>([]);
-  const [statusMap, setStatusMap] = useState<Record<string, UiAttendanceStatus>>({});
-
   const today = format(new Date(), "yyyy-MM-dd");
 
+  const [sessionActive, setSessionActive] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [roster, setRoster] = useState<any[]>([]);
+
+  // null/undefined = present; non-null = exception
+  const [statusMap, setStatusMap] =
+    useState<Record<string, UiAttendanceStatus | null>>({});
+  const [noteMap, setNoteMap] = useState<Record<string, string>>({});
+
+  const [lastStats, setLastStats] = useState<{
+    percentPresent: number | null;
+    lastTakenDate: string | null;
+  }>({
+    percentPresent: null,
+    lastTakenDate: null,
+  });
+
   /* ------------------------------------------------------------------------ */
-  /*  LOAD DATA                                                               */
+  /*  LOAD ROSTER                                                             */
   /* ------------------------------------------------------------------------ */
 
   useEffect(() => {
     if (!selectedProgramId) return;
-    loadData();
-  }, [selectedProgramId]);
 
-  async function loadData() {
-    setLoading(true);
+    async function loadRoster() {
+      const raw = await getRoster(selectedProgramId);
 
-    const rawRoster = await getRoster(selectedProgramId);
+      const cleaned = (raw || []).filter((ath: any) => {
+        if (!ath) return false;
+        const name = String(ath.name ?? "").trim();
+        if (!name) return false;
+        if (name === "null" || name === "undefined") return false;
+        if (name.startsWith("row_")) return false;
+        return name.length >= 2;
+      });
 
-    const cleaned = rawRoster.filter((ath) => {
-      if (!ath) return false;
-      const name = String(ath.name ?? "").trim();
-      if (!name) return false;
-      if (name === "null" || name === "undefined") return false;
-      if (name.startsWith("row_")) return false;
-      return name.length >= 2;
-    });
-
-    setRoster(cleaned);
-
-    const { data: rows } = await fetchAttendance(selectedProgramId, today);
-    const map: Record<string, UiAttendanceStatus> = {};
-
-    if (rows?.length) {
-      const hasAllPresent = rows.some((r) => r.status === "all_present");
-
-      if (!hasAllPresent) {
-        for (const row of rows) {
-          const ui = fromDbStatus(row.status);
-          if (ui && row.athlete_key) {
-            map[row.athlete_key] = ui;
-          }
-        }
-      }
+      setRoster(cleaned);
     }
 
-    setStatusMap(map);
+    loadRoster();
+  }, [selectedProgramId]);
+
+  /* ------------------------------------------------------------------------ */
+  /*  PRELOAD LAST SESSION STATS (FOR COVER)                                  */
+  /* ------------------------------------------------------------------------ */
+
+  useEffect(() => {
+    if (!selectedProgramId || roster.length === 0) return;
+
+    async function loadStats() {
+      const { data } = await fetchAttendance(selectedProgramId, today);
+
+      if (!data?.length) {
+        setLastStats({
+          percentPresent: null,
+          lastTakenDate: null,
+        });
+        return;
+      }
+
+      const hasAllPresent = data.some((r) => r.status === "all_present");
+
+      if (hasAllPresent) {
+        setLastStats({
+          percentPresent: 100,
+          lastTakenDate: today,
+        });
+        return;
+      }
+
+      const total = roster.length;
+      const exceptions = data.filter((r) => r.athlete_key).length;
+      const present = total - exceptions;
+
+      setLastStats({
+        percentPresent:
+          total > 0 ? Math.round((present / total) * 100) : null,
+        lastTakenDate: today,
+      });
+    }
+
+    loadStats();
+  }, [selectedProgramId, roster.length, today]);
+
+  /* ------------------------------------------------------------------------ */
+  /*  LOAD ATTENDANCE AFTER SESSION START                                     */
+  /* ------------------------------------------------------------------------ */
+
+  async function loadAttendanceRows() {
+    if (!selectedProgramId) return;
+
+    setLoading(true);
+
+    const { data } = await fetchAttendance(selectedProgramId, today);
+
+    const { statusMap: sMap, noteMap: nMap } = buildAttendanceMaps(
+      roster,
+      data || []
+    );
+
+    setStatusMap(sMap);
+    setNoteMap(nMap);
     setLoading(false);
   }
 
   /* ------------------------------------------------------------------------ */
-  /*  UPDATE STATUS                                                           */
+  /*  START SESSION → AUTO LOG ALL PRESENT                                    */
   /* ------------------------------------------------------------------------ */
 
-  async function updateStatus(athleteKey: string, status: UiAttendanceStatus) {
+  async function startSession() {
     if (!selectedProgramId) return;
 
-    setStatusMap((prev) => ({
-      ...prev,
-      [athleteKey]: status === "present" ? undefined : status,
-    }));
+    // Create clean all_present marker for today
+    await markAllPresent(selectedProgramId, today);
 
-    // Backend calls commented out for now
+    setSessionActive(true);
+    await loadAttendanceRows();
   }
 
   /* ------------------------------------------------------------------------ */
-  /*  SUBMIT                                                                  */
+  /*  STATUS CHANGE                                                            */
   /* ------------------------------------------------------------------------ */
 
-  async function submitFinal() {
+  async function updateStatus(
+    athleteKey: string,
+    newStatus: UiAttendanceStatus
+  ) {
     if (!selectedProgramId) return;
-    try {
-      toast.success("Attendance submitted");
-    } catch (err) {
-      toast.error("Submit failed");
+
+    const previousStatus = statusMap[athleteKey];
+
+    // "No exceptions" baseline = everyone is present (null/undefined)
+    const hadNoExceptionsBefore = Object.values(statusMap).every(
+      (s) => !s || s === "present"
+    );
+
+    // Local UI update first
+    const nextMap: Record<string, UiAttendanceStatus | null> = {
+      ...statusMap,
+      [athleteKey]: newStatus === "present" ? null : newStatus,
+    };
+    setStatusMap(nextMap);
+
+    // If this is the *first* exception of the day → remove all_present row
+    if (hadNoExceptionsBefore && newStatus !== "present") {
+      await deleteAllPresent(selectedProgramId, today);
+    }
+
+    // DB mutation for this athlete
+    if (newStatus === "present") {
+      await markPresent(selectedProgramId, today, athleteKey);
+    } else {
+      await markException(
+        selectedProgramId,
+        today,
+        athleteKey,
+        newStatus,
+        noteMap[athleteKey] ?? null
+      );
+    }
+
+    // If everyone is present again → rebuild single all_present marker
+    const everyonePresent = roster.every((ath: any) => {
+      const k = ath.key;
+      const s = k === athleteKey ? nextMap[k] : statusMap[k];
+      return !s || s === "present";
+    });
+
+    if (everyonePresent) {
+      await markAllPresent(selectedProgramId, today);
     }
   }
 
   /* ------------------------------------------------------------------------ */
-  /*  PILL COMPONENT                                                          */
+  /*  NOTE CHANGE                                                              */
   /* ------------------------------------------------------------------------ */
 
-  function Pill({ active, color, icon: Icon, onClick }) {
-    return (
-      <button
-        onClick={onClick}
-        className={`
-          h-8 w-8 rounded-full flex items-center justify-center transition
-          ${
-            active
-              ? `bg-[var(--${color}-bg)] text-[var(--${color})]`
-              : "text-[var(--text)]"
-          }
-        `}
-      >
-        <Icon size={22} strokeWidth={2} />
-      </button>
+  async function updateNote(athleteKey: string, note: string) {
+    if (!selectedProgramId) return;
+
+    const current = statusMap[athleteKey];
+    if (!current || current === "present") {
+      console.warn("Cannot attach notes to present athletes.");
+      return;
+    }
+
+    // Local UI note update
+    setNoteMap((prev) => ({ ...prev, [athleteKey]: note }));
+
+    // Any note on an exception means this date is no longer a pure all_present
+    await deleteAllPresent(selectedProgramId, today);
+
+    // Upsert exception with note
+    await markException(
+      selectedProgramId,
+      today,
+      athleteKey,
+      current,
+      note
     );
   }
 
   /* ------------------------------------------------------------------------ */
-  /*  CARD INFO CALCULATIONS                                                  */
+  /*  SUMMARY FOR CARD                                                         */
   /* ------------------------------------------------------------------------ */
 
   const info = useMemo(() => {
     const total = roster.length;
-    const present = roster.filter((ath) => !statusMap[ath.key]).length;
-    const absent = Object.values(statusMap).filter((s) => s === "absent").length;
-    const tardy = Object.values(statusMap).filter((s) => s === "tardy").length;
-    const other = Object.values(statusMap).filter((s) => s === "other").length;
 
-    return {
-      total,
-      present,
-      absent,
-      tardy,
-      other,
-    };
-  }, [roster, statusMap]);
+    const present = roster.reduce((count, ath: any) => {
+      const s = statusMap[ath.key];
+      return !s || s === "present" ? count + 1 : count;
+    }, 0);
+
+    const absent = Object.values(statusMap).filter(
+      (s) => s === "absent"
+    ).length;
+    const tardy = Object.values(statusMap).filter(
+      (s) => s === "tardy"
+    ).length;
+    const other = Object.values(statusMap).filter(
+      (s) => s === "other"
+    ).length;
+
+    return { total, present, absent, tardy, other };
+  }, [statusMap, roster]);
 
   /* ------------------------------------------------------------------------ */
-  /*  INFO KEY                                                              */
+  /*  COVER FIRST (INSIDE CARD CAROUSEL)                                      */
+  /* ------------------------------------------------------------------------ */
+
+  if (!sessionActive) {
+    return (
+      <CardFormatter
+        title="Attendance"
+        icon={UsersRound}
+        actions={
+          <div className="flex items-center gap-2 text-sm text-[var(--text)]">
+            <CalendarDays size={16} />
+            <span>{format(new Date(), "MMM d, yyyy")}</span>
+          </div>
+        }
+      >
+        <div className="p-4">
+          <AttendanceCover
+            date={today}
+            rosterCount={roster.length}
+            lastSessionStats={lastStats}
+            onStart={startSession}
+          />
+        </div>
+      </CardFormatter>
+    );
+  }
+
+  /* ------------------------------------------------------------------------ */
+  /*  FULL ATTENDANCE CARD                                                     */
   /* ------------------------------------------------------------------------ */
 
   const attendanceInfoContent = (
     <div className="space-y-2 text-sm text-[var(--text-dark)]">
       <div className="flex items-center gap-2 pb-1 border-b border-[var(--border)]">
-        <UsersRound size={14} className="text-[var(--text-dark)]" />
+        <UsersRound size={14} />
         <span>Total: {info.total}</span>
       </div>
 
@@ -192,82 +328,55 @@ export default function AttendanceCard() {
     </div>
   );
 
-  /* ------------------------------------------------------------------------ */
-  /*  RENDER                                                                  */
-  /* ------------------------------------------------------------------------ */
-
   return (
     <CardFormatter
       title="Attendance"
       icon={UsersRound}
       infoContent={attendanceInfoContent}
       actions={
-        <div className="flex items-center gap-2">
-          {/* <button
-            onClick={submitFinal}
-            className="
-              flex items-center gap-2 px-3 py-1.5
-              rounded-md
-              bg-[var(--accent-bg)] text-[var(--text-dark)]
-              hover:bg-[var(--accent-bg-hover)] transition text-sm
-            "
-          >
-            <ThumbsUp size={18} strokeWidth={2} />
-            Looks Good
-          </button>
-          <button>
-            <RotateCcw />
-          </button> */}
+        <div className="flex items-center gap-2 text-sm text-[var(--text)]">
+          <CalendarDays size={16} />
+          <span>{format(new Date(), "MMM d, yyyy")}</span>
         </div>
       }
     >
       {loading ? (
         <p className="text-sm text-[var(--text)]">Loading…</p>
       ) : (
-        <div className="flex flex-col gap-2 h-full overflow-y-auto">
-          {roster.map((athlete, i) => {
-            const name = athlete.name.trim();
-            const status = statusMap[athlete.key] ?? "present";
+        <div className="flex flex-col h-full overflow-y-auto rounded-sm">
+          {roster.map((athlete: any, i: number) => {
+            const full = athlete.name.trim();
+            const key = athlete.key;
+
+            const status = (statusMap[key] ?? "present") as UiAttendanceStatus;
+            const note = noteMap[key] ?? "";
 
             return (
               <div
-                key={athlete.key}
+                key={key}
                 className={`
                   flex items-center justify-between
-                  rounded-md px-3 py-2 h-12
+                  px-3 py-2 h-14
+                  border-b border-[var(--border)]
                   ${i % 2 === 0 ? "bg-[var(--gray-50)]" : "bg-[var(--gray-200)]"}
                 `}
               >
-                <div className="font-medium text-[var(--text-dark)]">{name}</div>
-
-                <div className="flex items-center gap-1 p-1 h-10 
-                  border border-[var(--border-dark)] rounded-full"
-                >
-                  <Pill
-                    active={status === "present"}
-                    icon={BadgeCheck}
-                    color="fvr-green"
-                    onClick={() => updateStatus(athlete.key, "present")}
-                  />
-                  <Pill
-                    active={status === "absent"}
-                    icon={BadgeX}
-                    color="fvr-red"
-                    onClick={() => updateStatus(athlete.key, "absent")}
-                  />
-                  <Pill
-                    active={status === "tardy"}
-                    icon={BadgeAlert}
-                    color="fvr-yellow"
-                    onClick={() => updateStatus(athlete.key, "tardy")}
-                  />
-                  <Pill
-                    active={status === "other"}
-                    icon={BadgeHelp}
-                    color="fvr-indigo"
-                    onClick={() => updateStatus(athlete.key, "other")}
-                  />
+                <div className="flex flex-col min-w-0 leading-tight">
+                  <span className="font-medium text-[var(--text-dark)] truncate">
+                    {full.split(" ")[0]}
+                  </span>
+                  <span className="text-xs text-[var(--text)] truncate">
+                    {full.split(" ").slice(1).join(" ")}
+                  </span>
                 </div>
+
+                <StatusSelector
+                  value={status}
+                  hasNote={note.length > 0}
+                  noteValue={note}
+                  onChange={(v) => updateStatus(key, v)}
+                  onNoteSave={(n) => updateNote(key, n)}
+                />
               </div>
             );
           })}

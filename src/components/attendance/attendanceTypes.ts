@@ -8,7 +8,7 @@ export type UiAttendanceStatus =
   | "present"   // not stored in DB → means delete exception row
   | "absent"
   | "tardy"
-  | "excused"
+  // | "excused"
   | "other";
 
 /* -------------------------------------------------------------
@@ -18,7 +18,7 @@ export type UiAttendanceStatus =
 export type DbAttendanceStatus =
   | "absent"
   | "tardy"
-  | "excused"
+  // | "excused"
   | "other"
   | "all_present";
 
@@ -30,15 +30,13 @@ export function fromDbStatus(db: string): UiAttendanceStatus | null {
   switch (db) {
     case "absent":
     case "tardy":
-    case "excused":
     case "other":
       return db;
 
-    // all_present is a session-level special value
     case "all_present":
-      return "present";
+      return null; // session marker → NOT a per-athlete status
 
     default:
-      return null; // unknown or present
+      return null;
   }
 }

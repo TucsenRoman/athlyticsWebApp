@@ -2,146 +2,233 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
+
+import AttendanceCover from "@/components/attendance/AttendanceCover";
+import { AttendanceRosterList } from "./AttendanceRosterList";
+
 import {
   fetchAttendance,
-  markAllPresent,
-  markException,
   markPresent,
+  markException,
+  deleteAllPresent,
+  markAllPresent,
+  buildAttendanceMaps,
 } from "@/components/attendance/useAttendance";
-import { AttendanceStatusBanner } from "./AttendanceStatusBanner";
-import { AttendanceRosterList } from "./AttendanceRosterList";
-import type { RosterAthlete } from "./AttendanceRosterRow";
-import type { StatusOption } from "./StatusSelector";
+
+import type { UiAttendanceStatus } from "@/components/attendance/attendanceTypes";
 import { useProgramContext } from "@/hooks/useProgramContext";
 import { getRoster } from "@/components/attendance/getRoster";
-
-type AttendanceRow = {
-  id: string;
-  athlete_key: string | null;
-  status: string;
-};
 
 export default function AttendanceView() {
   const { selectedProgramId: programId } = useProgramContext();
 
-  const [date, setDate] = useState(() => {
-    const d = new Date();
-    return d.toISOString().slice(0, 10);
+  const [date] = useState(() => format(new Date(), "yyyy-MM-dd"));
+
+  const [sessionActive, setSessionActive] = useState(false);
+
+  const [roster, setRoster] = useState<any[]>([]);
+  const [statusMap, setStatusMap] =
+    useState<Record<string, UiAttendanceStatus | null>>({});
+  const [noteMap, setNoteMap] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+
+  const [lastStats, setLastStats] = useState({
+    percentPresent: null as number | null,
+    lastTakenDate: null as string | null,
   });
 
-  const [roster, setRoster] = useState<RosterAthlete[]>([]);
-  const [rows, setRows] = useState<AttendanceRow[]>([]);
-  const [statusMap, setStatusMap] = useState<
-    Record<string, StatusOption | null>
-  >({});
-  const [isDirty, setIsDirty] = useState(false);
-
-  /* ------------------------------- LOAD ROSTER ------------------------------- */
-  useEffect(() => {
-    if (!programId) return;
-    getRoster(programId).then(setRoster);
-  }, [programId]);
-
-  /* ---------------------------- LOAD ATTENDANCE ---------------------------- */
-  async function loadAttendance() {
-    if (!programId) return;
-    const { data } = await fetchAttendance(programId, date);
-    setRows((data as AttendanceRow[]) || []);
-  }
+  /* -------------------------------------------------------------------------- */
+  /*  LOAD ROSTER                                                               */
+  /* -------------------------------------------------------------------------- */
 
   useEffect(() => {
     if (!programId) return;
-    setIsDirty(false); // new date/program → reset dirty state
-    loadAttendance();
-  }, [programId, date]);
 
-  /* ------------------------- BUILD STATUS MAP FROM DB ------------------------ */
-  useEffect(() => {
-    if (!roster.length) {
-      setStatusMap({});
-      return;
+    async function loadRoster() {
+      const r = await getRoster(programId);
+
+      const cleaned = (r || []).filter((ath) => {
+        if (!ath) return false;
+        const name = String(ath.name ?? "").trim();
+        if (!name) return false;
+        if (name === "null" || name === "undefined") return false;
+        if (name.startsWith("row_")) return false;
+        return name.length >= 2;
+      });
+
+      setRoster(cleaned);
     }
 
-    const map: Record<string, StatusOption | null> = {};
-    roster.forEach((a) => {
-      map[a.key] = null; // default = present
-    });
+    loadRoster();
+  }, [programId]);
 
-    rows.forEach((row) => {
-      if (!row.athlete_key) return;
+  /* -------------------------------------------------------------------------- */
+  /*  LOAD STATS FOR COVER                                                      */
+  /* -------------------------------------------------------------------------- */
 
-      // DB stores: absent | tardy | excused | other | all_present
-      if (
-        row.status === "absent" ||
-        row.status === "tardy" ||
-        row.status === "excused" ||
-        row.status === "other"
-      ) {
-        map[row.athlete_key] = row.status;
+  useEffect(() => {
+    if (!programId || roster.length === 0) return;
+
+    async function preload() {
+      const { data } = await fetchAttendance(programId, date);
+
+      if (!data?.length) {
+        setLastStats({ percentPresent: null, lastTakenDate: null });
+        return;
       }
-    });
 
-    setStatusMap(map);
-  }, [rows, roster]);
+      const hasAllPresent = data.some((r) => r.status === "all_present");
 
-  const hasSession = rows.length > 0;
-  const exceptionsCount = roster.reduce((count, athlete) => {
-    const s = statusMap[athlete.key];
-    return s && s !== "present" ? count + 1 : count;
-  }, 0);
+      let percentPresent = 100;
 
-  const bannerMode: "none" | "clean" | "dirty" = !hasSession
-    ? "none"
-    : isDirty
-    ? "dirty"
-    : "clean";
+      if (!hasAllPresent) {
+        const exceptions = data.filter((r) => r.athlete_key).length;
+        percentPresent =
+          roster.length > 0
+            ? Math.round(((roster.length - exceptions) / roster.length) * 100)
+            : 0;
+      }
 
-  /* --------------------------- STATUS CHANGE HANDLER ------------------------- */
+      setLastStats({
+        percentPresent,
+        lastTakenDate: date,
+      });
+    }
+
+    preload();
+  }, [programId, roster.length, date]);
+
+  /* -------------------------------------------------------------------------- */
+  /*  LOAD ATTENDANCE (ONLY WHEN SESSION STARTS)                                */
+  /* -------------------------------------------------------------------------- */
+
+  useEffect(() => {
+    if (!sessionActive || !programId) return;
+
+    async function load() {
+      setLoading(true);
+      const { data } = await fetchAttendance(programId, date);
+
+      const { statusMap: sMap, noteMap: nMap } =
+        buildAttendanceMaps(roster, data || []);
+
+      setStatusMap(sMap);
+      setNoteMap(nMap);
+      setLoading(false);
+    }
+
+    load();
+  }, [sessionActive, programId, roster, date]);
+
+  /* -------------------------------------------------------------------------- */
+  /*  START SESSION — AUTO CREATE ALL_PRESENT                                   */
+  /* -------------------------------------------------------------------------- */
+
+  async function startSession() {
+    if (!programId) return;
+    setSessionActive(true);
+
+    await markAllPresent(programId, date);
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*  STATUS CHANGE (NO UI RELOAD)                                              */
+  /* -------------------------------------------------------------------------- */
+
   async function handleStatusChange(
     athleteKey: string,
-    newStatus: StatusOption | null
+    newStatus: UiAttendanceStatus | null
   ) {
     if (!programId) return;
 
-    // UI "present" = null = remove exception row
-    if (newStatus === null || newStatus === "present") {
+    const oldStatus = statusMap[athleteKey];
+
+    // Update UI immediately
+    setStatusMap((prev) => ({
+      ...prev,
+      [athleteKey]: newStatus === "present" ? null : newStatus,
+    }));
+
+    // If this is the FIRST exception → delete all_present
+    const hadNoExceptions =
+      Object.values(statusMap).every((s) => !s || s === "present");
+
+    if (hadNoExceptions && newStatus !== "present") {
+      await deleteAllPresent(programId, date);
+    }
+
+    // DB mutation
+    if (newStatus === "present" || newStatus === null) {
       await markPresent(programId, date, athleteKey);
     } else {
-      await markException(programId, date, athleteKey, newStatus);
+      await markException(
+        programId,
+        date,
+        athleteKey,
+        newStatus,
+        noteMap[athleteKey] ?? null
+      );
     }
 
-    setIsDirty(true);
-    await loadAttendance();
+    // If EVERYONE is present → rebuild to all_present
+    const everyonePresent =
+      roster.every((a) =>
+        a.key === athleteKey ? newStatus === "present" : !statusMap[a.key]
+      );
+
+    if (everyonePresent) {
+      await markAllPresent(programId, date);
+    }
   }
 
-  /* ------------------------------ SUBMIT HANDLER ----------------------------- */
-  async function handleSubmit() {
+  /* -------------------------------------------------------------------------- */
+  /*  NOTE CHANGE                                                               */
+  /* -------------------------------------------------------------------------- */
+
+  async function handleNoteChange(athleteKey: string, note: string) {
     if (!programId) return;
 
-    // if there are NO exceptions at submit time:
-    // record an explicit all_present row so the session exists historically
-    const exceptions = Object.values(statusMap).filter(
-      (s) => s && s !== "present"
-    );
+    const current = statusMap[athleteKey];
+    if (!current || current === "present") return;
 
-    if (exceptions.length === 0) {
-      await markAllPresent(programId, date);
-      await loadAttendance();
-    }
+    // Update UI
+    setNoteMap((prev) => ({ ...prev, [athleteKey]: note }));
 
-    setIsDirty(false);
+    await deleteAllPresent(programId, date);
+    await markException(programId, date, athleteKey, current, note);
   }
 
-  /* ----------------------------------- UI ------------------------------------ */
+  /* -------------------------------------------------------------------------- */
+  /*  RENDER                                                                    */
+  /* -------------------------------------------------------------------------- */
+
+  if (!sessionActive) {
+    return (
+      <div className="p-6">
+        <AttendanceCover
+          date={date}
+          rosterCount={roster.length}
+          lastSessionStats={lastStats}
+          onStart={startSession}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-4">
-      <AttendanceStatusBanner mode={bannerMode} exceptionsCount={exceptionsCount} />
-
-      <AttendanceRosterList
-        roster={roster}
-        statusMap={statusMap}
-        onStatusChange={handleStatusChange}
-      />
+      {loading ? (
+        <p className="text-sm text-[var(--text)]">Loading…</p>
+      ) : (
+        <AttendanceRosterList
+          roster={roster}
+          statusMap={statusMap}
+          noteMap={noteMap}
+          onStatusChange={handleStatusChange}
+          onNoteChange={handleNoteChange}
+        />
+      )}
     </div>
   );
 }

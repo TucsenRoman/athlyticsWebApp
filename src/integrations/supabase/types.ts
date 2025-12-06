@@ -32,8 +32,8 @@ export type Database = {
           program_id: number
           date: string
           athlete_key: string | null
-          status: "present" | "absent" | "late" | "excused" | "all_present"
-          notes: string | null
+          status: "absent" | "tardy" | "other" | "all_present"
+          note: string | null
           created_at: string
           updated_at: string
         }
@@ -42,8 +42,8 @@ export type Database = {
           program_id: number
           date: string
           athlete_key?: string | null
-          status: "present" | "absent" | "late" | "excused" | "all_present"
-          notes?: string | null
+          status: "absent" | "tardy" | "other" | "all_present"
+          note?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -52,8 +52,8 @@ export type Database = {
           program_id?: number
           date?: string
           athlete_key?: string | null
-          status?: "present" | "absent" | "late" | "excused" | "all_present"
-          notes?: string | null
+          status?: "absent" | "tardy" | "other" | "all_present"
+          note?: string | null
           created_at?: string
           updated_at?: string
         }

@@ -69,7 +69,7 @@ export default function CardFormatter({
       {/* Subheader (ACTIONS ONLY)                                       */}
       {/* -------------------------------------------------------------- */}
       {actions && (
-        <div className="flex justify-end items-center gap-2">
+        <div className="flex justify-between items-center gap-2">
           {actions}
         </div>
       )}

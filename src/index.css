@@ -31,7 +31,8 @@
     --accent-bg: rgba(248, 118, 42, 0.1);
 
     /* TEXT */
-    --text-light: var(--light);
+    --text-white: var(--light);
+    --text-light: var(--gray-300);
     --text: var(--gray-600);
     --text-dark: var(--gray-800);
     --text-accent: var(--accent);
@@ -58,11 +59,16 @@
     /* --info: #219ebc; */
 
     /* FLAVORS */
+    --fvr-test: ;
+    
     --fvr-blue: rgb(37, 99, 235);
     --fvr-blue-bg: rgba(37, 99, 235, 0.10);
 
-    --fvr-purple: rgb(147, 51, 234);
-    --fvr-purple-bg: rgba(147, 51, 234, 0.10);
+    --fvr-slate: rgb(139, 157, 180);
+    --fvr-slate-bg: rgb(139, 157, 180, 0.10);
+
+    --fvr-purple: rgb(181, 152, 254);
+    --fvr-purple-bg: rgb(181, 152, 254, 0.10);
 
     --fvr-yellow: rgb(234, 179, 8);
     --fvr-yellow-bg: rgba(234, 179, 8, 0.10);
@@ -70,11 +76,16 @@
     --fvr-red: rgb(239, 68, 68);
     --fvr-red-bg: rgba(239, 68, 68, 0.10);
 
+    --fvr-coral: rgb(232, 159, 150);
+
+    --fvr-teal: rgb(102, 217, 204);
+
     --fvr-green: rgb(22, 163, 74);
     --fvr-green-bg: rgba(22, 163, 74, 0.10);
 
     --fvr-indigo: rgb(79, 70, 229);
     --fvr-indigo-bg: rgba(79, 70, 229, 0.10);
+
 
     /* FOCUS */
     /* --focus: #f0ffb3; */
