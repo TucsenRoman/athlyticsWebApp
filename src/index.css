@@ -61,8 +61,8 @@
     /* FLAVORS */
     --fvr-test: ;
     
-    --fvr-blue: rgb(37, 99, 235);
-    --fvr-blue-bg: rgba(37, 99, 235, 0.10);
+    --fvr-blue: rgb(77, 113, 190);
+    --fvr-blue-bg: rgba(77, 113, 190, 0.10);
 
     --fvr-slate: rgb(139, 157, 180);
     --fvr-slate-bg: rgb(139, 157, 180, 0.10);
@@ -73,15 +73,16 @@
     --fvr-yellow: rgb(234, 179, 8);
     --fvr-yellow-bg: rgba(234, 179, 8, 0.10);
 
-    --fvr-red: rgb(239, 68, 68);
-    --fvr-red-bg: rgba(239, 68, 68, 0.10);
+    --fvr-red: rgb(230, 21, 21);
+    --fvr-red-bg: rgb(230, 21, 21, 0.10);
 
     --fvr-coral: rgb(232, 159, 150);
+    --fvr-coral-bg: rgb(232, 159, 150, 0.10);
 
     --fvr-teal: rgb(102, 217, 204);
 
-    --fvr-green: rgb(22, 163, 74);
-    --fvr-green-bg: rgba(22, 163, 74, 0.10);
+    --fvr-green: rgb(54, 138, 86);
+    --fvr-green-bg: rgba(54, 138, 86, 0.10);
 
     --fvr-indigo: rgb(79, 70, 229);
     --fvr-indigo-bg: rgba(79, 70, 229, 0.10);

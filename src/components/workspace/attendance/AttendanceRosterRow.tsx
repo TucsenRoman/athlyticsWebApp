@@ -42,7 +42,10 @@ export function AttendanceRosterRow({
         bg-[var(--gray-50)]
         text-[var(--text-dark)]
         min-w-0
+        hover:bg-[var(--accent-bg)]
       `,
+        // hover:text-[var(--text-light)]
+        // hover:bg-[var(--gray-800)]
         className
       )}
     >
