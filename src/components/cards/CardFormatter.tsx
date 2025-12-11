@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { CardInfo } from "@/components/cards/CardInfo";
 
 export default function CardFormatter({

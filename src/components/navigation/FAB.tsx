@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPinned, Sparkles, PencilRuler, MoreVertical } from "lucide-react";
+import { MapPinned, Sparkles, PencilRuler, MoreVertical, Dumbbell } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -18,6 +18,11 @@ export default function ViewFab() {
       icon: <PencilRuler className="w-5 h-5" />,
       route: "/workspace",
       active: location.pathname.startsWith("/workspace"),
+    },
+    {
+      icon: <Dumbbell className="w-5 h-5" />,
+      route: "/training",
+      active: location.pathname.startsWith("/training"),
     },
     {
       icon: <Sparkles className="w-5 h-5" />,

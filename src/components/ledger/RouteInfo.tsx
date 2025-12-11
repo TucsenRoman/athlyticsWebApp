@@ -23,7 +23,7 @@ import {
   buildColumnRouteInfo,
   buildRemoveSecondaryMutation,
   buildRemovePrimaryMutation,
-} from "@/lib/chain-utils";
+} from "@/utils/chain-utils";
 
 import {
   Unlink,

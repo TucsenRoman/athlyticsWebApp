@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MapPinned, Sparkles, PencilRuler } from "lucide-react";
+import { MapPinned, Sparkles, PencilRuler, Weight, Dumbbell } from "lucide-react";
 import { motion } from "framer-motion";
 import ProgramSelector from "@/components/program/ProgramSelector";
 import { useProgramContext } from "@/hooks/useProgramContext";
@@ -25,6 +25,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
 
   const activeField = location.pathname.startsWith("/field");
   const activeWorkspace = location.pathname.startsWith("/workspace");
+  const activeTraining = location.pathname.startsWith("/training");
   const activeDiscovery = location.pathname.startsWith("/discovery");
 
   // Collapse/expand header toggle
@@ -89,6 +90,14 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                     widthClass="w-[120px]"
                   />
 
+                  {/* <DesktopNavButton
+                    icon={<Dumbbell className="w-4 h-4" />}
+                    label="Training"
+                    active={activeTraining}
+                    onClick={() => navigate("/training")}
+                    widthClass="w-[120px]"
+                  /> */}
+
                   <DesktopNavButton
                     icon={<Sparkles className="w-4 h-4" />}
                     label="Discovery"
@@ -122,6 +131,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
           <MobileBottomBar
             activeField={activeField}
             activeWorkspace={activeWorkspace}
+            activeTraining={activeTraining}
             activeDiscovery={activeDiscovery}
             navigate={navigate}
           />
@@ -185,7 +195,7 @@ function DesktopNavButton({
 /* MOBILE NAV BAR                                                             */
 /* -------------------------------------------------------------------------- */
 
-function MobileBottomBar({ activeField, activeWorkspace, activeDiscovery, navigate }) {
+function MobileBottomBar({ activeField, activeWorkspace, activeTraining, activeDiscovery, navigate }) {
   return (
     <div className="
       md:hidden fixed 
@@ -202,6 +212,11 @@ function MobileBottomBar({ activeField, activeWorkspace, activeDiscovery, naviga
         icon={<PencilRuler className="w-6 h-6" />}
         active={activeWorkspace}
         onClick={() => navigate("/workspace")}
+      />
+      <MobileNavIcon
+        icon={<Dumbbell className="w-6 h-6" />}
+        active={activeTraining}
+        onClick={() => navigate("/training")}
       />
       <MobileNavIcon
         icon={<Sparkles className="w-6 h-6" />}

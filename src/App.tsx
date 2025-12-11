@@ -25,6 +25,7 @@ import DiscoveryPage from "./pages/DiscoveryPage";
 import WorkspacePage from "./pages/WorkspacePage";
 import LedgerView from "./components/ledger/LedgerView";
 import FieldPage from "./pages/FieldPage";
+import TierPage from "./pages/TierPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -104,6 +105,22 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
+
+                {/* SETTINGS: TIER MANAGEMENT — does NOT need program */}
+                <Route
+                  path="/settings/tier"
+                  element={
+                    <ProtectedRoute>
+                      <MainHeader>
+                        <TierPage />
+                      </MainHeader>
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* CATCH-ALL */}
+                <Route path="*" element={<NotFound />} />
+
 
                 {/* LEGACY REDIRECTS */}
                 <Route path="/ledger" element={<Navigate to="/discovery" replace />} />

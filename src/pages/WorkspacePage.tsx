@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useProgramContext } from "@/hooks/useProgramContext";
 
-import WorkspaceToolbar from "@/components/workspace/Toolbar";
+import WorkspaceToolbar from "@/components/workspace/workspacetoolbar/WorkspaceToolbar";
 import ProjectManager from "@/components/workspace/manager/ProjectManager";
 import ProjectEditor from "@/components/workspace/editor/ProjectEditor";
 import AttendanceView from "@/components/workspace/attendance/AttendanceView";
+import ScheduleView from "@/components/workspace/schedule/ScheduleView";
 
 export default function WorkspacePage() {
   const { selectedProgramId } = useProgramContext();
@@ -134,6 +135,8 @@ export default function WorkspacePage() {
   const [attendanceIsDirty, setAttendanceIsDirty] = useState(false);
   const [attendanceExceptionCount, setAttendanceExceptionCount] = useState(0);
 
+  const [scheduleWeekIndex, setScheduleWeekIndex] = useState(0);
+
   // offline / save failure flag
   const [attendanceSaveFailed, setAttendanceSaveFailed] = useState(false);
 
@@ -184,6 +187,8 @@ export default function WorkspacePage() {
         onSubmitAttendance={handleSubmitAttendance}
         onResetAttendance={handleResetAttendance}
         attendanceSaveFailed={attendanceSaveFailed}
+        scheduleWeekIndex={scheduleWeekIndex}
+        setScheduleWeekIndex={setScheduleWeekIndex}
       />
 
       {/* MANAGER VIEW */}
@@ -225,7 +230,10 @@ export default function WorkspacePage() {
 
       {/* SCHEDULE VIEW */}
       {mode === "schedule" && (
-        <div className="flex flex-col flex-1 min-h-0">{/* Future schedule */}</div>
+        <ScheduleView
+          scheduleWeekIndex={scheduleWeekIndex}
+          setScheduleWeekIndex={setScheduleWeekIndex}
+        />
       )}
     </div>
   );

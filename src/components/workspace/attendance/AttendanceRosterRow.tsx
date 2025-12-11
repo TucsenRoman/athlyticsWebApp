@@ -2,7 +2,7 @@
 
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import StatusSelector from "../../attendance/StatusSelector";
 import { UiAttendanceStatus } from "@/components/attendance/attendanceTypes";
 

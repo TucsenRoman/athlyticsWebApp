@@ -25,7 +25,7 @@ import {
   buildChainMap,
   buildColumnRouteInfo,
   validateAndBuildCreateRoute,
-} from "@/lib/chain-utils";
+} from "@/utils/chain-utils";
 
 import { syncRoutes } from "@/lib/route-sync";
 

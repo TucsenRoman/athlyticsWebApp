@@ -24,10 +24,10 @@ import { Button } from "@/components/ui/button";
 import Search from "@/components/navigation/Search";
 
 // VIEW IMPORTS
-import AttendanceTools from "@/components/workspace/attendance/AttendanceTools";
-import ManagerTools from "@/components/workspace/manager/ManagerTools";
-import EditorTools from "@/components/workspace/editor/EditorTools";
-import ScheduleTools from "@/components/workspace/schedule/ScheduleTools";
+import AttendanceTools from "@/components/workspace/workspacetoolbar/AttendanceTools";
+import ManagerTools from "@/components/workspace/workspacetoolbar/ManagerTools";
+import EditorTools from "@/components/workspace/workspacetoolbar/EditorTools";
+import ScheduleTools from "@/components/workspace/workspacetoolbar/ScheduleTools";
 
 import {
   normalizeAttendanceDate,
@@ -59,6 +59,10 @@ export interface ToolbarProps {
   onResetAttendance?: () => void;
 
   attendanceSaveFailed: boolean;
+
+  // SCHEDULE MODE
+  scheduleWeekIndex?: number;
+  setScheduleWeekIndex?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -112,7 +116,12 @@ export default function WorkspaceToolbar({
   onSubmitAttendance,
   onResetAttendance,
   attendanceSaveFailed,
+
+  // ADD THESE
+  scheduleWeekIndex,
+  setScheduleWeekIndex,
 }: ToolbarProps) {
+
   const [query, setQuery] = useState("");
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
 
@@ -121,6 +130,10 @@ export default function WorkspaceToolbar({
     if (mode === "manager") onManagerSearch?.(value);
     if (mode === "editor") onEditorSearch?.(value);
   };
+
+  function handleOpenScheduleAdd() {
+    window.dispatchEvent(new CustomEvent("schedule-open-add"));
+  }
 
   return (
     <div className="sticky top-0 z-40 h-20 md:h-10 py-1 px-3 flex flex-col gap-1 md:flex-row md:items-center items-start justify-between backdrop-blur bg-[var(--bg)] select-none">
@@ -198,7 +211,15 @@ export default function WorkspaceToolbar({
             />
           )}
 
-          {mode === "schedule" && <ScheduleTools />}
+          {mode === "schedule" && (
+            <ScheduleTools
+              weekLabel={`Week ${scheduleWeekIndex}`}
+              onAddEvent={handleOpenScheduleAdd}
+              onPrevWeek={() => setScheduleWeekIndex?.(i => i - 1)}
+              onNextWeek={() => setScheduleWeekIndex?.(i => i + 1)}
+              onJumpToWeekZero={() => setScheduleWeekIndex?.(0)}
+            />
+          )}
 
         {/* ================= MAX/MIN BTN ================= */}
         <div className="flex items-center p-1 h-8 w-8 bg-[var(--gray-100)] rounded-full">
