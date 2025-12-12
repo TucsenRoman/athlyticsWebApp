@@ -418,7 +418,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         ref={triggerRef}
         tabIndex={-1}
         className="
-          flex items-center gap-2
+          flex justify-center items-center gap-2
           h-full px-3
           rounded-xl
           transition-colors

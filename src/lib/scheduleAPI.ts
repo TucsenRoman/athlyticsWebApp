@@ -1,71 +1,196 @@
 // src/lib/scheduleAPI.ts
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
-import { uiTimeToMinutes } from "@/utils/schedule/time";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 /* -------------------------------------------------------------------------- */
-/* FETCH WEEK (metadata only)                                                 */
+/*  DB TYPES                                                                  */
 /* -------------------------------------------------------------------------- */
 
-export async function fetchScheduleWeek({
-  programId,
-  weekIndex,
-}: {
-  programId: number;
-  weekIndex: number;
-}) {
+export type DbScheduleWeek =
+  Database["public"]["Tables"]["schedule_weeks"]["Row"];
+
+export type DbScheduleSlot =
+  Database["public"]["Tables"]["schedule_slots"]["Row"];
+
+export type DbScheduleSubslot =
+  Database["public"]["Tables"]["schedule_subslots"]["Row"];
+
+/* -------------------------------------------------------------------------- */
+/*  WEEK QUERIES                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Fetch week by program + index.
+ */
+export async function fetchScheduleWeek(
+  programId: number,
+  weekIndex: number,
+): Promise<DbScheduleWeek | null> {
+  console.log("[fetchScheduleWeek] program:", programId, "index:", weekIndex);
+
   const { data, error } = await supabase
     .from("schedule_weeks")
-    .select("id, program_id, index")
+    .select("*")
     .eq("program_id", programId)
     .eq("index", weekIndex)
     .maybeSingle();
 
   if (error) {
-    console.error("fetchScheduleWeek error:", error);
-    return null;
+    console.error("[fetchScheduleWeek] ERROR:", error);
+    throw error;
   }
 
+  console.log("[fetchScheduleWeek] result:", data);
+  return data;
+}
+
+/**
+ * Create a new week.
+ */
+export async function createScheduleWeek(
+  programId: number,
+  weekIndex: number,
+): Promise<DbScheduleWeek> {
+  console.log("[createScheduleWeek] Creating week", weekIndex);
+
+  const { data, error } = await supabase
+    .from("schedule_weeks")
+    .insert({
+      program_id: programId,
+      index: weekIndex,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("[createScheduleWeek] ERROR:", error);
+    throw error;
+  }
+
+  console.log("[createScheduleWeek] created:", data);
   return data;
 }
 
 /* -------------------------------------------------------------------------- */
-/* FETCH ALL MAIN SLOTS FOR A WEEK                                            */
+/*  MAIN SLOT QUERIES                                                        */
 /* -------------------------------------------------------------------------- */
 
-export async function fetchScheduleMainSlots({
-  programId,
-  weekIndex,
-}: {
-  programId: number;
-  weekIndex: number;
-}) {
+export async function fetchScheduleSlots(
+  weekId: string,
+): Promise<DbScheduleSlot[]> {
+  console.log("[fetchScheduleSlots] weekId:", weekId);
+
   const { data, error } = await supabase
     .from("schedule_slots")
     .select("*")
-    .eq("program_id", programId)
-    .eq("week_index", weekIndex);
+    .eq("week_id", weekId)
+    .order("day", { ascending: true })
+    .order("start_time", { ascending: true });
 
   if (error) {
-    console.error("fetchScheduleMainSlots error:", error);
-    return [];
+    console.error("[fetchScheduleSlots] ERROR:", error);
+    throw error;
   }
 
-  return data;
+  console.log("[fetchScheduleSlots] count:", data?.length ?? 0);
+  return data ?? [];
+}
+
+export interface CreateScheduleSlotInput {
+  program_id: number;
+  week_id: string;
+  day: number;
+  title: string;
+  start_time: number;
+  end_time: number;
+  color?: string | null;
+}
+
+export async function createScheduleSlot(input: CreateScheduleSlotInput) {
+  console.log("[createScheduleSlot] inserting", input);
+
+  const { data, error } = await supabase
+    .from("schedule_slots")
+    .insert({
+      program_id: input.program_id,
+      week_id: input.week_id,
+      day: input.day,
+      title: input.title,
+      start_time: input.start_time,
+      end_time: input.end_time,
+      color: input.color ?? null,
+    })
+    .select("*");
+
+  console.log("[createScheduleSlot] result:", { data, error });
+
+  if (error) throw error;
+  return data?.[0] ?? null;
 }
 
 /* -------------------------------------------------------------------------- */
-/* FETCH SUBSLOTS                                                             */
+/*  SLOT UPDATE / DELETE                                                      */
 /* -------------------------------------------------------------------------- */
 
-export async function fetchScheduleSubslots(slotIds: string[]) {
-  if (!slotIds.length) return [];
+export async function updateScheduleSlot(
+  id: string,
+  updates: {
+    title?: string;
+    day?: number;
+    start_time?: number;
+    end_time?: number | null;
+    color?: string | null;
+    icon?: string | null;
+    location?: string | null;
+    attachment?: string | null;
+  }
+): Promise<DbScheduleSlot> {
+  console.log("[updateScheduleSlot] Updating:", id, updates);
+
+  const { data, error } = await supabase
+    .from("schedule_slots")
+    .update(updates)
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("[updateScheduleSlot] ERROR:", error);
+    throw error;
+  }
+
+  console.log("[updateScheduleSlot] updated:", data);
+  return data;
+}
+
+export async function deleteScheduleSlot(id: string): Promise<void> {
+  console.log("[deleteScheduleSlot] Deleting:", id);
+
+  const { error } = await supabase
+    .from("schedule_slots")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("[deleteScheduleSlot] ERROR:", error);
+    throw error;
+  }
+
+  console.log("[deleteScheduleSlot] success");
+}
+
+/* -------------------------------------------------------------------------- */
+/*  SUBSLOTS                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export async function fetchSubslotsForSlots(
+  slotIds: string[],
+): Promise<DbScheduleSubslot[]> {
+  if (slotIds.length === 0) return [];
+
+  console.log("[fetchSubslotsForSlots] slotIds:", slotIds);
 
   const { data, error } = await supabase
     .from("schedule_subslots")
@@ -73,112 +198,72 @@ export async function fetchScheduleSubslots(slotIds: string[]) {
     .in("slot_id", slotIds);
 
   if (error) {
-    console.error("fetchScheduleSubslots error:", error);
-    return [];
+    console.error("[fetchSubslotsForSlots] ERROR:", error);
+    throw error;
   }
 
+  console.log("[fetchSubslotsForSlots] count:", data?.length ?? 0);
+  return data ?? [];
+}
+
+export async function createScheduleSubslot(input: {
+  slot_id: string;
+  title: string;
+}): Promise<DbScheduleSubslot> {
+  console.log("[createScheduleSubslot] INSERT:", input);
+
+  const { data, error } = await supabase
+    .from("schedule_subslots")
+    .insert({
+      slot_id: input.slot_id,
+      title: input.title,
+    })
+    .select("*")
+    .single();
+
+  if (error) {
+    console.error("[createScheduleSubslot] ERROR:", error);
+    throw error;
+  }
+
+  console.log("[createScheduleSubslot] created:", data);
   return data;
 }
 
-/* -------------------------------------------------------------------------- */
-/* ADD MAIN SLOT                                                              */
-/* -------------------------------------------------------------------------- */
-
-export async function addMainSlotToWeek({
-  programId,
-  weekIndex,
-  day,
-  title,
-  time,
-  color,
-}: {
-  programId: number;
-  weekIndex: number;
-  day: number;
+export async function updateScheduleSubslot(input: {
+  id: string;
   title: string;
-  time: string | null;
-  color: string | null;
-}) {
-  const slotId = crypto.randomUUID();
+}): Promise<DbScheduleSubslot> {
+  console.log("[updateScheduleSubslot] Updating:", input.id);
 
-  const startMinutes = time ? uiTimeToMinutes(time) : null;
+  const { data, error } = await supabase
+    .from("schedule_subslots")
+    .update({ title: input.title })
+    .eq("id", input.id)
+    .select("*")
+    .single();
 
-  const { error } = await supabase.from("schedule_slots").insert({
-    id: slotId,
-    program_id: programId,
-    week_index: weekIndex,
-    day,
-    title,
-    start_time: startMinutes,
-    color,
-  });
+  if (error) {
+    console.error("[updateScheduleSubslot] ERROR:", error);
+    throw error;
+  }
 
-  if (error) throw error;
-
-  return slotId;
+  console.log("[updateScheduleSubslot] updated:", data);
+  return data;
 }
 
-/* -------------------------------------------------------------------------- */
-/* UPDATE MAIN SLOT                                                           */
-/* -------------------------------------------------------------------------- */
-
-export async function updateMainSlot({
-  programId,
-  slotId,
-  day,
-  title,
-  time,
-  color,
-}: {
-  programId: number;
-  slotId: string;
-  day: number;
-  title: string;
-  time: string | null;
-  color: string | null;
-}) {
-  const startMinutes = time ? uiTimeToMinutes(time) : null;
+export async function deleteScheduleSubslot(id: string): Promise<void> {
+  console.log("[deleteScheduleSubslot] Deleting:", id);
 
   const { error } = await supabase
-    .from("schedule_slots")
-    .update({
-      title,
-      day,
-      start_time: startMinutes,
-      color,
-    })
-    .eq("id", slotId)
-    .eq("program_id", programId);
-
-  if (error) throw error;
-}
-
-/* -------------------------------------------------------------------------- */
-/* DELETE MAIN SLOT + CASCADE SUBSLOTS                                        */
-/* -------------------------------------------------------------------------- */
-
-export async function deleteMainSlot({
-  programId,
-  slotId,
-}: {
-  programId: number;
-  slotId: string;
-}) {
-  // First delete subslots
-  const delSubs = await supabase
     .from("schedule_subslots")
     .delete()
-    .eq("slot_id", slotId)
-    .eq("program_id", programId);
+    .eq("id", id);
 
-  if (delSubs.error) throw delSubs.error;
+  if (error) {
+    console.error("[deleteScheduleSubslot] ERROR:", error);
+    throw error;
+  }
 
-  // Then delete main slot
-  const delSlot = await supabase
-    .from("schedule_slots")
-    .delete()
-    .eq("id", slotId)
-    .eq("program_id", programId);
-
-  if (delSlot.error) throw delSlot.error;
+  console.log("[deleteScheduleSubslot] deleted");
 }

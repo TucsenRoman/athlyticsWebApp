@@ -90,45 +90,43 @@ export default function ScheduleTools({
 }: ScheduleToolsProps) {
   return (
     <div className="flex items-center justify-between w-full gap-6">
-
-      {/* ------------------------------------------------------------------ */}
-      {/* LEFT — WEEK LABEL                                                  */}
-      {/* ------------------------------------------------------------------ */}
-      <span
-        className="
-          h-6 px-3 flex items-center
-          text-xs font-medium rounded-full
-          bg-[var(--gray-100)]
-          border border-[var(--border)]
-          text-[var(--text)]
-          shadow-sm
-        "
-      >
-        {weekLabel}
-      </span>
-
       {/* ------------------------------------------------------------------ */}
       {/* RIGHT — TOOLBAR BUTTONS                                           */}
       {/* ------------------------------------------------------------------ */}
       <div className="flex items-center gap-1">
 
         {/* ------------------------- */}
-        {/* WEEK NAVIGATION           */}
+        {/* WEEK NAVIGATION & LABEL   */}
         {/* ------------------------- */}
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Previous Week"
-          onClick={onPrevWeek}
+        {onPrevWeek && (
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Previous Week"
+            onClick={onPrevWeek}
+            className="
+              h-7 w-7 rounded-full
+              hover:text-[var(--accent)]
+              hover:bg-[var(--accent-bg)]
+            "
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        )}
+
+        <span
           className="
-            h-7 w-7 rounded-full
-            hover:text-[var(--accent)]
-            hover:bg-[var(--accent-bg)]
+            h-6 px-3 flex items-center
+            text-xs font-medium rounded-full
+            bg-[var(--gray-100)]
+            border border-[var(--border)]
+            text-[var(--text)]
+            shadow-sm
           "
         >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
+          {weekLabel}
+        </span>
+        
         <Button
           variant="ghost"
           size="icon"

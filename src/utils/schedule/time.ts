@@ -1,10 +1,10 @@
 // src/utils/time.ts
 
-/**
+/*/
  * Convert "6:05 PM" → minutes since midnight (1105)
  * Convert "12:00 AM" → 0
  * Convert "12:00 PM" → 720
- */
+/*/
 export function uiTimeToMinutes(input: string | null | undefined): number {
   if (!input) return Number.MAX_SAFE_INTEGER;
 

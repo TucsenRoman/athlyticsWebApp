@@ -1,16 +1,16 @@
 // src/types/scheduleTypes.ts
 
 /* -------------------------------------------------------------------------- */
-/*  WEEK ROW (Option B — NO JSON days)                                        */
+/*  WEEK ROW (schedule_weeks)                                                 */
 /* -------------------------------------------------------------------------- */
 /**
- * Represents a single week row in schedule_weeks.
- * No embedded day/slot metadata.
+ * A week contains NO slot metadata in Option B.
+ * All slots live in schedule_slots and are fetched by week_index.
  */
 export interface DbWeek {
   id: string;
   program_id: number;
-  index: number;           // week_index in DB
+  index: number;       // week_index in DB
   created_at?: string;
 }
 
@@ -18,35 +18,22 @@ export interface DbWeek {
 /*  MAIN SLOT ROW (schedule_slots)                                            */
 /* -------------------------------------------------------------------------- */
 /**
- * A single scheduled item (practice, lift, meeting, etc.)
- * One row = one event.
- *
- * Stored in schedule_slots:
- *  - id: uuid
- *  - program_id: number
- *  - week_index: number
- *  - day: number (0 = Monday)
- *  - title: string
- *  - start_time: number | null (minutes since midnight)
- *  - color: string | null
+ * One scheduled event.
+ * Stored as minutes-since-midnight (24h), never "6:30 AM".
  */
 export interface DbMainSlot {
   id: string;
   program_id: number;
   week_index: number;
-  day: number;               // 0–6 (Mon–Sun)
+  day: number;              // 0–6 (Monday–Sunday)
   title: string;
-  start_time: number | null; // stored as minutes (24h)
+  start_time: number | null;
   color?: string | null;
 }
 
 /* -------------------------------------------------------------------------- */
 /*  SUBSLOT ROW (schedule_subslots)                                           */
 /* -------------------------------------------------------------------------- */
-/**
- * Subslots attached to a main slot.
- * Example: Sprint → Blocks, Starts, Strides
- */
 export interface DbSubSlot {
   id: string;
   slot_id: string;
@@ -57,20 +44,22 @@ export interface DbSubSlot {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  UI TYPES (what ScheduleView consumes)                                     */
+/*  UI TYPES (ScheduleView consumes these — NOT DB raw types)                 */
 /* -------------------------------------------------------------------------- */
 /**
- * Subslot displayed in ScheduleView.
+ * UI representation of a subslot.
+ * `time` is formatted (e.g. "6:30 AM") — derived from start_time.
  */
 export interface UiSubSlot {
   id: string;
   title: string;
-  time?: string | null;      // UI formatted ("6:30 AM")
+  time?: string | null;      // formatted for UI
   color?: string | null;
 }
 
 /**
- * Compiled slot = main slot + merged subslots.
+ * A compiled slot = main slot merged with all attached subslots.
+ * Both main + sub slots should already have UI-formatted times at this level.
  */
 export interface UiCompiledSlot {
   id: string;

@@ -1,7 +1,6 @@
 // src/components/TimeSelector.tsx
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 /* -------------------------------------------------------------------------- */
@@ -15,8 +14,15 @@ export interface TimeSelectorProps {
   onChange: (formatted: string) => void;
 }
 
+export interface TimeRangeSelectorProps {
+  start: string | null;
+  end: string | null;
+  onChangeStart: (v: string) => void;
+  onChangeEnd: (v: string) => void;
+}
+
 /* -------------------------------------------------------------------------- */
-/*  HELPERS                                                                   */
+/*  CONSTANTS                                                                 */
 /* -------------------------------------------------------------------------- */
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -27,7 +33,7 @@ function pad(n: number) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  COMPONENT                                                                  */
+/*  MAIN TIME SELECTOR                                                        */
 /* -------------------------------------------------------------------------- */
 
 export default function TimeSelector({ value, onChange }: TimeSelectorProps) {
@@ -37,16 +43,23 @@ export default function TimeSelector({ value, onChange }: TimeSelectorProps) {
   const [minute, setMinute] = useState(parsed.minute);
   const [period, setPeriod] = useState<Period>(parsed.period);
 
+  // Sync when parent value changes
   useEffect(() => {
-    const formatted = `${hour}:${pad(minute)} ${period}`;
-    onChange(formatted);
-  }, [hour, minute, period, onChange]);
+    const next = parseTime(value);
+    setHour(next.hour);
+    setMinute(next.minute);
+    setPeriod(next.period);
+  }, [value]);
+
+  // Emit time changes upward
+  useEffect(() => {
+    onChange(`${hour}:${pad(minute)} ${period}`);
+  }, [hour, minute, period]);
 
   return (
-    <div className="flex items-center gap-3">
-
-      {/* HOURS ---------------------------------------------------------------- */}
+    <div className="flex items-center gap-1">
       <Wheel<number>
+        label="HOURS"
         values={HOURS}
         selected={hour}
         onSelect={setHour}
@@ -55,16 +68,16 @@ export default function TimeSelector({ value, onChange }: TimeSelectorProps) {
 
       <span className="text-sm opacity-60">:</span>
 
-      {/* MINUTES -------------------------------------------------------------- */}
       <Wheel<number>
+        label="MINUTES"
         values={MINUTES}
         selected={minute}
         onSelect={setMinute}
         formatter={(v) => pad(v)}
       />
 
-      {/* PERIOD (“AM” | “PM”) ------------------------------------------------- */}
       <Wheel<Period>
+        label="PERIOD"
         values={["AM", "PM"]}
         selected={period}
         onSelect={setPeriod}
@@ -75,10 +88,45 @@ export default function TimeSelector({ value, onChange }: TimeSelectorProps) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  WHEEL UI (UI/UX ONLY — NO LOGIC)                                          */
+/*  TIME RANGE SELECTOR (START + END)                                         */
+/* -------------------------------------------------------------------------- */
+
+export function TimeRangeSelector({
+  start,
+  end,
+  onChangeStart,
+  onChangeEnd,
+}: TimeRangeSelectorProps) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+      {/* START */}
+      <div className="flex flex-col">
+        <label className="text-xs font-medium text-[var(--gray-600)]">Start</label>
+        <div className="flex flex-col items-center gap-1 p-1 bg-[var(--gray-100)] rounded-lg">
+          <TimeSelector value={start} onChange={onChangeStart} />
+        </div>
+      </div>
+
+      {/* DIVIDER */}
+      <div className="hidden sm:block sm:h-6 sm:w-px sm:mt-4 sm:bg-[var(--gray-200)]"></div>
+
+      {/* END */}
+      <div className="flex flex-col">
+        <label className="text-xs font-medium text-[var(--gray-600)]">End</label>
+        <div className="flex flex-col items-center gap-1 p-1 bg-[var(--gray-100)] rounded-lg">
+          <TimeSelector value={end} onChange={onChangeEnd} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  WHEEL (AUTO-SCROLL + SNAP SELECT)                                         */
 /* -------------------------------------------------------------------------- */
 
 interface WheelProps<T extends number | string> {
+  label: string;
   values: readonly T[];
   selected: T;
   onSelect: (v: T) => void;
@@ -86,81 +134,65 @@ interface WheelProps<T extends number | string> {
 }
 
 function Wheel<T extends number | string>({
+  label,
   values,
   selected,
   onSelect,
   formatter = (v) => String(v),
 }: WheelProps<T>) {
-
   const ref = useRef<HTMLDivElement>(null);
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Automatic selection when scrolling stops
+  /* Auto-scroll to selected item on mount & when selected changes */
+  useEffect(() => {
+    if (!ref.current) return;
+    const container = ref.current;
+
+    const index = values.indexOf(selected);
+    if (index === -1) return;
+
+    const child = container.children[index] as HTMLElement | undefined;
+    if (!child) return;
+
+    const top =
+      child.offsetTop - container.clientHeight / 2 + child.clientHeight / 2;
+
+    container.scrollTo({ top, behavior: "instant" });
+  }, [selected, values]);
+
+  /* Auto-select nearest item when scrolling stops */
   const handleScroll = () => {
     if (!ref.current) return;
 
     if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
-
     scrollTimeout.current = setTimeout(() => {
-      const container = ref.current;
+      const container = ref.current!;
+      const rect = container.getBoundingClientRect();
+      const centerY = rect.top + rect.height / 2;
 
-      const containerRect = container.getBoundingClientRect();
-      const centerY = containerRect.top + containerRect.height / 2;
-
-      let closestValue: T | null = null;
-      let closestDistance = Infinity;
+      let best: T | null = null;
+      let dist = Infinity;
 
       const children = Array.from(container.children) as HTMLElement[];
 
-      children.forEach((child, index) => {
-        const rect = child.getBoundingClientRect();
-        const itemCenter = rect.top + rect.height / 2;
-        const distance = Math.abs(itemCenter - centerY);
+      children.forEach((child, idx) => {
+        const childCenter = child.getBoundingClientRect().top + child.clientHeight / 2;
+        const d = Math.abs(childCenter - centerY);
 
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestValue = values[index];
+        if (d < dist) {
+          dist = d;
+          best = values[idx];
         }
       });
 
-      if (closestValue !== null && closestValue !== selected) {
-        onSelect(closestValue);
+      if (best !== null && best !== selected) {
+        onSelect(best);
       }
     }, 80);
   };
 
-  // Scroll to next/previous item when chevrons pressed
-  const scrollByStep = (direction: "up" | "down") => {
-    if (!ref.current) return;
-
-    const container = ref.current;
-    const child = container.children[0] as HTMLElement | undefined;
-    if (!child) return;
-
-    const itemHeight = child.getBoundingClientRect().height;
-
-    container.scrollBy({
-      top: direction === "up" ? -itemHeight : itemHeight,
-      behavior: "smooth",
-    });
-  };
-
   return (
     <div className="relative group w-12 h-10 overflow-hidden border rounded-lg bg-[var(--gray-50)] select-none">
-
-      {/* TOP CHEVRON */}
-      {/* <button
-        onClick={() => scrollByStep("up")}
-        className="
-          absolute right-0 top-1 z-50          
-          opacity-0 group-hover:opacity-100 transition-opacity
-          text-[var(--gray-500)] hover:text-[var(--accent)]
-        "
-      >
-        <ChevronUp className="w-4 h-4" />
-      </button> */}
-
-      {/* Scroll container */}
       <div
         ref={ref}
         onScroll={handleScroll}
@@ -169,37 +201,18 @@ function Wheel<T extends number | string>({
         {values.map((v) => (
           <div
             key={String(v)}
-            className={`
-              snap-center cursor-pointer py-0 leading-tight
-              ${
-                v === selected
-                  ? "text-[var(--accent)]"
-                  : "text-[var(--gray-600)]"
-              }
-            `}
+            className={`snap-center cursor-pointer py-0 leading-tight ${
+              v === selected ? "text-[var(--accent)]" : "text-[var(--gray-600)]"
+            }`}
           >
             {formatter(v)}
           </div>
         ))}
       </div>
 
-      {/* BOTTOM CHEVRON */}
-      {/* <button
-        onClick={() => scrollByStep("down")}
-        className="
-          absolute right-0 bottom-1 z-50
-          opacity-0 group-hover:opacity-100 transition-opacity
-          text-[var(--gray-500)] hover:text-[var(--accent)]
-        "
-      >
-        <ChevronDown className="w-4 h-4" />
-      </button> */}
-
       {/* Fades */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-white to-transparent"></div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent"></div>
-
-      {/* Center marker */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-white to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] bg-[var(--accent-light)]" />
     </div>
   );
@@ -217,13 +230,13 @@ function parseTime(input?: string | null): {
   if (!input) return { hour: 6, minute: 0, period: "AM" };
 
   try {
-    const [timePart, periodPartRaw] = input.split(" ");
-    const [h, m] = timePart.split(":");
+    const [timePart, periodRaw] = input.split(" ");
+    const [h, m] = timePart.split(":").map(Number);
 
     return {
-      hour: clampHour(Number(h)),
-      minute: clampMinute(Number(m)),
-      period: periodPartRaw === "PM" ? "PM" : "AM",
+      hour: clampHour(h),
+      minute: clampMinute(m),
+      period: periodRaw === "PM" ? "PM" : "AM",
     };
   } catch {
     return { hour: 6, minute: 0, period: "AM" };

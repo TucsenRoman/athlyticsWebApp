@@ -1,3 +1,4 @@
+// src/pages/WorkspacePage.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -10,23 +11,53 @@ import ProjectEditor from "@/components/workspace/editor/ProjectEditor";
 import AttendanceView from "@/components/workspace/attendance/AttendanceView";
 import ScheduleView from "@/components/workspace/schedule/ScheduleView";
 
+/* -------------------------------------------------------------------------- */
+/* COMPONENT                                                                  */
+/* -------------------------------------------------------------------------- */
+
 export default function WorkspacePage() {
   const { selectedProgramId } = useProgramContext();
 
-  /* -------------------------------------------------------------------------- */
-  /* WORKSPACE MODE                                                             */
-  /* -------------------------------------------------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* MODE                                                                   */
+  /* ---------------------------------------------------------------------- */
+
   const [mode, setMode] = useState<
     "manager" | "editor" | "attendance" | "schedule"
   >("manager");
+
+  /* ---------------------------------------------------------------------- */
+  /* MANAGER / EDITOR SHARED STATE                                          */
+  /* ---------------------------------------------------------------------- */
 
   const [searchQuery, setSearchQuery] = useState("");
   const [ledgerId, setLedgerId] = useState<string>("");
   const [path, setPath] = useState<string[]>([]);
 
-  /* -------------------------------------------------------------------------- */
-  /* 1. Load FIRST ledger                                                      */
-  /* -------------------------------------------------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* SCHEDULE                                                               */
+  /* ---------------------------------------------------------------------- */
+
+  // Start at week 1 (and we clamp navigation so it can't go below 1)
+  const [scheduleWeekIndex, setScheduleWeekIndex] = useState(1);
+  const [showAddSlot, setShowAddSlot] = useState(false);
+
+  /* ---------------------------------------------------------------------- */
+  /* ATTENDANCE                                                             */
+  /* ---------------------------------------------------------------------- */
+
+  const [attendanceDate, setAttendanceDate] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+  const [attendanceHasSession, setAttendanceHasSession] = useState(false);
+  const [attendanceIsDirty, setAttendanceIsDirty] = useState(false);
+  const [attendanceExceptionCount, setAttendanceExceptionCount] = useState(0);
+  const [attendanceSaveFailed, setAttendanceSaveFailed] = useState(false);
+
+  /* ---------------------------------------------------------------------- */
+  /* LOAD FIRST LEDGER                                                      */
+  /* ---------------------------------------------------------------------- */
+
   const loadFirstLedger = useCallback(async () => {
     if (!selectedProgramId) return;
 
@@ -45,110 +76,92 @@ export default function WorkspacePage() {
     loadFirstLedger();
   }, [loadFirstLedger]);
 
-  /* -------------------------------------------------------------------------- */
-  /* 2. Breadcrumb Path                                                         */
-  /* -------------------------------------------------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* BREADCRUMB PATH                                                        */
+  /* ---------------------------------------------------------------------- */
+
   const loadPath = useCallback(async () => {
-    if (mode === "manager") {
-      setPath([]);
-      return;
+    switch (mode) {
+      case "manager":
+        setPath([]);
+        return;
+
+      case "attendance":
+        setPath(["Attendance"]);
+        return;
+
+      case "schedule":
+        setPath(["Schedule"]);
+        return;
+
+      case "editor": {
+        if (!ledgerId) {
+          setPath(["No Path"]);
+          return;
+        }
+
+        const { data: ledger } = await supabase
+          .from("ledgers")
+          .select("name")
+          .eq("id", ledgerId)
+          .maybeSingle();
+
+        if (!ledger) {
+          setPath(["No Path"]);
+          return;
+        }
+
+        const { data: link } = await supabase
+          .from("package_items")
+          .select("package_id")
+          .eq("ledger_id", ledgerId)
+          .maybeSingle();
+
+        if (!link?.package_id) {
+          setPath([ledger.name ?? "Ledger"]);
+          return;
+        }
+
+        const { data: pkg } = await supabase
+          .from("packages")
+          .select("name")
+          .eq("id", link.package_id)
+          .maybeSingle();
+
+        setPath([pkg?.name ?? "", ledger.name ?? "Ledger"]);
+        return;
+      }
     }
-
-    if (mode === "attendance") {
-      setPath(["Attendance"]);
-      return;
-    }
-
-    if (mode === "schedule") {
-      setPath(["Schedule"]);
-      return;
-    }
-
-    if (!ledgerId) {
-      setPath(["No Path"]);
-      return;
-    }
-
-    const { data: ledger } = await supabase
-      .from("ledgers")
-      .select("name")
-      .eq("id", ledgerId)
-      .maybeSingle();
-
-    if (!ledger) {
-      setPath(["No Path"]);
-      return;
-    }
-
-    const { data: link } = await supabase
-      .from("package_items")
-      .select("package_id")
-      .eq("ledger_id", ledgerId)
-      .maybeSingle();
-
-    if (!link?.package_id) {
-      setPath([ledger.name ?? "Ledger"]);
-      return;
-    }
-
-    const { data: pkg } = await supabase
-      .from("packages")
-      .select("name")
-      .eq("id", link.package_id)
-      .maybeSingle();
-
-    if (!pkg) {
-      setPath([ledger.name ?? "Ledger"]);
-      return;
-    }
-
-    setPath([pkg.name, ledger.name ?? "Ledger"]);
   }, [mode, ledgerId]);
 
   useEffect(() => {
     loadPath();
   }, [loadPath]);
 
-  /* -------------------------------------------------------------------------- */
-  /* 3. GLOBAL EVENT LISTENER                                                   */
-  /* -------------------------------------------------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* GLOBAL PROGRAM UPDATED LISTENER                                        */
+  /* ---------------------------------------------------------------------- */
+
   useEffect(() => {
-    const handler = () => {
-      console.log("🔄 WorkspacePage: program-updated → refreshing UI");
+    function handler() {
+      console.log("🔄 program-updated → refreshing UI");
       loadFirstLedger();
       loadPath();
-    };
+    }
 
     window.addEventListener("program-updated", handler);
     return () => window.removeEventListener("program-updated", handler);
   }, [loadFirstLedger, loadPath]);
 
-  /* -------------------------------------------------------------------------- */
-  /* ATTENDANCE STATE (shared across toolbar + view)                            */
-  /* -------------------------------------------------------------------------- */
-
-  const [attendanceDate, setAttendanceDate] = useState(
-    new Date().toISOString().substring(0, 10)
-  );
-
-  const [attendanceHasSession, setAttendanceHasSession] = useState(false);
-  const [attendanceIsDirty, setAttendanceIsDirty] = useState(false);
-  const [attendanceExceptionCount, setAttendanceExceptionCount] = useState(0);
-
-  const [scheduleWeekIndex, setScheduleWeekIndex] = useState(0);
-
-  // offline / save failure flag
-  const [attendanceSaveFailed, setAttendanceSaveFailed] = useState(false);
+  /* ---------------------------------------------------------------------- */
+  /* ATTENDANCE ACTIONS                                                     */
+  /* ---------------------------------------------------------------------- */
 
   function handleSubmitAttendance() {
-    // If you ever add a manual "Save" flow, reset flags here
     setAttendanceIsDirty(false);
     setAttendanceSaveFailed(false);
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* RESET ATTENDANCE FOR CURRENT DATE                                          */
-  /* -------------------------------------------------------------------------- */
   async function handleResetAttendance() {
     if (!selectedProgramId) return;
 
@@ -158,19 +171,18 @@ export default function WorkspacePage() {
       .eq("program_id", selectedProgramId)
       .eq("date", attendanceDate);
 
-    // Reset UI
     setAttendanceIsDirty(false);
     setAttendanceExceptionCount(0);
     setAttendanceHasSession(false);
     setAttendanceSaveFailed(false);
 
-    // Force reload in AttendanceView for this same date
+    // Re-trigger AttendanceView reload for same date
     setAttendanceDate(attendanceDate);
   }
 
-  /* -------------------------------------------------------------------------- */
-  /* RENDER                                                                     */
-  /* -------------------------------------------------------------------------- */
+  /* ---------------------------------------------------------------------- */
+  /* RENDER                                                                  */
+  /* ---------------------------------------------------------------------- */
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
@@ -179,6 +191,7 @@ export default function WorkspacePage() {
         setMode={setMode}
         path={path}
         onEditorSearch={setSearchQuery}
+        // ATTENDANCE
         attendanceDate={attendanceDate}
         setAttendanceDate={setAttendanceDate}
         attendanceHasSession={attendanceHasSession}
@@ -187,18 +200,20 @@ export default function WorkspacePage() {
         onSubmitAttendance={handleSubmitAttendance}
         onResetAttendance={handleResetAttendance}
         attendanceSaveFailed={attendanceSaveFailed}
+        // SCHEDULE
         scheduleWeekIndex={scheduleWeekIndex}
         setScheduleWeekIndex={setScheduleWeekIndex}
+        onScheduleAdd={() => setShowAddSlot(true)}
       />
 
-      {/* MANAGER VIEW */}
+      {/* MANAGER ---------------------------------------------------------- */}
       {mode === "manager" && selectedProgramId && (
         <div className="flex flex-col flex-1 min-h-0">
           <ProjectManager programId={selectedProgramId} />
         </div>
       )}
 
-      {/* EDITOR VIEW */}
+      {/* EDITOR ----------------------------------------------------------- */}
       {mode === "editor" && selectedProgramId && (
         <div className="flex flex-col flex-1 min-h-0">
           <ProjectEditor
@@ -210,7 +225,7 @@ export default function WorkspacePage() {
         </div>
       )}
 
-      {/* ATTENDANCE VIEW */}
+      {/* ATTENDANCE ------------------------------------------------------- */}
       {mode === "attendance" && selectedProgramId && (
         <div className="flex flex-col flex-1 min-h-0">
           <AttendanceView
@@ -228,12 +243,17 @@ export default function WorkspacePage() {
         </div>
       )}
 
-      {/* SCHEDULE VIEW */}
-      {mode === "schedule" && (
-        <ScheduleView
-          scheduleWeekIndex={scheduleWeekIndex}
-          setScheduleWeekIndex={setScheduleWeekIndex}
-        />
+      {/* SCHEDULE --------------------------------------------------------- */}
+      {mode === "schedule" && selectedProgramId && (
+        <div className="flex flex-col flex-1 min-h-0">
+          <ScheduleView
+            programId={selectedProgramId}
+            scheduleWeekIndex={scheduleWeekIndex}
+            setScheduleWeekIndex={setScheduleWeekIndex}
+            triggerAddSlot={showAddSlot}
+            setTriggerAddSlot={setShowAddSlot}
+          />
+        </div>
       )}
     </div>
   );

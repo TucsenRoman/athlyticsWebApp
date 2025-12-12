@@ -1,67 +1,193 @@
-// src/utils/scheduleCompiler.ts
-"use client";
+// src/utils/schedule/scheduleCompiler.ts
 
-import type { DbMainSlot, DbSubSlot, UiCompiledSlot } from "@/types/scheduleTypes_TEMP";
+import type { Database } from "@/integrations/supabase/types";
 
 /* -------------------------------------------------------------------------- */
-/*  COMPILE DAY SCHEDULE (Option B)                                           */
+/*  DB ROW TYPES                                                              */
 /* -------------------------------------------------------------------------- */
-/**
- * Given:
- *  - day (0–6)
- *  - all main slots for the week
- *  - all subslots for the week
- *
- * Produces:
- *  - UiCompiledSlot[] sorted by start_time
- */
-export function compileDaySchedule({
-  day,
-  main,
-  subs,
-}: {
+
+export type DbScheduleWeek =
+  Database["public"]["Tables"]["schedule_weeks"]["Row"];
+
+export type DbScheduleSlot =
+  Database["public"]["Tables"]["schedule_slots"]["Row"];
+
+export type DbScheduleSubslot =
+  Database["public"]["Tables"]["schedule_subslots"]["Row"];
+
+/* -------------------------------------------------------------------------- */
+/*  UI TYPES                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export interface UiScheduleSubslot {
+  id: string;
+  title: string;
+}
+
+export interface UiScheduleSlot {
+  id: string;
+  day: number;               // 0–6
+  title: string;
+
+  startMinutes: number;
+  endMinutes: number;
+
+  startLabel: string;
+  endLabel: string;
+
+  color: string | null;
+  subslots: UiScheduleSubslot[];
+
+  // ⭐ NEW FIELDS (for edit modal + details modal)
+  location: string | null;
+  icon: string | null;
+  attachment: string | null;
+
+  allDay: boolean;
+  noEnd: boolean;
+}
+
+export interface UiScheduleDay {
   day: number;
-  main: DbMainSlot[];
-  subs: DbSubSlot[];
-}): UiCompiledSlot[] {
+  slots: UiScheduleSlot[];
+}
 
-  // 1) filter slots belonging to this day
-  const daySlots = main.filter((slot) => slot.day === day);
-
-  // 2) sort by start_time (null → last)
-  const sorted = [...daySlots].sort((a, b) => {
-    const aTime = a.start_time ?? Number.MAX_SAFE_INTEGER;
-    const bTime = b.start_time ?? Number.MAX_SAFE_INTEGER;
-    return aTime - bTime;
-  });
-
-  // 3) attach subslots
-  return sorted.map((slot) => ({
-    id: slot.id,
-    title: slot.title,
-    color: slot.color ?? null,
-    time: slot.start_time !== null ? minutesToUi(slot.start_time) : null,
-    subslots: subs
-      .filter((s) => s.slot_id === slot.id)
-      .map((s) => ({
-        id: s.id,
-        title: s.title,
-        color: s.color ?? null,
-        time: s.start_time !== null ? minutesToUi(s.start_time) : null,
-      })),
-  }));
+export interface UiCompiledWeek {
+  id: string;
+  index: number;
+  days: UiScheduleDay[];
 }
 
 /* -------------------------------------------------------------------------- */
-/*  HELPERS                                                                    */
+/*  DEBUG TOGGLE                                                              */
 /* -------------------------------------------------------------------------- */
 
-function minutesToUi(mins: number): string {
-  const h24 = Math.floor(mins / 60);
-  const m = mins % 60;
+const DEBUG = true;
 
-  const period = h24 >= 12 ? "PM" : "AM";
-  const h12 = ((h24 + 11) % 12) + 1;
+function dlog(...args: any[]) {
+  if (DEBUG) console.log("[scheduleCompiler]", ...args);
+}
 
-  return `${h12}:${m.toString().padStart(2, "0")} ${period}`;
+/* -------------------------------------------------------------------------- */
+/*  HELPERS                                                                   */
+/* -------------------------------------------------------------------------- */
+
+function formatMinutesToLabel(totalMinutes: number | null): string {
+  if (totalMinutes == null || typeof totalMinutes !== "number") {
+    return "";
+  }
+
+  const clamped = Math.max(0, Math.floor(totalMinutes));
+  const hours24 = Math.floor(clamped / 60);
+  const minutes = clamped % 60;
+
+  const period = hours24 >= 12 ? "PM" : "AM";
+  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+
+  const minuteStr = minutes.toString().padStart(2, "0");
+
+  return `${hours12}:${minuteStr} ${period}`;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  COMPILER                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export function compileScheduleWeek(
+  week: DbScheduleWeek,
+  slots: DbScheduleSlot[],
+  subslots: DbScheduleSubslot[],
+): UiCompiledWeek {
+
+  // dlog("Raw Week:", week);
+  // dlog("Raw Slots:", slots);
+  // dlog("Raw Subslots:", subslots);
+
+  /* ---------------------------------------------------------------------- */
+  /*  SUBSLOT MAPPING                                                       */
+  /* ---------------------------------------------------------------------- */
+
+  const subslotMap = new Map<string, UiScheduleSubslot[]>();
+
+  for (const sub of subslots) {
+    if (!sub.slot_id) {
+      // dlog("WARNING: subslot missing slot_id:", sub);
+      continue;
+    }
+
+    const list = subslotMap.get(sub.slot_id) ?? [];
+    list.push({ id: sub.id, title: sub.title });
+    subslotMap.set(sub.slot_id, list);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /*  BUILD UI SLOTS                                                        */
+  /* ---------------------------------------------------------------------- */
+
+  const uiSlots: UiScheduleSlot[] = slots.map((slot) => {
+    if (slot.day < 0 || slot.day > 6) {
+      dlog("ERROR: Slot has invalid day:", slot);
+    }
+
+    const slotSubslots = subslotMap.get(slot.id) ?? [];
+
+    const startMinutes = slot.start_time ?? 0;
+    const endMinutes = slot.end_time ?? startMinutes;
+
+    return {
+      id: slot.id,
+      day: slot.day,
+
+      title: slot.title ?? "(untitled)",
+
+      startMinutes,
+      endMinutes,
+
+      startLabel: formatMinutesToLabel(startMinutes),
+      endLabel: formatMinutesToLabel(endMinutes),
+
+      color: slot.color,
+      subslots: slotSubslots,
+
+      location: (slot as any).location ?? null,
+      icon: (slot as any).icon ?? null,
+      attachment: (slot as any).attachment ?? null,
+
+      allDay: Boolean((slot as any).all_day),
+      noEnd: Boolean((slot as any).no_end),
+    };
+  });
+
+  // dlog("Built UiSlots:", uiSlots);
+
+  /* ---------------------------------------------------------------------- */
+  /*  GROUP BY DAY                                                          */
+  /* ---------------------------------------------------------------------- */
+
+  const days: UiScheduleDay[] = [];
+
+  for (let d = 0; d < 7; d++) {
+    const daySlots = uiSlots
+      .filter((s) => s.day === d)
+      .sort((a, b) => {
+        if (a.startMinutes !== b.startMinutes) {
+          return a.startMinutes - b.startMinutes;
+        }
+        return a.endMinutes - b.endMinutes;
+      });
+
+    // dlog(`Day ${d}:`, daySlots);
+
+    days.push({ day: d, slots: daySlots });
+  }
+
+  const compiled: UiCompiledWeek = {
+    id: week.id,
+    index: week.index,
+    days,
+  };
+
+  // dlog("FINAL COMPILED WEEK:", compiled);
+
+  return compiled;
 }

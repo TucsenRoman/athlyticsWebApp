@@ -13,7 +13,7 @@ import AttendanceCard from "@/components/cards/fixed/AttendanceCard";
 import NotesCard from "@/components/cards/fixed/NotesCard";
 import MeetDayCard from "@/components/cards/fixed/MeetDayCard";
 import WeatherCard from "@/components/cards/fixed/WeatherCard";
-import CalendarCard from "@/components/cards/fixed/CalendarCard";
+import CalendarCard from "@/components/cards/fixed/ScheduleCard";
 import PostMeetSummaryCard from "@/components/cards/fixed/PostMeetSummaryCard";
 import PerformanceSummaryCard from "@/components/cards/fixed/PerformanceSummaryCard";
 

@@ -69,6 +69,106 @@ export type Database = {
       },
 
       /* ====================================================================== */
+      /*  SCHEDULE WEEKS                                                        */
+      /* ====================================================================== */
+       schedule_weeks: {
+        Row: {
+          id: string
+          program_id: number
+          index: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          program_id: number
+          index: number
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["schedule_weeks"]["Insert"]>
+        Relationships: [
+          {
+            foreignKeyName: "schedule_weeks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
+      /*  SCHEDULE SLOTS                                                        */
+      /* ====================================================================== */
+      schedule_slots: {
+        Row: {
+          id: string
+          program_id: number
+          week_id: string
+          day: number       // 0–6
+          title: string
+          start_time: number
+          end_time: number
+          color: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          program_id: number
+          week_id: string
+          day: number
+          title: string
+          start_time: number
+          end_time: number
+          color?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["schedule_slots"]["Insert"]>
+        Relationships: [
+          {
+            foreignKeyName: "schedule_slots_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_weeks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_slots_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+
+      /* ====================================================================== */
+      /*  SCHEDULE SUBSLOTS                                                     */
+      /* ====================================================================== */
+      schedule_subslots: {
+        Row: {
+          id: string
+          slot_id: string
+          title: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          slot_id: string
+          title: string
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["schedule_subslots"]["Insert"]>
+        Relationships: [
+          {
+            foreignKeyName: "schedule_subslots_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "schedule_slots"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      /* ====================================================================== */
       /*  ITEM SHARES                                                           */
       /* ====================================================================== */
       item_shares: {

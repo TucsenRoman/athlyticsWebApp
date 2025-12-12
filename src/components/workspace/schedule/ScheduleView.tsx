@@ -1,215 +1,328 @@
 // src/components/workspace/schedule/ScheduleView.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-
-import { compileDaySchedule } from "@/utils/schedule/scheduleCompiler";
-import type { DbMainSlot, DbSubSlot, UiCompiledSlot } from "@/types/scheduleTypes_TEMP";
+import { useEffect, useState, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 import {
-  supabase,
-  fetchScheduleSubslots,
-  addMainSlotToWeek,
+  fetchScheduleWeek,
+  createScheduleWeek,
+  fetchScheduleSlots,
+  fetchSubslotsForSlots,
+  createScheduleSlot,
+  updateScheduleSlot,
+  type DbScheduleWeek,
+  type DbScheduleSlot,
+  type DbScheduleSubslot,
 } from "@/lib/scheduleAPI";
 
-import { useProgramContext } from "@/hooks/useProgramContext";
-import ScheduleAddSlot from "@/components/workspace/schedule/ScheduleAddSlot";
+import {
+  compileScheduleWeek,
+  type UiCompiledWeek,
+} from "@/utils/schedule/scheduleCompiler";
+
+import { deleteScheduleSlot } from "@/lib/scheduleAPI";
+
+import ScheduleAddSlot from "./ScheduleAddSlot";
+import ScheduleSlotDetails from "./ScheduleSlotDetails";
+import ScheduleEditSlot from "./ScheduleEditSlot";
 
 /* -------------------------------------------------------------------------- */
-/* PROPS                                                                       */
+/*  PROPS                                                                     */
 /* -------------------------------------------------------------------------- */
 
 interface ScheduleViewProps {
+  programId: number;
   scheduleWeekIndex: number;
   setScheduleWeekIndex: React.Dispatch<React.SetStateAction<number>>;
+  triggerAddSlot: boolean;
+  setTriggerAddSlot: (v: boolean) => void;
 }
 
 /* -------------------------------------------------------------------------- */
-/* COLOR MAP                                                                   */
-/* -------------------------------------------------------------------------- */
 
-const COLOR_MAP: Record<string, string> = {
-  blue: "bg-blue-200 border-blue-400",
-  "blue-sub": "bg-blue-100 border-blue-300",
-
-  green: "bg-green-200 border-green-400",
-  "green-sub": "bg-green-100 border-green-300",
-
-  purple: "bg-purple-200 border-purple-400",
-  "purple-sub": "bg-purple-100 border-purple-300",
-
-  red: "bg-red-200 border-red-400",
-  "red-sub": "bg-red-100 border-red-300",
-
-  gray: "bg-gray-200 border-gray-400",
-  "gray-sub": "bg-gray-100 border-gray-300",
-};
-
-/* -------------------------------------------------------------------------- */
-/* DAYS                                                                        */
-/* -------------------------------------------------------------------------- */
-
-const DAYS = [
-  { key: "monday", label: "Monday", index: 0 },
-  { key: "tuesday", label: "Tuesday", index: 1 },
-  { key: "wednesday", label: "Wednesday", index: 2 },
-  { key: "thursday", label: "Thursday", index: 3 },
-  { key: "friday", label: "Friday", index: 4 },
-  { key: "saturday", label: "Saturday", index: 5 },
-  { key: "sunday", label: "Sunday", index: 6 },
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const FULL_DAY_LABELS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
 ];
 
 /* -------------------------------------------------------------------------- */
-/* MAIN COMPONENT                                                              */
+/*  COLOR MAPS — USING ATHLYTICS FLAVORS                                      */
+/* -------------------------------------------------------------------------- */
+
+const SLOT_COLOR_MAP: Record<string, string> = {
+  blue:   "bg-[var(--fvr-blue-md)]",
+  slate:  "bg-[var(--fvr-slate-md)]",
+  purple: "bg-[var(--fvr-purple-md)]",
+  yellow: "bg-[var(--fvr-yellow-md)]",
+  red:    "bg-[var(--fvr-red-md)]",
+  coral:  "bg-[var(--fvr-coral-md)]",
+  teal:   "bg-[var(--fvr-teal-md)]",
+  green:  "bg-[var(--fvr-green-md)]",
+  indigo: "bg-[var(--fvr-indigo-md)]",
+};
+
+const SUBSLOT_COLOR_MAP: Record<string, string> = {
+  blue:   "bg-[var(--fvr-blue-bg)]",
+  slate:  "bg-[var(--fvr-slate-bg)]",
+  purple: "bg-[var(--fvr-purple-bg)]",
+  yellow: "bg-[var(--fvr-yellow-bg)]",
+  red:    "bg-[var(--fvr-red-bg)]",
+  coral:  "bg-[var(--fvr-coral-bg)]",
+  teal:   "bg-[var(--fvr-teal-bg)]",
+  green:  "bg-[var(--fvr-green-bg)]",
+  indigo: "bg-[var(--fvr-indigo-bg)]",
+};
+
+
+function normalizeColorKey(raw?: string | null): keyof typeof SLOT_COLOR_MAP {
+  if (!raw) return "gray";
+  const cleaned = raw.replace("slot-", ""); // supports "blue" & "slot-blue"
+  if (cleaned in SLOT_COLOR_MAP) return cleaned as keyof typeof SLOT_COLOR_MAP;
+  return "gray";
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ADD SLOT PAYLOAD (FROM MODAL)                                             */
+/* -------------------------------------------------------------------------- */
+
+interface AddSlotFormPayload {
+  title: string;
+  color: string | null;
+  icon: string;
+
+  selectedDays: number[];
+  repeatEnabled: boolean;
+
+  start: string;
+  end: string | null;
+
+  allDay: boolean;
+  noEnd: boolean;
+}
+
+/* -------------------------------------------------------------------------- */
+/* HELPERS                                                                    */
+/* -------------------------------------------------------------------------- */
+
+function parseTimeString(v: string): number {
+  const [hm, period] = v.split(" ");
+  const [h, m] = hm.split(":").map(Number);
+
+  let hour = h;
+  if (period === "PM" && hour !== 12) hour += 12;
+  if (period === "AM" && hour === 12) hour = 0;
+
+  return hour * 60 + m;
+}
+
+/* -------------------------------------------------------------------------- */
+/* COMPONENT                                                                   */
 /* -------------------------------------------------------------------------- */
 
 export default function ScheduleView({
+  programId,
   scheduleWeekIndex,
-  setScheduleWeekIndex,
+  setScheduleWeekIndex, // currently unused but kept for future toolbar wiring
+  triggerAddSlot,
+  setTriggerAddSlot,
 }: ScheduleViewProps) {
-  const { selectedProgramId } = useProgramContext();
-
-  const [mainSlots, setMainSlots] = useState<DbMainSlot[]>([]);
-  const [subSlots, setSubSlots] = useState<DbSubSlot[]>([]);
+  const [week, setWeek] = useState<DbScheduleWeek | null>(null);
+  const [slots, setSlots] = useState<DbScheduleSlot[]>([]);
+  const [subslots, setSubslots] = useState<DbScheduleSubslot[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [showScheduleAdd, setShowScheduleAdd] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+
+  // DETAILS MODAL
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<any>(null);
+
+  // EDIT MODAL
+  const [showEdit, setShowEdit] = useState(false);
+
+  // LIST VIEW (auto on mobile)
+  const [listView, setListView] = useState(false);
+
+  const DEFAULT_REPEAT_WEEKS = 12;
 
   /* ---------------------------------------------------------------------- */
-  /* TOOLBAR EVENT LISTENER                                                 */
+  /* AUTO LIST VIEW FOR MOBILE                                              */
   /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
-    function openAddSlot() {
-      setShowScheduleAdd(true);
-    }
+    if (typeof window === "undefined") return;
 
-    window.addEventListener("schedule-open-add", openAddSlot);
-    return () => window.removeEventListener("schedule-open-add", openAddSlot);
+    const mql = window.matchMedia("(max-width: 767px)");
+
+    const apply = (e: MediaQueryList | MediaQueryListEvent) => {
+      setListView(e.matches);
+    };
+
+    apply(mql);
+    mql.addEventListener("change", apply as any);
+
+    return () => mql.removeEventListener("change", apply as any);
   }, []);
 
   /* ---------------------------------------------------------------------- */
-  /* LOAD MAIN SLOTS + SUBSLOTS                                             */
+  /* LOAD WEEK                                                              */
   /* ---------------------------------------------------------------------- */
 
-  async function reloadWeek(programId: number, weekIndex: number) {
+  async function loadWeek(): Promise<DbScheduleWeek | null> {
+    const existing = await fetchScheduleWeek(programId, scheduleWeekIndex);
+    return existing || null;
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* LOAD SLOTS + SUBSLOTS                                                  */
+  /* ---------------------------------------------------------------------- */
+
+  async function loadSlotsForWeek(w: DbScheduleWeek) {
+    const s = await fetchScheduleSlots(w.id);
+    const ids = s.map((x) => x.id);
+
+    const sub = await fetchSubslotsForSlots(ids);
+
+    setSlots(s);
+    setSubslots(sub);
+  }
+
+  /* ---------------------------------------------------------------------- */
+  /* MASTER LOADER                                                          */
+  /* ---------------------------------------------------------------------- */
+
+  async function loadData() {
+    if (!programId) return;
+
     setLoading(true);
-    setError(null);
+    setErrorMsg(null);
 
     try {
-      // 1) Fetch all main slots for this program + week
-      const { data: main, error: mainErr } = await supabase
-        .from("schedule_slots")
-        .select("*")
-        .eq("program_id", programId)
-        .eq("week_index", weekIndex);
+      const w = await loadWeek();
+      setWeek(w);
 
-      if (mainErr) throw mainErr;
-
-      const mainList = (main ?? []) as DbMainSlot[];
-      setMainSlots(mainList);
-
-      // 2) If there are no main slots, clear subs and bail
-      const ids = mainList.map((s) => s.id);
-      if (ids.length === 0) {
-        setSubSlots([]);
+      if (!w) {
+        setSlots([]);
+        setSubslots([]);
         return;
       }
 
-      // 3) Fetch all subslots for these main slot IDs
-      const subs = await fetchScheduleSubslots(ids);
-      setSubSlots((subs ?? []) as DbSubSlot[]);
-    } catch (err) {
-      console.error("Schedule load error:", err);
-      setError("Unable to load schedule");
-      setMainSlots([]);
-      setSubSlots([]);
+      await loadSlotsForWeek(w);
+    } catch (err: any) {
+      setErrorMsg(err.message ?? "Failed to load schedule.");
     } finally {
       setLoading(false);
     }
   }
-
-  /* ---------------------------------------------------------------------- */
-  /* LOAD WHEN PROGRAM OR WEEK CHANGES                                      */
-  /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
-    if (!selectedProgramId) return;
-    const programId = Number(selectedProgramId);
-    reloadWeek(programId, scheduleWeekIndex);
-  }, [selectedProgramId, scheduleWeekIndex]);
+    loadData();
+  }, [programId, scheduleWeekIndex]);
 
-  /* ---------------------------------------------------------------------- */
-  /* SUBMIT NEW SLOT                                                        */
-  /* ---------------------------------------------------------------------- */
-
-  async function handleSubmitNewSlot(slotData: {
-    day: number;
-    title: string;
-    time: string;
-    color: string;
-  }) {
-    if (!selectedProgramId) return;
-
-    const programId = Number(selectedProgramId);
-    const { day } = slotData;
-
-    const title = slotData.title.trim();
-    const time = slotData.time.trim();
-    const color = slotData.color.trim();
-
-    if (!title) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      await addMainSlotToWeek({
-        programId,
-        weekIndex: scheduleWeekIndex,
-        day,
-        title,
-        time: time || null,
-        color: color || null,
-      });
-
-      await reloadWeek(programId, scheduleWeekIndex);
-      setShowScheduleAdd(false);
-    } catch (err) {
-      console.error("addMainSlotToWeek error:", err);
-      setError("Unable to add schedule slot");
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    async function checkUser() {
+      await supabase.auth.getUser();
     }
-  }
+    checkUser();
+  }, []);
 
-  /* ---------------------------------------------------------------------- */
-  /* COMPILE UI                                                             */
-  /* ---------------------------------------------------------------------- */
-
-  const compiledByDay: Record<number, UiCompiledSlot[]> = useMemo(() => {
-    const bucket: Record<number, UiCompiledSlot[]> = {};
-    for (let i = 0; i < 7; i++) {
-      bucket[i] = compileDaySchedule({
-        day: i,
-        main: mainSlots,
-        subs: subSlots,
-      });
+  useEffect(() => {
+    if (triggerAddSlot) {
+      setShowAdd(true);
+      setTriggerAddSlot(false);
     }
-    return bucket;
-  }, [mainSlots, subSlots]);
+  }, [triggerAddSlot, setTriggerAddSlot]);
 
   /* ---------------------------------------------------------------------- */
-  /* NO PROGRAM SELECTED                                                    */
+  /* COMPILE UI MODEL                                                       */
   /* ---------------------------------------------------------------------- */
 
-  if (!selectedProgramId) {
-    return (
-      <div className="flex items-center justify-center h-full text-sm text-[var(--text-muted)]">
-        Select a program to view the schedule.
-      </div>
-    );
+  const compiled: UiCompiledWeek | null = useMemo(() => {
+    if (!week) return null;
+    return compileScheduleWeek(week, slots, subslots);
+  }, [week, slots, subslots]);
+
+  /* ---------------------------------------------------------------------- */
+  /* ADD SLOT LOGIC                                                         */
+  /* ---------------------------------------------------------------------- */
+
+  async function handleAddSlot(data: AddSlotFormPayload) {
+    const trimmedTitle = data.title.trim();
+    if (!trimmedTitle || data.selectedDays.length === 0) {
+      setShowAdd(false);
+      return;
+    }
+
+    let baseWeek = week;
+
+    if (!baseWeek) {
+      baseWeek = await createScheduleWeek(programId, scheduleWeekIndex);
+      setWeek(baseWeek);
+    }
+
+    function resolveTimeRange() {
+      if (data.allDay) return { start: 0, end: 1440 };
+
+      const startMinutes = parseTimeString(data.start);
+
+      if (data.noEnd || !data.end) {
+        return { start: startMinutes, end: startMinutes + 60 };
+      }
+
+      const endMinutes = parseTimeString(data.end);
+      return { start: startMinutes, end: endMinutes };
+    }
+
+    const { start, end } = resolveTimeRange();
+
+    const weekCache = new Map<number, DbScheduleWeek>();
+
+    async function ensureWeek(weekIndex: number): Promise<DbScheduleWeek> {
+      if (weekIndex === scheduleWeekIndex && baseWeek) return baseWeek;
+
+      if (weekCache.has(weekIndex)) return weekCache.get(weekIndex)!;
+
+      const existing = await fetchScheduleWeek(programId, weekIndex);
+      if (existing) {
+        weekCache.set(weekIndex, existing);
+        return existing;
+      }
+
+      const created = await createScheduleWeek(programId, weekIndex);
+      weekCache.set(weekIndex, created);
+      return created;
+    }
+
+    const weekIndices = data.repeatEnabled
+      ? Array.from({ length: DEFAULT_REPEAT_WEEKS }, (_, x) => scheduleWeekIndex + x)
+      : [scheduleWeekIndex];
+
+    for (const weekIndex of weekIndices) {
+      const targetWeek = await ensureWeek(weekIndex);
+
+      for (const day of data.selectedDays) {
+        await createScheduleSlot({
+          program_id: programId,
+          week_id: targetWeek.id,
+          day,
+          title: trimmedTitle,
+          start_time: start,
+          end_time: end,
+          color: data.color,
+        });
+      }
+    }
+
+    setShowAdd(false);
+    await loadData();
   }
 
   /* ---------------------------------------------------------------------- */
@@ -217,66 +330,103 @@ export default function ScheduleView({
   /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="flex flex-col w-full h-full">
-      {/* DAY LABELS -------------------------------------------------------- */}
-      <div className="flex border-b border-[var(--border)] bg-[var(--gray-50)]">
-        <div className="grid grid-cols-7 flex-1">
-          {DAYS.map((d) => (
-            <div
-              key={d.key}
-              className="text-center py-3 font-semibold text-[var(--text-dark)] border-r last:border-r-0 border-[var(--border)]"
-            >
-              {d.label}
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      {/* BODY WRAPPER — fixed area */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* LOADING */}
+        {loading && (
+          <div className="flex items-center justify-center h-full text-sm text-[var(--gray-600)]">
+            Loading…
+          </div>
+        )}
 
-      {/* MAIN GRID --------------------------------------------------------- */}
-      <div className="flex flex-1 min-h-0 overflow-y-auto">
-        <div className="grid grid-cols-7 flex-1 min-h-0">
-          {DAYS.map((d) => {
-            const slots = compiledByDay[d.index];
+        {/* ERROR */}
+        {!loading && errorMsg && (
+          <div className="p-4 text-sm text-[var(--danger-700)]">{errorMsg}</div>
+        )}
 
-            return (
-              <div
-                key={d.key}
-                className="border-r last:border-r-0 border-[var(--border)] p-2 space-y-2 min-h-full"
-              >
-                {slots.length === 0 && !loading && <div className="h-4" />}
-
-                {slots.map((slot) => {
-                  const mainColor =
-                    COLOR_MAP[slot.color ?? ""] ||
-                    "bg-gray-200 border-gray-400";
+        {/* SCROLL REGION */}
+        {!loading && !errorMsg && (
+          <div className="flex-1 overflow-y-auto min-h-0 pb-[9vh]">
+            {/* LIST VIEW (mobile or toggled) */}
+            {listView ? (
+              <div className="flex flex-col">
+                {DAY_LABELS.map((_, dayIdx) => {
+                  const daySlots = compiled?.days?.[dayIdx]?.slots ?? [];
 
                   return (
                     <div
-                      key={slot.id}
-                      className={`rounded-md border p-2 text-sm font-medium ${mainColor} shadow-sm`}
+                      key={dayIdx}
+                      className="border-t border-[var(--gray-300)] bg-white p-3 flex flex-col gap-2"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold">{slot.title}</span>
-                        {slot.time && (
-                          <span className="text-xs opacity-70">
-                            {slot.time}
-                          </span>
-                        )}
-                      </div>
+                      <h3 className="text-sm font-semibold">
+                        {FULL_DAY_LABELS[dayIdx]}
+                      </h3>
 
-                      {slot.subslots.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {slot.subslots.map((sub) => {
-                            const subColor =
-                              COLOR_MAP[sub.color ?? ""] ||
-                              "bg-gray-100 border-gray-300";
+                      {daySlots.length === 0 ? (
+                        <div className="text-[11px] text-[var(--gray-500)] italic">
+                          No events
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {daySlots.map((slot) => {
+                            const timeLabel = slot.endLabel
+                              ? `${slot.startLabel} – ${slot.endLabel}`
+                              : slot.startLabel;
+
+                            const colorKey = normalizeColorKey(slot.color);
+                            const colorClass =
+                              SLOT_COLOR_MAP[colorKey] ?? SLOT_COLOR_MAP.gray;
 
                             return (
                               <div
-                                key={sub.id}
-                                className={`text-xs rounded px-2 py-1 text-center border ${subColor}`}
+                                key={slot.id}
+                                className={`
+                                  rounded-md px-2 py-1.5 text-xs
+                                  flex justify-between items-center gap-2
+                                  cursor-pointer transition
+                                  ${colorClass} hover:opacity-90
+                                  text-white
+                                `}
+                                onClick={() => {
+                                  const base = slot;
+                                  const dateLabel = FULL_DAY_LABELS[dayIdx];
+
+                                  setSelectedSlot({
+                                    id: slot.id,
+                                    title: slot.title,
+                                    dateLabel,
+                                    timeLabel,
+                                    color: colorClass,
+                                    location: base.location ?? null,
+
+                                    // Fields required for edit modal
+                                    start: slot.startLabel,
+                                    end: slot.endLabel,
+                                    colorId: colorKey, // "blue"
+                                    icon: slot.icon ?? "star",
+                                    attachment: slot.attachment ?? null,
+                                    selectedDays: [dayIdx],
+                                    repeatEnabled: false,
+                                    allDay: slot.allDay ?? false,
+                                    noEnd: slot.noEnd ?? false,
+                                  });
+
+                                  setShowDetails(true);
+                                }}
                               >
-                                {sub.title}
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span
+                                    className={`w-2 h-2 rounded-sm ${colorClass}`}
+                                  />
+                                  <span className="font-medium truncate">
+                                    {slot.title}
+                                  </span>
+                                </div>
+
+                                <span className="text-[10px] text-[var(--gray-500)]">
+                                  {timeLabel}
+                                </span>
                               </div>
                             );
                           })}
@@ -286,16 +436,203 @@ export default function ScheduleView({
                   );
                 })}
               </div>
-            );
-          })}
-        </div>
+            ) : (
+              /* GRID VIEW (desktop default) */
+              <div className="grid grid-cols-7 border border-[var(--gray-300)]">
+                {/* HEADER */}
+                {DAY_LABELS.map((label) => (
+                  <div
+                    key={label}
+                    className="px-2 py-1 text-center font-medium text-xs bg-[var(--gray-50)] border-b border-[var(--gray-300)] sticky top-0 z-10"
+                  >
+                    {label}
+                  </div>
+                ))}
+
+                {/* COLUMNS */}
+                {DAY_LABELS.map((_, dayIdx) => {
+                  const daySlots = compiled?.days?.[dayIdx]?.slots ?? [];
+
+                  return (
+                    <div
+                      key={dayIdx}
+                      className="min-h-[350px] p-2 border-r last:border-r-0 border-[var(--gray-300)] flex flex-col gap-2"
+                    >
+                      {daySlots.length === 0 ? (
+                        <div className="text-[10px] text-[var(--gray-400)] italic">
+                          No events
+                        </div>
+                      ) : (
+                        daySlots.map((slot) => {
+                          const timeLabel = slot.endLabel
+                            ? `${slot.startLabel} – ${slot.endLabel}`
+                            : slot.startLabel;
+
+                          const colorKey = normalizeColorKey(slot.color);
+                          const colorClass =
+                            SLOT_COLOR_MAP[colorKey] ?? SLOT_COLOR_MAP.gray;
+                          const subslotBgClass =
+                            SUBSLOT_COLOR_MAP[colorKey] ??
+                            SUBSLOT_COLOR_MAP.gray;
+
+                          return (
+                            <div
+                              key={slot.id}
+                              className={`
+                                rounded-md p-2 text-xs flex flex-col gap-1
+                                cursor-pointer transition
+                                ${colorClass} hover:opacity-90
+                                text-white
+                              `}
+                              onClick={() => {
+                                const base = slot;
+                                const dateLabel = FULL_DAY_LABELS[dayIdx];
+
+                                setSelectedSlot({
+                                  id: slot.id,
+                                  title: slot.title,
+                                  dateLabel,
+                                  timeLabel,
+                                  color: colorClass,
+                                  location: base.location ?? null,
+
+                                  // Fields required for edit modal
+                                  start: slot.startLabel,
+                                  end: slot.endLabel,
+                                  colorId: colorKey,
+                                  icon: slot.icon ?? "star",
+                                  attachment: slot.attachment ?? null,
+                                  selectedDays: [dayIdx],
+                                  repeatEnabled: false,
+                                  allDay: slot.allDay ?? false,
+                                  noEnd: slot.noEnd ?? false,
+                                });
+
+                                setShowDetails(true);
+                              }}
+                            >
+                              <div className="flex justify-between items-center gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span
+                                    className={`w-2 h-2 rounded-sm ${colorClass}`}
+                                  />
+                                  <span className="font-medium truncate">
+                                    {slot.title}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-[var(--gray-500)]">
+                                  {slot.startLabel}
+                                </span>
+                              </div>
+
+                              {slot.subslots.length > 0 && (
+                                <div
+                                  className={`
+                                    mt-1 rounded-sm px-2 py-1 text-[var(--gray-900)]
+                                    ${subslotBgClass}
+                                  `}
+                                >
+                                  <ul className="list-disc pl-4 space-y-0.5">
+                                    {slot.subslots.map((sub) => (
+                                      <li
+                                        key={sub.id}
+                                        className="text-[10px] text-[var(--gray-800)]"
+                                      >
+                                        {sub.title}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* MODAL ------------------------------------------------------------- */}
-      {showScheduleAdd && (
+      {/* ADD SLOT MODAL */}
+      {showAdd && (
         <ScheduleAddSlot
-          onClose={() => setShowScheduleAdd(false)}
-          onSubmit={handleSubmitNewSlot}
+          onClose={() => setShowAdd(false)}
+          onSubmit={handleAddSlot}
+        />
+      )}
+
+      {/* DETAILS MODAL */}
+      {showDetails && selectedSlot && (
+        <ScheduleSlotDetails
+          isOpen={showDetails}
+          onClose={() => setShowDetails(false)}
+          slot={selectedSlot}
+          onEdit={() => {
+            setShowDetails(false);
+            setShowEdit(true);
+          }}
+          onDelete={async () => {
+            if (!selectedSlot?.id) return;
+
+            await deleteScheduleSlot(selectedSlot.id);
+
+            setShowEdit(false);
+            setShowDetails(false);
+            setSelectedSlot(null);
+
+            await loadData();
+          }}
+        />
+      )}
+
+      {/* EDIT MODAL */}
+      {showEdit && selectedSlot && (
+        <ScheduleEditSlot
+          initialTitle={selectedSlot.title}
+          initialStart={selectedSlot.start}
+          initialEnd={selectedSlot.end}
+          initialColor={selectedSlot.colorId}
+          initialIcon={selectedSlot.icon}
+          initialLocation={selectedSlot.location}
+          initialAttachment={selectedSlot.attachment}
+          selectedDays={selectedSlot.selectedDays}
+          repeatEnabled={selectedSlot.repeatEnabled}
+          initialAllDay={selectedSlot.allDay}
+          initialNoEnd={selectedSlot.noEnd}
+          onClose={() => setShowEdit(false)}
+          onSave={async (updated) => {
+            await updateScheduleSlot(selectedSlot.id, {
+              title: updated.title,
+              start_time: updated.allDay ? 0 : parseTimeString(updated.start),
+              end_time:
+                updated.noEnd || updated.allDay
+                  ? null
+                  : parseTimeString(updated.end),
+              color: updated.color,
+              icon: updated.icon,
+              location: updated.location,
+              attachment: updated.attachment,
+            });
+
+            setShowEdit(false);
+            await loadData();
+          }}
+
+          onDelete={async () => {
+            if (!selectedSlot?.id) return;
+
+            await deleteScheduleSlot(selectedSlot.id);
+
+            setShowEdit(false);
+            setShowDetails(false);
+            setSelectedSlot(null);
+
+            await loadData();
+          }}
         />
       )}
     </div>

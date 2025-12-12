@@ -38,7 +38,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
 
   return (
     <EditModeContext.Provider value={{ isEditMode, setIsEditMode }}>
-      <div className="bg-[var(--bg)] flex flex-col">
+      <div className="bg-[var(--bg)] flex flex-col flex-1 min-h-0">
       {/* <div className="min-h-screen bg-[var(--bg)] flex flex-col overflow-hidden"> */}
 
         {/* ------------------------------------------------------------------ */}
@@ -120,7 +120,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
         {/* ------------------------------------------------------------------ */}
         {/* CONTENT                                                           */}
         {/* ------------------------------------------------------------------ */}
-        <main className="flex flex-col flex-1 min-h-0 overflow-auto">
+        <main className="flex flex-col flex-1 min-h-0">
           {children}
         </main>
 
@@ -147,7 +147,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
 
 function DesktopNavPill({ children }) {
   return (
-    <div className="flex items-center gap-1 h-10 w-full px-1 py-1 rounded-xl bg-[var(--gray-100)]">
+    <div className="flex justify-center items-center gap-1 h-10 w-full px-1 py-1 rounded-xl bg-[var(--gray-100)]">
       {children}
     </div>
   );
@@ -201,7 +201,7 @@ function MobileBottomBar({ activeField, activeWorkspace, activeTraining, activeD
       md:hidden fixed 
       flex items-center justify-around
       bottom-0 inset-x-0 
-      h-[10vh] bg-[var(--light)] shadow-inner 
+      h-[9vh] bg-[var(--light)] shadow-inner 
     ">
       <MobileNavIcon
         icon={<MapPinned className="w-6 h-6" />}

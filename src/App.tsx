@@ -38,7 +38,7 @@ export default function App() {
           <Toaster />
           <Sonner />
 
-          <div className="h-[100vh] max-h-screen overflow-auto">
+          <div className="h-[100vh] max-h-screen flex flex-col overflow-hidden">
 
             <BrowserRouter>
               <Routes>
