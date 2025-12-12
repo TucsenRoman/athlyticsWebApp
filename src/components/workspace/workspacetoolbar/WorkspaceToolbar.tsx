@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/actions/button";
 import { AttendanceTools } from "@/features/attendance";
 import ManagerTools from "@/components/workspace/workspacetoolbar/ManagerTools";
 import EditorTools from "@/components/workspace/workspacetoolbar/EditorTools";
-import ScheduleTools from "@/components/workspace/workspacetoolbar/ScheduleTools";
+import { ScheduleTools } from "@/features/schedule";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */

@@ -5,12 +5,12 @@ import {
   type DbScheduleWeek,
   type DbScheduleSlot,
   type DbScheduleSubslot,
-} from "@/lib/schedule/scheduleAPI";
+} from "@/features/schedule/services/IGNOREscheduleAPI";
 
 import {
   compileScheduleWeek,
   type UiCompiledWeek,
-} from "@/utils/schedule/scheduleCompiler";
+} from "@/features/schedule/utils/scheduleCompiler";
 
 export async function loadScheduleWeekReadOnly({
   programId,

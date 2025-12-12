@@ -1,32 +1,32 @@
-// src/components/workspace/schedule/ScheduleView.tsx
+// src/features/schedule/views/workspace/ScheduleWorkspaceView.tsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+
+/* -------------------------------------------------------------------------- */
+/*  FEATURE API (SCHEDULE)                                                     */
+/* -------------------------------------------------------------------------- */
 
 import {
+  // services
   fetchScheduleWeek,
   createScheduleWeek,
   fetchScheduleSlots,
   fetchSubslotsForSlots,
   createScheduleSlot,
   updateScheduleSlot,
+  deleteScheduleSlot,
+  loadScheduleWeekReadOnly,
+  ScheduleAddSlot,
+  ScheduleSlotDetails,
+  ScheduleEditSlot,
+
+  // types
   type DbScheduleWeek,
   type DbScheduleSlot,
   type DbScheduleSubslot,
-} from "@/lib/schedule/scheduleAPI";
-
-import {
-  compileScheduleWeek,
   type UiCompiledWeek,
-} from "@/utils/schedule/scheduleCompiler";
-
-import { deleteScheduleSlot } from "@/lib/schedule/scheduleAPI";
-import { loadScheduleWeekReadOnly } from "@/lib/schedule/loadScheduleWeek";
-
-import ScheduleAddSlot from "./ScheduleAddSlot";
-import ScheduleSlotDetails from "./ScheduleSlotDetails";
-import ScheduleEditSlot from "./ScheduleEditSlot";
+} from "@/features/schedule";
 
 /* -------------------------------------------------------------------------- */
 /*  PROPS                                                                     */
@@ -152,6 +152,8 @@ export default function ScheduleView({
   // LIST VIEW (auto on mobile)
   const [listView, setListView] = useState(false);
 
+  const [compiled, setCompiled] = useState<UiCompiledWeek | null>(null);
+
   const DEFAULT_REPEAT_WEEKS = 12;
 
   /* ---------------------------------------------------------------------- */
@@ -215,6 +217,7 @@ export default function ScheduleView({
       setWeek(result.week);
       setSlots(result.slots);
       setSubslots(result.subslots);
+      setCompiled(result.compiled);
     } catch (err: any) {
       setErrorMsg(err.message ?? "Failed to load schedule.");
     } finally {
@@ -227,27 +230,11 @@ export default function ScheduleView({
   }, [programId, scheduleWeekIndex]);
 
   useEffect(() => {
-    async function checkUser() {
-      await supabase.auth.getUser();
-    }
-    checkUser();
-  }, []);
-
-  useEffect(() => {
     if (triggerAddSlot) {
       setShowAdd(true);
       setTriggerAddSlot(false);
     }
   }, [triggerAddSlot, setTriggerAddSlot]);
-
-  /* ---------------------------------------------------------------------- */
-  /* COMPILE UI MODEL                                                       */
-  /* ---------------------------------------------------------------------- */
-
-  const compiled: UiCompiledWeek | null = useMemo(() => {
-    if (!week) return null;
-    return compileScheduleWeek(week, slots, subslots);
-  }, [week, slots, subslots]);
 
   /* ---------------------------------------------------------------------- */
   /* ADD SLOT LOGIC                                                         */

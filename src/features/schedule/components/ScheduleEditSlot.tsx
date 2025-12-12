@@ -1,4 +1,4 @@
-// src/components/workspace/schedule/ScheduleEditSlot.tsx
+// src/features/schedule/components/ScheduleEditSlot.tsx
 "use client";
 
 import { useEffect, useState } from "react";

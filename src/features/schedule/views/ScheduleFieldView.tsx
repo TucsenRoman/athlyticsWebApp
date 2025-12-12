@@ -1,3 +1,4 @@
+// src/features/schedule/views/ScheduleFieldView.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,7 +11,7 @@ import {
   fetchScheduleWeek,
   fetchScheduleSlots,
   type DbScheduleSlot,
-} from "@/lib/schedule/scheduleAPI";
+} from "@/features/schedule";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */

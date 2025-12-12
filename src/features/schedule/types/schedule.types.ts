@@ -1,5 +1,14 @@
 // src/types/scheduleTypes.ts
 
+import type { Database } from "@/integrations/supabase/types";
+
+export type DbScheduleWeek =
+  Database["public"]["Tables"]["schedule_weeks"]["Row"];
+export type DbScheduleSlot =
+  Database["public"]["Tables"]["schedule_slots"]["Row"];
+export type DbScheduleSubslot =
+  Database["public"]["Tables"]["schedule_subslots"]["Row"];
+
 /* -------------------------------------------------------------------------- */
 /*  WEEK ROW (schedule_weeks)                                                 */
 /* -------------------------------------------------------------------------- */

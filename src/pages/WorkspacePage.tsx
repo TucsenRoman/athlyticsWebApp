@@ -9,7 +9,7 @@ import WorkspaceToolbar from "@/components/workspace/workspacetoolbar/WorkspaceT
 import ProjectManager from "@/components/workspace/manager/ProjectManager";
 import ProjectEditor from "@/components/workspace/editor/ProjectEditor";
 import AttendanceView from "@/features/attendance/views/AttendanceWorkspaceView";
-import ScheduleView from "@/components/workspace/schedule/ScheduleView";
+import ScheduleView from "@/features/schedule/views/workspace/ScheduleWorkspaceView";
 
 /* -------------------------------------------------------------------------- */
 /* COMPONENT                                                                  */
