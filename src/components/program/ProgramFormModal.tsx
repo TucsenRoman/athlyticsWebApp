@@ -6,23 +6,23 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/overlays/dialog";
+import { Button } from "@/components/ui/actions/button";
+import { Input } from "@/components/ui/forms/input";
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/forms/select";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
   DropdownMenuContent,
-} from "@/components/ui/dropdown-menu";
-import { LoadingIndicator } from "@/components/ui/loading-indicator";
+} from "@/components/ui/overlays/dropdown-menu";
+import { LoadingIndicator } from "@/components/ui/feedback/loading-indicator";
 
 import { projectInstaller } from "@/integrations/supabase/projectInstaller";
 

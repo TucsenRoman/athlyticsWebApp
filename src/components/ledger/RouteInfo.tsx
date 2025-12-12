@@ -5,15 +5,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+} from "@/components/ui/overlays/dialog";
+import { Button } from "@/components/ui/actions/button";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Tooltip,
   TooltipTrigger,
   TooltipContent,
-} from "@/components/ui/tooltip";
+} from "@/components/ui/overlays/tooltip";
 
 import {
   LedgerHeader,
@@ -40,7 +39,7 @@ import {
   ContextMenuTrigger,
   ContextMenuContent,
   ContextMenuItem,
-} from "@/components/ui/context-menu";
+} from "@/components/ui/overlays/context-menu";
 
 import {
   AlertDialog,
@@ -51,7 +50,7 @@ import {
   AlertDialogFooter as AlertFooter,
   AlertDialogCancel,
   AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/feedback/alert-dialog";
 
 import { useNavigate } from "react-router-dom";
 
@@ -456,11 +455,9 @@ export default function RouteInfo({
       await reloadHeaders();
       await reloadRoutes();
       onUpdated?.();
-      toast.success("Route updated.");
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error("Route update failed.");
     } finally {
       setBusy(false);
     }
@@ -476,7 +473,7 @@ export default function RouteInfo({
     );
 
     if (!validation.ok) {
-      toast.error(validation.reason);
+      console.log(validation.reason);
       return;
     }
 
@@ -493,7 +490,7 @@ export default function RouteInfo({
     );
 
     if (!validation.ok) {
-      toast.error(validation.reason);
+      console.log(validation.reason);
       return;
     }
 
@@ -594,7 +591,7 @@ export default function RouteInfo({
 
             <button
               className="hidden md:inline-flex group p-1.5 rounded-full transition-colors hover:bg-primary/10"
-              onClick={() => toast.info("Trigger RouteConnect from here")}
+              onClick={() => console.log("Trigger RouteConnect from here")}
             >
               <Plus
                 size={20}
@@ -643,7 +640,7 @@ export default function RouteInfo({
 
             {/* Add Secondary */}
             <button
-              onClick={() => toast.info("Trigger RouteConnect from here")}
+              onClick={() => console.log("Trigger RouteConnect from here")}
               className="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
             >
               <Plus size={24} className="text-gray-700" />

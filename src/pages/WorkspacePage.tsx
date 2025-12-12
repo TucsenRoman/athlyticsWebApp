@@ -8,7 +8,7 @@ import { useProgramContext } from "@/hooks/useProgramContext";
 import WorkspaceToolbar from "@/components/workspace/workspacetoolbar/WorkspaceToolbar";
 import ProjectManager from "@/components/workspace/manager/ProjectManager";
 import ProjectEditor from "@/components/workspace/editor/ProjectEditor";
-import AttendanceView from "@/components/workspace/attendance/AttendanceView";
+import AttendanceView from "@/features/attendance/views/AttendanceWorkspaceView";
 import ScheduleView from "@/components/workspace/schedule/ScheduleView";
 
 /* -------------------------------------------------------------------------- */

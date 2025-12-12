@@ -1,14 +1,67 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# ---------------------------------------------------------------------------
+# robots.txt — Athlytics
+#
+# This app is a client-side SPA (React + Vite).
+# Only the homepage ("/") is intended to be indexed by search engines.
+#
+# All other routes (auth, field, workspace, discovery, ledgers, settings)
+# are application-only views that require authentication and/or JS rendering.
+# Indexing them provides no SEO value and creates crawl noise.
+#
+# When real marketing pages are added (e.g. /features, /pricing, /sports/*),
+# REMOVE them from Disallow and add them to sitemap.xml.
+#
+# Note: robots.txt does NOT provide security — auth is enforced in-app.
+# ---------------------------------------------------------------------------
 
 User-agent: *
 Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /field
+Disallow: /workspace
+Disallow: /discovery
+Disallow: /ledgers
+Disallow: /settings
+
+User-agent: Googlebot
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /field
+Disallow: /workspace
+Disallow: /discovery
+Disallow: /ledgers
+Disallow: /settings
+
+User-agent: Bingbot
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /field
+Disallow: /workspace
+Disallow: /discovery
+Disallow: /ledgers
+Disallow: /settings
+
+User-agent: Twitterbot
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /field
+Disallow: /workspace
+Disallow: /discovery
+Disallow: /ledgers
+Disallow: /settings
+
+User-agent: facebookexternalhit
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /field
+Disallow: /workspace
+Disallow: /discovery
+Disallow: /ledgers
+Disallow: /settings
+
+Sitemap: https://athlyticshq.com/sitemap.xml

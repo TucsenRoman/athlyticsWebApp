@@ -4,23 +4,19 @@ import { useEffect, useState } from "react";
 import CardFormatter from "@/components/cards/CardFormatter";
 import { CalendarDays, Clock } from "lucide-react";
 
+import { useProgramContext } from "@/hooks/useProgramContext";
+
 import {
   fetchScheduleWeek,
-  createScheduleWeek,
   fetchScheduleSlots,
   type DbScheduleSlot,
-} from "@/lib/scheduleAPI";
+} from "@/lib/schedule/scheduleAPI";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
 /* -------------------------------------------------------------------------- */
 
-type Flavor =
-  | "blue"
-  | "green"
-  | "purple"
-  | "slate"
-  | "red";
+type Flavor = "blue" | "green" | "purple" | "slate" | "red";
 
 interface DailyEvent {
   id: string;
@@ -60,8 +56,7 @@ function minutesToLabel(min: number | null) {
 
 function normalizeColor(raw?: string | null): Flavor {
   if (!raw) return "slate";
-  if (raw in COLOR_MAP) return raw as Flavor;
-  return "slate";
+  return raw in COLOR_MAP ? (raw as Flavor) : "slate";
 }
 
 /* -------------------------------------------------------------------------- */
@@ -69,54 +64,57 @@ function normalizeColor(raw?: string | null): Flavor {
 /* -------------------------------------------------------------------------- */
 
 export default function ScheduleCard() {
-  const [events, setEvents] = useState<DailyEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { selectedProgramId } = useProgramContext();
 
-  // TODO: replace with real context later
-  const programId = 1;
-  const weekIndex = 0;
+  const [events, setEvents] = useState<DailyEvent[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * IMPORTANT:
+   * Field is VIEW ONLY.
+   * We do NOT create weeks here.
+   * Workspace owns mutations.
+   */
+  const weekIndex = 1; // DB-aligned, 1-based
 
   /* ---------------------------------------------------------------------- */
   /* LOAD                                                                    */
   /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
+    if (!selectedProgramId) {
+      console.warn("[ScheduleCard] No program selected");
+      setEvents([]);
+      return;
+    }
+
     async function load() {
-      console.log("[ScheduleCard] LOAD START");
-      console.log("programId:", programId);
-      console.log("weekIndex:", weekIndex);
+      console.log("[ScheduleCard] LOAD START", {
+        programId: selectedProgramId,
+        weekIndex,
+      });
 
       setLoading(true);
+      setError(null);
 
       try {
-        let week = await fetchScheduleWeek(programId, weekIndex);
-        console.log("[ScheduleCard] week result:", week);
+        const week = await fetchScheduleWeek(selectedProgramId, weekIndex);
 
-        // ✅ OPT A — lazy create
         if (!week) {
-          console.warn("[ScheduleCard] No week found — creating");
-          week = await createScheduleWeek(programId, weekIndex);
-          console.log("[ScheduleCard] week created:", week);
+          console.warn("[ScheduleCard] No schedule week found");
+          setEvents([]);
+          return;
         }
 
         const slots: DbScheduleSlot[] = await fetchScheduleSlots(week.id);
-        console.log("[ScheduleCard] Raw slots:", slots);
 
-        /* -------------------------------------------------------------- */
-        /* FILTER FOR TODAY                                               */
-        /* -------------------------------------------------------------- */
-
-        const jsDay = new Date().getDay(); // 0 = Sun
+        const jsDay = new Date().getDay(); // 0 = Sunday
         const scheduleDayIndex = jsDay === 0 ? 6 : jsDay - 1;
 
-        console.log("[ScheduleCard] JS day:", jsDay);
-        console.log("[ScheduleCard] Schedule day index:", scheduleDayIndex);
-
         const todaySlots = slots.filter(
-          (s) => s.day === scheduleDayIndex
+          (slot) => slot.day === scheduleDayIndex
         );
-
-        console.log("[ScheduleCard] Slots for today:", todaySlots);
 
         const mapped: DailyEvent[] = todaySlots.map((slot) => ({
           id: slot.id,
@@ -131,6 +129,7 @@ export default function ScheduleCard() {
         setEvents(mapped);
       } catch (err) {
         console.error("[ScheduleCard] LOAD ERROR", err);
+        setError("Failed to load schedule");
         setEvents([]);
       } finally {
         setLoading(false);
@@ -138,32 +137,37 @@ export default function ScheduleCard() {
     }
 
     load();
-  }, []);
+  }, [selectedProgramId]);
 
   /* ---------------------------------------------------------------------- */
-  /* RENDER                                                                 */
+  /* RENDER                                                                  */
   /* ---------------------------------------------------------------------- */
 
   return (
-    <CardFormatter
-      title="Today"
-      icon={CalendarDays}
-    >
+    <CardFormatter title="Today" icon={CalendarDays}>
       <div className="flex flex-col gap-3 text-sm">
 
         {/* SUBTITLE */}
         <div className="text-xs text-muted-foreground">
-          Upcoming events
+          Today’s schedule
         </div>
 
-        {/* STATES */}
+        {/* LOADING */}
         {loading && (
           <div className="italic text-muted-foreground">
             Loading schedule…
           </div>
         )}
 
-        {!loading && events.length === 0 && (
+        {/* ERROR */}
+        {!loading && error && (
+          <div className="italic text-red-600">
+            {error}
+          </div>
+        )}
+
+        {/* EMPTY */}
+        {!loading && !error && events.length === 0 && (
           <div className="italic text-muted-foreground">
             No events scheduled today.
           </div>

@@ -1,23 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/forms/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/forms/select";
+import { Button } from "@/components/ui/actions/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/overlays/dialog";
 import { SquarePen, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 import { searchHighlight } from "@/utils/searchHighlight";
 
@@ -171,11 +170,9 @@ function LedgerCell({
       if (error) throw error;
 
       setOptions(clean);
-      toast.success("Dropdown options updated");
       setOpenOptionsEditor(false);
     } catch (err) {
       console.error("❌ Failed to update dropdown options:", err);
-      toast.error("Failed to update options");
     }
   };
 
@@ -206,7 +203,6 @@ function LedgerCell({
       triggerSync();
     } catch (err) {
       console.error("❌ Failed to save cell:", err);
-      toast.error("Failed to save");
     }
   };
 

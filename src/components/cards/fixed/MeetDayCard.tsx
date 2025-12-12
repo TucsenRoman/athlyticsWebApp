@@ -1,5 +1,5 @@
 import CardFormatter from "@/components/cards/CardFormatter";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/actions/button";
 import {
   CalendarDays,
   MapPin,

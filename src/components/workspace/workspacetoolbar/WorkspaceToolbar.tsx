@@ -1,4 +1,4 @@
-// src/components/workspace/Toolbar.tsx
+// src/components/workspace/workspacetoolbar.tsx
 "use client";
 
 import {
@@ -11,10 +11,10 @@ import {
 } from "lucide-react";
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/actions/button";
 
 // VIEW IMPORTS
-import AttendanceTools from "@/components/workspace/workspacetoolbar/AttendanceTools";
+import { AttendanceTools } from "@/features/attendance";
 import ManagerTools from "@/components/workspace/workspacetoolbar/ManagerTools";
 import EditorTools from "@/components/workspace/workspacetoolbar/EditorTools";
 import ScheduleTools from "@/components/workspace/workspacetoolbar/ScheduleTools";

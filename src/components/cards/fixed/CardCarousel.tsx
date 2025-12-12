@@ -9,7 +9,7 @@ import {
   Pin,
 } from "lucide-react";
 
-import AttendanceCard from "@/components/cards/fixed/AttendanceCard";
+import AttendanceCard from "@/features/attendance/views/AttendanceFieldView";
 import NotesCard from "@/components/cards/fixed/NotesCard";
 import MeetDayCard from "@/components/cards/fixed/MeetDayCard";
 import WeatherCard from "@/components/cards/fixed/WeatherCard";

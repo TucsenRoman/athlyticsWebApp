@@ -1,8 +1,8 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/overlays/dialog";
+import { Input } from "@/components/ui/forms/input";
+import { ScrollArea } from "@/components/ui/layout/scroll-area";
 import { FileText } from "lucide-react";
 import { useState, useMemo } from "react";
 import Fuse from "fuse.js";

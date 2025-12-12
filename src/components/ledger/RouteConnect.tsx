@@ -5,18 +5,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/overlays/dialog";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/actions/button";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select";
+} from "@/components/ui/forms/select";
 
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import {
@@ -100,7 +99,6 @@ export default function RouteConnect({
    * --------------------------------------------------------- */
   async function handleCreate() {
     if (!secondaryId || !primaryId) {
-      toast.error("Select both columns.");
       return;
     }
 
@@ -112,7 +110,6 @@ export default function RouteConnect({
     );
 
     if (!validation.ok || !mutation) {
-      toast.error(validation.reason ?? "Cannot create route.");
       return;
     }
 
@@ -168,11 +165,9 @@ export default function RouteConnect({
         await syncRoutes(primaryHeader.ledger_id);
       }
 
-      toast.success("Route created.");
       closeDialog();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to create route.");
     } finally {
       setSaving(false);
     }
@@ -266,7 +261,7 @@ export default function RouteConnect({
               ) : (
                 <Button
                   variant="secondary"
-                  onClick={() => toast.info("Add a column using the Columns menu.")}
+                  onClick={() => console.log("Add a column using the Columns menu.")}
                 >
                   Add Column
                 </Button>

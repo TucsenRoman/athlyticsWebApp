@@ -1,6 +1,6 @@
 // src/components/program/ProgramDeleteModal.tsx
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/overlays/dialog";
+import { Button } from "@/components/ui/actions/button";
 
 interface Program {
   id: number;

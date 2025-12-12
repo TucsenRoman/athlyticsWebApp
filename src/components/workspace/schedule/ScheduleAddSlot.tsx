@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TimeRangeSelector } from "@/components/ui/TimeSelector";
+import { TimeRangeSelector } from "@/components/ui/forms/timeselector";
 import {
   Check,
   Star,

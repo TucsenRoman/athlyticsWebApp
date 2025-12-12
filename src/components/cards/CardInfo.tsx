@@ -4,7 +4,7 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from "@/components/ui/popover";
+} from "@/components/ui/overlays/popover";
 import { Info } from "lucide-react";
 
 type CardInfoProps = {

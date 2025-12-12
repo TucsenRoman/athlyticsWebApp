@@ -14,14 +14,15 @@ import {
   type DbScheduleWeek,
   type DbScheduleSlot,
   type DbScheduleSubslot,
-} from "@/lib/scheduleAPI";
+} from "@/lib/schedule/scheduleAPI";
 
 import {
   compileScheduleWeek,
   type UiCompiledWeek,
 } from "@/utils/schedule/scheduleCompiler";
 
-import { deleteScheduleSlot } from "@/lib/scheduleAPI";
+import { deleteScheduleSlot } from "@/lib/schedule/scheduleAPI";
+import { loadScheduleWeekReadOnly } from "@/lib/schedule/loadScheduleWeek";
 
 import ScheduleAddSlot from "./ScheduleAddSlot";
 import ScheduleSlotDetails from "./ScheduleSlotDetails";
@@ -206,16 +207,14 @@ export default function ScheduleView({
     setErrorMsg(null);
 
     try {
-      const w = await loadWeek();
-      setWeek(w);
+      const result = await loadScheduleWeekReadOnly({
+        programId,
+        scheduleWeekIndex,
+      });
 
-      if (!w) {
-        setSlots([]);
-        setSubslots([]);
-        return;
-      }
-
-      await loadSlotsForWeek(w);
+      setWeek(result.week);
+      setSlots(result.slots);
+      setSubslots(result.subslots);
     } catch (err: any) {
       setErrorMsg(err.message ?? "Failed to load schedule.");
     } finally {

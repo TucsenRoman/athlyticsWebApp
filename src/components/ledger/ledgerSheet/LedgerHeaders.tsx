@@ -1,8 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/forms/input";
+import { Button } from "@/components/ui/actions/button";
 import { supabase } from "@/integrations/supabase/client";
 
 import {
@@ -14,7 +13,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/overlays/dropdown-menu";
 
 import {
   ChevronDown,
@@ -40,7 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/overlays/dialog";
 
 import RouteConnect from "../RouteConnect";
 import RouteInfo from "../RouteInfo";
@@ -380,10 +379,8 @@ export default function LedgerHeaders({
           },
         ]);
         if (error) throw error;
-        toast.success("Column added");
         reloadHeaders();
       } catch {
-        toast.error("Failed to add column");
       }
     },
     [ledgerId, headers.length, reloadHeaders]
@@ -402,11 +399,9 @@ export default function LedgerHeaders({
           .update({ name: editValue })
           .eq("id", headerId);
         if (error) throw error;
-        toast.success("Header renamed");
         setEditingId(null);
         reloadHeaders();
       } catch {
-        toast.error("Failed to rename header");
       }
     },
     [editValue, reloadHeaders]
@@ -422,10 +417,8 @@ export default function LedgerHeaders({
           .delete()
           .eq("id", headerId);
         if (error) throw error;
-        toast.success("Header deleted");
         reloadHeaders();
       } catch {
-        toast.error("Failed to delete header");
       }
     },
     [reloadHeaders]
@@ -440,10 +433,8 @@ export default function LedgerHeaders({
           .update({ type })
           .eq("id", headerId);
         if (error) throw error;
-        toast.success(`Type set to ${type}`);
         reloadHeaders();
       } catch {
-        toast.error("Failed to change type");
       }
     },
     [reloadHeaders]

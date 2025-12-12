@@ -5,16 +5,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/overlays/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+} from "@/components/ui/forms/select";
+import { Button } from "@/components/ui/actions/button";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CopyLedgerProps {
@@ -116,11 +115,9 @@ export default function CopyLedger({ open, onOpenChange, ledgerId }: CopyLedgerP
           }))
         );
 
-      toast.success("Ledger duplicated successfully!");
       onOpenChange(false);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to duplicate ledger.");
     } finally {
       setLoading(false);
     }

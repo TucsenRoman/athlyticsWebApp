@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Fuse from "fuse.js";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/forms/input";
 import { Search as SearchIcon } from "lucide-react";
 
 interface SearchProps<T> {

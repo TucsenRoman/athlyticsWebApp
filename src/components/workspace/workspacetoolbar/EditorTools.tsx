@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/actions/button";
 import { Star, Filter, Layers } from "lucide-react";
 import Search from "@/components/navigation/Search";
 

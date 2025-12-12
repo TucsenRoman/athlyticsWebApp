@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import LedgerToolbar from "../workspace/workspacetoolbar/WorkspaceToolbar";
@@ -80,7 +79,6 @@ export default function LedgerView({ ledgerId: forcedId }: LedgerViewProps) {
 
       } catch (err) {
         console.error(err);
-        toast.error("Failed to load ledger data");
       } finally {
         setLoading(false);
       }

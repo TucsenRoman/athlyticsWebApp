@@ -2,13 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/actions/button";
+import { Input } from "@/components/ui/forms/input";
+import { Label } from "@/components/ui/forms/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/layout/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/navigation/tabs";
 
-import { toast } from "sonner";
 import { z } from "zod";
 
 /* -------------------------- Password Strength Schema -------------------------- */
@@ -62,10 +61,8 @@ export default function AuthForm() {
 
       if (error) throw error;
 
-      toast.success("Welcome back, Coach.");
       navigate("/");
     } catch (err: any) {
-      toast.error(err.message || "Authentication failed");
     } finally {
       setLoading(false);
     }
@@ -80,7 +77,6 @@ export default function AuthForm() {
 
     const validation = passwordSchema.safeParse(password);
     if (!validation.success) {
-      toast.error(validation.error.errors[0].message);
       setLoading(false);
       return;
     }
@@ -104,10 +100,8 @@ export default function AuthForm() {
         ]);
       }
 
-      toast.success("Account created. Logging you in…");
       navigate("/");
     } catch (err: any) {
-      toast.error(err.message || "Authentication failed");
     } finally {
       setLoading(false);
     }

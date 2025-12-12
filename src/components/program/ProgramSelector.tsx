@@ -28,18 +28,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/overlays/dropdown-menu";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/actions/button";
 
 import {
   Dialog,
   DialogHeader,
   DialogTitle,
   DialogContent,
-} from "@/components/ui/dialog";
+} from "@/components/ui/overlays/dialog";
 
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/forms/input";
 
 import {
   Select,
@@ -47,7 +47,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select";
+} from "@/components/ui/forms/select";
 
 import { useEditMode } from "@/contexts/EditModeContext";
 

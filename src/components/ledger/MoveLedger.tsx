@@ -5,17 +5,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/overlays/dialog";
+import { Button } from "@/components/ui/actions/button";
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/forms/select";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 
 interface MoveLedgerProps {
@@ -43,7 +42,6 @@ export default function MoveLedger({
 
       if (error) {
         console.error(error);
-        toast.error("Failed to load programs.");
       } else {
         setPrograms(data || []);
       }
@@ -55,7 +53,6 @@ export default function MoveLedger({
   // 🔄 Move the ledger
   const handleMove = async () => {
     if (!selectedProgram) {
-      toast.error("Please select a program first.");
       return;
     }
 
@@ -75,11 +72,9 @@ export default function MoveLedger({
 
       if (error) throw error;
 
-      toast.success("Ledger moved successfully.");
       onOpenChange(false);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to move ledger.");
     } finally {
       setLoading(false);
     }

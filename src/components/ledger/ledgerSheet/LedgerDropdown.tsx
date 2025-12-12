@@ -1,10 +1,9 @@
 // src/components/ledger/LedgerDropdown.tsx
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/data_display/badge";
+import { Button } from "@/components/ui/actions/button";
+import { Input } from "@/components/ui/forms/input";
 import type { Json } from "@/integrations/supabase/types";
 import {
   Dialog,
@@ -12,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@/components/ui/overlays/dialog";
 import {
   Command,
   CommandEmpty,
@@ -20,12 +19,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@/components/ui/command/command";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from "@/components/ui/popover";
+} from "@/components/ui/overlays/popover";
 import { Pencil } from "lucide-react";
 
 interface LedgerDropdownProps {
@@ -236,7 +235,6 @@ export default function LedgerDropdown({
                   .update({ options: options as unknown as Json[] })
                   .eq("id", header.id);
                 setEditDialogOpen(false);
-                toast.success("Options updated!");
               }}
             >
               Save Changes

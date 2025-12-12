@@ -107,7 +107,7 @@
 //         setEntries(entryData || []);
 //       } catch (err) {
 //         console.error("Error loading ledger:", err);
-//         toast.error("Failed to load ledger data.");
+//         console.log("Failed to load ledger data.");
 //       } finally {
 //         setLoading(false);
 //       }
@@ -171,13 +171,13 @@
 //         },
 //       ]);
 //       if (error) throw error;
-//       toast.success(`Added column "${newColumnName}"`);
+//       console.log(`Added column "${newColumnName}"`);
 //       setNewColumnName("");
 //       setAddModalOpen(false);
 //       reloadHeaders();
 //     } catch (err) {
 //       console.error("Error adding column:", err);
-//       toast.error("Failed to add column");
+//       console.log("Failed to add column");
 //     } finally {
 //       setAdding(false);
 //     }
@@ -194,20 +194,20 @@
 //         values: emptyValues,
 //       },
 //     ]);
-//     if (error) toast.error("Failed to add row");
+//     if (error) console.log("Failed to add row");
 //     else {
-//       toast.success("Row added");
+//       console.log("Row added");
 //       reloadEntries();
 //     }
 //   };
 
 //   // 🗑️ Delete column
 //   const handleDeleteColumn = async (headerId: string, isLocked: boolean) => {
-//     if (isLocked) return toast.error("This column is locked.");
+//     if (isLocked) return console.log("This column is locked.");
 //     const { error } = await supabase.from("ledger_headers").delete().eq("id", headerId);
-//     if (error) toast.error("Failed to delete column.");
+//     if (error) console.log("Failed to delete column.");
 //     else {
-//       toast.success("Column deleted.");
+//       console.log("Column deleted.");
 //       reloadHeaders();
 //     }
 //   };
@@ -215,9 +215,9 @@
 //   // 🗑️ Delete row
 //   const handleDeleteRow = async (entryId: string) => {
 //     const { error } = await supabase.from("ledger_entries").delete().eq("id", entryId);
-//     if (error) toast.error("Failed to delete row.");
+//     if (error) console.log("Failed to delete row.");
 //     else {
-//       toast.success("Row deleted");
+//       console.log("Row deleted");
 //       reloadEntries();
 //     }
 //   };
@@ -231,8 +231,8 @@
 //         icon: ledger.icon || "clipboard",
 //       })
 //       .eq("id", ledgerId);
-//     if (error) return toast.error("Failed to move ledger.");
-//     toast.success("Ledger moved successfully.");
+//     if (error) return console.log("Failed to move ledger.");
+//     console.log("Ledger moved successfully.");
 //     setMoveModalOpen(false);
 //     navigate(`/ledgers/${ledgerId}`);
 //     // navigate("/");
@@ -282,11 +282,11 @@
 //         await supabase.from("ledger_entries").insert(entryPayload);
 //       }
 
-//       toast.success("Ledger duplicated successfully.");
+//       console.log("Ledger duplicated successfully.");
 //       setDuplicateModalOpen(false);
 //     } catch (err) {
 //       console.error(err);
-//       toast.error("Failed to duplicate ledger.");
+//       console.log("Failed to duplicate ledger.");
 //     }
 //   };
 
@@ -339,11 +339,11 @@
 //         if (insertRowErr) throw insertRowErr;
 //       }
 
-//       toast.success("Template saved successfully.");
+//       console.log("Template saved successfully.");
 //       setSaveTemplateModalOpen(false);
 //     } catch (err) {
 //       console.error("Error saving as template:", err);
-//       toast.error("Failed to save template.");
+//       console.log("Failed to save template.");
 //     } finally {
 //       setSavingTemplate(false);
 //     }
@@ -357,9 +357,9 @@
 //       .from("ledger_headers")
 //       .update({ name: editName, formula: header?.formula ?? null })
 //       .eq("id", id);
-//     if (error) toast.error("Rename failed");
+//     if (error) console.log("Rename failed");
 //     else {
-//       toast.success("Header updated");
+//       console.log("Header updated");
 //       setEditingHeaderId(null);
 //       reloadHeaders();
 //     }
@@ -368,9 +368,9 @@
 //   // 🧮 Save formula
 //   const handleSaveFormula = async (id: string) => {
 //     const { error } = await supabase.from("ledger_headers").update({ formula: editFormula }).eq("id", id);
-//     if (error) toast.error("Failed to save formula");
+//     if (error) console.log("Failed to save formula");
 //     else {
-//       toast.success("Formula saved");
+//       console.log("Formula saved");
 //       setShowFormulaInput(null);
 //       reloadHeaders();
 //     }
@@ -388,9 +388,9 @@
 //       .from("ledger_entries")
 //       .update({ values: updatedValues })
 //       .eq("id", entryId);
-//     if (error) toast.error("Failed to update cell");
+//     if (error) console.log("Failed to update cell");
 //     else {
-//       // toast.success("Updated");
+//       // console.log("Updated");
 //       setEntries((prev) =>
 //         prev.map((e) => (e.id === entryId ? { ...e, values: updatedValues } : e))
 //       );

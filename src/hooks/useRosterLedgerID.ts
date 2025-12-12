@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export async function getRosterLedgerId(programId: number) {
+export async function resolveRosterLedgerId(programId: number) {
   const { data, error } = await supabase
     .from("ledgers")
     .select("id, name, program_id")

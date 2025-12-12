@@ -1,7 +1,7 @@
 import CardFormatter from "@/components/cards/CardFormatter";
 import { StickyNote, Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/actions/button";
+import { Textarea } from "@/components/ui/forms/textarea";
 
 interface NotesCardProps {
   // real props tomorrow
