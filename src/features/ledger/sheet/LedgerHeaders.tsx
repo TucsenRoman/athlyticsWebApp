@@ -41,8 +41,8 @@ import {
   DialogFooter,
 } from "@/components/ui/overlays/dialog";
 
-import RouteConnect from "../RouteConnect";
-import RouteInfo from "../RouteInfo";
+import RouteConnect from "../actions/RouteConnect";
+import RouteInfo from "../actions/RouteInfo";
 
 /* -------------------------------------------------------------------------- */
 /*                                Header Cell                                 */

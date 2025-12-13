@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-import LedgerSheet from "@/components/ledger/ledgerSheet/LedgerSheet";
+import LedgerSheet from "@/features/ledger/sheet/LedgerSheet";
 import EditorFooter from "./EditorFooter";
 
 import type { Tables } from "@/integrations/supabase/types";

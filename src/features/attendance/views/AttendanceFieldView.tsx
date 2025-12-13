@@ -22,7 +22,7 @@ import AttendanceCover from "@/features/attendance/components/AttendanceCover";
 import StatusSelector from "@/features/attendance/components/StatusSelector";
 
 import CardFormatter from "@/components/cards/CardFormatter";
-import { useProgramContext } from "@/hooks/useProgramContext";
+import { useProgramContext } from "@/features/program_cloak/useProgramContext";
 
 import {
   BadgeCheck,

@@ -1,8 +1,8 @@
 // src/components/RequireProgram.tsx
 "use client";
 
-import ProgramSelector from "@/components/program/ProgramSelector";
-import { useProgramContext } from "@/hooks/useProgramContext";
+import ProgramSelector from "@/features/program/components/ProgramSelector";
+import { useProgramContext } from "@/features/program_cloak/useProgramContext";
 
 /*
   This component doubles as:

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import CardFormatter from "@/components/cards/CardFormatter";
 import { CalendarDays, Clock } from "lucide-react";
 
-import { useProgramContext } from "@/hooks/useProgramContext";
+import { useProgramContext } from "@/features/program_cloak/useProgramContext";
 
 import {
   fetchScheduleWeek,

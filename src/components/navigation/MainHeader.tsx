@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { MapPinned, Sparkles, PencilRuler, Weight, Dumbbell } from "lucide-react";
 import { motion } from "framer-motion";
-import ProgramSelector from "@/components/program/ProgramSelector";
-import { useProgramContext } from "@/hooks/useProgramContext";
+import ProgramSelector from "@/features/program/components/ProgramSelector";
+import { useProgramContext } from "@/features/program_cloak/useProgramContext";
 import { EditModeContext } from "@/contexts/EditModeContext";
 import Usermenu from "./UserMenu";
 

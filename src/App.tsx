@@ -13,15 +13,15 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/navigation/ProtectedRoute";
 import MainHeader from "@/components/navigation/MainHeader";
 
-import RequireProgram from "@/components/navigation/RequireProgram";
-import { ProgramProvider } from "@/hooks/useProgramContext";
+import RequireProgram from "@/features/program_cloak/RequireProgram";
+import { ProgramProvider } from "@/features/program_cloak/useProgramContext";
 
 // Pages
 import Home from "./pages/HomePage";
 import Auth from "./pages/Auth";
 import DiscoveryPage from "./pages/DiscoveryPage";
 import WorkspacePage from "./pages/WorkspacePage";
-import LedgerView from "./components/ledger/LedgerView";
+// import LedgerView from "./features/ledger/LedgerView";
 import FieldPage from "./pages/FieldPage";
 import TierPage from "./pages/TierPage";
 import NotFound from "./pages/NotFound";
@@ -34,7 +34,7 @@ export default function App() {
       <AuthProvider>
         <ProgramProvider> 
           <TooltipProvider>
-            
+
             <div className="h-[100vh] max-h-screen flex flex-col overflow-hidden">
 
               <BrowserRouter>
@@ -90,7 +90,7 @@ export default function App() {
                   />
 
                   {/* LEDGER DETAIL — needs program */}
-                  <Route
+                  {/* <Route
                     path="/ledgers/:ledgerId"
                     element={
                       <ProtectedRoute>
@@ -101,7 +101,7 @@ export default function App() {
                         </MainHeader>
                       </ProtectedRoute>
                     }
-                  />
+                  /> */}
 
                   {/* SETTINGS: TIER MANAGEMENT — does NOT need program */}
                   <Route

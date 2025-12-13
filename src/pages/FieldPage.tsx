@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import FieldSearchBar from "@/components/field/FieldSearchBar";
 import FieldFeed from "@/components/field/FieldFeed";
-import NoProgramState from "@/components/navigation/RequireProgram"; //why is this here?
-import { useProgramContext } from "@/hooks/useProgramContext";
+import NoProgramState from "@/features/program_cloak/RequireProgram"; //why is this here?
+import { useProgramContext } from "@/features/program_cloak/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
 export default function FieldViewScreen() {

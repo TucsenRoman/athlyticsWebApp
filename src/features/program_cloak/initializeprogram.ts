@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
  *
  * All heavy cloning logic is inside the Edge Function.
  */
-export async function projectInstaller(programId: number) {
+export async function initializeProgram(programId: number) {
   try {
     // 1. Get current user
     const { data: auth, error: authErr } = await supabase.auth.getUser();
