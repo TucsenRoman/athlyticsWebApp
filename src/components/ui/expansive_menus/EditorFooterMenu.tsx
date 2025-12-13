@@ -9,7 +9,7 @@ import {
   X
 } from "lucide-react";
 
-import OpenExistingProject from "@/components/workspace/editor/OpenExistingProject";
+import OpenExistingProject from "@/features/workspace/views/editor/OpenExistingProject";
 
 /* TYPES ------------------------------------------------------------------- */
 

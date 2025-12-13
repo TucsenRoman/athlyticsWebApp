@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-import LedgerToolbar from "../workspace/workspacetoolbar/WorkspaceToolbar";
+import LedgerToolbar from "../../features/workspace/components/WorkspaceToolbar";
 import LedgerSheet from "./ledgerSheet/LedgerSheet";
 import LedgerFooter from "./LedgerFooter";
 

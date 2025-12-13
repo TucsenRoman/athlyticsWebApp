@@ -2,12 +2,12 @@
 "use client";
 
 import {
-  LayoutDashboard,
   Edit3,
   CalendarDays,
   Maximize,
   Minimize,
   UsersRound,
+  Settings,
 } from "lucide-react";
 
 import React, { useState } from "react";
@@ -15,19 +15,16 @@ import { Button } from "@/components/ui/actions/button";
 
 // VIEW IMPORTS
 import { AttendanceTools } from "@/features/attendance";
-import ManagerTools from "@/components/workspace/workspacetoolbar/ManagerTools";
-import EditorTools from "@/components/workspace/workspacetoolbar/EditorTools";
 import { ScheduleTools } from "@/features/schedule";
+import { ManagerTools, EditorTools, type WorkspaceMode } from "@/features/workspace";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
 /* -------------------------------------------------------------------------- */
 
 export interface ToolbarProps {
-  mode: "manager" | "editor" | "attendance" | "schedule";
-  setMode: React.Dispatch<
-    React.SetStateAction<"manager" | "editor" | "attendance" | "schedule">
-  >;
+  mode: WorkspaceMode;
+  setMode: React.Dispatch<React.SetStateAction<WorkspaceMode>>;
   path: string[];
 
   onManagerSearch?: (query: string) => void;
@@ -46,7 +43,7 @@ export interface ToolbarProps {
   // SCHEDULE
   scheduleWeekIndex?: number;
   setScheduleWeekIndex?: React.Dispatch<React.SetStateAction<number>>;
-  onScheduleAdd?: () => void;    // <-- we use this now
+  onScheduleAdd?: () => void;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -115,7 +112,7 @@ export default function WorkspaceToolbar({
             label="Manager"
             active={mode === "manager"}
             onClick={() => setMode("manager")}
-            icon={<LayoutDashboard className="h-3 w-3" />}
+            icon={<Settings className="h-3 w-3" />}
           />
           <ModeTab
             label="Editor"

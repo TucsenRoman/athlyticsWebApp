@@ -55,7 +55,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                 <button
                   onClick={() => navigate("/")}
                 >
-                  <img src="/StopWatchLogo.png" className="w-8 h-8" />
+                  <img src="/logos/athlytics-logo.png" className="w-8 h-8" />
                 </button>
               </div>
 
