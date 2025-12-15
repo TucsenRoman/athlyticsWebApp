@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/forms/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/layout/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/navigation/tabs";
 
+import fillerBackground from "@/assets/backgrounds/filler-bg-2.png"
+
 import { z } from "zod";
 
 /* -------------------------- Password Strength Schema -------------------------- */
@@ -120,7 +122,7 @@ export default function AuthForm() {
       `}
       style={
         showBg
-          ? { backgroundImage: "url('/AthlyticsFillerBg5.png')" }
+          ? { backgroundImage: `url(${fillerBackground})` }
           : undefined
       }
     >

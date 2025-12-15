@@ -15,14 +15,14 @@ export default function Home() {
 
   /* AUTO-REDIRECT WHEN USER LOGS IN */
   useEffect(() => {
-    if (user) navigate("/field");
+    if (user) navigate("radar");
   }, [user, navigate]);
 
   /* ---------------------------------------------------------------------- */
   /*  PUBLIC HOME                                                            */
   /* ---------------------------------------------------------------------- */
   return (
-    <div className="min-h-screen w-full bg-neutral-50 dark:bg-neutral-900">
+    <div className="min-h-screen w-full bg-neutral-50 dark:bg-neutral-900 overflow-auto">
 
       {/* HERO */}
       <section className="relative w-full flex flex-col items-center text-center px-6 pt-28 pb-32 overflow-hidden">

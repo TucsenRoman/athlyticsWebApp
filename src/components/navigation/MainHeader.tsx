@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MapPinned, Sparkles, PencilRuler, Weight, Dumbbell } from "lucide-react";
+import { MapPinned, Sparkles, PencilRuler, Weight, Dumbbell, LocateFixed } from "lucide-react";
 import { motion } from "framer-motion";
 import ProgramSelector from "@/features/program/components/ProgramSelector";
-import { useProgramContext } from "@/features/program_cloak/useProgramContext";
+import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 import { EditModeContext } from "@/contexts/EditModeContext";
-import Usermenu from "./UserMenu";
+import AccountMenu from "../layout/AccountMenu";
 
 /* -------------------------------------------------------------------------- */
 
@@ -23,7 +23,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
   const { selectedProgramId, setSelectedProgramId } = useProgramContext();
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const activeField = location.pathname.startsWith("/field");
+  const activeRadar = location.pathname.startsWith("/radar");
   const activeWorkspace = location.pathname.startsWith("/workspace");
   const activeTraining = location.pathname.startsWith("/training");
   const activeDiscovery = location.pathname.startsWith("/discovery");
@@ -75,11 +75,11 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
               <div className="flex justify-between items-center w-min-content">
                 <DesktopNavPill>
                   <DesktopNavButton
-                    icon={<MapPinned className="w-4 h-4" />}
-                    label="Field"
-                    active={activeField}
-                    onClick={() => navigate("/field")}
-                    widthClass="w-[80px]"
+                    icon={<LocateFixed className="w-5 h-5" />}
+                    label="Radar"
+                    active={activeRadar}
+                    onClick={() => navigate("/radar")}
+                    widthClass="w-[90px]"
                   />
 
                   <DesktopNavButton
@@ -107,12 +107,12 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                   />
                 </DesktopNavPill>
               </div>
-              <Usermenu />
+              <AccountMenu />
             </div>
 
             {/* Mobile — User menu only */}
             <div className="md:hidden">
-              <Usermenu />
+              <AccountMenu />
             </div>
           </header>
         )}
@@ -129,7 +129,7 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
         {/* ------------------------------------------------------------------ */}
         {!hideHeader && (
           <MobileBottomBar
-            activeField={activeField}
+            activeRadar={activeRadar}
             activeWorkspace={activeWorkspace}
             activeTraining={activeTraining}
             activeDiscovery={activeDiscovery}
@@ -195,7 +195,7 @@ function DesktopNavButton({
 /* MOBILE NAV BAR                                                             */
 /* -------------------------------------------------------------------------- */
 
-function MobileBottomBar({ activeField, activeWorkspace, activeTraining, activeDiscovery, navigate }) {
+function MobileBottomBar({ activeRadar, activeWorkspace, activeTraining, activeDiscovery, navigate }) {
   return (
     <div className="
       md:hidden fixed 
@@ -205,8 +205,8 @@ function MobileBottomBar({ activeField, activeWorkspace, activeTraining, activeD
     ">
       <MobileNavIcon
         icon={<MapPinned className="w-6 h-6" />}
-        active={activeField}
-        onClick={() => navigate("/field")}
+        active={activeRadar}
+        onClick={() => navigate("/radar")}
       />
       <MobileNavIcon
         icon={<PencilRuler className="w-6 h-6" />}

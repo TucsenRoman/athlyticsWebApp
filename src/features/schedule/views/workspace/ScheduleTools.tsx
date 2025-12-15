@@ -1,13 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/actions/button";
+import DateNavigator from "@/components/ui/navigation/datenavigator";
+import ExpansiveMenu, {
+  type ExpansiveMenuItem,
+} from "@/components/ui/navigation/expansivemenu";
+
 import {
   Plus,
   CalendarRange,
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  ArrowUpCircle,
   LayoutGrid,
   List,
   Calendar1,
@@ -15,278 +17,230 @@ import {
   Sparkles,
   Printer,
   Download,
+  ToolCase,
+  LayoutTemplate,
+  Eye,
 } from "lucide-react";
 
-/* -----------------------------------------------------------------------------
-   PROPS
------------------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------- */
+/* TYPES                                                                      */
+/* -------------------------------------------------------------------------- */
 
-interface ScheduleToolsProps {
-  // Core actions
-  onAddEvent?: () => void;
-  onJumpToToday?: () => void;
-  onViewRange?: () => void;
+type ScheduleView = "day" | "week" | "month";
 
-  // Navigation
-  onPrevWeek?: () => void;
-  onNextWeek?: () => void;
-  onJumpToWeekZero?: () => void;
+/* -------------------------------------------------------------------------- */
+/* UTIL                                                                       */
+/* -------------------------------------------------------------------------- */
 
-  // View modes
-  onViewWeek?: () => void;
-  onViewList?: () => void;
-  onViewDay?: () => void;
-
-  // Filters + Templates
-  onOpenFilter?: () => void;
-  onOpenTemplateMenu?: () => void;
-
-  // Exporting
-  onPrint?: () => void;
-  onExport?: () => void;
-
-  // Layout size toggle
-  compact?: boolean;
-  onToggleCompact?: () => void;
-
-  // UI label text
-  weekLabel?: string;
+function getLocalISODate() {
+  const d = new Date();
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0"),
+  ].join("-");
 }
 
-/* -----------------------------------------------------------------------------
-   COMPONENT
------------------------------------------------------------------------------ */
+function shiftByView(
+  iso: string,
+  view: ScheduleView,
+  direction: -1 | 1
+) {
+  const d = new Date(iso);
+  d.setHours(12); // DST safety
+
+  switch (view) {
+    case "day":
+      d.setDate(d.getDate() + direction);
+      break;
+    case "week":
+      d.setDate(d.getDate() + direction * 7);
+      break;
+    case "month":
+      d.setMonth(d.getMonth() + direction);
+      break;
+  }
+
+  return d.toISOString().slice(0, 10);
+}
+
+function formatByView(iso: string, view: ScheduleView) {
+  const d = new Date(iso);
+
+  if (view === "week") {
+    return `Week of ${d.toLocaleDateString()}`;
+  }
+
+  if (view === "month") {
+    return d.toLocaleString("default", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  return d.toLocaleDateString();
+}
+
+/* -------------------------------------------------------------------------- */
+/* PROPS                                                                      */
+/* -------------------------------------------------------------------------- */
+
+interface ScheduleToolsProps {
+  onAddEvent?: () => void;
+  onOpenFilter?: () => void;
+  onOpenTemplateMenu?: () => void;
+  onPrint?: () => void;
+  onExport?: () => void;
+}
+
+/* -------------------------------------------------------------------------- */
+/* COMPONENT                                                                  */
+/* -------------------------------------------------------------------------- */
 
 export default function ScheduleTools({
-  // Core
   onAddEvent,
-  onJumpToToday,
-  onViewRange,
-
-  // Navigation
-  onPrevWeek,
-  onNextWeek,
-  onJumpToWeekZero,
-
-  // Mode switches
-  onViewWeek,
-  onViewList,
-  onViewDay,
-
-  // Filters + Templates
   onOpenFilter,
   onOpenTemplateMenu,
-
-  // Exporting
   onPrint,
   onExport,
-
-  // Compact toggle
-  compact,
-  onToggleCompact,
-
-  // UI label
-  weekLabel = "Week — (dates)",
 }: ScheduleToolsProps) {
+  /* -------------------- VIEW + DATE STATE -------------------- */
+
+  const [view, setView] = useState<ScheduleView>("week");
+  const [anchorDate, setAnchorDate] = useState(getLocalISODate());
+
+  /* -------------------- DATE HANDLERS -------------------- */
+
+  function handlePrev() {
+    setAnchorDate((d) => shiftByView(d, view, -1));
+  }
+
+  function handleNext() {
+    setAnchorDate((d) => shiftByView(d, view, 1));
+  }
+
+  function handleToday() {
+    setAnchorDate(getLocalISODate());
+  }
+
+  /* -------------------- TOOL MENU -------------------- */
+  const toolItems: ExpansiveMenuItem[] = [
+    /* -------------------------------------------------- */
+    /* ADD EVENT (primary action)                          */
+    /* -------------------------------------------------- */
+    {
+      label: "Add Event",
+      icon: <Plus className="h-4 w-4" />,
+      flavor: "coral",
+      children: [
+        {
+          label: "Add Event",
+          icon: <Plus className="h-4 w-4" />,
+          action: onAddEvent,
+          flavor: "coral",
+        },
+        {
+          label: "Templates",
+          icon: <LayoutTemplate className="h-4 w-4" />,
+          action: onOpenTemplateMenu,
+          flavor: "indigo",
+        },
+      ],
+    },
+
+    /* -------------------------------------------------- */
+    /* VIEW (mode selector)                                */
+    /* -------------------------------------------------- */
+    {
+      id: "view",
+      label: "View",
+      icon: <Eye className="h-4 w-4" />,
+      flavor: "blue",
+      children: [
+        {
+          label: "Day",
+          icon: <Calendar1 className="h-4 w-4" />,
+          action: () => setView("day"),
+          flavor: "teal",
+        },
+        {
+          label: "Week",
+          icon: <LayoutGrid className="h-4 w-4" />,
+          action: () => setView("week"),
+          flavor: "slate",
+        },
+        {
+          label: "Month",
+          icon: <CalendarRange className="h-4 w-4" />,
+          action: () => setView("month"),
+          flavor: "indigo",
+        },
+      ],
+    },
+
+    /* -------------------------------------------------- */
+    /* FILTERS                                            */
+    /* -------------------------------------------------- */
+    {
+      label: "Filters",
+      icon: <Filter className="h-4 w-4" />,
+      action: onOpenFilter,
+      flavor: "purple",
+    },
+
+    /* -------------------------------------------------- */
+    /* EXPORT                                             */
+    /* -------------------------------------------------- */
+    {
+      id: "export",
+      label: "Export",
+      icon: <Download className="h-4 w-4" />,
+      flavor: "green",
+      children: [
+        {
+          label: "Print",
+          icon: <Printer className="h-4 w-4" />,
+          action: onPrint,
+          flavor: "yellow",
+        },
+        {
+          label: "Export File",
+          icon: <Download className="h-4 w-4" />,
+          action: onExport,
+          flavor: "green",
+        },
+      ],
+    },
+  ];
+
+  /* -------------------- RENDER -------------------- */
   return (
-    <div className="flex items-center justify-between w-full gap-6">
-      {/* ------------------------------------------------------------------ */}
-      {/* RIGHT — TOOLBAR BUTTONS                                           */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="flex items-center gap-1">
-
-        {/* ------------------------- */}
-        {/* WEEK NAVIGATION & LABEL   */}
-        {/* ------------------------- */}
-        {onPrevWeek && (
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Previous Week"
-            onClick={onPrevWeek}
-            className="
-              h-7 w-7 rounded-full
-              hover:text-[var(--accent)]
-              hover:bg-[var(--accent-bg)]
-            "
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-        )}
-
-        <span
-          className="
-            h-6 px-3 flex items-center
-            text-xs font-medium rounded-full
-            bg-[var(--gray-100)]
-            border border-[var(--border)]
-            text-[var(--text)]
-            shadow-sm
-          "
-        >
-          {weekLabel}
-        </span>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Next Week"
-          onClick={onNextWeek}
-          className="
-            h-7 w-7 rounded-full
-            hover:text-[var(--accent)]
-            hover:bg-[var(--accent-bg)]
-          "
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Jump to Week 0"
-          onClick={onJumpToWeekZero}
-          className="
-            h-7 w-7 rounded-full
-            hover:text-[var(--fvr-blue)]
-            hover:bg-[var(--fvr-blue-bg)]
-          "
-        >
-          <ArrowUpCircle className="h-4 w-4" />
-        </Button>
-
-        {/* ------------------------- */}
-        {/* CORE ACTIONS               */}
-        {/* ------------------------- */}
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Add Event"
-          onClick={onAddEvent}
-          className="
-            h-7 w-7 rounded-full
-            hover:text-[var(--accent)]
-            hover:bg-[var(--accent-bg)]
-          "
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Jump to Today"
-          onClick={onJumpToToday}
-          className="
-            h-7 w-7 rounded-full
-            hover:text-[var(--fvr-blue)]
-            hover:bg-[var(--fvr-blue-bg)]
-          "
-        >
-          <CalendarDays className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          title="View Date Range"
-          onClick={onViewRange}
-          className="
-            h-7 w-7 rounded-full
-            hover:text-[var(--fvr-green)]
-            hover:bg-[var(--fvr-green-bg)]
-          "
-        >
-          <CalendarRange className="h-4 w-4" />
-        </Button>
-
-        {/* ------------------------- */}
-        {/* VIEW MODES                */}
-        {/* ------------------------- */}
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Week View"
-          onClick={onViewWeek}
-          className="h-7 w-7 rounded-full hover:bg-[var(--gray-200)]"
-        >
-          <LayoutGrid className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          title="List View"
-          onClick={onViewList}
-          className="h-7 w-7 rounded-full hover:bg-[var(--gray-200)]"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Day View"
-          onClick={onViewDay}
-          className="h-7 w-7 rounded-full hover:bg-[var(--gray-200)]"
-        >
-          <Calendar1 className="h-4 w-4" />
-        </Button>
-
-        {/* ------------------------- */}
-        {/* FILTERS + TEMPLATES       */}
-        {/* ------------------------- */}
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Filters"
-          onClick={onOpenFilter}
-          className="
-            h-7 w-7 rounded-full
-            hover:text-[var(--fvr-purple)]
-            hover:bg-[var(--fvr-purple-bg)]
-          "
-        >
-          <Filter className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Templates"
-          onClick={onOpenTemplateMenu}
-          className="
-            h-7 w-7 rounded-full
-            hover:text-[var(--fvr-yellow)]
-            hover:bg-[var(--fvr-yellow-bg)]
-          "
-        >
-          <Sparkles className="h-4 w-4" />
-        </Button>
-
-        {/* ------------------------- */}
-        {/* EXPORTING                */}
-        {/* ------------------------- */}
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Print"
-          onClick={onPrint}
-          className="h-7 w-7 rounded-full hover:bg-[var(--gray-200)]"
-        >
-          <Printer className="h-4 w-4" />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          title="Export"
-          onClick={onExport}
-          className="h-7 w-7 rounded-full hover:bg-[var(--gray-200)]"
-        >
-          <Download className="h-4 w-4" />
-        </Button>
-      </div>
+    <div className="flex items-center justify-between w-full gap-4">
+      {/* TOOLS */}
+      <ExpansiveMenu
+        items={toolItems}
+        expand="line"
+        direction="left"
+        spacing={36}
+        variant="rainbow"
+        mainIcon={<ToolCase />}
+        mainRotate={-20}
+        mainSize={42}
+        defaultState="open"
+        mobile={{
+          direction: "right",
+          mainRotate: 20,
+        }}
+      />
+      {/* DATE NAVIGATION (view-aware) */}
+      <DateNavigator
+        value={anchorDate}
+        onChange={setAnchorDate}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        onToday={handleToday}
+        formatDisplay={(iso) => formatByView(iso, view)}
+      />
     </div>
   );
 }

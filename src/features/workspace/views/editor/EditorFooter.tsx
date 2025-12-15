@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Route, Settings, Trash2 } from "lucide-react";
 
-import EditorFooterMenu from "@/components/ui/expansive_menus/EditorFooterMenu";
+import EditorFooterMenu from "@/components/ui/IGNORE/EditorFooterMenu";
 import { fetchPackageLedgers } from "@/lib/fetchPackageLedgers";
 
 /* TYPES ------------------------------------------------------------------- */

@@ -8,7 +8,7 @@
 // Views (page-level / route-level)
 // ---------------------------------------------------------------------------
 export { default as AttendanceFieldView } from "./views/AttendanceFieldView";
-export { default as AttendanceWorkspaceView } from "./views/AttendanceWorkspaceView";
+export { default as AttendanceWorkspaceView } from "./views/workspace/AttendanceWorkspaceView";
 
 // ---------------------------------------------------------------------------
 // Components (shared UI across attendance views)

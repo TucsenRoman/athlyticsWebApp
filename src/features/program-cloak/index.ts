@@ -1,4 +1,4 @@
-// src/features/program_cloak/index.ts
+// src/features/program-cloak/index.ts
 
 /* -------------------------------------------------------------------------- */
 /* CONTEXT / ACCESS                                                           */

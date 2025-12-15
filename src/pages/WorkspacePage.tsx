@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { useProgramContext } from "@/features/program_cloak/useProgramContext";
+import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 
 import {
   WorkspaceToolbar,

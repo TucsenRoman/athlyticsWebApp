@@ -1,4 +1,4 @@
-// src/features/program_cloak/program.types.ts
+// src/features/program-cloak/program.types.ts
 
 export type ProgramId = number;
 

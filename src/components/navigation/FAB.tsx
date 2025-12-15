@@ -11,8 +11,8 @@ export default function ViewFab() {
   const buttons = [
     {
       icon: <MapPinned className="w-5 h-5" />,
-      route: "/field",
-      active: location.pathname.startsWith("/field"),
+      route: "/radar",
+      active: location.pathname.startsWith("/radar"),
     },
     {
       icon: <PencilRuler className="w-5 h-5" />,

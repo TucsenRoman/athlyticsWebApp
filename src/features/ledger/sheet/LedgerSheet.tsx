@@ -8,9 +8,9 @@ import React, {
 import { supabase } from "@/integrations/supabase/client";
 import LedgerHeaders from "./LedgerHeaders";
 import LedgerCell from "./LedgerCell";
-import LedgerMenu from "@/components/ui/expansive_menus/LedgerMenu";
-import ColumnsMenu from "@/components/ui/expansive_menus/ColumnsMenu";
-import RowsMenu from "@/components/ui/expansive_menus/RowsMenu";
+import LedgerMenu from "@/components/ui/IGNORE/LedgerMenu";
+import ColumnsMenu from "@/components/ui/IGNORE/ColumnsMenu";
+import RowsMenu from "@/components/ui/IGNORE/RowsMenu";
 import {
   repairRouteClasses,
   LedgerHeader,

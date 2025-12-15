@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-import { useProgramContext } from "@/features/program_cloak/useProgramContext";
+import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
 import DiscoveryHeader from "@/components/discovery/DiscoveryHeader";

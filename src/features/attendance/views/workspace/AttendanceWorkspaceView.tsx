@@ -15,7 +15,7 @@ import {
   type UiAttendanceStatus,
 } from "@/features/attendance";
 
-import { useProgramContext } from "@/features/program_cloak/useProgramContext";
+import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 
 /* -------------------------------------------------------------------------- */
 /* PROPS                                                                       */

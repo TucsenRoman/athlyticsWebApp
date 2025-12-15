@@ -491,7 +491,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           className={
             variant === "empty"
               ? `
-                min-w-[155px] rounded-3xl overflow-hidden
+                min-w-[155px] rounded-xl overflow-hidden
                 bg-[var(--bg)]
                 border border-[var(--border)]
                 backdrop-blur-xl

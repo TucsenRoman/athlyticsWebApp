@@ -2,7 +2,8 @@
 "use client";
 
 import ProgramSelector from "@/features/program/components/ProgramSelector";
-import { useProgramContext } from "@/features/program_cloak/useProgramContext";
+import { useProgramContext } from "@/features/program-cloak/useProgramContext";
+import fillerBg from "@/assets/backgrounds/filler-bg-2.png";
 
 /*
   This component doubles as:
@@ -33,8 +34,8 @@ export default function RequireProgram({
           p-10 flex flex-col items-center
 
           bg-cover bg-center
-          bg-[url('/AthlyticsFillerBg5.png')]
         "
+         style={{ backgroundImage: `url(${fillerBg})` }}
       >
         {/* Blur overlay */}
         <div className="absolute inset-0 bg-[var(--black-overlay)] backdrop-blur-[8px]" />

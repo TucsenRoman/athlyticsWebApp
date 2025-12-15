@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/actions/button";
 import { Input } from "@/components/ui/forms/input";
 import { Separator } from "@/components/ui/disclosure/separator";
 import { Sheet, SheetContent } from "@/components/ui/layout/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/overlays/tooltip";
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state";

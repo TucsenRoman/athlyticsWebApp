@@ -4,7 +4,7 @@
 # This app is a client-side SPA (React + Vite).
 # Only the homepage ("/") is intended to be indexed by search engines.
 #
-# All other routes (auth, field, workspace, discovery, ledgers, settings)
+# All other routes (auth, radar, workspace, discovery, ledgers, settings)
 # are application-only views that require authentication and/or JS rendering.
 # Indexing them provides no SEO value and creates crawl noise.
 #
@@ -18,7 +18,7 @@ User-agent: *
 Allow: /
 Disallow: /login
 Disallow: /signup
-Disallow: /field
+Disallow: /radar
 Disallow: /workspace
 Disallow: /discovery
 Disallow: /ledgers
@@ -28,7 +28,7 @@ User-agent: Googlebot
 Allow: /
 Disallow: /login
 Disallow: /signup
-Disallow: /field
+Disallow: /radar
 Disallow: /workspace
 Disallow: /discovery
 Disallow: /ledgers
@@ -38,7 +38,7 @@ User-agent: Bingbot
 Allow: /
 Disallow: /login
 Disallow: /signup
-Disallow: /field
+Disallow: /radar
 Disallow: /workspace
 Disallow: /discovery
 Disallow: /ledgers
@@ -48,7 +48,7 @@ User-agent: Twitterbot
 Allow: /
 Disallow: /login
 Disallow: /signup
-Disallow: /field
+Disallow: /radar
 Disallow: /workspace
 Disallow: /discovery
 Disallow: /ledgers
@@ -58,7 +58,7 @@ User-agent: facebookexternalhit
 Allow: /
 Disallow: /login
 Disallow: /signup
-Disallow: /field
+Disallow: /radar
 Disallow: /workspace
 Disallow: /discovery
 Disallow: /ledgers
