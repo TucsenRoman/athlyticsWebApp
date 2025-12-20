@@ -61,7 +61,7 @@ export default function EditorTools({
         variant="rainbow"
         mainIcon={<ToolCase />}
         mainRotate={-20}
-        mainSize={42}
+        // mainSize={42}
         defaultState="open"
         mobile={{
           direction: "right",

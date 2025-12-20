@@ -6,16 +6,12 @@ import { MapPinned, Sparkles, PencilRuler, Weight, Dumbbell, LocateFixed } from 
 import { motion } from "framer-motion";
 import ProgramSelector from "@/features/program/components/ProgramSelector";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
-import { EditModeContext } from "@/contexts/EditModeContext";
 import AccountMenu from "../layout/AccountMenu";
+import { Button } from "@/components/ui";
 
 /* -------------------------------------------------------------------------- */
 
-interface HeaderLayoutProps {
-  children: React.ReactNode;
-}
-
-export default function HeaderLayout({ children }: HeaderLayoutProps) {
+export default function MainHeader() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,6 +24,11 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
   const activeTraining = location.pathname.startsWith("/training");
   const activeDiscovery = location.pathname.startsWith("/discovery");
 
+  const programScoped =
+    location.pathname.startsWith("/radar") ||
+    location.pathname.startsWith("/workspace") ||
+    location.pathname.startsWith("/training");
+
   // Collapse/expand header toggle
   const [collapsed, setCollapsed] = useState(false);
   useEffect(() => {
@@ -37,28 +38,24 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
   }, []);
 
   return (
-    <EditModeContext.Provider value={{ isEditMode, setIsEditMode }}>
-      <div className="bg-[var(--bg)] flex flex-col flex-1 min-h-0">
-      {/* <div className="min-h-screen bg-[var(--bg)] flex flex-col overflow-hidden"> */}
+    <>
+      {/* HEADER (Mobile + Desktop) */}
+      {!hideHeader && !collapsed && (
+        <header className="h-14 px-3 flex items-center justify-between border-b border-[var(--border)]">
 
-        {/* ------------------------------------------------------------------ */}
-        {/* HEADER (Mobile + Desktop)                                         */}
-        {/* ------------------------------------------------------------------ */}
-        {!hideHeader && !collapsed && (
-          <header className="h-[8vh] px-3 flex items-center justify-between border-b border-[var(--border)]">
+          {/* LEFT — Logo + Program Selector */}
+          <div className="flex justify-between items-center gap-2 w-min-content">
+            
+            {/* LOGO BUTTON */}
+            <div className="flex items-center p-1 h-10 w-[50px] rounded-md hover:bg-[var(--accent-bg)] transition-all">
+              <button
+                onClick={() => navigate("/")}
+              >
+                <img src="/logos/athlytics-logo.png" className="w-8 h-8" />
+              </button>
+            </div>
 
-            {/* LEFT — Logo + Program Selector */}
-            <div className="flex justify-between items-center gap-2 w-min-content">
-              
-              {/* LOGO BUTTON */}
-              <div className="flex items-center p-1 h-10 w-[50px] rounded-md hover:bg-[var(--accent-bg)] transition-all">
-                <button
-                  onClick={() => navigate("/")}
-                >
-                  <img src="/logos/athlytics-logo.png" className="w-8 h-8" />
-                </button>
-              </div>
-
+            {programScoped && (
               <DesktopNavPill>
                 {/* PROGRAM SELECTOR */}
                 <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text)] hover:bg-[var(--accent-bg)] hover:text-[var(--accent)] cursor-pointer">
@@ -68,76 +65,56 @@ export default function HeaderLayout({ children }: HeaderLayoutProps) {
                   />
                 </div>
               </DesktopNavPill>
+            )}
+          </div>
+
+          {/* RIGHT — Desktop Nav + User Menu */}
+          <div className="hidden md:flex gap-2">
+            <div className="flex justify-between items-center w-min-content">
+              <DesktopNavPill>
+                <DesktopNavButton
+                  icon={<LocateFixed className="w-5 h-5" />}
+                  label="Radar"
+                  active={activeRadar}
+                  onClick={() => navigate("/radar")}
+                  widthClass="w-[90px]"
+                />
+
+                <DesktopNavButton
+                  icon={<PencilRuler className="w-4 h-4" />}
+                  label="Workspace"
+                  active={activeWorkspace}
+                  onClick={() => navigate("/workspace")}
+                  widthClass="w-[120px]"
+                />
+
+                {/* <DesktopNavButton
+                  icon={<Dumbbell className="w-4 h-4" />}
+                  label="Training"
+                  active={activeTraining}
+                  onClick={() => navigate("/training")}
+                  widthClass="w-[120px]"
+                /> */}
+
+                <DesktopNavButton
+                  icon={<Sparkles className="w-4 h-4" />}
+                  label="Discovery"
+                  active={activeDiscovery}
+                  onClick={() => navigate("/discovery")}
+                  widthClass="w-[120px]"
+                />
+              </DesktopNavPill>
             </div>
+            <AccountMenu />
+          </div>
 
-            {/* RIGHT — Desktop Nav + User Menu */}
-            <div className="hidden md:flex gap-2">
-              <div className="flex justify-between items-center w-min-content">
-                <DesktopNavPill>
-                  <DesktopNavButton
-                    icon={<LocateFixed className="w-5 h-5" />}
-                    label="Radar"
-                    active={activeRadar}
-                    onClick={() => navigate("/radar")}
-                    widthClass="w-[90px]"
-                  />
-
-                  <DesktopNavButton
-                    icon={<PencilRuler className="w-4 h-4" />}
-                    label="Workspace"
-                    active={activeWorkspace}
-                    onClick={() => navigate("/workspace")}
-                    widthClass="w-[120px]"
-                  />
-
-                  {/* <DesktopNavButton
-                    icon={<Dumbbell className="w-4 h-4" />}
-                    label="Training"
-                    active={activeTraining}
-                    onClick={() => navigate("/training")}
-                    widthClass="w-[120px]"
-                  /> */}
-
-                  <DesktopNavButton
-                    icon={<Sparkles className="w-4 h-4" />}
-                    label="Discovery"
-                    active={activeDiscovery}
-                    onClick={() => navigate("/discovery")}
-                    widthClass="w-[120px]"
-                  />
-                </DesktopNavPill>
-              </div>
-              <AccountMenu />
-            </div>
-
-            {/* Mobile — User menu only */}
-            <div className="md:hidden">
-              <AccountMenu />
-            </div>
-          </header>
-        )}
-
-        {/* ------------------------------------------------------------------ */}
-        {/* CONTENT                                                           */}
-        {/* ------------------------------------------------------------------ */}
-        <main className="flex flex-col flex-1 min-h-0">
-          {children}
-        </main>
-
-        {/* ------------------------------------------------------------------ */}
-        {/* MOBILE BOTTOM NAV                                                 */}
-        {/* ------------------------------------------------------------------ */}
-        {!hideHeader && (
-          <MobileBottomBar
-            activeRadar={activeRadar}
-            activeWorkspace={activeWorkspace}
-            activeTraining={activeTraining}
-            activeDiscovery={activeDiscovery}
-            navigate={navigate}
-          />
-        )}
-      </div>
-    </EditModeContext.Provider>
+          {/* Mobile — User menu only */}
+          <div className="md:hidden">
+            <AccountMenu />
+          </div>
+        </header>
+      )}
+    </>
   );
 }
 
@@ -188,67 +165,5 @@ function DesktopNavButton({
       {icon}
       <span className="text-sm">{label}</span>
     </button>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* MOBILE NAV BAR                                                             */
-/* -------------------------------------------------------------------------- */
-
-function MobileBottomBar({ activeRadar, activeWorkspace, activeTraining, activeDiscovery, navigate }) {
-  return (
-    <div className="
-      md:hidden fixed 
-      flex items-center justify-around
-      bottom-0 inset-x-0 
-      h-[9vh] bg-[var(--light)] shadow-inner 
-    ">
-      <MobileNavIcon
-        icon={<MapPinned className="w-6 h-6" />}
-        active={activeRadar}
-        onClick={() => navigate("/radar")}
-      />
-      <MobileNavIcon
-        icon={<PencilRuler className="w-6 h-6" />}
-        active={activeWorkspace}
-        onClick={() => navigate("/workspace")}
-      />
-      <MobileNavIcon
-        icon={<Dumbbell className="w-6 h-6" />}
-        active={activeTraining}
-        onClick={() => navigate("/training")}
-      />
-      <MobileNavIcon
-        icon={<Sparkles className="w-6 h-6" />}
-        active={activeDiscovery}
-        onClick={() => navigate("/discovery")}
-      />
-    </div>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* MOBILE NAV ICON                                                            */
-/* -------------------------------------------------------------------------- */
-
-function MobileNavIcon({ icon, active, onClick }) {
-  return (
-    <motion.button
-      onClick={onClick}
-      whileTap={{ scale: 0.85 }}
-      animate={active ? { scale: 1.25 } : { scale: 1 }}
-      transition={{ type: "spring", stiffness: 260, damping: 20 }}
-      className={`
-        flex flex-col items-center justify-center p-2 rounded-full
-        ${active ? "text-[var(--text-accent)] bg-[var(--accent-bg)]" : "text-[var(--text)]"}
-      `}
-    >
-      <motion.div
-        animate={active ? { opacity: 1 } : { opacity: 0.75 }}
-        transition={{ duration: 0.15 }}
-      >
-        {icon}
-      </motion.div>
-    </motion.button>
   );
 }

@@ -27,6 +27,7 @@ import {
   type DbScheduleSubslot,
   type UiCompiledWeek,
 } from "@/features/schedule";
+import { Divider } from "@/components/ui";
 
 /* -------------------------------------------------------------------------- */
 /*  PROPS                                                                     */
@@ -316,9 +317,9 @@ export default function ScheduleView({
   /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="flex flex-col h-full w-full overflow-hidden">
+    <div className="flex flex-col h-full w-full">
       {/* BODY WRAPPER — fixed area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="relative w-full h-[calc(100dvh-8.5rem)] overflow-hidden">
         {/* LOADING */}
         {loading && (
           <div className="flex items-center justify-center h-full text-sm text-[var(--gray-600)]">
@@ -333,7 +334,7 @@ export default function ScheduleView({
 
         {/* SCROLL REGION */}
         {!loading && !errorMsg && (
-          <div className="flex-1 overflow-y-auto min-h-0 pb-[9vh]">
+          <div className="absolute inset-0 overflow-y-auto pb-16 md:pb-0">
             {/* LIST VIEW (mobile or toggled) */}
             {listView ? (
               <div className="flex flex-col">
@@ -343,14 +344,18 @@ export default function ScheduleView({
                   return (
                     <div
                       key={dayIdx}
-                      className="border-t border-[var(--gray-300)] bg-white p-3 flex flex-col gap-2"
+                      className="p-3 flex flex-col gap-2"
                     >
-                      <h3 className="text-sm font-semibold">
+                      {dayIdx !== 0 && (
+                        <Divider tone="dark" />
+                      )}
+                      
+                      <h3 className="text-sm font-semibold text-[var(--text-dark)]">
                         {FULL_DAY_LABELS[dayIdx]}
                       </h3>
 
                       {daySlots.length === 0 ? (
-                        <div className="text-[11px] text-[var(--gray-500)] italic">
+                        <div className="text-[11px] text-[var(--text)] italic">
                           No events
                         </div>
                       ) : (

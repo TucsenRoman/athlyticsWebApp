@@ -304,6 +304,8 @@ export default function ExpansiveMenu({
 
     return (
       <Button
+        variant="toolbar"
+        iconSize="sm"
         title={item.label}
         onClick={() => {
           if (!activeNestKey && hasChildren) {
@@ -358,14 +360,9 @@ export default function ExpansiveMenu({
     >
       {/* MAIN ORB */}
       <Button
-        variant="none"
+        variant="toolbar"
+        data-active={open}
         onClick={handleMainClick}
-        className={`
-          h-full w-full rounded-full transition-all bg-[var(--gray-100)]
-          ${open
-            ? "hover:bg-[var(--accent-bg)] text-[var(--accent)]"
-            : "text-[var(--text)] hover:text-[var(--text-accent)]"}
-        `}
       >
         <motion.div
           animate={{ rotate: isNested ? 0 : open ? effectiveRotation : 0 }}
@@ -382,7 +379,7 @@ export default function ExpansiveMenu({
               justifyContent: "center",
             }}
           >
-            {isNested ? <ChevronLeft className="h-5 w-5" /> : mainIcon}
+            {isNested ? <ChevronLeft className="h-4 w-4" /> : mainIcon}
           </span>
         </motion.div>
       </Button>

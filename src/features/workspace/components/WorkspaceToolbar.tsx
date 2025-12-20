@@ -10,6 +10,7 @@ import {
   Settings,
   CalendarCog,
   CalendarFold,
+  Dumbbell,
 } from "lucide-react";
 
 import React, { useState } from "react";
@@ -20,7 +21,8 @@ import { AttendanceTools } from "@/features/attendance";
 import { ScheduleTools } from "@/features/schedule";
 import { ManagerTools, EditorTools, type WorkspaceMode } from "@/features/workspace";
 
-import AIAssistantTrigger from "@/components/aiassistant/AIAsisstantTrigger"
+import BatonTrigger from "@/components/baton/BatonTrigger";
+import TabToggler from "@/components/ui/navigation/tabtoggler";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
@@ -116,7 +118,7 @@ export default function WorkspaceToolbar({
 
   scheduleWeekIndex,
   setScheduleWeekIndex,
-  onScheduleAdd,       // <-- Now used correctly
+  onScheduleAdd,
 }: ToolbarProps) {
 
   const [query, setQuery] = useState("");
@@ -128,39 +130,25 @@ export default function WorkspaceToolbar({
     if (mode === "editor") onEditorSearch?.(value);
   };
 
+  const MODE_TABS = [
+    { value: "manager", label: "Manager", icon: <Settings className="h-4 w-4" /> },
+    { value: "editor", label: "Editor", icon: <Edit3 className="h-4 w-4" /> },
+    { value: "attendance", label: "Attendance", icon: <UsersRound className="h-4 w-4" /> },
+    { value: "schedule", label: "Schedule", icon: <CalendarFold className="h-4 w-4" /> },
+  ] as const;
+  type WorkspaceMode = (typeof MODE_TABS)[number]["value"];
+
   return (
-    // ~Keep sticky??
-    <div className="sticky top-0 z-40 h-20 md:h-10 py-1 px-3 flex flex-row gap-2 md:items-center items-start justify-between backdrop-blur bg-[var(--bg)] select-none">
-      <div className="flex flex-col md:flex-row justify-between gap-1 w-full">
+    <div className="h-10 py-1 px-3 flex flex-row gap-2 md:items-center items-start justify-between backdrop-blur bg-[var(--bg)] select-none">
+      {/* <div className="flex flex-col md:flex-row gap-1 w-full min-w-0"> */}
         {/* LEFT SECTION ----------------------------------------------------- */}
-        <div className="flex items-center h-8">
-          <div className="flex items-center gap-1 p-1 h-full bg-[var(--gray-100)] rounded-full">
-            <ModeTab
-              label="Manager"
-              active={mode === "manager"}
-              onClick={() => setMode("manager")}
-              icon={<Settings className="h-3 w-3" />}
-            />
-            <ModeTab
-              label="Editor"
-              active={mode === "editor"}
-              onClick={() => setMode("editor")}
-              icon={<Edit3 className="h-3 w-3" />}
-            />
-            <ModeTab
-              label="Attendance"
-              active={mode === "attendance"}
-              onClick={() => setMode("attendance")}
-              icon={<UsersRound className="h-3 w-3" />}
-            />
-            <ModeTab
-              label="Schedule"
-              active={mode === "schedule"}
-              onClick={() => setMode("schedule")}
-              icon={<CalendarFold className="h-3 w-3" />}
-            />
-          </div>
-        </div>
+        <>
+          <TabToggler<WorkspaceMode>
+            value={mode}
+            onChange={setMode}
+            items={MODE_TABS}
+          />
+        </>
 
         {/* RIGHT SECTION ---------------------------------------------------- */}
         <div className="h-auto md:h-8">
@@ -201,30 +189,26 @@ export default function WorkspaceToolbar({
               }}
             />
           )}
-        </div>
+        {/* </div> */}
       </div>
 
-      <AIAssistantTrigger />
+      <BatonTrigger />
       
       {/* MAX / MIN BUTTON ---------------------------------------------- */}
-      <div className="flex justify-center items-center p-1 h-8 w-8 bg-[var(--gray-100)] rounded-full">
-        <Button
-          variant="none"
-          // size="icon"
-          title={headerCollapsed ? "Minimize" : "Maximize"}
-          className="rounded-full"
-          onClick={() => {
-            window.dispatchEvent(new CustomEvent("toggle-header"));
-            setHeaderCollapsed((prev) => !prev);
-          }}
-        >
-          {headerCollapsed ? (
-            <Minimize className="h-5 w-5 text-[var(--accent)] group-hover:text-[var(--text)]" />
-          ) : (
-            <Maximize className="h-5 w-5 text-[var(--text)] group-hover:text-[var(--accent)]" />
-          )}
-        </Button>
-      </div>
+      <Button
+        variant="toolbar"
+        title={headerCollapsed ? "Minimize" : "Maximize"}
+        onClick={() => {
+          window.dispatchEvent(new CustomEvent("toggle-header"));
+          setHeaderCollapsed((prev) => !prev);
+        }}
+      >
+        {headerCollapsed ? (
+          <Minimize className="h-4 w-4 text-[var(--accent)]" />
+        ) : (
+          <Maximize className="h-4 w-4 text-[var(--text)]" />
+        )}
+      </Button>
     </div>
   );
 }

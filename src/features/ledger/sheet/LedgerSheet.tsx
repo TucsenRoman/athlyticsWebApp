@@ -547,7 +547,7 @@ export default function LedgerSheet({
   /*                                  RENDER                                   */
   /* ========================================================================= */
   return (
-    <div className="relative w-full h-[calc(75vh)] flex flex-col bg-white overflow-hidden">
+    <div className="relative w-full h-[calc(100dvh-210px)] flex flex-col bg-white overflow-hidden">
       {/* Ledger Menu */}
       <div className="absolute left-0 top-0 h-10 w-[50px] flex items-center justify-center z-[200]">
         <LedgerMenu

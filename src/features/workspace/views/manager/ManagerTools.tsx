@@ -87,7 +87,7 @@ export default function ManagerTools({
         variant="rainbow"
         mainIcon={<ToolCase />}
         mainRotate={-20}
-        mainSize={42}
+        // mainSize={32}
         defaultState="open"
         mobile={{
           direction: "right",

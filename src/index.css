@@ -1,3 +1,9 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
 /* ========================================================================== */
 /*  ATHLYTICS DESIGN SYSTEM — BLACK / WHITE / GREY + SINGLE ACCENT            */
 /* ========================================================================== */
@@ -40,6 +46,9 @@
     /* BACLGROUND */
     /* use this to easily toggle light and dark mode */
     --bg: var(--light);
+    --bg-gray-lt: var(--gray-100);
+    --bg-gray-md: var(--gray-500);
+    --bg-gray-dk: var(--gray-800);
 
     /* BORDERS */
     --border-light: var(--gray-50);
@@ -143,6 +152,16 @@
 }
 
 *::-webkit-scrollbar {
+  display: none;
+}
+
+/* hide scrollbars ONLY where you opt-in */
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
   display: none;
 }
 

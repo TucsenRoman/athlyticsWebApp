@@ -13,6 +13,7 @@ import {
   CreditCard,
   MessageSquareHeart,
   BotMessageSquare,
+  Bot,
 } from "lucide-react";
 
 /* ========================================================================== */
@@ -45,7 +46,7 @@ export default function SettingsLayout() {
         <SettingsNavItem to="experiments" icon={<FlaskConical />} label="Experiments" />
         <SettingsNavItem to="billing" icon={<CreditCard />} label="Plan & Billing" />
         <SettingsNavItem to="support" icon={<MessageSquareHeart />} label="Support" />
-        <SettingsNavItem to="aiassistant" icon={<BotMessageSquare />} label="AI Assistant" />
+        <SettingsNavItem to="aiassistant" icon={<Bot />} label="AI Assistant" />
       </aside>
 
       {/* CONTENT ---------------------------------------------------------- */}

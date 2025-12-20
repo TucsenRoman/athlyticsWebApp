@@ -37,7 +37,7 @@ const TONE_STYLES: Record<DividerTone, string> = {
 
 export function Divider({
   orientation = "horizontal",
-  tone = "light",
+  tone = "medium",
   className,
 }: DividerProps) {
   return (

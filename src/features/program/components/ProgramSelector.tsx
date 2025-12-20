@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
-import ProgramFormModal from "./ProgramFormModal"
 import { projectInstaller } from "@/integrations/supabase/projectInstaller";
 
 import {
@@ -39,17 +38,20 @@ import {
   DialogContent,
 } from "@/components/ui/overlays/dialog";
 
-import { Input } from "@/components/ui/forms/input";
+// import { Input } from "@/components/ui/forms/input";
 
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/forms/select";
+// import {
+//   Select,
+//   SelectTrigger,
+//   SelectValue,
+//   SelectContent,
+//   SelectItem,
+// } from "@/components/ui/forms/select";
 
 import { useEditMode } from "@/contexts/EditModeContext";
+
+// SETUP
+import ProgramSetupView from "../setup/ProgramSetupView";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES */
@@ -340,11 +342,11 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
     const renderActions = () => {
       const items = [
-        {
-          label: "Add",
-          icon: <Plus size={20} className="text-[var(--text)]" />,
-          action: () => openAddProgram(),
-        },
+        // {
+        //   label: "Add",
+        //   icon: <Plus size={20} className="text-[var(--text)]" />,
+        //   action: () => openAddProgram(),
+        // },
         {
           label: "Edit",
           icon: <Pencil size={20} className="text-[var(--edit)]" />,
@@ -562,7 +564,8 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           </div>
 
           {variant === "header" && !noPrograms && (
-            <div className="sticky bottom-0 bg-transparent backdrop-blur border-t border-[var(--border)] py-2 px-1">
+            <div className="sticky bottom-0 flex justify-between bg-transparent backdrop-blur border-t border-[var(--border)] py-2 px-1">
+              {/* SETTINGS */}
               <Button
                 className={`
                   h-9 w-9 rounded-full transition-all relative z-50 bg-[var(--bg)]
@@ -592,6 +595,20 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
               </Button>
 
               {renderActions()}
+
+              {/* ADD PROGRAM */}
+              <Button
+                variant="accent"
+                size="icon"
+                className="h-8 w-8 rounded-full shadow-md hover:shadow-lg"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openAddProgram();
+                }}
+                title="Add Program"
+              >
+                <Plus size={16} />
+              </Button>
             </div>
           )}
         </DropdownMenuContent>
@@ -652,7 +669,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           </DialogContent>
         </Dialog>
 
-        <ProgramFormModal
+        <ProgramSetupView
           mode={formMode}
           open={formOpen}
           program={formProgram}
