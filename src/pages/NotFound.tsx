@@ -40,7 +40,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md shadow-lg border-border bg-card">
+      <Card className="w-full max-w-md shadow-lg border-border bg-[var(--bg-gray-lt)]">
         <CardContent className="flex flex-col items-center text-center py-10 px-6 space-y-6">
 
           {/* 👻 Animated Ghost */}

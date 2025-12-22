@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { MapPinned, Sparkles, PencilRuler, Weight, Dumbbell, LocateFixed } from "lucide-react";
-import { motion } from "framer-motion";
+import { Sparkles, PencilRuler, Dumbbell, LocateFixed } from "lucide-react";
 import ProgramSelector from "@/features/program/components/ProgramSelector";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 import AccountMenu from "../layout/AccountMenu";
-import { Button } from "@/components/ui";
+import { useDemo } from "@/contexts/DemoContext";
 
 /* -------------------------------------------------------------------------- */
 
@@ -16,8 +15,19 @@ export default function MainHeader() {
   const location = useLocation();
 
   const hideHeader = location.pathname.startsWith("/ledgers/");
-  const { selectedProgramId, setSelectedProgramId } = useProgramContext();
-  const [isEditMode, setIsEditMode] = useState(false);
+
+  // ACTIVE PROGRAM
+  const {
+    selectedProgramId,
+    setSelectedProgramId,
+    programs,
+  } = useProgramContext();
+
+  // DEMO MODE
+  const { demoMode } = useDemo();
+
+  // ~Old code.
+  // const [isEditMode, setIsEditMode] = useState(false);
 
   const activeRadar = location.pathname.startsWith("/radar");
   const activeWorkspace = location.pathname.startsWith("/workspace");
@@ -57,11 +67,11 @@ export default function MainHeader() {
 
             {programScoped && (
               <DesktopNavPill>
-                {/* PROGRAM SELECTOR */}
                 <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text)] hover:bg-[var(--accent-bg)] hover:text-[var(--accent)] cursor-pointer">
                   <ProgramSelector
                     selectedProgramId={selectedProgramId}
                     onProgramChange={setSelectedProgramId}
+                    programsOverride={demoMode ? programs : undefined}
                   />
                 </div>
               </DesktopNavPill>
@@ -70,7 +80,7 @@ export default function MainHeader() {
 
           {/* RIGHT — Desktop Nav + User Menu */}
           <div className="hidden md:flex gap-2">
-            <div className="flex justify-between items-center w-min-content">
+            <div className="flex justify-between items-center gap-2 w-min-content">
               <DesktopNavPill>
                 <DesktopNavButton
                   icon={<LocateFixed className="w-5 h-5" />}
@@ -94,8 +104,10 @@ export default function MainHeader() {
                   active={activeTraining}
                   onClick={() => navigate("/training")}
                   widthClass="w-[120px]"
-                /> */}
+                />
+              </DesktopNavPill>
 
+              <DesktopNavPill> */}
                 <DesktopNavButton
                   icon={<Sparkles className="w-4 h-4" />}
                   label="Discovery"
@@ -115,6 +127,8 @@ export default function MainHeader() {
         </header>
       )}
     </>
+
+    // ~ For mobile, move user menu to fab and replace with settings gear.
   );
 }
 

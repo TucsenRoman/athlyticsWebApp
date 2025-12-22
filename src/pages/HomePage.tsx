@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 import Auth from "./Auth";
-import DemoAppPreview from "@/components/demo/DemoPreview";
 
 export default function Home() {
   const { user } = useAuth();
@@ -19,7 +18,7 @@ export default function Home() {
   }, [user, navigate]);
 
   /* ---------------------------------------------------------------------- */
-  /*  PUBLIC HOME                                                            */
+  /*  PUBLIC HOME                                                           */
   /* ---------------------------------------------------------------------- */
   return (
     <div className="min-h-screen w-full bg-neutral-50 dark:bg-neutral-900 overflow-auto">
@@ -81,9 +80,9 @@ export default function Home() {
           From the infield to the office, your workflow stays seamless.
         </h2>
 
-        <div className="flex justify-center">
+        {/* <div className="flex justify-center">
           <DemoAppPreview />
-        </div>
+        </div> */}
       </section>
 
 

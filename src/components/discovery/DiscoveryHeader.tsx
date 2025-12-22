@@ -38,6 +38,7 @@ export default function DiscoveryHeader({
   setMode,
   query,
   setQuery,
+  isPublic,
 }: {
   collapsed: boolean;
   setCollapsed: (v: boolean) => void;
@@ -45,6 +46,7 @@ export default function DiscoveryHeader({
   setMode: (m: CommunityMode) => void;
   query: string;
   setQuery: (v: string) => void;
+  isPublic: boolean;
 }) {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 

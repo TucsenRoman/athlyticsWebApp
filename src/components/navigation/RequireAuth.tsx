@@ -10,8 +10,10 @@ export default function RequireAuth({
 }) {
   const { user, loading } = useAuth();
 
-  if (loading) return null; // or splash / spinner
+  // Wait for auth state to resolve
+  if (loading) return null;
 
+  // Block unauthenticated users
   if (!user) {
     return <Navigate to="/login" replace />;
   }

@@ -10,13 +10,11 @@ import React, {
 
 import { supabase } from "@/integrations/supabase/client";
 
-import {
-  ChevronDown,
-  Settings2,
-  Plus,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import type { ProgramId } from "@/features/program-cloak/useProgramContext";
+import { useProgramContext } from "@/features/program-cloak/useProgramContext";
+import { useDemo } from "@/contexts/DemoContext";
+
+import { ChevronDown, Settings2, Plus, Pencil, Trash2 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { projectInstaller } from "@/integrations/supabase/projectInstaller";
@@ -26,7 +24,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
 } from "@/components/ui/overlays/dropdown-menu";
 
 import { Button } from "@/components/ui/actions/button";
@@ -38,16 +35,6 @@ import {
   DialogContent,
 } from "@/components/ui/overlays/dialog";
 
-// import { Input } from "@/components/ui/forms/input";
-
-// import {
-//   Select,
-//   SelectTrigger,
-//   SelectValue,
-//   SelectContent,
-//   SelectItem,
-// } from "@/components/ui/forms/select";
-
 import { useEditMode } from "@/contexts/EditModeContext";
 
 // SETUP
@@ -57,15 +44,16 @@ import ProgramSetupView from "../setup/ProgramSetupView";
 /* TYPES */
 /* -------------------------------------------------------------------------- */
 
-export interface Program {
-  id: number;
-  user_id: string;
-  school: string | null;
-  sport: string | null;
-  level: string | null;
-  gender: string | null;
-  year: string | null;
-}
+import type { Program } from "@/features/program-cloak/useProgramContext";
+// export interface Program {
+//   id: ProgramId; // <-- unified (real: number, demo: string)
+//   user_id?: string; // <-- optional so demo programs don't need it
+//   school: string | null;
+//   sport: string | null;
+//   level: string | null;
+//   gender: string | null;
+//   year: string | null;
+// }
 
 export interface ProgramSelectorHandle {
   openPicker: () => void;
@@ -74,10 +62,25 @@ export interface ProgramSelectorHandle {
 type ProgramSelectorVariant = "header" | "empty";
 
 interface ProgramSelectorProps {
-  selectedProgramId: number | null;
-  onProgramChange: (id: number | null) => void;
+  selectedProgramId: ProgramId | null;
+  onProgramChange: (id: ProgramId | null) => void;
+
+  // controls styling of the trigger ("header" vs "empty")
   variant?: ProgramSelectorVariant;
+
+  // allows demo / parent to inject program list
+  programsOverride?: Program[];
 }
+
+const toProgram = (
+  id: ProgramId,
+  data: any
+): Program => ({
+  id,
+  school: data.school ?? null,
+  sport: data.sport ?? null,
+  year: data.seasonYear ?? null,
+});
 
 /* -------------------------------------------------------------------------- */
 /* STATIC OPTIONS */
@@ -117,7 +120,7 @@ const GENDERS = ["Boys", "Girls", "Co-ed"];
 /* -------------------------------------------------------------------------- */
 
 const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
-  ({ selectedProgramId, onProgramChange, variant = "header" }, ref) => {
+  ({ selectedProgramId, onProgramChange, variant = "header", programsOverride }, ref) => {
     /* ---------------------------------------------------------------------- */
     /* STATE */
     /* ---------------------------------------------------------------------- */
@@ -139,6 +142,10 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     const [formProgram, setFormProgram] = useState<Program | null>(null);
 
     const { isEditMode, setIsEditMode } = useEditMode();
+    const { demoMode } = useDemo();
+
+    // Demo mutations live in ProgramContext (source of truth)
+    const { addProgram, updateProgram, deleteProgram } = useProgramContext();
 
     const triggerRef = useRef<HTMLButtonElement | null>(null);
 
@@ -147,10 +154,34 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     }));
 
     /* ---------------------------------------------------------------------- */
+    /* EFFECTIVE PROGRAMS (override wins; no DB reads/writes in demo) */
+    /* ---------------------------------------------------------------------- */
+
+    const effectivePrograms = programsOverride ?? programs;
+
+    /* ---------------------------------------------------------------------- */
     /* LOAD PROGRAMS */
     /* ---------------------------------------------------------------------- */
 
     useEffect(() => {
+      console.log("[ProgramSelector]", {
+        demoMode,
+        programsOverride,
+      });
+
+      // If parent injects programs (demo or otherwise), never read from Supabase.
+      if (programsOverride) {
+        setPrograms(programsOverride);
+        setLoading(false);
+        return;
+      }
+
+      // Demo mode should never talk to Supabase.
+      if (demoMode) {
+        setLoading(false);
+        return;
+      }
+
       const load = async () => {
         try {
           const {
@@ -167,7 +198,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
             .select("*")
             .eq("user_id", user.id);
 
-          setPrograms(data || []);
+          setPrograms((data || []) as unknown as Program[]);
         } catch (err) {
           console.error("Failed to load programs:", err);
         } finally {
@@ -176,13 +207,22 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       };
 
       load();
-    }, []);
+    }, [programsOverride, demoMode]);
 
     /* ---------------------------------------------------------------------- */
     /* HELPERS */
     /* ---------------------------------------------------------------------- */
 
     const refreshPrograms = async () => {
+      // If programs are injected, they're the source of truth.
+      if (programsOverride) {
+        setPrograms(programsOverride);
+        return;
+      }
+
+      // Demo mode never touches Supabase.
+      if (demoMode) return;
+
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -194,25 +234,25 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         .select("*")
         .eq("user_id", user.id);
 
-      setPrograms(data || []);
+      setPrograms((data || []) as unknown as Program[]);
     };
 
-    const selectedProgram = programs.find((p) => p.id === selectedProgramId);
-    const noPrograms = programs.length === 0;
+    const selectedProgram = effectivePrograms.find((p) => p.id === selectedProgramId);
+    const noPrograms = effectivePrograms.length === 0;
 
-    const formattedName = (p: Program) =>
-      `${p.sport ?? "Unknown"} • ${p.year ?? "Year"}`;
+    const formattedName = (p: Program) => `${p.sport ?? "Unknown"} • ${p.year ?? "Year"}`;
 
-    const formattedDetails = (p: Program) =>
-      p.school ?? "No school";
+    const formattedDetails = (p: Program) => p.school ?? "No school";
 
     // 🔔 Notify other components that the program has new data (packages, ledgers, etc.)
-    const notifyProgramUpdated = (id: number) => {
+    const notifyProgramUpdated = (id: ProgramId) => {
+      // In demo mode IDs can be strings; only dispatch for real numeric IDs
+      if (typeof id !== "number") return;
+
       window.dispatchEvent(
         new CustomEvent("program-updated", { detail: { programId: id } })
       );
     };
-
 
     // Helpers to open modal
     const openAddProgram = () => {
@@ -228,8 +268,41 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     };
 
     // Submit handler for external modal (non-blocking for installer)
-    const handleExternalFormSubmit = async (data) => {
-      const { data: { user } } = await supabase.auth.getUser();
+    // IMPORTANT: Return type stays Promise<number> for real mode compatibility.
+    const handleExternalFormSubmit = async (data: any): Promise<number> => {
+      /* ------------------------------------------------------------------ */
+      /* DEMO MODE (no Supabase, fully interactive)                          */
+      /* ------------------------------------------------------------------ */
+      if (demoMode || programsOverride) {
+        if (formMode === "add") {
+          const demoId = `demo-${Date.now()}`;
+
+          const created = toProgram(demoId, data);
+
+          addProgram(created);
+          onProgramChange(demoId);
+          return -1;
+        }
+
+        if (formMode === "edit" && formProgram) {
+          const updated = toProgram(formProgram.id, data);
+
+          updateProgram(updated);
+          notifyProgramUpdated(updated.id);
+          return -1;
+        }
+
+        return -1;
+      }
+
+
+      /* ------------------------------------------------------------------ */
+      /* REAL MODE (Supabase)                                                */
+      /* ------------------------------------------------------------------ */
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return 0;
 
       /* -------------------------------------------------------------- */
@@ -238,14 +311,16 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       if (formMode === "add") {
         const { data: created, error } = await supabase
           .from("programs")
-          .insert([{
-            user_id: user.id,
-            school: data.school,
-            sport: data.sport,
-            level: data.levels.join(", "),
-            gender: data.gender,
-            year: data.seasonYear,
-          }])
+          .insert([
+            {
+              user_id: user.id,
+              school: data.school,
+              sport: data.sport,
+              level: data.levels.join(", "),
+              gender: data.gender,
+              year: data.seasonYear,
+            },
+          ])
           .select()
           .single();
 
@@ -254,7 +329,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           return 0;
         }
 
-        const newId = created.id;
+        const newId = created.id as unknown as ProgramId;
 
         // Update UI immediately
         await refreshPrograms();
@@ -262,17 +337,23 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
         // 🔥 Run installer *after* modal closes → async & non-blocking
         setTimeout(async () => {
+          // Only run installer for real numeric ids
+          if (typeof newId !== "number") return;
           await projectInstaller(newId);
           notifyProgramUpdated(newId);
         }, 0);
 
-        return newId;
+        // Real mode returns numeric ID
+        return typeof newId === "number" ? newId : 0;
       }
 
       /* -------------------------------------------------------------- */
       /* EDIT MODE                                                      */
       /* -------------------------------------------------------------- */
       if (formMode === "edit" && formProgram) {
+        // Only real numeric IDs should ever reach Supabase
+        if (typeof formProgram.id !== "number") return 0;
+
         await supabase
           .from("programs")
           .update({
@@ -322,10 +403,25 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     const handleConfirmDelete = async () => {
       if (!pendingDelete) return;
 
-      await supabase
-        .from("programs")
-        .delete()
-        .eq("id", pendingDelete.id);
+      // DEMO / OVERRIDE: delete in ProgramContext only (no Supabase)
+      if (demoMode || programsOverride) {
+        deleteProgram(pendingDelete.id);
+
+        if (selectedProgramId === pendingDelete.id) {
+          onProgramChange(null);
+        }
+
+        setPendingDelete(null);
+        return;
+      }
+
+      // REAL: only numeric ids hit Supabase
+      if (typeof pendingDelete.id !== "number") {
+        setPendingDelete(null);
+        return;
+      }
+
+      await supabase.from("programs").delete().eq("id", pendingDelete.id);
 
       await refreshPrograms();
 
@@ -342,25 +438,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
     const renderActions = () => {
       const items = [
-        // {
-        //   label: "Add",
-        //   icon: <Plus size={20} className="text-[var(--text)]" />,
-        //   action: () => openAddProgram(),
-        // },
         {
           label: "Edit",
           icon: <Pencil size={20} className="text-[var(--edit)]" />,
-          action: () =>
-            setPendingAction((p) => (p === "edit" ? null : "edit")),
+          action: () => setPendingAction((p) => (p === "edit" ? null : "edit")),
         },
         {
           label: "Delete",
-          icon: (
-            <Trash2
-              size={20}
-              className="text-[var(--danger)]"
-            />
-          ),
+          icon: <Trash2 size={20} className="text-[var(--danger)]" />,
           destructive: true,
           action: () =>
             setPendingAction((p) => (p === "delete" ? null : "delete")),
@@ -440,7 +525,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       </button>
     );
 
-
     const renderEmptyTrigger = () => (
       <Button
         ref={triggerRef}
@@ -461,10 +545,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           {selectedProgram ? formattedName(selectedProgram) : "Select Program"}
         </span>
 
-        <ChevronDown
-          size={16}
-          className="opacity-70 text-[var(--text-dark)]"
-        />
+        <ChevronDown size={16} className="opacity-70 text-[var(--text-dark)]" />
       </Button>
     );
 
@@ -482,9 +563,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         }}
       >
         <DropdownMenuTrigger asChild>
-          {variant === "empty"
-            ? renderEmptyTrigger()
-            : renderHeaderTrigger()}
+          {variant === "empty" ? renderEmptyTrigger() : renderHeaderTrigger()}
         </DropdownMenuTrigger>
 
         <DropdownMenuContent
@@ -529,9 +608,9 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                 + Add Program
               </DropdownMenuItem>
             ) : (
-              programs.map((p) => (
+              effectivePrograms.map((p) => (
                 <DropdownMenuItem
-                  key={p.id}
+                  key={String(p.id)}
                   data-selected={selectedProgramId === p.id}
                   className="
                     relative
@@ -621,15 +700,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
     if (loading) {
       return (
-        <div className="text-sm text-[var(--muted-foreground)]">
-          Loading…
-        </div>
+        <div className="text-sm text-[var(--muted-foreground)]">Loading…</div>
       );
     }
 
     return (
       <>
         {renderDropdown()}
+
         {/* DELETE CONFIRM */}
         <Dialog
           open={pendingDelete !== null}
@@ -645,7 +723,8 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
             <p className="text-sm text-[var(--muted-foreground)]">
               Are you sure you want to delete{" "}
               <span className="font-semibold text-[var(--accent)]">
-                {pendingDelete?.school} {pendingDelete?.sport}, {pendingDelete?.year}
+                {pendingDelete?.school} {pendingDelete?.sport},{" "}
+                {pendingDelete?.year}
               </span>
               ? This action cannot be undone.
             </p>
@@ -659,10 +738,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                 Delete Program
               </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => setPendingDelete(null)}
-              >
+              <Button variant="outline" onClick={() => setPendingDelete(null)}>
                 Cancel
               </Button>
             </div>

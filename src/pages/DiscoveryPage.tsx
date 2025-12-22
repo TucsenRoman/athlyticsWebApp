@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
 import DiscoveryHeader from "@/components/discovery/DiscoveryHeader";
 import DiscoveryFeed from "@/components/discovery/DiscoveryFeed";
+
 import {
   ClipboardList,
   FileText,
@@ -42,8 +44,6 @@ const getIcon = (key: string | null | undefined) =>
 
 export type AnyLedger = {
   id: string;
-  program_id: number | null;
-  user_id: string | null;
   name: string;
   description?: string | null;
   icon: string | null;
@@ -58,26 +58,43 @@ export type AnyLedger = {
 
 export default function DiscoveryPage() {
   const navigate = useNavigate();
+
+  /* ---------------------------------------------------------------------- */
+  /* AUTH / MODE                                                            */
+  /* ---------------------------------------------------------------------- */
+
+  const { user } = useAuth();
+  const isPublic = !user;
+
   const { selectedProgramId } = useProgramContext();
   const { demoMode } = useDemo();
 
-  /* UI STATE */
+  /* ---------------------------------------------------------------------- */
+  /* UI STATE                                                               */
+  /* ---------------------------------------------------------------------- */
+
   const [collapsed, setCollapsed] = useState(true);
   const [openOther, setOpenOther] = useState(true);
   const [mode, setMode] = useState<"discover" | "social">("discover");
   const [query, setQuery] = useState("");
 
-  /* DATA STATE */
+  /* ---------------------------------------------------------------------- */
+  /* DATA STATE                                                             */
+  /* ---------------------------------------------------------------------- */
+
   const [ledgers, setLedgers] = useState<AnyLedger[]>([]);
   const [loading, setLoading] = useState(true);
-  const [installedLedgerIds, setInstalledLedgerIds] = useState<Set<string>>(new Set());
+  const [installedLedgerIds, setInstalledLedgerIds] = useState<Set<string>>(
+    new Set()
+  );
 
-  /* DEMO FALLBACK */
+  /* ---------------------------------------------------------------------- */
+  /* DEMO DATA                                                              */
+  /* ---------------------------------------------------------------------- */
+
   const demoLedgers: AnyLedger[] = [
     {
       id: "demo1",
-      program_id: 0,
-      user_id: "demo",
       name: "Sprint Results",
       description: "PRs, SBs, event results",
       icon: "performance",
@@ -85,8 +102,6 @@ export default function DiscoveryPage() {
     },
     {
       id: "demo2",
-      program_id: 0,
-      user_id: "demo",
       name: "Attendance",
       description: "Practice attendance tracker",
       icon: "clipboard",
@@ -95,25 +110,40 @@ export default function DiscoveryPage() {
   ];
 
   /* ---------------------------------------------------------------------- */
-  /* LOAD LEDGERS FOR PROGRAM                                               */
+  /* LOAD DISCOVERY CONTENT                                                  */
   /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
-    if (demoMode) {
-      setLedgers(demoLedgers);
-      setLoading(false);
-      return;
-    }
-
     async function load() {
       setLoading(true);
 
-      if (!selectedProgramId) {
-        setLedgers([]);
+      /* DEMO MODE */
+      if (demoMode) {
+        setLedgers(demoLedgers);
         setLoading(false);
         return;
       }
 
+      /* PUBLIC DISCOVERY (NO AUTH) */
+      if (isPublic) {
+        // ⚠️ IMPORTANT:
+        // This must point to PUBLIC / PUBLISHED content only.
+        // If you don’t have a public table yet, leave this empty.
+        setLedgers([]);
+        setInstalledLedgerIds(new Set());
+        setLoading(false);
+        return;
+      }
+
+      /* AUTHED USER BUT NO PROGRAM */
+      if (!selectedProgramId) {
+        setLedgers([]);
+        setInstalledLedgerIds(new Set());
+        setLoading(false);
+        return;
+      }
+
+      /* AUTHED + PROGRAM SCOPED */
       const { data, error } = await supabase
         .from("ledgers")
         .select("*")
@@ -121,19 +151,20 @@ export default function DiscoveryPage() {
         .order("created_at", { ascending: false });
 
       if (error) console.error("Ledger fetch error:", error);
+
       setLedgers((data || []) as AnyLedger[]);
       setLoading(false);
     }
 
     load();
-  }, [demoMode, selectedProgramId]);
+  }, [demoMode, isPublic, selectedProgramId]);
 
   /* ---------------------------------------------------------------------- */
-  /* LOAD LEDGERS THAT BELONG TO INSTALLED PACKAGES                         */
+  /* LOAD INSTALLED LEDGERS (AUTHED ONLY)                                   */
   /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
-    if (demoMode || !selectedProgramId) {
+    if (demoMode || isPublic || !selectedProgramId) {
       setInstalledLedgerIds(new Set());
       return;
     }
@@ -146,25 +177,26 @@ export default function DiscoveryPage() {
 
       if (error) {
         console.error("Package items error:", error);
-        return setInstalledLedgerIds(new Set());
+        setInstalledLedgerIds(new Set());
+        return;
       }
 
-      const set = new Set<string>(data?.map((row) => row.ledger_id));
-      setInstalledLedgerIds(set);
+      setInstalledLedgerIds(new Set(data?.map((r) => r.ledger_id)));
     }
 
     loadInstalled();
-  }, [demoMode, selectedProgramId]);
+  }, [demoMode, isPublic, selectedProgramId]);
 
   /* ---------------------------------------------------------------------- */
-  /* ORPHAN LEDGERS → (not from a package)                                  */
+  /* ORPHAN LEDGERS                                                         */
   /* ---------------------------------------------------------------------- */
 
   const orphanLedgers = useMemo(() => {
     if (demoMode) return demoLedgers;
+    if (isPublic) return ledgers;
     if (!installedLedgerIds.size) return ledgers;
     return ledgers.filter((l) => !installedLedgerIds.has(l.id));
-  }, [demoMode, ledgers, installedLedgerIds]);
+  }, [demoMode, isPublic, ledgers, installedLedgerIds]);
 
   /* ---------------------------------------------------------------------- */
   /* RENDER                                                                 */
@@ -173,7 +205,7 @@ export default function DiscoveryPage() {
   return (
     <div className="flex h-full overflow-hidden">
 
-      {/* SIDEBAR — minimal, only orphans */}
+      {/* SIDEBAR */}
       <aside
         className={`
           ${collapsed ? "w-0 opacity-0 pointer-events-none" : "w-72 opacity-100"}
@@ -198,7 +230,13 @@ export default function DiscoveryPage() {
               ) : (
                 <ChevronRight className="w-4 h-4 opacity-70" />
               )}
-              <span>{demoMode ? "Demo Ledgers" : "Other Ledgers"}</span>
+              <span>
+                {demoMode
+                  ? "Demo Ledgers"
+                  : isPublic
+                  ? "Preview"
+                  : "Other Ledgers"}
+              </span>
             </div>
 
             {orphanLedgers.length > 0 && (
@@ -210,19 +248,29 @@ export default function DiscoveryPage() {
 
           {openOther && (
             <div className="mt-1 space-y-1 pl-9 pr-2 pb-3">
-              {loading && <p className="text-xs text-muted-foreground">Loading…</p>}
+              {loading && (
+                <p className="text-xs text-muted-foreground">Loading…</p>
+              )}
+
               {!loading && orphanLedgers.length === 0 && (
                 <p className="text-xs text-muted-foreground">None</p>
               )}
 
               {orphanLedgers.map((ledger) => {
                 const Icon = getIcon(ledger.icon);
+
                 return (
                   <button
                     key={ledger.id}
-                    onClick={() =>
-                      demoMode ? null : navigate(`/ledgers/${ledger.id}`)
-                    }
+                    onClick={() => {
+                      if (isPublic) {
+                        navigate("/login", {
+                          state: { from: "/discovery" },
+                        });
+                        return;
+                      }
+                      navigate(`/ledgers/${ledger.id}`);
+                    }}
                     className="
                       w-full flex items-center justify-between
                       px-3 py-2 rounded-lg hover:bg-muted/40 transition
@@ -245,11 +293,9 @@ export default function DiscoveryPage() {
                       </div>
                     </div>
 
-                    {!demoMode && (
-                      <span className="text-[10px] text-muted-foreground">
-                        Open
-                      </span>
-                    )}
+                    <span className="text-[10px] text-muted-foreground">
+                      {isPublic ? "Sign in" : "Open"}
+                    </span>
                   </button>
                 );
               })}
@@ -267,6 +313,7 @@ export default function DiscoveryPage() {
           setMode={setMode}
           query={query}
           setQuery={setQuery}
+          isPublic={isPublic}
         />
 
         <div className="flex-1 overflow-hidden">

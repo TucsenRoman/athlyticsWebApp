@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
+import { useDemo } from "@/contexts/DemoContext";
 
 import {
   WorkspaceToolbar,
@@ -15,11 +16,28 @@ import {
 } from "@/features/workspace";
 
 /* -------------------------------------------------------------------------- */
+/* CONSTANTS                                                                  */
+/* -------------------------------------------------------------------------- */
+
+// Stable fake program id for demo users
+const DEMO_PROGRAM_ID = -1;
+
+/* -------------------------------------------------------------------------- */
 /* PAGE                                                                       */
 /* -------------------------------------------------------------------------- */
 
 export default function WorkspacePage() {
   const { selectedProgramId } = useProgramContext();
+  const { demoMode } = useDemo();
+
+  /* ---------------------------------------------------------------------- */
+  /* EFFECTIVE PROGRAM CONTEXT                                              */
+  /* ---------------------------------------------------------------------- */
+
+  // Demo users always get a fake program
+  const effectiveProgramId = demoMode
+    ? DEMO_PROGRAM_ID
+    : selectedProgramId;
 
   /* ---------------------------------------------------------------------- */
   /* MODE                                                                   */
@@ -36,7 +54,7 @@ export default function WorkspacePage() {
     setLedgerId,
     searchQuery,
     setSearchQuery,
-  } = useWorkspaceLedger(selectedProgramId);
+  } = useWorkspaceLedger(effectiveProgramId);
 
   /* ---------------------------------------------------------------------- */
   /* SCHEDULE                                                               */
@@ -66,17 +84,31 @@ export default function WorkspacePage() {
     setAttendanceSaveFailed,
     submitAttendance,
     resetAttendance,
-  } = useWorkspaceAttendance(selectedProgramId);
+  } = useWorkspaceAttendance(effectiveProgramId);
 
   /* ---------------------------------------------------------------------- */
   /* BREADCRUMB PATH                                                        */
   /* ---------------------------------------------------------------------- */
 
   const path = useWorkspacePath({
-    programId: selectedProgramId,
+    programId: effectiveProgramId,
     mode,
     ledgerId,
   });
+
+  /* ---------------------------------------------------------------------- */
+  /* DEMO-SAFE ACTION WRAPPERS                                              */
+  /* ---------------------------------------------------------------------- */
+
+  const safeSubmitAttendance = () => {
+    if (demoMode) return;
+    submitAttendance();
+  };
+
+  const safeResetAttendance = () => {
+    if (demoMode) return;
+    resetAttendance();
+  };
 
   /* ---------------------------------------------------------------------- */
   /* RENDER                                                                 */
@@ -84,6 +116,7 @@ export default function WorkspacePage() {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 w-full">
+
       <WorkspaceToolbar
         mode={mode}
         setMode={setMode}
@@ -97,18 +130,21 @@ export default function WorkspacePage() {
         attendanceIsDirty={attendanceIsDirty}
         attendanceExceptionCount={attendanceExceptionCount}
         attendanceSaveFailed={attendanceSaveFailed}
-        onSubmitAttendance={submitAttendance}
-        onResetAttendance={resetAttendance}
+        onSubmitAttendance={safeSubmitAttendance}
+        onResetAttendance={safeResetAttendance}
 
         /* SCHEDULE */
         scheduleWeekIndex={scheduleWeekIndex}
         setScheduleWeekIndex={setScheduleWeekIndex}
-        onScheduleAdd={() => setShowAddSlot(true)}
+        onScheduleAdd={() => {
+          if (demoMode) return;
+          setShowAddSlot(true);
+        }}
       />
 
       <WorkspaceModeOutlet
         mode={mode}
-        programId={selectedProgramId}
+        programId={effectiveProgramId}
 
         /* MANAGER */
 
@@ -133,7 +169,7 @@ export default function WorkspacePage() {
         setAttendanceExceptionCount={setAttendanceExceptionCount}
         attendanceSaveFailed={attendanceSaveFailed}
         setAttendanceSaveFailed={setAttendanceSaveFailed}
-        onSubmitAttendance={submitAttendance}
+        onSubmitAttendance={safeSubmitAttendance}
       />
     </div>
   );

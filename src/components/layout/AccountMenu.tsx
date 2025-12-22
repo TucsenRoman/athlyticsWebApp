@@ -3,23 +3,19 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Divider } from "@/components/ui"
 
 import {
-  User,
+  UserRound,
   Paintbrush,
   Bell,
   ShieldCheck,
-  Box,
+  Archive,
   FlaskConical,
   CreditCard,
   MessageSquareHeart,
-  LogOut,
-  Trophy,
-  Database,
-  Archive,
-  UserRound,
   BotMessageSquare,
+  LogOut,
+  User,
 } from "lucide-react";
 
 import {
@@ -27,52 +23,80 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/data_display/avatar";
-import { Button } from "../ui/actions/button";
+import { Button } from "@/components/ui/actions/button";
+import { Divider } from "@/components/ui";
 
 /* ========================================================================== */
 /* COMPONENT                                                                  */
 /* ========================================================================== */
 
 export default function AccountMenu() {
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const navigate = useNavigate();
-  const { signOut } = useAuth();
 
   const go = (path: string) => {
     navigate(path);
     setOpen(false);
   };
 
-  // Close on outside click
+  /* ---------------------------------------------------------------------- */
+  /* CLOSE ON OUTSIDE CLICK                                                  */
+  /* ---------------------------------------------------------------------- */
+
   useEffect(() => {
     if (!open) return;
 
-    const handleClick = (e: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (!menuRef.current?.contains(e.target as Node)) {
         setOpen(false);
       }
     };
 
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
   }, [open]);
+
+  if (loading) return null;
+
+  /* ---------------------------------------------------------------------- */
+  /* DERIVED USER DATA                                                       */
+  /* ---------------------------------------------------------------------- */
+
+  const displayName =
+    user?.user_metadata?.full_name ??
+    user?.email?.split("@")[0] ??
+    "Account";
+
+  const avatarUrl = user?.user_metadata?.avatar_url ?? null;
+
+  const initials = displayName
+    .split(" ")
+    .map((s: string) => s[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  /* ---------------------------------------------------------------------- */
+  /* RENDER                                                                  */
+  /* ---------------------------------------------------------------------- */
 
   return (
     <div className="relative" ref={menuRef}>
       {/* TRIGGER ---------------------------------------------------------- */}
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => setOpen((v) => !v)}
         className="
           h-10 w-10 rounded-full overflow-hidden
-          cursor-pointer
           focus:outline-none focus:ring-2 focus:ring-[var(--accent)]
         "
       >
-        <Avatar className="h-full w-full bg-[var(--gray-200)] hover:bg-[var(--gray-300)] transition-colors">
-          <AvatarImage src="public/misc/profile-placeholder.jpg" />
+        <Avatar className="h-full w-full bg-[var(--gray-200)]">
+          {avatarUrl && <AvatarImage src={avatarUrl} />}
           <AvatarFallback className="bg-[var(--accent)] text-white">
-            TR
+            {initials}
           </AvatarFallback>
         </Avatar>
       </button>
@@ -82,69 +106,78 @@ export default function AccountMenu() {
         <div
           className="
             absolute right-0 mt-2 z-50
-            flex flex-col gap-[2px]
             w-64 rounded-xl p-2
             bg-[var(--bg)]
             border border-[var(--border)]
             shadow-lg backdrop-blur-xl
-            max-h-[70vh] overflow-y-auto
+            flex flex-col gap-[2px]
           "
         >
-          {/* ACCOUNT HEADER ------------------------------------------------ */}
-          <div className="flex items-center gap-3">
-            <Avatar className="h-11 w-11 rounded-xl">
-              <AvatarImage src="public/misc/profile-placeholder.jpg" />
-              <AvatarFallback className="bg-[var(--gray-300)] rounded-xl">
-                TR
-              </AvatarFallback>
-            </Avatar>
+          {/* ===================== LOGGED OUT ===================== */}
+          {!user && (
+            <>
+              <MenuItem
+                icon={<User />}
+                label="Sign in"
+                onClick={() => go("/login")}
+              />
+              <MenuItem
+                icon={<UserRound />}
+                label="Create account"
+                onClick={() => go("/signup")}
+              />
+            </>
+          )}
 
-            <div className="min-w-0 flex-1">
-              <div className="font-semibold text-[var(--accent)] truncate">
-                Tucsen Roman
+          {/* ===================== LOGGED IN ====================== */}
+          {user && (
+            <>
+              {/* HEADER */}
+              <div className="flex items-center gap-3 px-2 py-2">
+                <Avatar className="h-11 w-11 rounded-xl">
+                  {avatarUrl && <AvatarImage src={avatarUrl} />}
+                  <AvatarFallback className="bg-[var(--gray-300)] rounded-xl">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-[var(--accent)] truncate">
+                    {displayName}
+                  </div>
+                  <div className="text-[11px] text-[var(--text)] truncate">
+                    {user.email}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1 text-[11px] text-[var(--text)]">
-                <span className="truncate">@tucsenroman129</span>
-                <span className="opacity-40">•</span>
-                <Button
-                  variant="none"
-                  onClick={()=> console.log("TROPHIES")}
-                >
-                  <span className="flex items-center gap-1 text-[var(--fvr-yellow)] font-medium">
-                    <Trophy className="h-3 w-3" />
-                    57
-                  </span>
-                </Button>
-              </div>
-            </div>
-          </div>
+              <Divider />
 
-          <Divider />
+              {/* SETTINGS */}
+              <MenuItem icon={<UserRound />} label="Profile" onClick={() => go("/settings/profile")} />
+              <MenuItem icon={<Paintbrush />} label="Appearance" onClick={() => go("/settings/appearance")} />
+              <MenuItem icon={<Bell />} label="Notifications" onClick={() => go("/settings/notifications")} />
+              <MenuItem icon={<ShieldCheck />} label="Security" onClick={() => go("/settings/security")} />
+              <MenuItem icon={<Archive />} label="Storage" onClick={() => go("/settings/storage")} />
+              <MenuItem icon={<FlaskConical />} label="Experiments" onClick={() => go("/settings/experiments")} />
+              <MenuItem icon={<CreditCard />} label="Plan & Billing" onClick={() => go("/settings/billing")} />
+              <MenuItem icon={<MessageSquareHeart />} label="Support" onClick={() => go("/settings/support")} />
+              <MenuItem icon={<BotMessageSquare />} label="AI Assistant" onClick={() => go("/settings/aiassistant")} />
 
-          {/* SETTINGS ----------------------------------------------------- */}
-          <MenuItem icon={<UserRound />} label="Profile" onClick={() => go("/settings/profile")} />
-          <MenuItem icon={<Paintbrush />} label="Appearance" onClick={() => go("/settings/appearance")} />
-          <MenuItem icon={<Bell />} label="Notifications" onClick={() => go("/settings/notifications")} />
-          <MenuItem icon={<ShieldCheck />} label="Security" onClick={() => go("/settings/security")} />
-          <MenuItem icon={<Archive />} label="Storage" onClick={() => go("/settings/storage")} />
-          <MenuItem icon={<FlaskConical />} label="Experiments" onClick={() => go("/settings/experiments")} />
-          <MenuItem icon={<CreditCard />} label="Plan & Billing" onClick={() => go("/settings/billing")} />
-          <MenuItem icon={<MessageSquareHeart />} label="Support" onClick={() => go("/settings/support")} />
-          <MenuItem icon={<BotMessageSquare />} label="AI Assistant" onClick={() => go("/settings/aiassistant")} />
+              <Divider />
 
-          <Divider />
-
-          {/* LOGOUT ------------------------------------------------------- */}
-          <MenuItem
-            icon={<LogOut />}
-            label="Log out"
-            danger
-            onClick={async () => {
-              await signOut();
-              setOpen(false);
-            }}
-          />
+              {/* LOGOUT */}
+              <MenuItem
+                icon={<LogOut />}
+                label="Log out"
+                danger
+                onClick={async () => {
+                  await signOut();
+                  setOpen(false);
+                }}
+              />
+            </>
+          )}
         </div>
       )}
     </div>
@@ -152,7 +185,7 @@ export default function AccountMenu() {
 }
 
 /* ========================================================================== */
-/* SUBCOMPONENTS                                                             */
+/* SUBCOMPONENT                                                              */
 /* ========================================================================== */
 
 function MenuItem({
@@ -173,39 +206,27 @@ function MenuItem({
         group w-full flex items-center gap-2
         px-3 py-2 rounded-md
         text-left cursor-pointer
-        transition-colors hover:shadow-inner
-
+        transition-colors
         ${
           danger
-            ? "text-[var(--text-dark)] hover:bg-[var(--danger-bg)]"
-            : "text-[var(--text-dark)] hover:bg-[var(--gray-200)]"
+            ? "hover:bg-[var(--danger-bg)]"
+            : "hover:bg-[var(--gray-200)]"
         }
       `}
     >
-      {/* ICON */}
       <span
-        className={`
-          transition-colors
-          ${
-            danger
-              ? "text-[var(--text-dark)] group-hover:text-[var(--danger)]"
-              : "text-[var(--text)]"
-          }
-        `}
+        className={
+          danger
+            ? "text-[var(--danger)]"
+            : "text-[var(--text)]"
+        }
       >
         {icon}
       </span>
-
-      {/* LABEL */}
       <span
-        className={`
-          text-sm transition-colors
-          ${
-            danger
-              ? "group-hover:text-[var(--danger)]"
-              : ""
-          }
-        `}
+        className={`text-sm ${
+          danger ? "text-[var(--danger)]" : ""
+        }`}
       >
         {label}
       </span>

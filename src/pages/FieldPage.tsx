@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import FieldSearchBar from "@/components/field/FieldSearchBar";
 import FieldFeed from "@/components/field/FieldFeed";
-import NoProgramState from "@/features/program-cloak/RequireProgram"; //why is this here?
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 

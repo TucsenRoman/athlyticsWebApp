@@ -7,12 +7,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { TooltipProvider } from "@/components/ui/overlays/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DemoProvider } from "@/contexts/DemoContext";
 import { UserSettingsProvider } from "@/features/user-settings/UserSettingsContext";
 import { ProgramProvider } from "@/features/program-cloak/useProgramContext";
 import { PushPanelProvider, usePushPanel } from "@/contexts/PushPanelContext";
 
-import ProtectedRoute from "@/components/navigation/ProtectedRoute";
+import RequireAuth from "@/components/navigation/RequireAuth";
 import RequireProgram from "@/features/program-cloak/RequireProgram";
+
 import PageShell from "@/components/layout/PageShell";
 import { PushPanel } from "@/components/ui";
 
@@ -51,11 +53,10 @@ export default function App() {
             <TooltipProvider>
               <PushPanelProvider>
                 <BrowserRouter>
-                  {/* Persistent header */}
-                  <MainHeader />
-
-                  {/* Route-based content */}
-                  <RouterContent />
+                  <DemoProvider>
+                    <MainHeader />
+                    <RouterContent />
+                  </DemoProvider>
                 </BrowserRouter>
               </PushPanelProvider>
             </TooltipProvider>
@@ -76,68 +77,74 @@ function RouterContent() {
   return (
     <div className="h-[100vh] max-h-screen flex flex-col overflow-hidden">
       <Routes>
+        {/* ------------------------------------------------------------------ */}
+        {/* PUBLIC                                                             */}
+        {/* ------------------------------------------------------------------ */}
 
-        {/* PUBLIC */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Auth />} />
         <Route path="/signup" element={<Auth />} />
 
-        {/* RADAR */}
+        {/* ------------------------------------------------------------------ */}
+        {/* PROGRAM-SCOPED (DEMO OR AUTH)                                      */}
+        {/* ------------------------------------------------------------------ */}
+
         <Route
           path="/radar"
           element={
-            <ProtectedRoute>
+            <RequireProgram>
               <PageShell>
                 <FieldPage />
               </PageShell>
-            </ProtectedRoute>
+            </RequireProgram>
           }
         />
 
-        {/* WORKSPACE */}
         <Route
           path="/workspace"
           element={
-            <ProtectedRoute>
-              <RequireProgram>
-                <PageShell>
-                  <PushPanel
-                    open={open}
-                    width="360px"
-                    title="Baton"
-                    titleIcon={<BotMessageSquare className="h-4 w-4" />}
-                    onClose={() => setOpen(false)}
-                    panel={<BatonChatInterface />}
-                  >
-                    <WorkspacePage />
-                  </PushPanel>
-                </PageShell>
-              </RequireProgram>
-            </ProtectedRoute>
+            <RequireProgram>
+              <PageShell>
+                <PushPanel
+                  open={open}
+                  width="360px"
+                  title="Baton"
+                  titleIcon={<BotMessageSquare className="h-4 w-4" />}
+                  onClose={() => setOpen(false)}
+                  panel={<BatonChatInterface />}
+                >
+                  <WorkspacePage />
+                </PushPanel>
+              </PageShell>
+            </RequireProgram>
           }
         />
 
-        {/* DISCOVERY */}
+        {/* ------------------------------------------------------------------ */}
+        {/* DISCOVERY (PUBLIC READ-ONLY)                                       */}
+        {/* ------------------------------------------------------------------ */}
+
         <Route
           path="/discovery"
           element={
-            <ProtectedRoute>
-              <PageShell>
-                <DiscoveryPage />
-              </PageShell>
-            </ProtectedRoute>
+            <PageShell>
+              <DiscoveryPage />
+            </PageShell>
           }
         />
 
-        {/* SETTINGS */}
+        {/* ------------------------------------------------------------------ */}
+        {/* SETTINGS (AUTH ONLY)                                               */}
+        {/* ------------------------------------------------------------------ */}
+
         <Route
           path="/settings"
           element={
-            <ProtectedRoute>
+            <RequireAuth>
               <PageShell>
                 <SettingsLayout />
               </PageShell>
-            </ProtectedRoute>
+            </RequireAuth>
           }
         >
           <Route index element={<ProfileSettingsPage />} />
@@ -152,9 +159,11 @@ function RouterContent() {
           <Route path="aiassistant" element={<AIAssistantSettingsPage />} />
         </Route>
 
-        {/* FALLBACK */}
-        <Route path="*" element={<NotFound />} />
+        {/* ------------------------------------------------------------------ */}
+        {/* FALLBACK                                                           */}
+        {/* ------------------------------------------------------------------ */}
 
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   );
