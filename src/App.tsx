@@ -42,8 +42,9 @@ import SupportSettingsPage from "@/pages/settings/support/SupportSettingsPage";
 import AIAssistantSettingsPage from "@/pages/settings/AIAssistantSettingsPage";
 
 // PREVIEW PAGES
-import TrainingPreviewPage from "./pages/previews/TrainingPreview";
-import DiscoveryPreviewPage from "./pages/previews/DiscoveryPreview";
+import TrainingPreviewPage from "./pages/public/TrainingPreview";
+import DiscoveryPreviewPage from "./pages/public/DiscoveryPreview";
+import PricingPage from "./pages/public/PricingPage";
 
 const queryClient = new QueryClient();
 
@@ -134,6 +135,16 @@ function RouterContent() {
           element={
             <PageShell>
               <DiscoveryPreviewPage />
+            </PageShell>
+          }
+        />
+
+        {/* PRICING (PUBLIC) */}
+        <Route
+          path="/pricing"
+          element={
+            <PageShell>
+              <PricingPage />
             </PageShell>
           }
         />

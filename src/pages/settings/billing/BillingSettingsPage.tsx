@@ -1,13 +1,26 @@
-// src/pages/settings/BillingSettingsPage.tsx
 "use client";
 
 import { ArrowLeft, Medal, Trophy, Crown, Check } from "lucide-react";
 
+import {
+  PRICING_PLANS,
+  PRICING_PLAN_LIST,
+  type PricingPlan,
+} from "@/config/pricingPlans";
+
+/* -------------------------------------------------------------------------- */
+/* PAGE                                                                       */
+/* -------------------------------------------------------------------------- */
+
 export default function BillingSettingsPage() {
+  // TEMP: assume first plan is active (UI shell only)
+  const activePlan = PRICING_PLANS.free;
+
   return (
     <div className="flex flex-col h-full bg-[var(--bg)]">
-
-      {/* HEADER */}
+      {/* ------------------------------------------------------------------ */}
+      {/* HEADER                                                             */}
+      {/* ------------------------------------------------------------------ */}
       <header className="flex items-center gap-4 px-6 py-5 border-b border-[var(--border)]">
         <button className="p-2 rounded-md hover:bg-[var(--gray-100)]">
           <ArrowLeft className="w-5 h-5 text-[var(--text)]" />
@@ -23,64 +36,29 @@ export default function BillingSettingsPage() {
         </div>
       </header>
 
-      {/* CONTENT */}
+      {/* ------------------------------------------------------------------ */}
+      {/* CONTENT                                                            */}
+      {/* ------------------------------------------------------------------ */}
       <div className="flex-1 overflow-y-auto px-6 py-8 space-y-10 max-w-4xl">
-
         {/* CURRENT PLAN */}
         <section className="space-y-3">
           <Label>Current Plan</Label>
-
-          <div className="rounded-xl border border-[var(--border)] p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Medal className="w-4 h-4 text-[var(--accent)]" />
-                <span className="font-medium text-[var(--text-dark)]">
-                  Starter
-                </span>
-              </div>
-              <p className="text-sm text-[var(--text)] max-w-md">
-                Core tools for managing athletes, schedules, and daily operations.
-              </p>
-            </div>
-
-            <span className="text-xs px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
-              Active
-            </span>
-          </div>
+          <CurrentPlanCard plan={activePlan} />
         </section>
 
         {/* AVAILABLE PLANS */}
         <section className="space-y-4">
           <Label>Available Plans</Label>
 
-          <Plan
-            icon={<Trophy className="w-4 h-4 text-[var(--text)]" />}
-            name="Performance"
-            price={19.99}
-            description="Expanded tools for competitive programs."
-            features={[
-              "Advanced attendance controls",
-              "Unlimited scheduling",
-              "Cross-program package installs",
-            ]}
-          />
-
-          <Plan
-            icon={<Crown className="w-4 h-4 text-[var(--accent)]" />}
-            name="Organization"
-            price={99.99}
-            primary
-            description="Full analytics, collaboration, and long-term insight."
-            features={[
-              "Multi-coach roles & permissions",
-              "Full analytics & trends",
-              "Season import & export",
-            ]}
-          />
+          {PRICING_PLAN_LIST.filter(p => p.id !== activePlan.id).map(plan => (
+            <PlanCard key={plan.id} plan={plan} />
+          ))}
         </section>
       </div>
 
-      {/* FOOTER */}
+      {/* ------------------------------------------------------------------ */}
+      {/* FOOTER                                                             */}
+      {/* ------------------------------------------------------------------ */}
       <footer className="px-6 py-4 border-t border-[var(--border)] text-sm text-[var(--text)]">
         Billing history and payment methods are managed securely.
       </footer>
@@ -88,6 +66,8 @@ export default function BillingSettingsPage() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* COMPONENTS                                                                 */
 /* -------------------------------------------------------------------------- */
 
 function Label({ children }: { children: string }) {
@@ -98,45 +78,66 @@ function Label({ children }: { children: string }) {
   );
 }
 
-function Plan({
-  icon,
-  name,
-  price,
-  description,
-  features,
-  primary,
-}: {
-  icon: React.ReactNode;
-  name: string;
-  price: number;
-  description: string;
-  features: string[];
-  primary?: boolean;
-}) {
+/* -------------------------------------------------------------------------- */
+
+function CurrentPlanCard({ plan }: { plan: PricingPlan }) {
   return (
-    <div
-      className={`
-        rounded-xl border p-6 flex justify-between gap-6
-        ${primary ? "border-[var(--accent)]" : "border-[var(--border)]"}
-      `}
-    >
-      <div className="space-y-3">
+    <div className="rounded-xl border border-[var(--border)] p-5 flex items-center justify-between">
+      <div className="space-y-1">
         <div className="flex items-center gap-2">
-          {icon}
+          <Medal className="w-4 h-4 text-[var(--accent)]" />
           <span className="font-medium text-[var(--text-dark)]">
-            {name}
+            {plan.name}
           </span>
         </div>
 
         <p className="text-sm text-[var(--text)] max-w-md">
-          {description}
+          {plan.description}
+        </p>
+      </div>
+
+      <span className="text-xs px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+        Active
+      </span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+function PlanCard({ plan }: { plan: PricingPlan }) {
+  const Icon = plan.highlight ? Crown : Trophy;
+
+  return (
+    <div
+      className={`
+        rounded-xl border p-6 flex justify-between gap-6
+        ${plan.highlight ? "border-[var(--accent)]" : "border-[var(--border)]"}
+      `}
+    >
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Icon
+            className={`w-4 h-4 ${
+              plan.highlight
+                ? "text-[var(--accent)]"
+                : "text-[var(--text)]"
+            }`}
+          />
+          <span className="font-medium text-[var(--text-dark)]">
+            {plan.name}
+          </span>
+        </div>
+
+        <p className="text-sm text-[var(--text)] max-w-md">
+          {plan.description}
         </p>
 
         <ul className="space-y-1 text-sm text-[var(--text)]">
-          {features.map(f => (
-            <li key={f} className="flex items-center gap-2">
+          {plan.features.map(feature => (
+            <li key={feature} className="flex items-center gap-2">
               <Check className="w-4 h-4 text-[var(--text-light)]" />
-              {f}
+              {feature}
             </li>
           ))}
         </ul>
@@ -145,7 +146,7 @@ function Plan({
       <div className="flex flex-col items-end justify-between">
         <div className="text-right">
           <div className="text-2xl font-semibold text-[var(--text-dark)]">
-            ${price}
+            {plan.price.monthly}
           </div>
           <div className="text-xs text-[var(--text)]">per month</div>
         </div>
@@ -154,13 +155,13 @@ function Plan({
           className={`
             px-4 py-2 rounded-md text-sm font-medium
             ${
-              primary
+              plan.highlight
                 ? "bg-[var(--accent)] text-white"
                 : "bg-[var(--gray-200)] text-[var(--text-dark)]"
             }
           `}
         >
-          Choose {name}
+          {plan.cta.label}
         </button>
       </div>
     </div>

@@ -13,8 +13,15 @@ export interface FooterGroup {
   items: ReactNode[];
 }
 
+export type FooterSlot = "brand" | "links" | "legal";
+
 interface PageFooterProps {
-  groups: FooterGroup[];
+  brand?: ReactNode;
+  links?: FooterGroup[];
+  layout?: {
+    brandPosition?: "top" | "left" | "right";
+    linksPosition?: "col" | "row";
+  };
   bottomBar?: ReactNode;
 }
 
@@ -23,68 +30,67 @@ interface PageFooterProps {
 /* -------------------------------------------------------------------------- */
 
 export default function PageFooter({
-  groups,
+  brand,
+  links = [],
+  layout = {
+    brandPosition: "top",
+    linksPosition: "col",
+  },
   bottomBar,
 }: PageFooterProps) {
   return (
-    <div
-      className="
-        w-full
-        border-t border-[var(--border)]
-        bg-[var(--bg)]
-        text-[var(--text)]
-      "
-    >
+    <div className="w-full border-t border-[var(--border)] bg-[var(--bg)]">
       {/* CONTENT */}
       <div
-        className="
-          max-w-3xl
-          mx-auto
-          px-6
-          pt-12
-          pb-8
-          flex
-          flex-col
-          items-center
+        className={`
+          flex 
+          p-4 w-full
           text-center
-          space-y-10
-        "
+          ${layout.brandPosition === "top" ? "flex-col items-center" : "flex-row justify-around items-start gap-16"}
+        `}
       >
-        {groups.map((group) => (
-          <div key={group.key} className="space-y-4">
-            {group.title && (
-              <h4
-                className="
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-wide
-                  text-[var(--text-dark)]
-                "
-              >
-                {group.title}
-              </h4>
-            )}
-
-            <div className="flex flex-col items-center space-y-2">
-              {group.items.map((item, i) => (
-                <div key={i}>{item}</div>
-              ))}
-            </div>
+        {/* BRAND SLOT */}
+        {brand && (
+          <div>
+            {brand}
           </div>
-        ))}
+        )}
+
+        {/* LINK GROUPS */}
+        <div
+          className={`
+            flex
+            ${
+              layout.linksPosition === "col"
+                ? "flex-col items-center"
+                : "flex-row"
+            }
+            gap-10
+          `}
+        >
+          {links.map((group) => (
+            <div key={group.key} className="flex flex-col gap-0.5">
+              {group.title && (
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-[--text-dark]">
+                  {group.title}
+                </h4>
+              )}
+              <Divider />
+              <div className="flex flex-col items-center gap-1 text-xs text-[--text]">
+                {group.items.map((item, i) => (
+                  <div key={i}>{item}</div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
+      {/* BOTTOM BAR */}
       {bottomBar && (
         <>
           <Divider inset={5} />
-
-          <div
-            className="
-                w-full p-4
-                text-xs text-center text-[var(--text)]
-            "
-          >
+          <div className="p-4 text-xs text-center text-[--text]">
             {bottomBar}
           </div>
         </>

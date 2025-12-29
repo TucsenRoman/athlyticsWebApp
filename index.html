@@ -2,38 +2,37 @@
 <html lang="en">
   <head>
     <!-- ========================================================= -->
-    <!-- BASIC META                                                -->
+    <!-- CORE META                                                 -->
     <!-- ========================================================= -->
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>
-      Athlytics | All-in-One Coaching & Athlete Management Platform
-    </title>
+    <title>Athlytics | Coach-First Athlete & Program Management</title>
 
     <meta
       name="description"
-      content="Athlytics is a web-based coaching and athlete management platform built for sports programs. Manage attendance, schedules, training plans, rosters, communication, and program data in one clean, coach-first dashboard. Coaching is for the field, not the office."
+      content="Athlytics is a coach-first web platform for managing attendance, schedules, training, and team data in one place. Built to replace spreadsheets and scattered tools—so coaches can focus on athletes, not admin."
     />
 
-    <meta
-      name="keywords"
-      content="Athlytics, athlete management software, coaching platform, sports management system, high school athletics software, track and field management, cross country coaching tools, team attendance app, training plan software, sports SaaS, coaching dashboard"
-    />
-
-    <meta name="author" content="Athlytics LLC" />
     <meta name="application-name" content="Athlytics" />
+    <meta name="author" content="Athlytics LLC" />
     <meta name="theme-color" content="#0f172a" />
+    <meta name="robots" content="index, follow" />
 
     <!-- ========================================================= -->
-    <!-- BRAND / IDENTITY                                          -->
+    <!-- BRANDING                                                  -->
     <!-- ========================================================= -->
     <link rel="icon" href="/athlyticsfav.png" type="image/png" />
     <link rel="apple-touch-icon" href="/athlyticsfav.png" />
 
     <!-- ========================================================= -->
-    <!-- OPEN GRAPH (FACEBOOK / LINK PREVIEWS)                     -->
+    <!-- CANONICAL                                                 -->
+    <!-- ========================================================= -->
+    <link rel="canonical" href="https://athlyticshq.com" />
+
+    <!-- ========================================================= -->
+    <!-- OPEN GRAPH (INSTAGRAM + GENERAL LINK PREVIEWS)            -->
     <!-- ========================================================= -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Athlytics" />
@@ -41,57 +40,61 @@
 
     <meta
       property="og:title"
-      content="Athlytics — Coaching & Athlete Management Made Simple"
+      content="Athlytics — Coaching Is for the Field, Not the Office"
     />
 
     <meta
       property="og:description"
-      content="Athlytics helps coaches manage attendance, schedules, training, and program operations in one web-based platform. Designed for real coach workflows so you can focus on athletes, not admin."
+      content="Coach-first software that centralizes schedules, attendance, training, and team data—so coaches spend less time managing and more time coaching."
     />
 
-    <meta property="og:image" content="/athlytics-social-preview.png" />
-    <meta property="og:image:alt" content="Athlytics coaching dashboard preview" />
+    <meta
+      property="og:image"
+      content="https://athlyticshq.com/athlytics-social-preview.png"
+    />
+    <meta
+      property="og:image:alt"
+      content="Athlytics dashboard preview showing coach-first athlete management tools"
+    />
 
     <!-- ========================================================= -->
-    <!-- TWITTER / X                                               -->
+    <!-- X (TWITTER)                                               -->
     <!-- ========================================================= -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Athlytics | Coaching Is for the Field" />
+    <meta name="twitter:site" content="@athlytics" />
+
+    <meta
+      name="twitter:title"
+      content="Athlytics | Coach-First Program Management"
+    />
+
     <meta
       name="twitter:description"
-      content="An all-in-one athlete and program management platform built for coaches. Replace spreadsheets, group chats, and paperwork with one clean system."
+      content="Replace spreadsheets, group chats, and paperwork with one clean system built for real coach workflows."
     />
-    <meta name="twitter:image" content="/athlytics-social-preview.png" />
+
+    <meta
+      name="twitter:image"
+      content="https://athlyticshq.com/athlytics-social-preview.png"
+    />
 
     <!-- ========================================================= -->
-    <!-- SEO / DISCOVERY                                           -->
-    <!-- ========================================================= -->
-    <link rel="canonical" href="https://athlyticshq.com" />
-
-    <meta name="robots" content="index, follow" />
-    <meta name="googlebot" content="index, follow" />
-
-    <!-- ========================================================= -->
-    <!-- STRUCTURED DATA (JSON-LD)                                 -->
+    <!-- STRUCTURED DATA (SEO + YOUTUBE DISCOVERY)                 -->
     <!-- ========================================================= -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Athlytics",
-        "operatingSystem": "Web",
         "applicationCategory": "SportsApplication",
-        "description": "Athlytics is a web-based athlete and coaching management platform that centralizes attendance, scheduling, training, communication, and program operations for sports teams.",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "USD"
-        },
+        "operatingSystem": "Web",
+        "description": "Athlytics is a coach-first web application that centralizes attendance, scheduling, training, and program management for athletic teams.",
         "publisher": {
           "@type": "Organization",
           "name": "Athlytics LLC",
           "url": "https://athlyticshq.com"
-        }
+        },
+        "url": "https://athlyticshq.com"
       }
     </script>
   </head>
@@ -99,6 +102,7 @@
   <body>
     <div id="root"></div>
     <div id="overlay-root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

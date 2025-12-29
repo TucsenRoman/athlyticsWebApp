@@ -194,14 +194,14 @@ export default function AppHeader() {
             <div className="flex justify-between items-center gap-2 w-min-content">
               <div className="hidden md:flex items-center gap-2">
                 {/* DEMO TAGS */}
-                {!user && isLandingPage && scrolled &&
+                {/* {!user && isLandingPage && scrolled &&
                   <div>
                     <div className="flex flex-row justify-center items-center h-8 w-[150px] rounded-full shadow-lg">
                       <span className="text-sm font-medium text-[--accent-md]">Explore for free →</span>
                     </div>
                   </div>
                   // ~Add more tags describing the visitor's state.
-                }
+                } */}
                 <DesktopNavPill landingScrolled={landingScrolled}>
                   <DesktopNavButton
                     icon={<LocateFixed className="w-5 h-5" />}
