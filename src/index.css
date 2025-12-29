@@ -34,7 +34,10 @@ body,
 
     /* BRAND ACCENT */
     --accent: rgb(248, 118, 42);
-    --accent-bg: rgba(248, 118, 42, 0.1);
+    --accent-md: rgb(251, 173, 127);  /* ~60% accent */
+    --accent-lt: rgb(252, 200, 170);  /* ~40% accent */
+    --accent-bg: rgb(254, 241, 233);  /* ~10% accent */
+    --accent-glass: rgb(248, 118, 42, 0.1);
 
     /* TEXT */
     --text-white: var(--light);
@@ -46,14 +49,17 @@ body,
     /* BACLGROUND */
     /* use this to easily toggle light and dark mode */
     --bg: var(--light);
-    --bg-gray-lt: var(--gray-100);
+    --bg-gray-lt: var(--slot-green);
+    --bg-gray-lt-hv: var(--slot-green);
+    --gray-lt: var(--gray-100);
+    --gray-lt-hv: var(--gray-200);
     --bg-gray-md: var(--gray-500);
     --bg-gray-dk: var(--gray-800);
 
     /* BORDERS */
     --border-light: var(--gray-50);
     --border: var(--gray-200);
-    --border-dark: var(--gray-300);
+    --border-dark: var(--gray-600);
     /* --border: red; */
 
     /* FUNCTION COLORS */

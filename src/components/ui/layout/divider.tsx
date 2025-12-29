@@ -12,6 +12,7 @@ type DividerTone = "light" | "medium" | "dark" | "bold";
 interface DividerProps {
   orientation?: DividerOrientation;
   tone?: DividerTone;
+  inset?: number; // percentage (0–50)
   className?: string;
 }
 
@@ -20,8 +21,8 @@ interface DividerProps {
 /* ========================================================================== */
 
 const ORIENTATION_STYLES: Record<DividerOrientation, string> = {
-  horizontal: "w-full h-px",
-  vertical: "h-full w-px",
+  horizontal: "h-px",
+  vertical: "w-px",
 };
 
 const TONE_STYLES: Record<DividerTone, string> = {
@@ -38,13 +39,28 @@ const TONE_STYLES: Record<DividerTone, string> = {
 export function Divider({
   orientation = "horizontal",
   tone = "medium",
+  inset = 0,
   className,
 }: DividerProps) {
+  const style =
+    orientation === "horizontal"
+      ? {
+          width: `calc(100% - ${inset * 2}%)`,
+          marginLeft: `${inset}%`,
+          marginRight: `${inset}%`,
+        }
+      : {
+          height: `calc(100% - ${inset * 2}%)`,
+          marginTop: `${inset}%`,
+          marginBottom: `${inset}%`,
+        };
+
   return (
     <div
       aria-hidden
+      style={style}
       className={cn(
-        "shrink-0 m-[2px]",
+        "shrink-0",
         ORIENTATION_STYLES[orientation],
         TONE_STYLES[tone],
         className

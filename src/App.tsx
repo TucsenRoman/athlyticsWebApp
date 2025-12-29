@@ -19,18 +19,18 @@ import { PushPanel } from "@/components/ui";
 
 import BatonChatInterface from "@/components/baton/BatonChatInterface";
 import { BotMessageSquare } from "lucide-react";
-import MainHeader from "@/components/navigation/MainHeader";
+import AppHeader from "@/components/navigation/AppHeader";
 
-// Pages
-import Home from "@/pages/HomePage";
+// PAGES
+import LandingPage from "@/pages/LandingPage";
 import Auth from "@/pages/Auth";
 import FieldPage from "@/pages/FieldPage";
 import WorkspacePage from "@/pages/WorkspacePage";
-import DiscoveryPage from "@/pages/DiscoveryPage";
-import SettingsLayout from "@/pages/settings/SettingsLayout";
+// import DiscoveryPage from "@/pages/DiscoveryPage";
 import NotFound from "@/pages/NotFound";
 
-// Settings sub-pages
+// SETTINGS PAGES
+import SettingsLayout from "@/pages/settings/SettingsLayout";
 import ProfileSettingsPage from "@/pages/settings/profile/ProfileSettingsPage";
 import AppearanceSettingsPage from "@/pages/settings/appearance/AppearanceSettingsPage";
 import NotificationSettingsPage from "@/pages/settings/notifications/NotificationSettingsPage";
@@ -40,6 +40,10 @@ import ExperimentsSettingsPage from "@/pages/settings/experiments/ExperimentsSet
 import BillingSettingsPage from "@/pages/settings/billing/BillingSettingsPage";
 import SupportSettingsPage from "@/pages/settings/support/SupportSettingsPage";
 import AIAssistantSettingsPage from "@/pages/settings/AIAssistantSettingsPage";
+
+// PREVIEW PAGES
+import TrainingPreviewPage from "./pages/previews/TrainingPreview";
+import DiscoveryPreviewPage from "./pages/previews/DiscoveryPreview";
 
 const queryClient = new QueryClient();
 
@@ -53,7 +57,7 @@ export default function App() {
               <PushPanelProvider>
                 <BrowserRouter>
                   <DemoProvider>
-                    <MainHeader />
+                    <AppHeader />
                     <RouterContent />
                   </DemoProvider>
                 </BrowserRouter>
@@ -74,20 +78,15 @@ function RouterContent() {
   const { open, setOpen } = usePushPanel();
 
   return (
-    <div className="h-[100vh] max-h-screen flex flex-col overflow-hidden">
+    // <div className="h-[100vh] max-h-screen flex flex-col overflow-hidden">
+    <div className="flex flex-col">
       <Routes>
-        {/* ------------------------------------------------------------------ */}
-        {/* PUBLIC                                                             */}
-        {/* ------------------------------------------------------------------ */}
-
-        <Route path="/" element={<Home />} />
+        {/* PUBLIC */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Auth />} />
         <Route path="/signup" element={<Auth />} />
-
-        {/* ------------------------------------------------------------------ */}
-        {/* PROGRAM-SCOPED (DEMO OR AUTH)                                      */}
-        {/* ------------------------------------------------------------------ */}
-
+        
+        {/* PROGRAM-SCOPED (DEMO OR AUTH) */}
         <Route
           path="/radar"
           element={
@@ -119,15 +118,22 @@ function RouterContent() {
           }
         />
 
-        {/* ------------------------------------------------------------------ */}
-        {/* DISCOVERY (PUBLIC READ-ONLY)                                       */}
-        {/* ------------------------------------------------------------------ */}
-
+        {/* TRAINING (PREVIEW) */}
         <Route
-          path="/discovery"
+          path="/preview/training"
           element={
             <PageShell>
-              <DiscoveryPage />
+              <TrainingPreviewPage />
+            </PageShell>
+          }
+        />
+
+        {/* DISCOVERY (PREVIEW) */}
+        <Route
+          path="/preview/discovery"
+          element={
+            <PageShell>
+              <DiscoveryPreviewPage />
             </PageShell>
           }
         />

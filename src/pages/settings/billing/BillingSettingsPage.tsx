@@ -35,7 +35,7 @@ export default function BillingSettingsPage() {
               <div className="flex items-center gap-2">
                 <Medal className="w-4 h-4 text-[var(--accent)]" />
                 <span className="font-medium text-[var(--text-dark)]">
-                  Rookie
+                  Starter
                 </span>
               </div>
               <p className="text-sm text-[var(--text)] max-w-md">
@@ -55,7 +55,7 @@ export default function BillingSettingsPage() {
 
           <Plan
             icon={<Trophy className="w-4 h-4 text-[var(--text)]" />}
-            name="Varsity"
+            name="Performance"
             price={19.99}
             description="Expanded tools for competitive programs."
             features={[
@@ -67,8 +67,8 @@ export default function BillingSettingsPage() {
 
           <Plan
             icon={<Crown className="w-4 h-4 text-[var(--accent)]" />}
-            name="Olympian"
-            price={49.99}
+            name="Organization"
+            price={99.99}
             primary
             description="Full analytics, collaboration, and long-term insight."
             features={[

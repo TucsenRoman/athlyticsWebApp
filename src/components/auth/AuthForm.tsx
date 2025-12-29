@@ -127,7 +127,7 @@ export default function AuthForm() {
       }
     >
       {/* HOME BUTTON — HIDDEN ON "/" */}
-      {location.pathname !== "/" && (
+      {/* {location.pathname !== "/" && (
         <div className="absolute top-5 left-5">
           <button
             onClick={() => navigate("/")}
@@ -143,7 +143,7 @@ export default function AuthForm() {
             Home
           </button>
         </div>
-      )}
+      )} */}
 
       {/* CARD */}
       <Card
@@ -180,7 +180,7 @@ export default function AuthForm() {
                 rounded-xl p-1
               "
             >
-              <TabsTrigger value="login">Log In</TabsTrigger>
+              <TabsTrigger value="login">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
 
