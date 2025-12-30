@@ -9,13 +9,12 @@ import {
   Pin,
 } from "lucide-react";
 
-import AttendanceCard from "@/features/attendance/views/AttendanceFieldView";
-import NotesCard from "@/components/cards/fixed/NotesCard";
-import MeetDayCard from "@/components/cards/fixed/MeetDayCard";
-import WeatherCard from "@/components/cards/fixed/WeatherCard";
-import CalendarCard from "@/features/schedule/views/ScheduleFieldView";
-import PostMeetSummaryCard from "@/components/cards/fixed/PostMeetSummaryCard";
-import PerformanceSummaryCard from "@/components/cards/fixed/PerformanceSummaryCard";
+import AttendanceCard from "@/features/attendance/views/AttendanceRadarView";
+import NotesCard from "@/features/radar/cards/NotesCard";
+import WeatherCard from "@/features/radar/cards/WeatherCard";
+import CalendarCard from "@/features/schedule/views/ScheduleRadarView";
+import PostMeetSummaryCard from "@/features/radar/cards/PostMeetSummaryCard";
+import PerformanceSummaryCard from "@/features/radar/cards/PerformanceSummaryCard";
 
 const ALL_CARDS = [
   { id: "attendance", element: <AttendanceCard /> },
@@ -139,7 +138,7 @@ export default function FixedCardsSystem() {
           flex
           overflow-x-auto overflow-y-hidden
           snap-x snap-mandatory
-          px-4
+          px-3
         "
       >
         {sortedCards.map((card) => {
@@ -152,7 +151,7 @@ export default function FixedCardsSystem() {
                 shrink-0
                 w-full
                 snap-center
-                px-2
+                px-1
               "
             >
               <div className={`${CARD_HEIGHT} rounded-xl overflow-hidden`}>
@@ -183,7 +182,7 @@ export default function FixedCardsSystem() {
             flex items-center gap-2
             px-4 py-2
             rounded-full
-            bg-[var(--bg)]
+            bg-[var(--gray-lt)]
             border border-[var(--border)]
             shadow-lg
           "

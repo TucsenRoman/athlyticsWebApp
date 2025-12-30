@@ -10,7 +10,7 @@ import PageFooter from "@/components/layout/PageFooter";
 import { Button, Divider } from "@/components/ui";
 import radarImage from "@/assets/images/coach-radar-pov.png"
 import workspaceImage from "@/assets/images/ChatGPT Image Dec 29, 2025, 01_48_48 PM.png"
-import { AtSign, Dumbbell, Facebook, Globe, Instagram, LayoutGrid, Link2, LocateFixed, MonitorSmartphone, PencilRuler, Smartphone, SmartphoneCharging, Sparkles, Users, Youtube } from "lucide-react";
+import { Dumbbell, Globe, Link2, LocateFixed, MonitorSmartphone, PencilRuler, Sparkles, Users } from "lucide-react";
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -61,9 +61,15 @@ export default function LandingPage() {
   }, [user, navigate]);
 
   return (
-    <div className="min-h-screen w-full bg-[var(--bg)] text-[var(--text-dark)]">
+    <div className="min-h-screen w-full bg-transparent text-[var(--text-dark)]">
       {/* HERO */}
-      <section className="relative px-6 pt-32 pb-10 text-center overflow-hidden">
+      <section className="
+        relative
+        px-6 pt-32 pb-10
+        text-center
+        overflow-hidden
+        bg-[var(--bg)]
+      ">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(248,118,42,0.25),transparent_65%)]" />
 
         <motion.h1

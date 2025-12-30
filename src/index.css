@@ -1,16 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 html,
 body,
 #root {
   height: 100%;
+  /* background: transparent; */
 }
-
-/* ========================================================================== */
-/*  ATHLYTICS DESIGN SYSTEM — BLACK / WHITE / GREY + SINGLE ACCENT            */
-/* ========================================================================== */
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
 /* ========================================================================== */
 /*  COLOR TOKENS (ONLY WHAT YOU REQUESTED)                                    */
@@ -40,10 +37,11 @@ body,
     --accent-glass: rgb(248, 118, 42, 0.1);
 
     /* TEXT */
-    --text-white: var(--light);
+    --text-black: #000000;
+    --text-white: #ffffff;
     --text-light: var(--gray-300);
     --text: var(--gray-600);
-    --text-dark: var(--gray-800);
+    --text-dark: var(--gray-700);
     --text-accent: var(--accent);
 
     /* BACLGROUND */
@@ -66,7 +64,8 @@ body,
     --debug: red;
     --success: rgb(87, 136, 64);
     --success-bg: rgba(87, 136, 64, 0.1);
-    /* --warning: #ffb703; */
+    --warning: rgb(255, 183, 3);
+    --warning-bg: rgb(255, 183, 3, 0.1);
     --edit: rgb(33, 158, 188);
     --edit-bg: rgb(33, 158, 188, 0.1);
     --danger: rgb(217, 4, 41);

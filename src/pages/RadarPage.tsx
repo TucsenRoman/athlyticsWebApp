@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import FieldSearchBar from "@/components/field/FieldSearchBar";
-import FieldFeed from "@/components/field/FieldFeed";
+import GlobalSearch from "@/features/radar/GlobalSearch";
+import RadarFeed from "@/features/radar/RadarFeed";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
+import RadarToolbar from "@/features/radar/RadarToolbar";
 
-export default function FieldViewScreen() {
+export default function RadarViewScreen() {
   const { selectedProgramId } = useProgramContext();
   const { demoMode } = useDemo();
 
@@ -36,12 +37,15 @@ export default function FieldViewScreen() {
   }, [query, demoMode]);
 
   /* ---------------------------------------------------------------------- */
-  /* FIELDVIEW UI                                                           */
+  /* RADARVIEW UI                                                           */
   /* ---------------------------------------------------------------------- */
   return (
-    <div className="flex flex-col justify-between gap-2 w-full h-[82vh] md:h-[92vh] overflow-clip py-4 bg-[var(--bg)]">
-      <FieldSearchBar query={query} onChange={setQuery} />
-      <FieldFeed query={query} results={results} />
+    <div className="flex flex-col justify-between gap-2 w-full h-[82vh] md:h-[92vh] overflow-hidden py-4 bg-[var(--bg)]">
+      <RadarToolbar
+        query={query}
+        onQueryChange={setQuery}
+      />
+      <RadarFeed query={query} results={results} />
     </div>
   );
 }

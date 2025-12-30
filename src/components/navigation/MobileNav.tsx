@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui";
 import { cn } from "@/utils/utils";
 
-export default function MobilePageNav() {
+export default function MobileNav() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -23,11 +23,11 @@ export default function MobilePageNav() {
     //   route: "/training",
     //   active: location.pathname.startsWith("/training"),
     // },
-    {
-      icon: Sparkles,
-      route: "/discovery",
-      active: location.pathname.startsWith("/discovery"),
-    },
+    // {
+    //   icon: Sparkles,
+    //   route: "/discovery",
+    //   active: location.pathname.startsWith("/discovery"),
+    // },
   ];
 
   return (

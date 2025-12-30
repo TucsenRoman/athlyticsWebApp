@@ -19,12 +19,11 @@ import { PushPanel } from "@/components/ui";
 
 import BatonChatInterface from "@/components/baton/BatonChatInterface";
 import { BotMessageSquare } from "lucide-react";
-import AppHeader from "@/components/navigation/AppHeader";
 
 // PAGES
 import LandingPage from "@/pages/LandingPage";
 import Auth from "@/pages/Auth";
-import FieldPage from "@/pages/FieldPage";
+import RadarPage from "@/pages/RadarPage";
 import WorkspacePage from "@/pages/WorkspacePage";
 // import DiscoveryPage from "@/pages/DiscoveryPage";
 import NotFound from "@/pages/NotFound";
@@ -45,6 +44,7 @@ import AIAssistantSettingsPage from "@/pages/settings/AIAssistantSettingsPage";
 import TrainingPreviewPage from "./pages/public/TrainingPreview";
 import DiscoveryPreviewPage from "./pages/public/DiscoveryPreview";
 import PricingPage from "./pages/public/PricingPage";
+import MobileNav from "./components/navigation/MobileNav";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +58,6 @@ export default function App() {
               <PushPanelProvider>
                 <BrowserRouter>
                   <DemoProvider>
-                    <AppHeader />
                     <RouterContent />
                   </DemoProvider>
                 </BrowserRouter>
@@ -79,108 +78,120 @@ function RouterContent() {
   const { open, setOpen } = usePushPanel();
 
   return (
-    // <div className="h-[100vh] max-h-screen flex flex-col overflow-hidden">
-    <div className="flex flex-col">
-      <Routes>
-        {/* PUBLIC */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Auth />} />
-        <Route path="/signup" element={<Auth />} />
-        
-        {/* PROGRAM-SCOPED (DEMO OR AUTH) */}
-        <Route
-          path="/radar"
-          element={
+    <Routes>
+      {/* PUBLIC */}
+      <Route
+        path="/"
+        element={
+          <PageShell>
+            <LandingPage />
+          </PageShell>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <PageShell>
+            <Auth />
+          </PageShell>
+        }
+      />
+
+      <Route
+        path="/signup"
+        element={
+          <PageShell>
+            <Auth />
+          </PageShell>
+        }
+      />
+
+      {/* PROGRAM-SCOPED */}
+      <Route
+        path="/radar"
+        element={
+          <PageShell>
             <RequireProgram>
-              <PageShell>
-                <FieldPage />
-              </PageShell>
+              <RadarPage />
             </RequireProgram>
-          }
-        />
+          </PageShell>
+        }
+      />
 
-        <Route
-          path="/workspace"
-          element={
+      <Route
+        path="/workspace"
+        element={
+          <PageShell>
             <RequireProgram>
-              <PageShell>
-                <PushPanel
-                  open={open}
-                  width="360px"
-                  title="Baton"
-                  titleIcon={<BotMessageSquare className="h-4 w-4" />}
-                  onClose={() => setOpen(false)}
-                  panel={<BatonChatInterface />}
-                >
-                  <WorkspacePage />
-                </PushPanel>
-              </PageShell>
+              <PushPanel
+                open={open}
+                width="360px"
+                title="Baton"
+                titleIcon={<BotMessageSquare className="h-4 w-4" />}
+                onClose={() => setOpen(false)}
+                panel={<BatonChatInterface />}
+              >
+                <WorkspacePage />
+              </PushPanel>
             </RequireProgram>
-          }
-        />
+          </PageShell>
+        }
+      />
 
-        {/* TRAINING (PREVIEW) */}
-        <Route
-          path="/preview/training"
-          element={
-            <PageShell>
-              <TrainingPreviewPage />
-            </PageShell>
-          }
-        />
+      {/* PREVIEW */}
+      <Route
+        path="/preview/training"
+        element={
+          <PageShell>
+            <TrainingPreviewPage />
+          </PageShell>
+        }
+      />
 
-        {/* DISCOVERY (PREVIEW) */}
-        <Route
-          path="/preview/discovery"
-          element={
-            <PageShell>
-              <DiscoveryPreviewPage />
-            </PageShell>
-          }
-        />
+      <Route
+        path="/preview/discovery"
+        element={
+          <PageShell>
+            <DiscoveryPreviewPage />
+          </PageShell>
+        }
+      />
 
-        {/* PRICING (PUBLIC) */}
-        <Route
-          path="/pricing"
-          element={
-            <PageShell>
-              <PricingPage />
-            </PageShell>
-          }
-        />
+      {/* PRICING */}
+      <Route
+        path="/pricing"
+        element={
+          <PageShell>
+            <PricingPage />
+          </PageShell>
+        }
+      />
 
-        {/* ------------------------------------------------------------------ */}
-        {/* SETTINGS (AUTH ONLY)                                               */}
-        {/* ------------------------------------------------------------------ */}
-
-        <Route
-          path="/settings"
-          element={
+      {/* SETTINGS */}
+      <Route
+        path="/settings"
+        element={
+          <PageShell>
             <RequireAuth>
-              <PageShell>
-                <SettingsLayout />
-              </PageShell>
+              <SettingsLayout />
             </RequireAuth>
-          }
-        >
-          <Route index element={<ProfileSettingsPage />} />
-          <Route path="profile" element={<ProfileSettingsPage />} />
-          <Route path="appearance" element={<AppearanceSettingsPage />} />
-          <Route path="notifications" element={<NotificationSettingsPage />} />
-          <Route path="security" element={<SecuritySettingsPage />} />
-          <Route path="storage" element={<StorageSettingsPage />} />
-          <Route path="experiments" element={<ExperimentsSettingsPage />} />
-          <Route path="billing" element={<BillingSettingsPage />} />
-          <Route path="support" element={<SupportSettingsPage />} />
-          <Route path="aiassistant" element={<AIAssistantSettingsPage />} />
-        </Route>
+          </PageShell>
+        }
+      >
+        <Route index element={<ProfileSettingsPage />} />
+        <Route path="profile" element={<ProfileSettingsPage />} />
+        <Route path="appearance" element={<AppearanceSettingsPage />} />
+        <Route path="notifications" element={<NotificationSettingsPage />} />
+        <Route path="security" element={<SecuritySettingsPage />} />
+        <Route path="storage" element={<StorageSettingsPage />} />
+        <Route path="experiments" element={<ExperimentsSettingsPage />} />
+        <Route path="billing" element={<BillingSettingsPage />} />
+        <Route path="support" element={<SupportSettingsPage />} />
+        <Route path="aiassistant" element={<AIAssistantSettingsPage />} />
+      </Route>
 
-        {/* ------------------------------------------------------------------ */}
-        {/* FALLBACK                                                           */}
-        {/* ------------------------------------------------------------------ */}
-
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </div>
+      {/* FALLBACK */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }

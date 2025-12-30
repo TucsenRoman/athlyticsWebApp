@@ -136,7 +136,7 @@ export default function StatusSelector({
           className="
             flex items-center h-10 gap-2 md:gap-5
             px-2 md:px-4
-            border border-[var(--border-dark)]
+            border border-[var(--gray-300)]
             rounded-full
           "
         >

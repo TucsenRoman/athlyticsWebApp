@@ -2,6 +2,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { resolveRosterLedgerId } from "@/hooks/useRosterLedgerID";
+import type { ProgramId } from "@/features/program-cloak/useProgramContext";
 
 export interface RosterAthlete {
   key: string;
@@ -9,7 +10,7 @@ export interface RosterAthlete {
   raw: any;
 }
 
-export async function fetchRoster(programId: number): Promise<RosterAthlete[]> {
+export async function fetchRoster(programId: ProgramId): Promise<RosterAthlete[]> {
   const rosterLedgerId = await resolveRosterLedgerId(programId);
   if (!rosterLedgerId) return [];
 

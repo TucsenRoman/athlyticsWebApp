@@ -13,7 +13,7 @@
 
 // import { DemoContext } from "@/contexts/DemoContext";
 
-// import FieldPage from "@/pages/FieldPage";
+// import RadarPage from "@/pages/RadarPage";
 // import WorkspacePage from "@/pages/WorkspacePage";
 // import DiscoveryPage from "@/pages/DiscoveryPage";
 
@@ -23,7 +23,7 @@
 // /* TYPES                                                                      */
 // /* -------------------------------------------------------------------------- */
 
-// type DemoTab = "field" | "workspace" | "discovery";
+// type DemoTab = "radar" | "workspace" | "discovery";
 
 // /* -------------------------------------------------------------------------- */
 // /* CONSTANTS                                                                  */
@@ -53,7 +53,7 @@
 //   icon: any;
 //   component: JSX.Element;
 // }[] = [
-//   { key: "field", label: "Field", icon: MapPinned, component: <FieldPage /> },
+//   { key: "radar", label: "Radar", icon: MapPinned, component: <RadarPage /> },
 //   {
 //     key: "workspace",
 //     label: "Workspace",
@@ -123,7 +123,7 @@
 // /* -------------------------------------------------------------------------- */
 
 // export default function DemoPreview() {
-//   const [tab, setTab] = useState<DemoTab>("field");
+//   const [tab, setTab] = useState<DemoTab>("radar");
 //   const [device, setDevice] = useState<DemoDevice>("mobile");
 //   const [viewport, setViewport] = useState<DemoDevice>("desktop");
 

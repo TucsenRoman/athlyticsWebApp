@@ -13,7 +13,7 @@
 
 // import { DemoContext } from "@/contexts/DemoContext";
 
-// import FieldPage from "@/pages/FieldPage";
+// import RadarPage from "@/pages/RadarPage";
 // import WorkspacePage from "@/pages/WorkspacePage"; 
 // import DiscoveryPage from "@/pages/DiscoveryPage";
 
@@ -87,7 +87,7 @@
 // /*  DEMO PREVIEW                                                              */
 // /* -------------------------------------------------------------------------- */
 // export default function DemoAppPreview() {
-//   const [tab, setTab] = useState("field");
+//   const [tab, setTab] = useState("radar");
 //   const [device, setDevice] = useState("mobile");
 //   const [viewport, setViewport] = useState("desktop");
 
@@ -122,7 +122,7 @@
 //   const { wrapper, screen } = DEVICE_STYLES[device];
 
 //   const TABS = [
-//     { key: "field", label: "Field", component: <FieldPage /> },
+//     { key: "radar", label: "Radar", component: <RadarPage /> },
 //     { key: "workspace", label: "Workspace", component: <WorkspacePage /> },
 //     { key: "discovery", label: "Discovery", component: <DiscoveryPage /> },
 //   ];
@@ -203,7 +203,7 @@
 
 //               {TABS.map((t) => {
 //                 const Icon =
-//                   t.key === "field" ? MapPinned :
+//                   t.key === "radar" ? MapPinned :
 //                   t.key === "workspace" ? PencilRuler :
 //                   Sparkles;
 

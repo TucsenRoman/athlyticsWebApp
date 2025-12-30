@@ -58,7 +58,7 @@ export default function MoveLedger({
 
     setLoading(true);
     try {
-      // ✅ Type-safe partial update including required field `icon`
+      // ✅ Type-safe partial update including required Radar `icon`
       const updatePayload: TablesUpdate<"ledgers"> = {
         program_id: selectedProgram,
         icon: "", // ✅ Required to satisfy Supabase type

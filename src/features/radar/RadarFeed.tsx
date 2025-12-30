@@ -1,6 +1,6 @@
 "use client";
 
-import CardCarousel from "@/components/cards/fixed/CardCarousel";
+import CardCarousel from "@/features/radar/cards/CardCarousel";
 import { SearchX } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -19,6 +19,7 @@ const FAIL_MESSAGES = [
   "Clock hit zero — no results on the board.",
   "He shoots! He scores! Oh, nevermind — no return.",
   "Foul ball sndanifennfeinf???????????????",
+  "This result has a 1/1000000000000000 chance of generating. Congratulations!", // Add a math chance to this
 ];
 
 /* -------------------------------------------------------------------------- */
@@ -34,10 +35,10 @@ function SearchResultCardShell({ children }: { children: React.ReactNode }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  FieldView Feed                                                            */
+/*  RadarView Feed                                                            */
 /* -------------------------------------------------------------------------- */
 
-export default function FieldViewFeed({
+export default function RadarViewFeed({
   query,
   results,
 }: {

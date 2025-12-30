@@ -1,4 +1,4 @@
-import CardFormatter from "@/components/cards/CardFormatter";
+import CardFormatter from "@/components/layout/CardFormatter";
 import { Button } from "@/components/ui/actions/button";
 import {
   CalendarDays,

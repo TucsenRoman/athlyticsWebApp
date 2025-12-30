@@ -1,4 +1,4 @@
-// src/features/attendance/views/AttendanceFieldView.tsx
+// src/features/attendance/views/AttendanceRadarView.tsx
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
@@ -21,7 +21,7 @@ import {
 import AttendanceCover from "@/features/attendance/components/AttendanceCover";
 import StatusSelector from "@/features/attendance/components/StatusSelector";
 
-import CardFormatter from "@/components/cards/CardFormatter";
+import CardFormatter from "@/components/layout/CardFormatter";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 
 import {
@@ -32,12 +32,13 @@ import {
   UsersRound,
   CalendarDays,
 } from "lucide-react";
+import { Divider } from "@/components/ui";
 
 /* -------------------------------------------------------------------------- */
 /*  COMPONENT                                                                  */
 /* -------------------------------------------------------------------------- */
 
-export default function AttendanceFieldView() {
+export default function AttendanceRadarView() {
   const { selectedProgramId } = useProgramContext();
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -84,6 +85,16 @@ export default function AttendanceFieldView() {
 
     loadRoster();
   }, [selectedProgramId]);
+
+  /* ------------------------------------------------------------------------ */
+  /*  AUTO-LOAD ATTENDANCE ONCE ROSTER IS READY                                */
+  /* ------------------------------------------------------------------------ */
+
+  useEffect(() => {
+    if (!selectedProgramId || roster.length === 0) return;
+
+    loadAttendanceRows();
+  }, [selectedProgramId, roster.length]);
 
   /* ------------------------------------------------------------------------ */
   /*  PRELOAD LAST SESSION STATS (FOR COVER)                                  */
@@ -271,43 +282,17 @@ export default function AttendanceFieldView() {
   }, [statusMap, roster]);
 
   /* ------------------------------------------------------------------------ */
-  /*  COVER FIRST (INSIDE CARD CAROUSEL)                                      */
-  /* ------------------------------------------------------------------------ */
-
-  if (!sessionActive) {
-    return (
-      <CardFormatter
-        title="Attendance"
-        icon={UsersRound}
-        actions={
-          <div className="flex items-center gap-2 text-sm text-[var(--text)]">
-            <CalendarDays size={16} />
-            <span>{format(new Date(), "MMM d, yyyy")}</span>
-          </div>
-        }
-      >
-        <div className="p-4">
-          <AttendanceCover
-            date={today}
-            rosterCount={roster.length}
-            lastSessionStats={lastStats}
-            onStart={startSession}
-          />
-        </div>
-      </CardFormatter>
-    );
-  }
-
-  /* ------------------------------------------------------------------------ */
   /*  FULL ATTENDANCE CARD                                                     */
   /* ------------------------------------------------------------------------ */
 
   const attendanceInfoContent = (
     <div className="space-y-2 text-sm text-[var(--text-dark)]">
-      <div className="flex items-center gap-2 pb-1 border-b border-[var(--border)]">
+      <div className="flex items-center gap-2">
         <UsersRound size={14} />
         <span>Total: {info.total}</span>
       </div>
+
+      <Divider />
 
       <div className="flex items-center gap-2">
         <BadgeCheck size={14} className="text-[var(--fvr-green)]" />
@@ -360,7 +345,6 @@ export default function AttendanceFieldView() {
                 className={`
                   flex items-center justify-between
                   px-3 py-2 h-14
-                  border-b border-[var(--border)]
                   ${i % 2 === 0 ? "bg-[var(--gray-50)]" : "bg-[var(--gray-200)]"}
                 `}
               >

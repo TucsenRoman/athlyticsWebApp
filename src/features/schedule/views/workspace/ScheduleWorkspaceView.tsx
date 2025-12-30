@@ -391,7 +391,7 @@ export default function ScheduleView({
                                     color: colorClass,
                                     location: base.location ?? null,
 
-                                    // Fields required for edit modal
+                                    // Radars required for edit modal
                                     start: slot.startLabel,
                                     end: slot.endLabel,
                                     colorId: colorKey, // "blue"
@@ -487,7 +487,7 @@ export default function ScheduleView({
                                   color: colorClass,
                                   location: base.location ?? null,
 
-                                  // Fields required for edit modal
+                                  // Radars required for edit modal
                                   start: slot.startLabel,
                                   end: slot.endLabel,
                                   colorId: colorKey,

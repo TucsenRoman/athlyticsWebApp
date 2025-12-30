@@ -67,7 +67,8 @@ export default function AppHeader() {
     if (logoInactive) return;
 
     if (location.pathname === "/") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      const el = document.getElementById("app-scroll-container");
+      el?.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       navigate("/");
     }
@@ -77,13 +78,17 @@ export default function AppHeader() {
   useEffect(() => {
     if (!isLandingPage) return;
 
+    const el = document.getElementById("app-scroll-container");
+    if (!el) return;
+
     const onScroll = () => {
-      setScrolled(window.scrollY > 8);
+      setScrolled(el.scrollTop > 8);
     };
 
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
   }, [isLandingPage]);
+
 
   const showLandingCTA =
     isLandingPage &&

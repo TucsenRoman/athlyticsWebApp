@@ -192,7 +192,7 @@ export default function WorkspaceToolbar({
         {/* </div> */}
       </div>
 
-      <BatonTrigger />
+      {/* <BatonTrigger /> */}
       
       {/* MAX / MIN BUTTON ---------------------------------------------- */}
       <Button

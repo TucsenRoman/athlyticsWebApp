@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/utils/utils";
-import { CardInfo } from "@/components/cards/CardInfo";
+import { CardInfo } from "@/components/layout/CardInfo";
 
 export default function CardFormatter({
   title,
@@ -16,7 +16,7 @@ export default function CardFormatter({
   icon: React.ComponentType<{ className?: string }>;
   children: React.ReactNode;
   actions?: React.ReactNode;
-  infoContent?: React.ReactNode;     // ⬅ accepts JSX, not objects
+  infoContent?: React.ReactNode; // accepts JSX, not objects
   onClick?: () => void;
   className?: string;
 }) {
@@ -27,7 +27,7 @@ export default function CardFormatter({
         `
         h-full w-full
         rounded-lg
-        border border-[var(--border-dark)]
+        border border-[var(--border)]
         bg-[var(--bg)]
         p-4 pt-2
         shadow-lg
@@ -38,9 +38,7 @@ export default function CardFormatter({
         className
       )}
     >
-      {/* -------------------------------------------------------------- */}
-      {/* Header                                                         */}
-      {/* -------------------------------------------------------------- */}
+      {/* Header */}
       <div
         className="
           relative

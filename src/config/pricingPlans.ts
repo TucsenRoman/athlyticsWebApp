@@ -5,7 +5,7 @@
 export type PricingPlanId =
   | "free"
   | "pro"
-  | "enterprise";
+  // | "enterprise";
 
 /* -------------------------------------------------------------------------- */
 /* CTA DEFINITIONS                                                             */
@@ -113,31 +113,31 @@ export const PRICING_PLANS: Record<PricingPlanId, PricingPlan> = {
     },
   },
 
-  enterprise: {
-    id: "enterprise",
-    name: "Enterprise",
-    description: "For schools and multi-team organizations",
-    price: {
-      monthly: "Custom",
-      note: "Volume pricing available",
-    },
-    limits: {
-      programs: "unlimited",
-      athletes: "unlimited",
-      coaches: "unlimited",
-    },
-    features: [
-      "Everything in Coach",
-      "Multi-role access",
-      "Org-wide insights",
-      "Custom onboarding",
-      "Dedicated support",
-    ],
-    cta: {
-      label: "Contact sales",
-      action: "contact",
-    },
-  },
+  // enterprise: {
+  //   id: "enterprise",
+  //   name: "Enterprise",
+  //   description: "For schools and multi-team organizations",
+  //   price: {
+  //     monthly: "Custom",
+  //     note: "Volume pricing available",
+  //   },
+  //   limits: {
+  //     programs: "unlimited",
+  //     athletes: "unlimited",
+  //     coaches: "unlimited",
+  //   },
+  //   features: [
+  //     "Everything in Coach",
+  //     "Multi-role access",
+  //     "Org-wide insights",
+  //     "Custom onboarding",
+  //     "Dedicated support",
+  //   ],
+  //   cta: {
+  //     label: "Contact sales",
+  //     action: "contact",
+  //   },
+  // },
 };
 
 /* -------------------------------------------------------------------------- */

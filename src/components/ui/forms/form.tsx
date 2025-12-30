@@ -1,55 +1,55 @@
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
-import { Controller, ControllerProps, FieldPath, FieldValues, FormProvider, useFormContext } from "react-hook-form";
+import { Controller, ControllerProps, RadarPath, RadarValues, FormProvider, useFormContext } from "react-hook-form";
 
 import { cn } from "@/utils/utils";
 import { Label } from "@/components/ui/forms/label";
 
 const Form = FormProvider;
 
-type FormFieldContextValue<
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+type FormRadarContextValue<
+  TRadarValues extends RadarValues = RadarValues,
+  TName extends RadarPath<TRadarValues> = RadarPath<TRadarValues>,
 > = {
   name: TName;
 };
 
-const FormFieldContext = React.createContext<FormFieldContextValue>({} as FormFieldContextValue);
+const FormRadarContext = React.createContext<FormRadarContextValue>({} as FormRadarContextValue);
 
-const FormField = <
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+const FormRadar = <
+  TRadarValues extends RadarValues = RadarValues,
+  TName extends RadarPath<TRadarValues> = RadarPath<TRadarValues>,
 >({
   ...props
-}: ControllerProps<TFieldValues, TName>) => {
+}: ControllerProps<TRadarValues, TName>) => {
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
+    <FormRadarContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
-    </FormFieldContext.Provider>
+    </FormRadarContext.Provider>
   );
 };
 
-const useFormField = () => {
-  const fieldContext = React.useContext(FormFieldContext);
+const useFormRadar = () => {
+  const RadarContext = React.useContext(FormRadarContext);
   const itemContext = React.useContext(FormItemContext);
-  const { getFieldState, formState } = useFormContext();
+  const { getRadarState, formState } = useFormContext();
 
-  const fieldState = getFieldState(fieldContext.name, formState);
+  const RadarState = getRadarState(radarContext.name, formState);
 
-  if (!fieldContext) {
-    throw new Error("useFormField should be used within <FormField>");
+  if (!radarContext) {
+    throw new Error("useFormRadar should be used within <FormRadar>");
   }
 
   const { id } = itemContext;
 
   return {
     id,
-    name: fieldContext.name,
+    name: radarContext.name,
     formItemId: `${id}-form-item`,
     formDescriptionId: `${id}-form-item-description`,
     formMessageId: `${id}-form-item-message`,
-    ...fieldState,
+    ...radarState,
   };
 };
 
@@ -76,7 +76,7 @@ const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField();
+  const { error, formItemId } = useFormRadar();
 
   return <Label ref={ref} className={cn(error && "text-destructive", className)} htmlFor={formItemId} {...props} />;
 });
@@ -84,7 +84,7 @@ FormLabel.displayName = "FormLabel";
 
 const FormControl = React.forwardRef<React.ElementRef<typeof Slot>, React.ComponentPropsWithoutRef<typeof Slot>>(
   ({ ...props }, ref) => {
-    const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
+    const { error, formItemId, formDescriptionId, formMessageId } = useFormRadar();
 
     return (
       <Slot
@@ -101,7 +101,7 @@ FormControl.displayName = "FormControl";
 
 const FormDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => {
-    const { formDescriptionId } = useFormField();
+    const { formDescriptionId } = useFormRadar();
 
     return <p ref={ref} id={formDescriptionId} className={cn("text-sm text-muted-foreground", className)} {...props} />;
   },
@@ -110,7 +110,7 @@ FormDescription.displayName = "FormDescription";
 
 const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
   ({ className, children, ...props }, ref) => {
-    const { error, formMessageId } = useFormField();
+    const { error, formMessageId } = useFormRadar();
     const body = error ? String(error?.message) : children;
 
     if (!body) {
@@ -126,4 +126,4 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
 );
 FormMessage.displayName = "FormMessage";
 
-export { useFormField, Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormField };
+export { useFormRadar, Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormRadar };

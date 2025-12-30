@@ -88,7 +88,7 @@ const toProgram = (
 
 const SPORTS = [
   "Cross Country",
-  "Track & Field",
+  "Track & Radar",
   "Basketball",
   "Football",
   "Soccer",

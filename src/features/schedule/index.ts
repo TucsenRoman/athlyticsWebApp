@@ -2,7 +2,7 @@
 
 // views
 export { default as ScheduleWorkspaceView } from "./views/workspace/ScheduleWorkspaceView";
-export { default as ScheduleFieldView } from "./views/ScheduleFieldView";
+export { default as ScheduleRadarView } from "./views/ScheduleRadarView";
 
 // tools
 export { default as ScheduleTools } from "./views/workspace/ScheduleTools";

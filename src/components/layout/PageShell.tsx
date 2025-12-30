@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import MobilePageNav from "@/components/navigation/MobilePageNav";
 import { useCapabilities } from "@/hooks/useCapabilities";
+import MobileNav from "@/components/navigation/MobileNav";
+import AppHeader from "@/components/navigation/AppHeader";
 
 interface PageShellProps {
   children: React.ReactNode;
@@ -12,21 +13,20 @@ export default function PageShell({ children }: PageShellProps) {
   const { isDemo } = useCapabilities();
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Preview banner at top so it's immediately visible */}
-      {isDemo && (
-        <div className="w-full px-4 py-2 text-xs text-center bg-[var(--accent-bg)] text-[var(--accent)]">
-          Preview mode — sign in to make changes
+    <div className="relative flex flex-col h-screen">
+      {/* {isDemo && (
+        <div className="absolute w-20 z-50 px-4 py-2 text-xs text-center bg-(--warning-bg) text-(--text)]">
+          Explore Mode — sign in to make changes.
         </div>
-      )}
+      )} */}
 
-      {/* Main scrollable content */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <AppHeader />
+
+      <div id="app-scroll-container" className="flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden">
         {children}
       </div>
 
-      {/* Mobile navigation stays fixed at bottom */}
-      <MobilePageNav />
+      <MobileNav />
     </div>
   );
 }

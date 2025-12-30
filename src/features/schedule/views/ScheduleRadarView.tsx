@@ -1,8 +1,8 @@
-// src/features/schedule/views/ScheduleFieldView.tsx
+// src/features/schedule/views/ScheduleRadarView.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import CardFormatter from "@/components/cards/CardFormatter";
+import CardFormatter from "@/components/layout/CardFormatter";
 import { CalendarDays, Clock } from "lucide-react";
 
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
@@ -73,7 +73,7 @@ export default function ScheduleCard() {
 
   /**
    * IMPORTANT:
-   * Field is VIEW ONLY.
+   * Radar is VIEW ONLY.
    * We do NOT create weeks here.
    * Workspace owns mutations.
    */

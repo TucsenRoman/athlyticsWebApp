@@ -67,14 +67,14 @@ export default function WorkspaceOverview({ activeLedger }: OverviewProps) {
           </section>
 
           {/* ------------------------------------------------------------------ */}
-          {/* STAT CARDS (Routes / Headers / Entries / Fields)                  */}
+          {/* STAT CARDS (Routes / Headers / Entries / Radars)                  */}
           {/* ------------------------------------------------------------------ */}
           <section className="grid grid-cols-4 gap-6">
             {[
               { label: "Routes", value: activeLedger.meta?.routes },
               { label: "Headers", value: activeLedger.meta?.headers },
               { label: "Entries", value: activeLedger.meta?.entries },
-              { label: "Fields", value: activeLedger.meta?.fields },
+              { label: "Radars", value: activeLedger.meta?.fields },
             ].map((stat, i) => (
               <div
                 key={i}

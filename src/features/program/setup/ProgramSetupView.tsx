@@ -211,7 +211,7 @@ export default function ProgramSetupView({
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="default" onClick={handleFinalSubmit}>
             {mode === "add" ? "Create Program" : "Save Changes"} 
-            {/* ~ Add check for required fields. */}
+            {/* ~ Add check for required radars. */}
           </Button>
 
           <Button variant="outline" onClick={handleClose}>

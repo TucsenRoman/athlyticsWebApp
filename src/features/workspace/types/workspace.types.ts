@@ -7,4 +7,4 @@ export type WorkspaceMode =
   // | "routes";
   // | "permissions";
   // | "automations";
-  // | "field_cards";
+  // | "radar_cards";

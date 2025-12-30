@@ -41,16 +41,17 @@ import { demoPrograms } from "@/demo/demoPrograms";
   - Real programs use numeric IDs (from the database)
   - Demo programs use string IDs (to guarantee no collision)
 */
-export type ProgramId = number | string;
+export type ProgramId = number;
+export type DemoProgramId = `demo-${string}`;
 
 /*
   Program
   -------
   Minimal shape required by ProgramSelector and headers.
-  This intentionally avoids database-specific fields.
+  This intentionally avoids database-specific radars.
 */
 export interface Program {
-  id: ProgramId;
+  id: ProgramId | DemoProgramId;
   school: string | null;
   sport: string | null;
   year: string | null;
@@ -117,10 +118,7 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     In real mode:
       - Starts as null and is set via ProgramSelector
   */
-  const [selectedProgramId, setSelectedProgramId] =
-    useState<ProgramId | null>(
-      demoMode ? demoPrograms[0]?.id ?? null : null
-    );
+  const [selectedProgramId, setSelectedProgramId] = useState<ProgramId | null>(null);
 
   /* ---------------------------------------------------------------------- */
   /* DEMO MUTATION HANDLERS                                                   */
@@ -135,7 +133,10 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     if (!demoMode) return;
 
     setDemoProgramState((prev) => [...prev, program]);
-    setSelectedProgramId(program.id);
+    
+    if (typeof program.id === "number") {
+      setSelectedProgramId(program.id);
+    }
   };
 
   /*

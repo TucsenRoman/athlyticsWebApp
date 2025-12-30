@@ -3,6 +3,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import type { UiAttendanceStatus } from "@/features/attendance/types/attendance.types";
+import type { ProgramId } from "@/features/program-cloak/useProgramContext";
 
 /* -------------------------------------------------------------------------- */
 /*  TYPES — GENERATED + ATTENDANCE-SPECIFIC                                   */
@@ -61,7 +62,7 @@ export function toDbStatus(
 /*  FETCH ATTENDANCE — SINGLE SESSION (PROGRAM + DATE)                        */
 /* -------------------------------------------------------------------------- */
 
-export async function fetchAttendance(programId: number, date: string) {
+export async function fetchAttendance(programId: ProgramId, date: string) {
   const { data, error } = await supabase
     .from("attendance")
     .select("*")
@@ -82,7 +83,7 @@ export async function fetchAttendance(programId: number, date: string) {
 /* -------------------------------------------------------------------------- */
 
 export async function markPresent(
-  programId: number,
+  programId: ProgramId,
   date: string,
   athleteKey: string
 ) {
@@ -103,7 +104,7 @@ export async function markPresent(
 /* -------------------------------------------------------------------------- */
 
 export async function markException(
-  programId: number,
+  programId: ProgramId,
   date: string,
   athleteKey: string,
   status: UiAttendanceStatus,
@@ -152,7 +153,7 @@ export async function markException(
 /* -------------------------------------------------------------------------- */
 
 export async function updateNote(
-  programId: number,
+  programId: ProgramId,
   date: string,
   athleteKey: string,
   note: string
@@ -193,7 +194,7 @@ export async function updateNote(
    MARK ALL PRESENT — SAFE VERSION
    Only inserts all_present if NO rows exist for the session.
 -------------------------------------------------------------------------- */
-export async function markAllPresent(programId: number, date: string) {
+export async function markAllPresent(programId: ProgramId, date: string) {
   // 1️⃣ Check if any attendance rows already exist for this date/program
   const { data: existing, error: fetchErr } = await supabase
     .from("attendance")
@@ -231,7 +232,7 @@ export async function markAllPresent(programId: number, date: string) {
 /*  DELETE all_present SESSION MARKER ONLY                                    */
 /* -------------------------------------------------------------------------- */
 
-export async function deleteAllPresent(programId: number, date: string) {
+export async function deleteAllPresent(programId: ProgramId, date: string) {
   const { error } = await supabase
     .from("attendance")
     .delete()

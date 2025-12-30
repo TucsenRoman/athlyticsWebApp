@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------------
 // Views (page-level / route-level)
 // ---------------------------------------------------------------------------
-export { default as AttendanceFieldView } from "./views/AttendanceFieldView";
+export { default as AttendanceRadarView } from "./views/AttendanceRadarView";
 export { default as AttendanceWorkspaceView } from "./views/workspace/AttendanceWorkspaceView";
 
 // ---------------------------------------------------------------------------
