@@ -141,7 +141,7 @@ function Message({
             ? "bg-[var(--accent-bg)] text-[var(--text-dark)]"
             : accent
             ? "bg-[var(--accent-bg)] text-[var(--text-dark)]"
-            : "bg-[var(--gray-100)] text-[var(--text-dark)]"
+            : "bg-[var(--gray-lt)] text-[var(--text-dark)]"
         )}
       >
         {children}

@@ -279,7 +279,7 @@ export default function PackageDisplay({
                           className="
                             w-full flex items-center justify-between
                             px-3 py-2 rounded-lg transition
-                            hover:bg-[hsl(var(--gray-100))]
+                            hover:bg-[hsl(var(--gray-lt))]
                           "
                         >
                           <div className="flex items-center gap-3 overflow-hidden">

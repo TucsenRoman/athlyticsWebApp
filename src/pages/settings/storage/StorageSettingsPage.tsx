@@ -54,7 +54,7 @@ export default function StorageSettingsPage() {
           {MOCK.breakdown.map((b) => (
             <div
               key={b.label}
-              className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-100)] px-4 py-3"
+              className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-lttx-4 py-3"
             >
               <div className="flex items-center gap-3">
                 <span className="text-[var(--text)]">{b.icon}</span>

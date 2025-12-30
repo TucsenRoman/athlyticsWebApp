@@ -40,7 +40,7 @@ export default function ScheduleSlotDetails({
 
           <button
             onClick={onClose}
-            className="p-1 rounded-md hover:bg-[var(--gray-100)]"
+            className="p-1 rounded-md hover:bg-[var(--gray-lt)]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -63,7 +63,7 @@ export default function ScheduleSlotDetails({
         <div className="mt-5 flex justify-end gap-3">
           <button
             onClick={onEdit}
-            className="flex items-center gap-1 text-sm px-3 py-1 rounded hover:bg-[var(--gray-100)]"
+            className="flex items-center gap-1 text-sm px-3 py-1 rounded hover:bg-[var(--gray-lt)]"
           >
             <Pencil className="w-4 h-4" />
             Edit

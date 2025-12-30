@@ -59,7 +59,7 @@ export function SettingsRow({
         ${
           danger
             ? "bg-[var(--danger-bg)] text-[var(--danger)]"
-            : "bg-[var(--gray-100)]"
+            : "bg-[var(--gray-lt)]"
         }
       `}
     >

@@ -97,7 +97,7 @@ export default function WorkspaceProjectPerms({
       case "Editor":
         return `${base} bg-[hsl(var(--gray-200))] text-[hsl(var(--gray-700))]`;
       case "Viewer":
-        return `${base} bg-[hsl(var(--gray-100))] text-[hsl(var(--gray-600))]`;
+        return `${base} bg-[hsl(var(--gray-ltt))] text-[hsl(var(--gray-600))]`;
     }
   };
 

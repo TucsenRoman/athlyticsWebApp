@@ -102,7 +102,7 @@ export function TimeRangeSelector({
       {/* START */}
       <div className="flex flex-col">
         <label className="text-xs font-medium text-[var(--gray-600)]">Start</label>
-        <div className="flex flex-col items-center gap-1 p-1 bg-[var(--gray-100)] rounded-lg">
+        <div className="flex flex-col items-center gap-1 p-1 bg-[var(--gray-lt)] rounded-lg">
           <TimeSelector value={start} onChange={onChangeStart} />
         </div>
       </div>
@@ -113,7 +113,7 @@ export function TimeRangeSelector({
       {/* END */}
       <div className="flex flex-col">
         <label className="text-xs font-medium text-[var(--gray-600)]">End</label>
-        <div className="flex flex-col items-center gap-1 p-1 bg-[var(--gray-100)] rounded-lg">
+        <div className="flex flex-col items-center gap-1 p-1 bg-[var(--gray-lt)] rounded-lg">
           <TimeSelector value={end} onChange={onChangeEnd} />
         </div>
       </div>

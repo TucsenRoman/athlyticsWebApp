@@ -58,7 +58,7 @@ export default function AssistantSettingsPage() {
                   ${
                     active
                       ? "border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)]"
-                      : "border-[var(--border)] text-[var(--text-dark)] hover:bg-[var(--gray-100)]"
+                      : "border-[var(--border)] text-[var(--text-dark)] hover:bg-[var(--gray-lt)]"
                   }
                 `}
               >
@@ -163,7 +163,7 @@ function Toggle({
   description: string;
 }) {
   return (
-    <div className="flex items-center justify-between rounded-lg bg-[var(--gray-100)] px-4 py-3">
+    <div className="flex items-center justify-between rounded-lg bg-[var(--gray-lt)] px-4 py-3">
       <div>
         <div className="text-sm font-medium text-[var(--text-dark)]">{label}</div>
         <div className="text-xs text-[var(--text)]">{description}</div>
@@ -192,7 +192,7 @@ function Radio({
         ${
           active
             ? "bg-[var(--accent-bg)] border border-[var(--accent)]"
-            : "bg-[var(--gray-100)] hover:bg-[var(--gray-200)]"
+            : "bg-[var(--gray-lt)] hover:bg-[var(--gray-200)]"
         }
       `}
     >

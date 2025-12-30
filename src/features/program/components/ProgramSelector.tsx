@@ -19,6 +19,10 @@ import { ChevronDown, Settings2, Plus, Pencil, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { projectInstaller } from "@/integrations/supabase/projectInstaller";
 
+import ExpansiveMenu, {
+  type ExpansiveMenuItem,
+} from "@/components/ui/navigation/expansivemenu";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,8 +38,6 @@ import {
   DialogTitle,
   DialogContent,
 } from "@/components/ui/overlays/dialog";
-
-import { useEditMode } from "@/contexts/EditModeContext";
 
 // SETUP
 import ProgramSetupView from "../setup/ProgramSetupView";
@@ -115,16 +117,10 @@ const LEVEL_OPTIONS = [
 
 const GENDERS = ["Boys", "Girls", "Co-ed"];
 
-/* -------------------------------------------------------------------------- */
 /* COMPONENT */
-/* -------------------------------------------------------------------------- */
-
 const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
   ({ selectedProgramId, onProgramChange, variant = "header", programsOverride }, ref) => {
-    /* ---------------------------------------------------------------------- */
     /* STATE */
-    /* ---------------------------------------------------------------------- */
-
     const [programs, setPrograms] = useState<Program[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -141,7 +137,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     const [formMode, setFormMode] = useState<"add" | "edit">("add");
     const [formProgram, setFormProgram] = useState<Program | null>(null);
 
-    const { isEditMode, setIsEditMode } = useEditMode();
     const { demoMode } = useDemo();
 
     // Demo mutations live in ProgramContext (source of truth)
@@ -152,6 +147,27 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     useImperativeHandle(ref, () => ({
       openPicker: () => triggerRef.current?.click(),
     }));
+
+    // SETTINGS PARAMS
+    const settingsMenuItems: ExpansiveMenuItem[] = [
+      {
+        label: "Edit",
+        icon: <Pencil size={16} />,
+        flavor: "blue",
+        action: () => {
+          setPendingAction((prev) => (prev === "edit" ? null : "edit"));
+        },
+      },
+      {
+        label: "Delete",
+        icon: <Trash2 size={16} />,
+        flavor: "red",
+        destructive: true,
+        action: () => {
+          setPendingAction((prev) => (prev === "delete" ? null : "delete"));
+        },
+      },
+    ];
 
     /* ---------------------------------------------------------------------- */
     /* EFFECTIVE PROGRAMS (override wins; no DB reads/writes in demo) */
@@ -213,6 +229,9 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     /* HELPERS */
     /* ---------------------------------------------------------------------- */
 
+    const isRealProgramId = (id: ProgramId): id is number =>
+      typeof id === "number";
+
     const refreshPrograms = async () => {
       // If programs are injected, they're the source of truth.
       if (programsOverride) {
@@ -269,32 +288,39 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
     // Submit handler for external modal (non-blocking for installer)
     // IMPORTANT: Return type stays Promise<number> for real mode compatibility.
-    const handleExternalFormSubmit = async (data: any): Promise<number> => {
+    const handleExternalFormSubmit = async (
+      data: any
+    ): Promise<ProgramId | null> => {
       /* ------------------------------------------------------------------ */
       /* DEMO MODE (no Supabase, fully interactive)                          */
       /* ------------------------------------------------------------------ */
       if (demoMode || programsOverride) {
         if (formMode === "add") {
-          const demoId = `demo-${Date.now()}`;
+          const demoId: ProgramId = `demo-${Date.now()}`;
 
           const created = toProgram(demoId, data);
 
           addProgram(created);
           onProgramChange(demoId);
-          return -1;
+
+          return demoId;
         }
 
         if (formMode === "edit" && formProgram) {
           const updated = toProgram(formProgram.id, data);
 
           updateProgram(updated);
-          notifyProgramUpdated(updated.id);
-          return -1;
+
+          // Only notify for real programs
+          if (isRealProgramId(updated.id)) {
+            notifyProgramUpdated(updated.id);
+          }
+
+          return updated.id;
         }
 
-        return -1;
+        return null;
       }
-
 
       /* ------------------------------------------------------------------ */
       /* REAL MODE (Supabase)                                                */
@@ -303,11 +329,10 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return 0;
 
-      /* -------------------------------------------------------------- */
-      /* ADD MODE                                                       */
-      /* -------------------------------------------------------------- */
+      if (!user) return null;
+
+      // ADD MODE
       if (formMode === "add") {
         const { data: created, error } = await supabase
           .from("programs")
@@ -324,35 +349,26 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           .select()
           .single();
 
-        if (!created || error) {
-          console.error("Program create error:", error);
-          return 0;
-        }
+        if (!created || error) return null;
 
-        const newId = created.id as unknown as ProgramId;
+        const newId = created.id as ProgramId;
 
-        // Update UI immediately
         await refreshPrograms();
         onProgramChange(newId);
 
-        // 🔥 Run installer *after* modal closes → async & non-blocking
-        setTimeout(async () => {
-          // Only run installer for real numeric ids
-          if (typeof newId !== "number") return;
-          await projectInstaller(newId);
-          notifyProgramUpdated(newId);
-        }, 0);
+        if (isRealProgramId(newId)) {
+          setTimeout(() => {
+            projectInstaller(newId);
+            notifyProgramUpdated(newId);
+          }, 0);
+        }
 
-        // Real mode returns numeric ID
-        return typeof newId === "number" ? newId : 0;
+        return newId;
       }
 
-      /* -------------------------------------------------------------- */
-      /* EDIT MODE                                                      */
-      /* -------------------------------------------------------------- */
+      // EDIT MODE
       if (formMode === "edit" && formProgram) {
-        // Only real numeric IDs should ever reach Supabase
-        if (typeof formProgram.id !== "number") return 0;
+        if (!isRealProgramId(formProgram.id)) return null;
 
         await supabase
           .from("programs")
@@ -366,15 +382,13 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           .eq("id", formProgram.id);
 
         await refreshPrograms();
-
-        // Notify other components — name/order might have changed
         notifyProgramUpdated(formProgram.id);
 
         return formProgram.id;
       }
 
-      return 0;
-    };
+      return null;
+      };
 
     /* ---------------------------------------------------------------------- */
     /* CLICK HANDLING */
@@ -430,70 +444,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       }
 
       setPendingDelete(null);
-    };
-
-    /* ---------------------------------------------------------------------- */
-    /* EDIT ACTIONS (floating circle buttons) */
-    /* ---------------------------------------------------------------------- */
-
-    const renderActions = () => {
-      const items = [
-        {
-          label: "Edit",
-          icon: <Pencil size={20} className="text-[var(--edit)]" />,
-          action: () => setPendingAction((p) => (p === "edit" ? null : "edit")),
-        },
-        {
-          label: "Delete",
-          icon: <Trash2 size={20} className="text-[var(--danger)]" />,
-          destructive: true,
-          action: () =>
-            setPendingAction((p) => (p === "delete" ? null : "delete")),
-        },
-      ];
-
-      return (
-        <AnimatePresence>
-          {isEditMode &&
-            items.map((a, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0, x: 0 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  x: (i + 1) * 42,
-                }}
-                exit={{
-                  opacity: 0,
-                  scale: 0.8,
-                  x: 0,
-                }}
-                transition={{ duration: 0.25, delay: i * 0.05 }}
-                className="absolute bottom-2.5 left-1"
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    a.action();
-                  }}
-                  className={`
-                    h-8 w-8 flex items-center justify-center rounded-full shadow-md transition-all
-                    ${
-                      a.label === "Edit"
-                        ? "bg-[var(--bg)] hover:bg-[var(--edit-bg)]"
-                        : a.destructive
-                        ? "bg-[var(--bg)] hover:bg-[var(--danger-bg)]"
-                        : "bg-[var(--bg)] hover:bg-[var(--gray-200)]"
-                    }
-                  `}
-                >
-                  {a.icon}
-                </button>
-              </motion.div>
-            ))}
-        </AnimatePresence>
-      );
     };
 
     /* ---------------------------------------------------------------------- */
@@ -557,7 +507,6 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       <DropdownMenu
         onOpenChange={(open) => {
           if (!open) {
-            setIsEditMode(false);
             setPendingAction(null);
           }
         }}
@@ -643,50 +592,30 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           </div>
 
           {variant === "header" && !noPrograms && (
-            <div className="sticky bottom-0 flex justify-between bg-transparent backdrop-blur border-t border-[var(--border)] py-2 px-1">
+            <div className="sticky bottom-0 flex justify-between backdrop-blur border-t border-[var(--border)] py-2 px-1">
               {/* SETTINGS */}
-              <Button
-                className={`
-                  h-9 w-9 rounded-full transition-all relative z-50 bg-[var(--bg)]
-                  ${
-                    isEditMode
-                      ? "hover:bg-[var(--accent-bg)] text-[var(--accent)] shadow-lg"
-                      : "hover:bg-[var(--gray-300)] text-[var(--text)]"
-                  }
-                `}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsEditMode(!isEditMode);
-                  setPendingAction(null);
-                }}
-              >
-                <motion.div
-                  animate={{ rotate: isEditMode ? -90 : 0 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 260,
-                    damping: 20,
-                  }}
-                  className="flex items-center justify-center"
-                >
-                  <Settings2 className="scale-[1.3]" />
-                </motion.div>
-              </Button>
-
-              {renderActions()}
+              <ExpansiveMenu
+                items={settingsMenuItems}
+                mainIcon={<Settings2 className="h-4 w-4" />}
+                expand="line"
+                direction="right"
+                spacing={45}
+                variant="rainbow"
+                defaultState="closed"
+                autoClose={false}
+                mainRotate={90}
+              />
 
               {/* ADD PROGRAM */}
               <Button
-                variant="accent"
-                size="icon"
-                className="h-8 w-8 rounded-full shadow-md hover:shadow-lg"
+                variant="stick"
                 onClick={(e) => {
                   e.stopPropagation();
                   openAddProgram();
                 }}
                 title="Add Program"
               >
-                <Plus size={16} />
+                <Plus />
               </Button>
             </div>
           )}
@@ -694,10 +623,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       </DropdownMenu>
     );
 
-    /* ---------------------------------------------------------------------- */
     /* RENDER */
-    /* ---------------------------------------------------------------------- */
-
     if (loading) {
       return (
         <div className="text-sm text-[var(--muted-foreground)]">Loading…</div>

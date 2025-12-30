@@ -75,7 +75,7 @@ export default function ProfileSettingsPage() {
 
         <Divider />
 
-        <div className="rounded-lg bg-[var(--gray-100)] p-4">
+        <div className="rounded-lg bg-[var(--gray-ltt p-4">
           <div className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
             Bio
           </div>
@@ -135,7 +135,7 @@ function Row({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-100)] px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-ltt px-4 py-3">
       <div className="flex items-center gap-3 min-w-0">
         {icon && <span className="text-[var(--text)]">{icon}</span>}
         <span className="text-sm font-medium text-[var(--text-dark)]">{label}</span>

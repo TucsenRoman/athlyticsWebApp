@@ -264,7 +264,7 @@ export default function DiscoveryPage() {
                     key={ledger.id}
                     onClick={() => {
                       if (isPublic) {
-                        navigate("/login", {
+                        navigate("/auth", {
                           state: { from: "/discovery" },
                         });
                         return;

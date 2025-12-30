@@ -149,7 +149,7 @@ function Row({
   badge?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-100)] px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-ltt)] px-4 py-3">
       <div className="flex items-center gap-3 min-w-0">
         <span className="text-[var(--text)]">{icon}</span>
         <span className="text-sm font-medium text-[var(--text-dark)]">{label}</span>

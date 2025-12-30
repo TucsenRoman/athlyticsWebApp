@@ -108,7 +108,7 @@ export default function DiscoveryHeader({
           <div
             className="
               flex items-center gap-1 px-1 py-1 rounded-full
-              bg-[hsl(var(--gray-100))] 
+              bg-[hsl(var(--gray-lt))] 
               dark:bg-[hsl(var(--gray-800))]
               text-base font-semibold shadow-lg
             "

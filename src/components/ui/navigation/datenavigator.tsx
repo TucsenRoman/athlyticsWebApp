@@ -68,7 +68,7 @@ export default function DateNavigator({
       className="
         flex items-center gap-[1px]
         h-8 p-1
-        bg-[var(--gray-100)]
+        bg-[var(--gray-lt)]
         border border-[var(--border)]
         rounded-full shadow-sm
       "

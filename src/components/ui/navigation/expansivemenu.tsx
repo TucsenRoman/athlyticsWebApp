@@ -78,6 +78,8 @@ export interface ExpansiveMenuProps {
 
   layeredArch?: LayeredArchConfig;
   mainSize?: number;
+
+  autoClose?: boolean;
 }
 
 /* ========================================================================== */
@@ -132,6 +134,8 @@ export default function ExpansiveMenu({
 
   open: controlledOpen,
   setOpen: controlledSetOpen,
+
+  autoClose = true,
 }: ExpansiveMenuProps) {
   const isMobile = isMobileViewport();
 
@@ -304,7 +308,7 @@ export default function ExpansiveMenu({
 
     return (
       <Button
-        variant="toolbar"
+        variant="float"
         iconSize="sm"
         title={item.label}
         onClick={() => {
@@ -315,8 +319,10 @@ export default function ExpansiveMenu({
           }
 
           item.action?.();
-          setOpen(false);
-          setActiveNestKey(null);
+          if (autoClose) {
+            setOpen(false);
+            setActiveNestKey(null);
+          }
         }}
         style={
           variant === "rainbow" && flavor
@@ -360,7 +366,7 @@ export default function ExpansiveMenu({
     >
       {/* MAIN ORB */}
       <Button
-        variant="toolbar"
+        variant="stick"
         data-active={open}
         onClick={handleMainClick}
       >

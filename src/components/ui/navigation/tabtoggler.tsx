@@ -29,7 +29,7 @@ export default function TabToggler<T extends string>({
   return (
     <div className="flex items-center h-8 min-w-0">
       {/* Pill container */}
-      <div className="flex items-center gap-1 p-1 h-full bg-[var(--gray-100)] rounded-full">
+      <div className="flex items-center gap-1 p-1 h-full bg-[var(--gray-lttttt)] rounded-full">
         {items.map((item) => {
           const active = value === item.value;
 

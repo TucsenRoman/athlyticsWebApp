@@ -124,8 +124,8 @@ export default function OpenExistingProject({
                           w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition
                           ${
                             disabled
-                              ? "bg-[var(--gray-100)] text-[var(--text)] cursor-not-allowed"
-                              : "text-[var(--text-dark)] hover:bg-[var(--gray-100)]"
+                              ? "bg-[var(--gray-ltt)] text-[var(--text)] cursor-not-allowed"
+                              : "text-[var(--text-dark)] hover:bg-[var(--gray-ltt)]"
                           }
                         `}
                       >

@@ -192,7 +192,7 @@ export default function ProjectSidebar({
           flex items-center justify-between
           w-full px-3 py-2
           rounded-md
-          hover:bg-[hsl(var(--gray-100))]
+          hover:bg-[hsl(var(--gray-lt))]
           transition
         "
       >
@@ -253,7 +253,7 @@ export default function ProjectSidebar({
                 flex w-full items-center justify-between
                 px-2 py-1.5
                 rounded-md
-                hover:bg-[hsl(var(--gray-100))]
+                hover:bg-[hsl(var(--gray-lt))]
                 transition
               "
             >

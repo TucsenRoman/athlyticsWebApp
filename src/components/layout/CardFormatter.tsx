@@ -49,15 +49,15 @@ export default function CardFormatter({
       >
         {/* Centered Icon + Title */}
         <div className="flex items-center gap-2 pointer-events-none">
-          <Icon className="w-5 h-5 text-[var(--text-dark)]" />
-          <span className="text-lg font-semibold text-[var(--text-dark)]">
+          <Icon className="w-5 h-5 text-[var(--text-dk)]" />
+          <span className="text-lg font-semibold text-[var(--text-dk)]">
             {title}
           </span>
         </div>
 
         {/* Header Info Button (top-right) */}
         {infoContent && (
-          <div className="absolute top-0 right-0">
+          <div className="absolute top-0 right-0 text-[var(--text)]">
             <CardInfo content={infoContent} />
           </div>
         )}

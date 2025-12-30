@@ -120,7 +120,7 @@ export default function EditorFooterMenu({
                   title={item.label}
                   className="
                     h-7 w-7 rounded-full shadow-md flex items-center justify-center
-                    bg-[var(--bg)] hover:bg-[var(--gray-100)]
+                    bg-[var(--bg)] hover:bg-[var(--gray-lt)]
                     transition-all duration-200
                   "
                 >

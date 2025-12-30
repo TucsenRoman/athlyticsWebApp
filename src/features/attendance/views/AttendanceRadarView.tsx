@@ -345,7 +345,7 @@ export default function AttendanceRadarView() {
                 className={`
                   flex items-center justify-between
                   px-3 py-2 h-14
-                  ${i % 2 === 0 ? "bg-[var(--gray-50)]" : "bg-[var(--gray-200)]"}
+                  ${i % 2 === 0 ? "bg-[var(--gray-lt)]" : "bg-[var(--gray-lt2)]"}
                 `}
               >
                 <div className="flex flex-col min-w-0 leading-tight">

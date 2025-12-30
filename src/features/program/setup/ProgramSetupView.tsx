@@ -14,6 +14,7 @@ import ProgramSetupBasics, {
   ProgramBasicsData,
 } from "./ProgramSetupBasics";
 import ProgramSetupRoles from "./ProgramSetupRoles";
+import { ProgramId } from "@/features/program-cloak";
 
 /* ========================================================================== */
 /* TYPES                                                                      */
@@ -33,7 +34,7 @@ export interface ProgramSetupViewProps {
   onClose: () => void;
   onSubmit: (
     data: ProgramBasicsData & { rolePreset?: string }
-  ) => Promise<number>;
+  ) => Promise<ProgramId | null>;
 }
 
 /* ========================================================================== */
@@ -99,7 +100,7 @@ export default function ProgramSetupView({
         className="
           w-[98vw]
           sm:max-w-md
-          bg-[var(--bg-gray-lt)]
+          bg-[var(--gray-lt)]
           border border-[var(--border)]
           rounded-lg
           shadow-xl
@@ -209,7 +210,7 @@ export default function ProgramSetupView({
 
         {/* FOOTER */}
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="default" onClick={handleFinalSubmit}>
+          <Button variant="solid" onClick={handleFinalSubmit}>
             {mode === "add" ? "Create Program" : "Save Changes"} 
             {/* ~ Add check for required radars. */}
           </Button>

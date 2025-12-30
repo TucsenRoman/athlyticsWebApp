@@ -143,7 +143,7 @@ export default function AttendanceFilterDialog({
                   ${
                     isSelected
                       ? "bg-[var(--accent-bg)] text-[var(--accent)]"
-                      : "bg-[var(--gray-50)] text-[var(--text-dark)] hover:bg-[var(--gray-100)]"
+                      : "bg-[var(--gray-50)] text-[var(--text-dark)] hover:bg-[var(--gray-lttt)]"
                   }
                 `}
               >

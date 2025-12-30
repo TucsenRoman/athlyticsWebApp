@@ -272,7 +272,6 @@ export default function ProgramFormModal({
           ) : (
             <>
               <Button
-                variant="none"
                 className={`
                   px-2 py-1
                   ${
@@ -288,7 +287,7 @@ export default function ProgramFormModal({
 
               <Button
                 variant="outline"
-                className="px-2 py-1 border-[var(--border)] text-[var(--text)] hover:bg-[var(--gray-100)]"
+                className="px-2 py-1 border-[var(--border)] text-[var(--text)] hover:bg-[var(--gray-lt)]"
                 onClick={onClose}
               >
                 Cancel

@@ -22,7 +22,7 @@ export default function BillingSettingsPage() {
       {/* HEADER                                                             */}
       {/* ------------------------------------------------------------------ */}
       <header className="flex items-center gap-4 px-6 py-5 border-b border-[var(--border)]">
-        <button className="p-2 rounded-md hover:bg-[var(--gray-100)]">
+        <button className="p-2 rounded-md hover:bg-[var(--gray-ltt)]">
           <ArrowLeft className="w-5 h-5 text-[var(--text)]" />
         </button>
 

@@ -1,6 +1,6 @@
 // src/features/program-cloak/program.types.ts
 
-export type ProgramId = number;
+export type ProgramId = number | `demo-${string}`;
 
 export interface Program {
   id: ProgramId;

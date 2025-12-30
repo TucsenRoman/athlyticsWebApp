@@ -1,6 +1,6 @@
 "use client";
 
-import CardCarousel from "@/features/radar/cards/CardCarousel";
+import CardCarousel from "@/features/radar/CardCarousel";
 import { SearchX } from "lucide-react";
 import { motion } from "framer-motion";
 

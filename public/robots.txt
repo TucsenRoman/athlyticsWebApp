@@ -16,7 +16,7 @@
 
 User-agent: *
 Allow: /
-Disallow: /login
+Disallow: /auth
 Disallow: /signup
 Disallow: /radar
 Disallow: /workspace
@@ -26,7 +26,7 @@ Disallow: /settings
 
 User-agent: Googlebot
 Allow: /
-Disallow: /login
+Disallow: /auth
 Disallow: /signup
 Disallow: /radar
 Disallow: /workspace
@@ -36,7 +36,7 @@ Disallow: /settings
 
 User-agent: Bingbot
 Allow: /
-Disallow: /login
+Disallow: /auth
 Disallow: /signup
 Disallow: /radar
 Disallow: /workspace
@@ -46,7 +46,7 @@ Disallow: /settings
 
 User-agent: Twitterbot
 Allow: /
-Disallow: /login
+Disallow: /auth
 Disallow: /signup
 Disallow: /radar
 Disallow: /workspace
@@ -56,7 +56,7 @@ Disallow: /settings
 
 User-agent: facebookexternalhit
 Allow: /
-Disallow: /login
+Disallow: /auth
 Disallow: /signup
 Disallow: /radar
 Disallow: /workspace

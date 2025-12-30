@@ -41,8 +41,7 @@ import { demoPrograms } from "@/demo/demoPrograms";
   - Real programs use numeric IDs (from the database)
   - Demo programs use string IDs (to guarantee no collision)
 */
-export type ProgramId = number;
-export type DemoProgramId = `demo-${string}`;
+export type ProgramId = number | `demo-${string}`;
 
 /*
   Program
@@ -51,7 +50,7 @@ export type DemoProgramId = `demo-${string}`;
   This intentionally avoids database-specific radars.
 */
 export interface Program {
-  id: ProgramId | DemoProgramId;
+  id: ProgramId;
   school: string | null;
   sport: string | null;
   year: string | null;

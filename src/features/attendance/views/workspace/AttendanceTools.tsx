@@ -159,7 +159,7 @@ export default function AttendanceTools({
       {/* STATUS BADGE */}
       {/* <div>
         {!attendanceHasSession ? (
-          <span className="h-6 px-3 flex items-center text-xs font-medium rounded-full bg-[var(--gray-100)] border shadow-sm">
+          <span className="h-6 px-3 flex items-center text-xs font-medium rounded-full bg-[var(--gray-lttt border shadow-sm">
             No Session Logged
           </span>
         ) : attendanceIsDirty ? (

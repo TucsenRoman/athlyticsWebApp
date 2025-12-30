@@ -125,8 +125,8 @@ export default function StatusSelector({
           >
             <OverlayIcon
               size={18}
-              stroke="var(--gray-600)"
-              fill="var(--gray-50)"
+              stroke="var(--gray-md2)"
+              fill="var(--gray-lt)"
             />
           </button>
         )}
@@ -136,7 +136,7 @@ export default function StatusSelector({
           className="
             flex items-center h-10 gap-2 md:gap-5
             px-2 md:px-4
-            border border-[var(--gray-300)]
+            border border-[var(--border2)]
             rounded-full
           "
         >
@@ -253,7 +253,7 @@ export default function StatusSelector({
               onChange={(e) => setNoteText(e.target.value)}
               className="
                 w-full h-28 p-3 rounded-lg border border-[var(--border)]
-                bg-[var(--gray-100)] resize-none
+                bg-[var(--gray-lt)] resize-none
               "
               placeholder="Write note..."
             />

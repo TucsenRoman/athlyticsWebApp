@@ -29,8 +29,7 @@ export default function AppHeader() {
   // NO AUTH → SIGN IN BUTTON
   const { user } = useAuth();
   const authActive =
-    location.pathname.startsWith("/login") ||
-    location.pathname.startsWith("/signup");
+    location.pathname.startsWith("/auth")
   // const hideHeader = location.pathname.startsWith("/ledgers/");
 
   // ACTIVE PROGRAM
@@ -46,10 +45,10 @@ export default function AppHeader() {
   // PAGES
   const isLandingPage = 
     location.pathname === "/" || 
-    location.pathname === "/login"; // ~Change to "signin."
+    location.pathname === "/auth"; // ~Change to "signin."
   const activeRadar = location.pathname.startsWith("/radar");
   const activeWorkspace = location.pathname.startsWith("/workspace");
-  const activeSignIn = location.pathname.startsWith("/login"); // ~Change to "signin."
+  const activeSignIn = location.pathname.startsWith("/auth"); // ~Change to "signin."
   // const activeTraining = location.pathname.startsWith("/training");
   // const activeDiscovery = location.pathname.startsWith("/discovery");
 
@@ -122,7 +121,7 @@ export default function AppHeader() {
               isLandingPage
                 ? scrolled
                   ? "bg-transparent border-transparent"
-                  : "bg-[var(--bg)] border-[var(--border)]"
+                  : "bg-white border-[var(--border)]"
                 : "bg-[var(--bg)] border-[var(--border)]"
             }
           `}
@@ -147,7 +146,7 @@ export default function AppHeader() {
                   landingScrolled
                     ? logoInactive
                       ? "bg-[--gray-lt]"
-                      : "bg-[--gray-lt] hover:bg-[var(--gray-lt-hv)] shadow-lg"
+                      : "bg-[--gray-lt] hover:bg-[var(--gray-lt2)] shadow-lg"
                     : logoInactive
                       ? ""
                       : "hover:bg-[var(--accent-glass)]"
@@ -162,7 +161,7 @@ export default function AppHeader() {
 
             {programScoped && (
               <DesktopNavPill>
-                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text)] hover:bg-[var(--accent-glass)] hover:text-[var(--accent)] cursor-pointer">
+                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text-dark)] hover:bg-[var(--accent-glass)] hover:text-[var(--accent)] cursor-pointer">
                   <ProgramSelector
                     selectedProgramId={selectedProgramId}
                     onProgramChange={setSelectedProgramId}
@@ -181,7 +180,7 @@ export default function AppHeader() {
                   icon={<User className="w-4 h-4" strokeWidth={2.5} />}
                   label="Sign In"
                   active={activeSignIn}
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate("/auth")}
                   widthClass="w-[95px]"
                 />
                 <DesktopNavButton
@@ -254,7 +253,7 @@ export default function AppHeader() {
                   icon={<User className="w-4 h-4" strokeWidth={2.5} />}
                   label="Sign In"
                   active={activeSignIn}
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate("/auth")}
                   widthClass="w-[95px]"
                 />
               </DesktopNavPill>
@@ -324,8 +323,8 @@ function DesktopNavButton({
         ${widthClass}
         ${
           active
-            ? "text-[var(--text-accent)] bg-[var(--accent-glass)]"
-            : "text-[var(--text)] hover:bg-[var(--gray-200)]"
+            ? "text-[var(--accent)] bg-[var(--accent-glass)]"
+            : "text-[var(--text-dark)] hover:bg-[var(--gray-lt2)]"
         }
       `}
     >

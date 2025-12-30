@@ -22,7 +22,7 @@ import { BotMessageSquare } from "lucide-react";
 
 // PAGES
 import LandingPage from "@/pages/LandingPage";
-import Auth from "@/pages/Auth";
+import Auth from "@/pages/AuthPage";
 import RadarPage from "@/pages/RadarPage";
 import WorkspacePage from "@/pages/WorkspacePage";
 // import DiscoveryPage from "@/pages/DiscoveryPage";
@@ -89,16 +89,7 @@ function RouterContent() {
         }
       />
       <Route
-        path="/login"
-        element={
-          <PageShell>
-            <Auth />
-          </PageShell>
-        }
-      />
-
-      <Route
-        path="/signup"
+        path="/auth"
         element={
           <PageShell>
             <Auth />

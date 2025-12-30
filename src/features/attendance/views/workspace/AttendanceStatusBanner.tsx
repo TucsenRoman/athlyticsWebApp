@@ -12,7 +12,7 @@ export default function AttendanceStatusBanner({
       <div
         className="
           p-4 rounded-lg
-          bg-[var(--gray-100)]
+          bg-[var(--gray-ltt)]
           border border-[var(--border)]
           text-[var(--text)]
           text-sm

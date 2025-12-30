@@ -124,7 +124,7 @@ export default function EditorFooter({
                 ${
                   active
                     ? "bg-[var(--accent-bg)] text-[var(--text-accent)] shadow-md font-medium"
-                    : "bg-[var(--gray-100)] text-[var(--text-dark)] hover:bg-[var(--gray-200)] shadow"
+                    : "bg-[var(--gray-ltt)] text-[var(--text-dark)] hover:bg-[var(--gray-200)] shadow"
                 }
               `}
             >
@@ -203,7 +203,7 @@ export default function EditorFooter({
               className="
                 w-full flex items-center gap-2 px-3 py-2
                 text-[var(--text-dark)]
-                hover:bg-[var(--gray-100)]
+                hover:bg-[var(--gray-ltt)]
               "
             >
               <Route className="w-4 h-4" />
@@ -218,7 +218,7 @@ export default function EditorFooter({
               className="
                 w-full flex items-center gap-2 px-3 py-2
                 text-[var(--text-dark)]
-                hover:bg-[var(--gray-100)]
+                hover:bg-[var(--gray-ltt)]
               "
             >
               <Settings className="w-4 h-4" />

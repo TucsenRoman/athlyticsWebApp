@@ -23,12 +23,12 @@ export default function ProgramDeleteModal({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-card">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Delete Program?</DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm">
           Are you sure you want to delete{" "}
           <span className="font-semibold">
             {program?.sport} • {program?.season_year}

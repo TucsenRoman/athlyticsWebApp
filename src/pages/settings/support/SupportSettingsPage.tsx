@@ -95,7 +95,7 @@ export default function SupportSettingsPage() {
             className="
               flex-1 rounded-lg
               border border-[var(--border)]
-              bg-[var(--gray-100)]
+              bg-[var(--gray-lt)]
               px-3 py-2
               text-sm text-[var(--text-dark)]
               placeholder:text-[var(--text)]
@@ -131,7 +131,7 @@ export default function SupportSettingsPage() {
               key={l.label}
               className="
                 w-full flex items-center justify-between
-                rounded-lg bg-[var(--gray-100)] px-4 py-3
+                rounded-lg bg-[var(--gray-lt)] px-4 py-3
                 hover:bg-[var(--gray-200)] hover:shadow-inner
                 transition-colors
               "
@@ -210,7 +210,7 @@ function Divider() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-100)] px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-lt)] px-4 py-3">
       <span className="text-sm font-medium text-[var(--text-dark)]">{label}</span>
       <span className="text-sm text-[var(--text)]">{value}</span>
     </div>

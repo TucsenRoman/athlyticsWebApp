@@ -41,7 +41,7 @@ function PinButton({ pinned, onToggle }: { pinned: boolean; onToggle: () => void
       <Pin
         size={22}
         className={`transition-all duration-200 ${
-          pinned ? "text-[var(--text-accent)] rotate-45 fill-[var(--accent-bg)]" : "text-[var(--gray-300)]"
+          pinned ? "text-[var(--accent-md)] rotate-45 fill-[var(--accent-bg)]" : "text-[var(--text)]"
         }`}
       />
     </button>
