@@ -1,18 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://athlytics.app/</loc>
+    <loc>https://athlyticshq.com/</loc>
   </url>
-
   <url>
-    <loc>https://athlytics.app/login</loc>
+    <loc>https://athlyticshq.com/login</loc>
   </url>
-
   <url>
-    <loc>https://athlytics.app/pricing</loc>
+    <loc>https://athlyticshq.com/pricing</loc>
   </url>
-
   <url>
-    <loc>https://athlytics.app/discovery</loc>
+    <loc>https://athlyticshq.com/discovery</loc>
   </url>
 </urlset>
