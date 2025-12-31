@@ -161,7 +161,7 @@ export default function AppHeader() {
 
             {programScoped && (
               <DesktopNavPill>
-                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text-dark)] hover:bg-[var(--accent-glass)] hover:text-[var(--accent)] cursor-pointer">
+                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text2)] hover:bg-[var(--accent-glass)] hover:text-[var(--accent)] cursor-pointer">
                   <ProgramSelector
                     selectedProgramId={selectedProgramId}
                     onProgramChange={setSelectedProgramId}
@@ -324,7 +324,7 @@ function DesktopNavButton({
         ${
           active
             ? "text-[var(--accent)] bg-[var(--accent-glass)]"
-            : "text-[var(--text-dark)] hover:bg-[var(--gray-lt2)]"
+            : "text-[var(--text2)] hover:bg-[var(--gray-lt2)]"
         }
       `}
     >

@@ -1,57 +1,85 @@
 "use client";
 
+import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import { Menu } from "lucide-react";
+
 import { Divider } from "@/components/ui";
-
-import {
-  UserRound,
-  Paintbrush,
-  Bell,
-  ShieldCheck,
-  Archive,
-  FlaskConical,
-  CreditCard,
-  MessageSquareHeart,
-  BotMessageSquare,
-  Bot,
-} from "lucide-react";
-
-/* ========================================================================== */
-/* COMPONENT                                                                  */
-/* ========================================================================== */
+import { SETTINGS_NAV } from "@/features/user-scope/settings/settingsNav";
 
 export default function SettingsLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className="flex h-full min-h-0 bg-[var(--bg)]">
+    <div className="relative flex h-full min-h-0 bg-[var(--bg)]">
+
+      {/* MOBILE OVERLAY */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* SIDEBAR ---------------------------------------------------------- */}
       <aside
-        className="
-          w-64 shrink-0
+        className={`
+          fixed z-40 inset-y-0 left-0
+          w-72
+          bg-[var(--bg)]
           border-r border-[var(--border)]
-          px-2 py-3
-          flex flex-col gap-[2px]
-        "
+          flex flex-col
+          transform transition-transform duration-300
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          md:relative md:translate-x-0
+        `}
       >
-        <header className="w-min ml-1 px-2 text-lg font-semibold text-[var(--text-dark)]"> Settings </header>
-        <Divider 
-          tone="medium"
-        />
+        {/* HEADER */}
+        <div className="px-4 pt-4 pb-3">
+          <div className="text-lg font-semibold text-[var(--text-dark)]">
+            User Settings
+          </div>
+        </div>
 
-        <SettingsNavItem to="profile" icon={<UserRound />} label="Profile" />
-        <SettingsNavItem to="appearance" icon={<Paintbrush />} label="Appearance" />
-        <SettingsNavItem to="notifications" icon={<Bell />} label="Notifications" />
-        <SettingsNavItem to="security" icon={<ShieldCheck />} label="Security" />
-        <SettingsNavItem to="storage" icon={<Archive />} label="Storage" />
-        <SettingsNavItem to="experiments" icon={<FlaskConical />} label="Experiments" />
-        <SettingsNavItem to="billing" icon={<CreditCard />} label="Plan & Billing" />
-        <SettingsNavItem to="support" icon={<MessageSquareHeart />} label="Support" />
-        <SettingsNavItem to="aiassistant" icon={<Bot />} label="AI Assistant" />
+        <Divider inset={5} />
+
+        {/* MODE RAIL */}
+        <div className="px-3 py-4 flex flex-col gap-2">
+          {SETTINGS_NAV
+            .filter((item) => item.enabled !== false)
+            .map((item) => (
+              <SettingsModeTile
+                key={item.id}
+                to={item.route}
+                icon={item.icon}
+                label={item.label}
+                onSelect={() => setSidebarOpen(false)}
+              />
+            ))}
+        </div>
       </aside>
 
       {/* CONTENT ---------------------------------------------------------- */}
-      <main className="flex-1 min-w-0 overflow-y-auto">
-        <div className="max-w-4xl px-8 py-8">
+      <main className="flex-1 min-w-0 overflow-y-auto md:ml-0">
+        {/* MOBILE HEADER */}
+        <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-[var(--bg)] md:hidden">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="
+              h-9 w-9 rounded-lg
+              flex items-center justify-center
+              border border-[var(--border)]
+              bg-[var(--gray-100)]
+            "
+          >
+            <Menu size={18} />
+          </button>
+          <div className="text-lg font-semibold text-[var(--text-dark)]">
+            Settings
+          </div>
+        </div>
+
+        <div className="max-w-4xl px-6 md:px-8 py-8">
           <Outlet />
         </div>
       </main>
@@ -63,48 +91,61 @@ export default function SettingsLayout() {
 /* SUBCOMPONENTS                                                             */
 /* ========================================================================== */
 
-function SettingsNavItem({
+function SettingsModeTile({
   to,
   icon,
   label,
+  onSelect,
 }: {
   to: string;
   icon: React.ReactNode;
   label: string;
+  onSelect?: () => void;
 }) {
   return (
-    <NavLink to={to} end>
+    <NavLink to={to} end onClick={onSelect}>
       {({ isActive }) => (
         <div
           className={`
-            group w-full flex items-center gap-2
-            px-3 py-2 rounded-md
+            group relative
+            flex items-center gap-3
+            px-4 py-3 rounded-xl
             cursor-pointer
-            transition-colors
-
+            transition-all duration-300
             ${
               isActive
-                ? "bg-[var(--gray-200)] text-[var(--text-dark)] shadow-inner"
-                : "text-[var(--text-dark)] hover:bg-[var(--gray-200)] hover:shadow-inner"
+                ? `
+                  bg-[var(--accent-glass)]
+                  text-[var(--accent)]
+                  shadow-md
+                  border border-[var(--accent)]
+                `
+                : `
+                  bg-[var(--gray-100)]
+                  text-[var(--text2)]
+                  border border-transparent
+                  hover:border-[var(--border)]
+                `
             }
           `}
         >
-          {/* ICON */}
-          <span
+          {/* ICON CHIP */}
+          <div
             className={`
-              transition-colors
+              h-9 w-9 rounded-lg
+              flex items-center justify-center
               ${
                 isActive
-                  ? "text-[var(--text-dark)]"
-                  : "text-[var(--text)]"
+                  ? "bg-transparent"
+                  : "bg-[var(--gray-lt)] text-[var(--text2)]"
               }
             `}
           >
             {icon}
-          </span>
+          </div>
 
           {/* LABEL */}
-          <span className="text-sm">{label}</span>
+          <span className="text-sm font-semibold">{label}</span>
         </div>
       )}
     </NavLink>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { usePostAuthRedirect } from "./usePostAuthRedirect";
 
@@ -89,7 +90,45 @@ export default function AuthForm() {
   const navigate = useNavigate();
   const location = useLocation();
   // REDIRECT
+  const { user, loading: authLoading } = useAuth();
   const { redirectAfterAuth } = usePostAuthRedirect();
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      redirectAfterAuth();
+    }
+  }, [user, authLoading]);
+
+
+  // FORGOT PASSWORD (RESET)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetError, setResetError] = useState<string | null>(null)
+
+  async function handleForgotPassword() {
+    if (!values.email) {
+      setResetError("Please enter your email address first.")
+      return
+    }
+
+    setResetLoading(true)
+    setResetSent(false)
+    setResetError(null)
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        values.email,
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        }
+      )
+
+      if (!error) setResetSent(true)
+    } finally {
+      setResetLoading(false)
+    }
+  }
 
   const routeTab: AuthTab = location.pathname.includes("signup")
     ? "signup"
@@ -119,14 +158,18 @@ export default function AuthForm() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setAuthError(null);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
-      if (error) throw error;
-      redirectAfterAuth();
+
+      if (error) {
+        setAuthError(error.message);
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -158,8 +201,6 @@ export default function AuthForm() {
           { id: data.user.id, full_name: values.fullName },
         ]);
       }
-
-      navigate("/");
     } finally {
       setLoading(false);
     }
@@ -197,6 +238,45 @@ export default function AuthForm() {
     return (
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
         {config.fields.map(renderField)}
+
+        {tab === "login" && authError && (
+          <div className="rounded-lg bg-red-500/20 border border-red-500/40 px-3 py-2">
+            <p className="text-sm text-red-100">
+              {authError === "Invalid login credentials"
+                ? "Incorrect email or password"
+                : authError}
+            </p>
+          </div>
+        )}
+        
+        {tab === "login" && (
+          <div className="flex flex-col items-end gap-1 mr-1">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={resetLoading}
+              className="
+                text-sm text-white/80
+                hover:text-white
+                underline-offset-2 hover:underline
+                transition
+              "
+            >
+              {resetSent
+                ? "Reset email sent"
+                : resetLoading
+                ? "Sending…"
+                : "Forgot password?"}
+            </button>
+
+            {resetError && (
+              <span className="text-xs text-red-200">
+                {resetError}
+              </span>
+            )}
+          </div>
+        )}
+
         <Button
           variant="ghost"
           type="submit"

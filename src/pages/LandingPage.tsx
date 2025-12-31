@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
-import Auth from "./AuthPage";
+import Auth from "./auth/AuthPage";
 import PageFooter from "@/components/layout/PageFooter";
 import { Button, Divider } from "@/components/ui";
 import radarImage from "@/assets/images/coach-radar-pov.png"

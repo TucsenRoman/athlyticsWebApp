@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/overlays/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DemoProvider } from "@/contexts/DemoContext";
-import { UserSettingsProvider } from "@/features/user-settings/UserSettingsContext";
+import { UserSettingsProvider } from "@/features/user-scope/UserSettingsContext";
 import { ProgramProvider } from "@/features/program-cloak/useProgramContext";
 import { PushPanelProvider, usePushPanel } from "@/contexts/PushPanelContext";
 
@@ -20,9 +20,11 @@ import { PushPanel } from "@/components/ui";
 import BatonChatInterface from "@/components/baton/BatonChatInterface";
 import { BotMessageSquare } from "lucide-react";
 
+import { ProfileProvider } from "@/features/user-scope/profile/ProfileProvider";
+
 // PAGES
 import LandingPage from "@/pages/LandingPage";
-import Auth from "@/pages/AuthPage";
+import Auth from "@/pages/auth/AuthPage";
 import RadarPage from "@/pages/RadarPage";
 import WorkspacePage from "@/pages/WorkspacePage";
 // import DiscoveryPage from "@/pages/DiscoveryPage";
@@ -45,6 +47,7 @@ import TrainingPreviewPage from "./pages/public/TrainingPreview";
 import DiscoveryPreviewPage from "./pages/public/DiscoveryPreview";
 import PricingPage from "./pages/public/PricingPage";
 import MobileNav from "./components/navigation/MobileNav";
+import PasswordResetPage from "./pages/auth/PasswordResetPage";
 
 const queryClient = new QueryClient();
 
@@ -52,19 +55,21 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <UserSettingsProvider>
-          <ProgramProvider>
-            <TooltipProvider>
-              <PushPanelProvider>
-                <BrowserRouter>
-                  <DemoProvider>
-                    <RouterContent />
-                  </DemoProvider>
-                </BrowserRouter>
-              </PushPanelProvider>
-            </TooltipProvider>
-          </ProgramProvider>
-        </UserSettingsProvider>
+        <ProfileProvider>
+          <UserSettingsProvider>
+            <ProgramProvider>
+              <TooltipProvider>
+                <PushPanelProvider>
+                  <BrowserRouter>
+                    <DemoProvider>
+                      <RouterContent />
+                    </DemoProvider>
+                  </BrowserRouter>
+                </PushPanelProvider>
+              </TooltipProvider>
+            </ProgramProvider>
+          </UserSettingsProvider>
+        </ProfileProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
@@ -96,6 +101,15 @@ function RouterContent() {
           </PageShell>
         }
       />
+      <Route
+        path="/reset-password"
+        element={
+          <PageShell>
+            <PasswordResetPage />
+          </PageShell>
+        }
+      />
+
 
       {/* PROGRAM-SCOPED */}
       <Route
@@ -169,6 +183,7 @@ function RouterContent() {
           </PageShell>
         }
       >
+        {/* ~Map over these. */}
         <Route index element={<ProfileSettingsPage />} />
         <Route path="profile" element={<ProfileSettingsPage />} />
         <Route path="appearance" element={<AppearanceSettingsPage />} />

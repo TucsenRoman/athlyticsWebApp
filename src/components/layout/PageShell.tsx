@@ -26,6 +26,7 @@ export default function PageShell({ children }: PageShellProps) {
         {children}
       </div>
 
+      {/* ~Add bottom padding when MobileNav is in use. */}
       <MobileNav />
     </div>
   );

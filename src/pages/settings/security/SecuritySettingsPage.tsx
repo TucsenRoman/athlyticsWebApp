@@ -1,62 +1,86 @@
 // src/pages/settings/security/SecuritySettingsPage.tsx
 "use client";
 
-import { ShieldCheck, KeyRound, Smartphone, Monitor, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-const MOCK = {
-  passwordLastChanged: "3 months ago",
-  mfa: "Enabled",
-  sessions: [
-    { device: "Windows • Chrome", location: "Minnesota, US", status: "Current" },
-    { device: "iPhone • Safari", location: "Minnesota, US", status: "Yesterday" },
-  ],
-};
+import { KeyRound, LogOut } from "lucide-react";
+
+/* ========================================================================== */
+/* PAGE                                                                       */
+/* ========================================================================== */
 
 export default function SecuritySettingsPage() {
+  const { user } = useAuth();
+  const [resetSent, setResetSent] = useState(false);
+  const [cooldown, setCooldown] = useState<number | null>(null);
+
+  async function handlePasswordReset() {
+    if (!user?.email || cooldown !== null) return;
+
+    await supabase.auth.resetPasswordForEmail(user.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    setCooldown(60);
+  }
+
+  useEffect(() => {
+    if (cooldown === null) return;
+
+    if (cooldown === 0) {
+      setCooldown(null);
+      return;
+    }
+
+    const id = setTimeout(() => {
+      setCooldown((c) => (c !== null ? c - 1 : null));
+    }, 1000);
+
+    return () => clearTimeout(id);
+  }, [cooldown]);
+
+  
+  async function handleGlobalSignOut() {
+    await supabase.auth.signOut({ scope: "global" });
+  }
+
   return (
     <div className="space-y-8">
       <Header
         title="Security"
-        description="Protect your account and review active access."
+        description="Manage password access and active sessions."
       />
 
       <SectionLabel>Authentication</SectionLabel>
       <Card>
-        <Row
+        <ActionRow
           icon={<KeyRound className="h-4 w-4" />}
-          label="Password"
-          value={`Last changed ${MOCK.passwordLastChanged}`}
-          badge="Recommended"
-          badgeTone="info"
-        />
-        <Row
-          icon={<ShieldCheck className="h-4 w-4" />}
-          label="Multi-factor authentication"
-          value={MOCK.mfa}
-          badge={MOCK.mfa === "Enabled" ? "On" : "Off"}
-          badgeTone={MOCK.mfa === "Enabled" ? "good" : "neutral"}
+          label="Change password"
+          description={
+            cooldown !== null
+              ? `Reset email sent. You can resend in ${cooldown}s.`
+              : "We’ll email you a secure link to reset your password."
+          }
+          actionLabel={cooldown !== null ? "Email sent. Check your inbox (and spam). Delivery may take several minute." : "Send reset email"}
+          onAction={handlePasswordReset}
+          disabled={cooldown !== null}
         />
       </Card>
 
-      <SectionLabel>Active Sessions</SectionLabel>
+      <SectionLabel>Sessions</SectionLabel>
       <Card>
-        {MOCK.sessions.map((s) => (
-          <SessionRow
-            key={s.device + s.status}
-            device={s.device}
-            location={s.location}
-            status={s.status}
-          />
-        ))}
-
-        <Divider />
-
         <div className="rounded-lg border border-[var(--danger)] bg-[var(--danger-bg)] p-4">
-          <div className="text-sm font-medium text-[var(--danger)]">Sign out everywhere</div>
+          <div className="text-sm font-medium text-[var(--danger)]">
+            Sign out everywhere
+          </div>
           <p className="text-sm text-[var(--text)] mt-1">
-            Ends all sessions across devices. You’ll need to sign in again.
+            Ends all active sessions across devices.
           </p>
+
           <button
+            onClick={handleGlobalSignOut}
             className="
               mt-3 inline-flex items-center gap-2
               px-4 py-2 rounded-lg
@@ -73,12 +97,22 @@ export default function SecuritySettingsPage() {
   );
 }
 
-/* ============================= UI PRIMITIVES ============================= */
+/* ========================================================================== */
+/* UI PRIMITIVES                                                              */
+/* ========================================================================== */
 
-function Header({ title, description }: { title: string; description: string }) {
+function Header({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
     <header>
-      <h1 className="text-lg font-semibold text-[var(--text-dark)]">{title}</h1>
+      <h1 className="text-lg font-semibold text-[var(--text-dark)]">
+        {title}
+      </h1>
       <p className="text-sm text-[var(--text)]">{description}</p>
     </header>
   );
@@ -94,78 +128,56 @@ function SectionLabel({ children }: { children: string }) {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 shadow-sm space-y-3">
+    <section className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-5 shadow-sm">
       {children}
     </section>
   );
 }
 
-function Divider() {
-  return <div className="border-t border-[var(--border-light)] my-1" />;
-}
-
-function Row({
+function ActionRow({
   icon,
   label,
-  value,
-  badge,
-  badgeTone,
+  description,
+  actionLabel,
+  onAction,
+  disabled = false,
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
-  badge?: string;
-  badgeTone?: "good" | "neutral" | "info";
+  description: string;
+  actionLabel: string;
+  onAction: () => void;
+  disabled?: boolean;
 }) {
-  const tone =
-    badgeTone === "good"
-      ? "bg-[var(--success-bg)] text-[var(--success)]"
-      : badgeTone === "info"
-        ? "bg-[var(--edit-bg)] text-[var(--edit)]"
-        : "bg-[var(--gray-200)] text-[var(--text-dark)]";
-
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-ltt)] px-4 py-3">
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-start gap-3">
         <span className="text-[var(--text)]">{icon}</span>
-        <div className="min-w-0">
-          <div className="text-sm font-medium text-[var(--text-dark)]">{label}</div>
-          <div className="text-sm text-[var(--text)] truncate">{value}</div>
+        <div>
+          <div className="text-sm font-medium text-[var(--text-dark)]">
+            {label}
+          </div>
+          <div className="text-sm text-[var(--text)]">
+            {description}
+          </div>
         </div>
       </div>
 
-      {badge && <span className={`text-xs px-2 py-1 rounded-full ${tone}`}>{badge}</span>}
-    </div>
-  );
-}
-
-function SessionRow({
-  device,
-  location,
-  status,
-}: {
-  device: string;
-  location: string;
-  status: string;
-}) {
-  const Icon = device.toLowerCase().includes("iphone") ? Smartphone : Monitor;
-  const pill =
-    status === "Current"
-      ? "bg-[var(--success-bg)] text-[var(--success)]"
-      : "bg-[var(--gray-200)] text-[var(--text-dark)]";
-
-  return (
-    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-ltt)] px-4 py-3">
-      <div className="flex items-center gap-3 min-w-0">
-        <span className="text-[var(--text)]">
-          <Icon className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <div className="text-sm font-medium text-[var(--text-dark)]">{device}</div>
-          <div className="text-sm text-[var(--text)] truncate">{location}</div>
-        </div>
-      </div>
-      <span className={`text-xs px-2 py-1 rounded-full ${pill}`}>{status}</span>
+      <button
+        onClick={onAction}
+        disabled={disabled}
+        className="
+          shrink-0
+          px-3 py-2 rounded-lg
+          border border-[var(--border)]
+          text-sm
+          hover:bg-[var(--gray-200)]
+          disabled:opacity-50
+          disabled:cursor-not-allowed
+        "
+      >
+        {actionLabel}
+      </button>
     </div>
   );
 }
