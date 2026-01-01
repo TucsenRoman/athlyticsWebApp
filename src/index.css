@@ -22,7 +22,7 @@ body,
 @layer base {
   :root {
     /* GRAYS */
-    --gray-1:  #ffffff;
+    --white:  #ffffff;
     --gray-2:  #fafafa;
     --gray-3:  #f5f5f5;
     --gray-4:  #f0f0f0;
@@ -41,7 +41,7 @@ body,
     --gray-17: #383838;
     --gray-18: #262626;
     --gray-19: #1a1a1a;
-    --gray-20: #000000;
+    --black: #000000;
 
     /* use this to easily toggle light and dark mode */
     --bg: var(--gray-1);
@@ -59,14 +59,16 @@ body,
     --accent-glass: rgb(248, 118, 42, 0.1);
 
     /* TEXT */
-    --vBlack: #000000;
-    --vWhite: #ffffff;
-    --text-light: var(--gray-lt);
-    --text-lt: var(--gray-lt);
-    --text: var(--gray-md);
-    --text2: var(--gray-md2);
-    --text-dk: var(--gray-dk);
-    --text-dark: var(--gray-dk);
+    --vBlack: var(--black);
+    --vWhite: var(--white);
+    
+    --text-lt: var(--gray-11);
+    --text: var(--gray-13);
+    --text-dk: var(--gray-15);
+
+    --text2: var(--mole);
+    --text-light: var(--mole);
+    --text-dark: var(--mole);
 
     /* BORDERS */
     --border-lt: var(--gray-2);
@@ -86,6 +88,7 @@ body,
     --danger-bg: rgb(217, 4, 41, 0.1);
     /* --info: #219ebc; */
     --link-bg: rgba(89, 220, 253, 0.2);
+    --archive: rgb(255, 251, 19);;
 
 
     /* SCHEDULE SLOTS */
@@ -101,12 +104,14 @@ body,
     /* --focus-foreground: #6b6b5a; */
 
     /* OVERLAYS */
-    --overlay-dark: rgb(0, 0, 0, 0.7);
+    --overlay-dk: rgb(0, 0, 0, 0.7);
+    --overlay-dark: var(--mole);
 
     /* ~Mole this later. */
     --radius: 0.75rem;
 
     /* MOLES */
+    --mole: rgb(78, 58, 1);
     --debug: red;
     --bg-gray-lt: var(--fvr-blue);
     --bg-gray-lt-hv: var(--fvr-blue-lt);
@@ -127,48 +132,48 @@ body,
   --fvr-test: ;
 
   /* BLUE */
-  --fvr-blue: rgb(77, 113, 190);
-  --fvr-blue-md: rgb(77 113 190 / 0.40);
-  --fvr-blue-lt: rgb(77 113 190 / 0.10);
+  --fvr-blue: rgb(99, 132, 204);
+  --fvr-blue-md: rgb(99 132 204 / 0.20);
+  --fvr-blue-lt: rgb(99 132 204 / 0.10);
 
   /* SLATE */
   --fvr-slate: rgb(139, 157, 180);
-  --fvr-slate-md: rgb(139 157 180 / 0.40);
+  --fvr-slate-md: rgb(139 157 180 / 0.20);
   --fvr-slate-lt: rgb(139 157 180 / 0.10);
 
   /* PURPLE */
   --fvr-purple: rgb(181, 152, 254);
-  --fvr-purple-md: rgb(181 152 254 / 0.40);
+  --fvr-purple-md: rgb(181 152 254 / 0.20);
   --fvr-purple-lt: rgb(181 152 254 / 0.10);
 
   /* YELLOW */
-  --fvr-yellow: rgb(234, 179, 8);
-  --fvr-yellow-md: rgb(234 179 8 / 0.40);
-  --fvr-yellow-lt: rgb(234 179 8 / 0.10);
+  --fvr-yellow: rgb(240, 197, 70);
+  --fvr-yellow-md: rgb(240 197 70 / 0.20);
+  --fvr-yellow-lt: rgb(240 197 70 / 0.10);
 
   /* RED */
   --fvr-red: rgb(230, 21, 21);
-  --fvr-red-md: rgb(230 21 21 / 0.40);
+  --fvr-red-md: rgb(230 21 21 / 0.20);
   --fvr-red-lt: rgb(230 21 21 / 0.10);
 
   /* CORAL */
   --fvr-coral: rgb(232, 159, 150);
-  --fvr-coral-md: rgb(232 159 150 / 0.40);
+  --fvr-coral-md: rgb(232 159 150 / 0.20);
   --fvr-coral-lt: rgb(232 159 150 / 0.10);
 
   /* TEAL */
   --fvr-teal: rgb(102, 217, 204);
-  --fvr-teal-md: rgb(102 217 204 / 0.40);
+  --fvr-teal-md: rgb(102 217 204 / 0.20);
   --fvr-teal-lt: rgb(102 217 204 / 0.10);
 
   /* GREEN */
   --fvr-green: rgb(54, 138, 86);
-  --fvr-green-md: rgb(54 138 86 / 0.40);
+  --fvr-green-md: rgb(54 138 86 / 0.20);
   --fvr-green-lt: rgb(54 138 86 / 0.10);
 
   /* INDIGO */
   --fvr-indigo: rgb(79, 70, 229);
-  --fvr-indigo-md: rgb(79 70 229 / 0.40);
+  --fvr-indigo-md: rgb(79 70 229 / 0.20);
   --fvr-indigo-lt: rgb(79 70 229 / 0.10);
 }
 
@@ -270,6 +275,10 @@ input:-webkit-autofill {
     animation: deleteFlash 1.2s infinite;
   }
 
+  .flash-archive {
+    animation: archiveFlash 1.2s infinite;
+  }
+
   @keyframes editFlash {
     0%, 100% { background-color: transparent; }
     50% { background-color: color-mix(in srgb, var(--edit) 15%, transparent); }
@@ -278,5 +287,10 @@ input:-webkit-autofill {
   @keyframes deleteFlash {
     0%, 100% { background-color: transparent; }
     50% { background-color: color-mix(in srgb, var(--danger) 15%, transparent); }
+  }
+
+  @keyframes archiveFlash {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: color-mix(in srgb, var(--archive) 15%, transparent); }
   }
 }

@@ -5,6 +5,7 @@ import { AvatarId } from "./avatars"
 import { AVATAR_MAP } from "./avatarMap"
 
 import { Ban, X } from "lucide-react"
+import { GradientHint } from "@/components/ui"
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
@@ -66,7 +67,7 @@ export default function AvatarSelector({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-[var(--overlay-dark)]"
+        className="absolute inset-0 bg-[var(--overlay-dk)]"
         onClick={onClose}
       />
 
@@ -79,7 +80,7 @@ export default function AvatarSelector({
           max-h-[80vh]
           rounded-xl
           border border-[var(--border)]
-          bg-[var(--bg)]
+          bg-[var(--gray-2)]
           p-4
           shadow-lg
           flex flex-col
@@ -120,7 +121,7 @@ export default function AvatarSelector({
                   }
                 `}
               >
-                <div className="h-[150px] w-[150px] flex items-center justify-center">
+                <div className="h-[140px] w-[140px] flex items-center justify-center">
                   <Ban className="h-[100px] w-[100px] text-[var(--text)]" />
                 </div>
               </button>
@@ -155,7 +156,7 @@ export default function AvatarSelector({
                   border-[var(--accent)] bg-[var(--accent-bg)]
                 "
               >
-                <div className="h-[150px] w-[150px] rounded-full overflow-hidden bg-[var(--gray-lt)]">
+                <div className="h-[140px] w-[140px] rounded-full overflow-hidden bg-[var(--gray-lt)]">
                   <img
                     src={src}
                     alt=""
@@ -176,7 +177,7 @@ export default function AvatarSelector({
                     border-transparent hover:bg-[var(--gray-lt)]
                 "
                 >
-                <div className="h-[150px] w-[150px] rounded-full overflow-hidden bg-[var(--gray-lt)]">
+                <div className="h-[140px] w-[140px] rounded-full overflow-hidden bg-[var(--gray-lt)]">
                     <img
                     src={src}
                     alt=""
@@ -190,18 +191,7 @@ export default function AvatarSelector({
           </div>
         </div>
 
-        {/* Bottom Gradient Hint */}
-        <div
-          className="
-            pointer-events-none
-            absolute bottom-0 left-0 right-0
-            h-[200px]
-            rounded-b-xl
-            bg-gradient-to-t
-            from-gray-200
-            to-transparent
-          "
-        />
+        <GradientHint direction="bottom" extent="200px" radius="lg" />
       </div>
     </div>,
     document.getElementById("overlay-root")!

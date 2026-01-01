@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/actions/button";
 
 interface Program {
   id: number;
+  school: string;
   sport: string;
   season_year: string;
 }
@@ -23,17 +24,20 @@ export default function ProgramDeleteModal({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-[var(--gray-lt)] rounded-lg">
         <DialogHeader>
           <DialogTitle>Delete Program?</DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm">
+        <p className="text-center text-sm text-[var(--text)]">
           Are you sure you want to delete{" "}
-          <span className="font-semibold">
-            {program?.sport} • {program?.season_year}
+          <span className="font-semibold text-[var(--accent)]">
+            {program?.school} {program?.sport}, {program?.season_year}
           </span>
-          ? This action cannot be undone.
+          ? This action{" "}
+          <span className="font-bold">
+            cannot be undone.
+          </span>
         </p>
 
         <div className="flex flex-col gap-2 mt-5">

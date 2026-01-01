@@ -14,7 +14,7 @@ import type { ProgramId } from "@/features/program-cloak/useProgramContext";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 import { useDemo } from "@/contexts/DemoContext";
 
-import { ChevronDown, Settings2, Plus, Pencil, Trash2 } from "lucide-react";
+import { ChevronDown, Settings2, Plus, Pencil, Trash2, Archive } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { projectInstaller } from "@/integrations/supabase/projectInstaller";
@@ -40,22 +40,15 @@ import {
 } from "@/components/ui/overlays/dialog";
 
 // SETUP
-import ProgramSetupView from "../setup/ProgramSetupView";
+import ProgramConfigModal from "../setup/ProgramConfigView";
 
 /* -------------------------------------------------------------------------- */
 /* TYPES */
 /* -------------------------------------------------------------------------- */
 
 import type { Program } from "@/features/program-cloak/useProgramContext";
-// export interface Program {
-//   id: ProgramId; // <-- unified (real: number, demo: string)
-//   user_id?: string; // <-- optional so demo programs don't need it
-//   school: string | null;
-//   sport: string | null;
-//   level: string | null;
-//   gender: string | null;
-//   year: string | null;
-// }
+import ProgramDeleteModal from "../setup/ProgramDeleteModal";
+import ProgramArchiveModal from "../setup/ProgramArchiveModal";
 
 export interface ProgramSelectorHandle {
   openPicker: () => void;
@@ -81,7 +74,7 @@ const toProgram = (
   id,
   school: data.school ?? null,
   sport: data.sport ?? null,
-  year: data.seasonYear ?? null,
+  year: data.year ?? null,
 });
 
 /* -------------------------------------------------------------------------- */
@@ -125,12 +118,13 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     const [loading, setLoading] = useState(true);
 
     const [pendingAction, setPendingAction] =
-      useState<"edit" | "delete" | null>(null);
+      useState<"edit" | "delete" | "archive" | null>(null);
 
     const [editorMode, setEditorMode] = useState<"add" | "edit" | null>(null);
     const [editorProgram, setEditorProgram] = useState<Program | null>(null);
 
     const [pendingDelete, setPendingDelete] = useState<Program | null>(null);
+    const [pendingArchive, setPendingArchive] = useState<Program | null>(null);
 
     // External modal state
     const [formOpen, setFormOpen] = useState(false);
@@ -156,6 +150,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         flavor: "blue",
         action: () => {
           setPendingAction((prev) => (prev === "edit" ? null : "edit"));
+        },
+      },
+      {
+        label: "Archive",
+        icon: <Archive size={16} />,
+        flavor: "yellow",
+        action: () => {
+          setPendingAction((prev) => (prev === "archive" ? null : "archive"));
         },
       },
       {
@@ -343,7 +345,9 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
               sport: data.sport,
               level: data.levels.join(", "),
               gender: data.gender,
-              year: data.seasonYear,
+              year: data.year,
+              season_start: data.seasonStart ?? null,
+              season_end: data.seasonEnd ?? null,
             },
           ])
           .select()
@@ -377,7 +381,9 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
             sport: data.sport,
             level: data.levels.join(", "),
             gender: data.gender,
-            year: data.seasonYear,
+            year: data.year,
+            season_start: data.seasonStart ?? null,
+            season_end: data.seasonEnd ?? null,
           })
           .eq("id", formProgram.id);
 
@@ -390,10 +396,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
       return null;
       };
 
-    /* ---------------------------------------------------------------------- */
-    /* CLICK HANDLING */
-    /* ---------------------------------------------------------------------- */
-
+    /* SETTINGS APPLICATION HANDER */
     const handleProgramClick = (p: Program) => {
       if (pendingAction === "edit") {
         openEditProgram(p);
@@ -407,13 +410,16 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         return;
       }
 
+      if (pendingAction === "archive") {
+        setPendingArchive(p);
+        setPendingAction(null);
+        return;
+      }
+
       onProgramChange(p.id);
     };
 
-    /* ---------------------------------------------------------------------- */
-    /* DELETE */
-    /* ---------------------------------------------------------------------- */
-
+    /* DELETE HANDLER */
     const handleConfirmDelete = async () => {
       if (!pendingDelete) return;
 
@@ -445,6 +451,24 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
 
       setPendingDelete(null);
     };
+
+    /* ARCHIVE HANDLER */
+    const handleConfirmArchive = async () => {
+      if (!pendingArchive) return;
+
+      // DEMO / OVERRIDE
+      if (demoMode || programsOverride) {
+        // future: mark archived in context
+        setPendingArchive(null);
+        return;
+      }
+
+      // REAL MODE (placeholder)
+      // supabase.from("programs").update({ archived: true }).eq("id", pendingArchive.id)
+
+      setPendingArchive(null);
+    };
+
 
     /* ---------------------------------------------------------------------- */
     /* TRIGGERS — ORIGINAL VARIANT STYLING */
@@ -483,12 +507,12 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
           px-4
           rounded-full
           flex items-center gap-2
-          bg-[var(--bg)]
-          hover:bg-[var(--bg)]
+          bg-[var(--gray-lt)]
+          hover:bg-[var(--gray-lt)]
           border border-[var(--border)]
           backdrop-blur-sm
           transition
-          text-[var(--foreground)]
+          text-[var(--text)]
         "
       >
         <span className="font-medium text-sm truncate">
@@ -522,14 +546,14 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
             variant === "empty"
               ? `
                 min-w-[155px] rounded-xl overflow-hidden
-                bg-[var(--bg)]
+                bg-[var(--gray-2)]
                 border border-[var(--border)]
                 backdrop-blur-xl
                 p-0
               `
               : `
-                min-w-[180px] rounded-xl relative
-                bg-[var(--bg)]
+                min-w-[190px] rounded-xl relative
+                bg-[var(--gray-2)]
                 border border-[var(--border)]
                 shadow-xl backdrop-blur
               `
@@ -540,6 +564,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
               m-1 max-h-[260px] overflow-y-auto custom-scrollbar relative rounded-sm
               ${pendingAction === "edit" ? "flash-edit" : ""}
               ${pendingAction === "delete" ? "flash-delete" : ""}
+              ${pendingAction === "archive" ? "flash-archive" : ""}
             `}
           >
             {noPrograms ? (
@@ -579,7 +604,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                   onClick={() => handleProgramClick(p)}
                 >
                   <div className="flex flex-col min-w-0 truncate">
-                    <span className="font-medium text-sm text-[var(--text-dark)]">
+                    <span className="font-medium text-sm text-[var(--text-dk)]">
                       {formattedName(p)}
                     </span>
                     <span className="text-xs text-[var(--text)]">
@@ -599,7 +624,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
                 mainIcon={<Settings2 className="h-4 w-4" />}
                 expand="line"
                 direction="right"
-                spacing={45}
+                spacing={35}
                 variant="rainbow"
                 defaultState="closed"
                 autoClose={false}
@@ -626,7 +651,7 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
     /* RENDER */
     if (loading) {
       return (
-        <div className="text-sm text-[var(--muted-foreground)]">Loading…</div>
+        <div className="text-sm text-[var(--text-lt)]">Loading…</div>
       );
     }
 
@@ -635,43 +660,39 @@ const ProgramSelector = forwardRef<ProgramSelectorHandle, ProgramSelectorProps>(
         {renderDropdown()}
 
         {/* DELETE CONFIRM */}
-        <Dialog
+        <ProgramDeleteModal
           open={pendingDelete !== null}
-          onOpenChange={(open) => {
-            if (!open) setPendingDelete(null);
-          }}
-        >
-          <DialogContent className="sm:max-w-md bg-[var(--card)] text-[var(--card-foreground)]">
-            <DialogHeader>
-              <DialogTitle>Delete Program?</DialogTitle>
-            </DialogHeader>
+          program={
+            pendingDelete
+              ? {
+                  id: pendingDelete.id as number,
+                  school: pendingDelete.school ?? null,
+                  sport: pendingDelete.sport ?? "Program",
+                  season_year: pendingDelete.year ?? "",
+                }
+              : null
+          }
+          onClose={() => setPendingDelete(null)}
+          onConfirm={handleConfirmDelete}
+        />
 
-            <p className="text-sm text-[var(--muted-foreground)]">
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-[var(--accent)]">
-                {pendingDelete?.school} {pendingDelete?.sport},{" "}
-                {pendingDelete?.year}
-              </span>
-              ? This action cannot be undone.
-            </p>
+        <ProgramArchiveModal
+          open={pendingArchive !== null}
+          program={
+            pendingArchive
+              ? {
+                  id: pendingArchive.id as number,
+                  sport: pendingArchive.sport ?? "Program",
+                  year: pendingArchive.year ?? "",
+                  school: pendingArchive.school ?? null,
+                }
+              : null
+          }
+          onClose={() => setPendingArchive(null)}
+          onConfirm={handleConfirmArchive}
+        />
 
-            <div className="flex flex-col gap-2 mt-5">
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={handleConfirmDelete}
-              >
-                Delete Program
-              </Button>
-
-              <Button variant="outline" onClick={() => setPendingDelete(null)}>
-                Cancel
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <ProgramSetupView
+        <ProgramConfigModal
           mode={formMode}
           open={formOpen}
           program={formProgram}

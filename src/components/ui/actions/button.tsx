@@ -31,17 +31,16 @@ const buttonVariants = cva(
 
         stick: [
           "h-[32px] w-[32px] p-0 rounded-full",
-          "bg-[var(--gray-lt)] hover:bg-[var(--accent-bg)]",
-          "text-[var(--text2)]",
-          "data-[active=true]:text-[var(--accent)]",
-          "data-[active=true]:hover:bg-[var(--accent-bg)]",
+          "bg-[var(--gray-5)] hover:bg-[var(--accent-bg)]",
+          "text-[var(--text)] data-[active=true]:text-[var(--accent-md)]",
+          "data-[active=true]:bg-[var(--accent-bg)] data-[active=true]:hover:bg-[var(--accent-bg)]",
         ].join(" "),
 
         float: [
           "h-[32px] w-[32px] p-0 rounded-full",
-          "bg-[var(--gray-lt)] hover:bg-[var(--accent-bg)]",
-          "text-[var(--text2)]",
-          "data-[active=true]:text-[var(--accent)]",
+          "bg-[var(--gray-5)] hover:bg-[var(--accent-bg)]",
+          "text-[var(--text)]",
+          "data-[active=true]:text-[var(--accent-md)]",
           "data-[active=true]:hover:bg-[var(--accent-bg)]",
           "shadow-md hover:shadow-lg",
         ].join(" "),

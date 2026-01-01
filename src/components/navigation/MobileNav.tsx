@@ -34,22 +34,21 @@ export default function MobileNav() {
     <div className="
       md:hidden fixed bottom-0 inset-x-0
       flex items-center justify-around
-      m-1 h-14
+      m-1 h-16
       backdrop-blur-lg rounded-lg shadow-inner
     ">
       {buttons.map(({ icon: Icon, route, active }) => (
         <Button
           key={route}
-          variant="none"
           iconSize="xlg"
           onClick={() => navigate(route)}
           className={cn(
-            "p-6",
+            "p-2", // ~Was at p-6. Why?
             active
-              ? "text-[var(--accent)] rounded-full"
+              ? "bg-[var(--accent-bg)] text-[var(--accent)] rounded-full"
               : "text-[var(--text)]"
           )}        >
-          <Icon fill="var(--bg)" />
+          <Icon fill="transparent" /* ~Maybe use white fill. */ /> 
         </Button>
       ))}
     </div>

@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 import { Button } from "@/components/ui/actions/button";
 import { Input } from "@/components/ui/forms/input";
 import {
@@ -25,14 +23,17 @@ import {
 export interface ProgramBasicsData {
   school: string;
   sport: string;
+  customSport?: string;
   levels: string[];
   gender: string;
+  seasonStart?: string;
+  seasonEnd?: string;
 }
 
 interface ProgramSetupBasicsProps {
   mode: "add" | "edit";
-  program?: Partial<ProgramBasicsData> | null;
-  onSubmit: (data: ProgramBasicsData) => void;
+  value: ProgramBasicsData;
+  onChange: (value: ProgramBasicsData) => void;
 }
 
 /* ========================================================================== */
@@ -66,7 +67,7 @@ const LEVELS = [
   "D-Team",
 ];
 
-const GENDERS = ["Boys", "Girls", "Co-ed"];
+const GENDERS = ["Boys", "Girls", "Co-ed"]; // ~Do a left to right tab selection (Vertical on mobile).
 
 /* ========================================================================== */
 /* COMPONENT                                                                  */
@@ -74,39 +75,31 @@ const GENDERS = ["Boys", "Girls", "Co-ed"];
 
 export default function ProgramSetupBasics({
   mode,
-  program,
-  onSubmit,
+  value,
+  onChange,
 }: ProgramSetupBasicsProps) {
-  /* ------------------------------------------------------------------------ */
-  /* STATE                                                                    */
-  /* ------------------------------------------------------------------------ */
-
-  const [school, setSchool] = useState(program?.school ?? "");
-  const [sport, setSport] = useState(program?.sport ?? "");
-  const [customSport, setCustomSport] = useState("");
-  const [levels, setLevels] = useState<string[]>(program?.levels ?? []);
-  const [gender, setGender] = useState(program?.gender ?? "");
-
-  const resolvedSport = sport === "Other" ? customSport : sport;
-
-  /* ------------------------------------------------------------------------ */
-  /* RENDER                                                                   */
-  /* ------------------------------------------------------------------------ */
-
   return (
-    <div className="flex flex-col gap-4">
-      {/* SCHOOL */}
+    <div className="flex flex-col gap-8 pb-20">
+
+      {/* SCHOOL ----------------------------------------------------------- */}
       <Field label="School">
         <Input
-          value={school}
-          onChange={(e) => setSchool(e.target.value)}
+          value={value.school}
+          onChange={(e) =>
+            onChange({ ...value, school: e.target.value })
+          }
           placeholder="e.g. Zimmerman High School"
         />
       </Field>
 
-      {/* SPORT */}
+      {/* SPORT ------------------------------------------------------------ */}
       <Field label="Sport">
-        <Select value={sport} onValueChange={setSport}>
+        <Select
+          value={value.sport}
+          onValueChange={(sport) =>
+            onChange({ ...value, sport })
+          }
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select sport" />
           </SelectTrigger>
@@ -120,29 +113,28 @@ export default function ProgramSetupBasics({
           </SelectContent>
         </Select>
 
-        {sport === "Other" && (
+        {value.sport === "Other" && (
           <Input
             className="mt-2"
             placeholder="Enter custom sport"
-            value={customSport}
-            onChange={(e) => setCustomSport(e.target.value)}
+            value={value.customSport ?? ""}
+            onChange={(e) =>
+              onChange({ ...value, customSport: e.target.value })
+            }
           />
         )}
       </Field>
 
-      {/* LEVELS */}
+      {/* LEVELS ----------------------------------------------------------- */}
       <Field label="Levels">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full justify-between"
-            >
-              {levels.length === 0
+            <Button variant="outline" className="w-full justify-between">
+              {value.levels.length === 0
                 ? "Select levels"
-                : levels.length > 2
-                ? `${levels.length} levels selected`
-                : levels.join(", ")}
+                : value.levels.length > 2
+                ? `${value.levels.length} levels selected`
+                : value.levels.join(", ")}
             </Button>
           </DropdownMenuTrigger>
 
@@ -150,13 +142,14 @@ export default function ProgramSetupBasics({
             {LEVELS.map((level) => (
               <DropdownMenuCheckboxItem
                 key={level}
-                checked={levels.includes(level)}
+                checked={value.levels.includes(level)}
                 onCheckedChange={(checked) =>
-                  setLevels((prev) =>
-                    checked
-                      ? [...prev, level]
-                      : prev.filter((l) => l !== level)
-                  )
+                  onChange({
+                    ...value,
+                    levels: checked
+                      ? [...value.levels, level]
+                      : value.levels.filter((l) => l !== level),
+                  })
                 }
                 onSelect={(e) => e.preventDefault()}
               >
@@ -167,9 +160,14 @@ export default function ProgramSetupBasics({
         </DropdownMenu>
       </Field>
 
-      {/* GENDER */}
+      {/* GENDER ----------------------------------------------------------- */}
       <Field label="Gender">
-        <Select value={gender} onValueChange={setGender}>
+        <Select
+          value={value.gender}
+          onValueChange={(gender) =>
+            onChange({ ...value, gender })
+          }
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select gender" />
           </SelectTrigger>
@@ -183,6 +181,32 @@ export default function ProgramSetupBasics({
           </SelectContent>
         </Select>
       </Field>
+
+      {/* SEASON RANGE (MVP) ---------------------------------------------- */}
+      <Field label="Season range">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Input
+            type="date"
+            value={value.seasonStart ?? ""}
+            onChange={(e) =>
+              onChange({ ...value, seasonStart: e.target.value })
+            }
+          />
+
+          <Input
+            type="date"
+            value={value.seasonEnd ?? ""}
+            onChange={(e) =>
+              onChange({ ...value, seasonEnd: e.target.value })
+            }
+          />
+        </div>
+
+        <span className="text-center text-xs text-[var(--accent)]">
+          Extend the range to include pre- or post-season events.
+        </span>
+      </Field>
+
     </div>
   );
 }

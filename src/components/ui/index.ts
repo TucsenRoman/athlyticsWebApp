@@ -86,6 +86,7 @@ export * from "./overlays/confirmation-dialog";
 export * from "./overlays/context-menu";
 export * from "./overlays/dialog";
 export * from "./overlays/dropdown-menu";
+export * from "./overlays/GradientHint"
 export * from "./overlays/hover-card";
 export * from "./overlays/overlayshell"
 export * from "./overlays/popover";
