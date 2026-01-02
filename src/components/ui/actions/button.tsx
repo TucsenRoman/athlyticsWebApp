@@ -45,7 +45,7 @@ const buttonVariants = cva(
           "shadow-md hover:shadow-lg",
         ].join(" "),
 
-        destructive:
+        danger:
           "bg-[var(--danger-bg)] hover:bg-[var(--danger)] text-[var(--danger)] hover:text-white",
 
         outline:
@@ -71,16 +71,27 @@ const buttonVariants = cva(
       },
 
       /* -------------------------------- SIZE ------------------------------- */
-      size: {
+      regular: {
         default: "none",
-        sm: "h-9 px-3",
-        lg: "h-11 px-8",
+        xs: "h-6 w-6",
+        sm: "h-8 w-8",
+        md: "h-10 w-10",
+        lg: "h-12 h-12",
         mobile: "",
-        icon: "h-10 w-10",
+      },
+
+      irregular: {
+        default: "none",
+        xs: "h-6 min-w-6",
+        sm: "h-8 min-w-8",
+        md: "h-10 min-w-10",
+        lg: "h-12 min-h-12",
+        mobile: "",
       },
 
       /* --------------------------- ICON SIZE (SVG) -------------------------- */
       iconSize: {
+        none: "none",
         sm: "[&_svg]:h-[16px] [&_svg]:w-[16px]",
         md: "[&_svg]:h-[20px] [&_svg]:w-[20px]",
         lg: "[&_svg]:h-[24px] [&_svg]:w-[24px]",
@@ -90,7 +101,8 @@ const buttonVariants = cva(
 
     defaultVariants: {
       variant: "default",
-      size: "default",
+      regular: "default",
+      irregular: "default",
       iconSize: "md",
     },
   },
@@ -112,7 +124,7 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, iconSize, asChild = false, ...props },
+    { className, variant, regular, irregular, iconSize, asChild = false, ...props },
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
@@ -121,7 +133,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         ref={ref}
         className={cn(
-          buttonVariants({ variant, size, iconSize }),
+          buttonVariants({ variant, regular, irregular, iconSize }),
           className,
         )}
         {...props}

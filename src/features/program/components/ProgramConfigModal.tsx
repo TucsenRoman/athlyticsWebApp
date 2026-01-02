@@ -10,15 +10,12 @@ import { Button } from "@/components/ui/actions/button";
 
 import ProgramSetupBasics, {
   ProgramBasicsData,
-} from "./ProgramSetupBasics";
+} from "../setup/ProgramSetupBasics";
 import { ProgramId } from "@/features/program-cloak";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { GradientHint } from "@/components/ui";
 
-/* ========================================================================== */
-/* TYPES                                                                      */
-/* ========================================================================== */
-
+/* TYPES */
 type SetupTab = "basic";
 
 export interface ProgramConfigModalProps {
@@ -29,10 +26,7 @@ export interface ProgramConfigModalProps {
   onSubmit: (data: ProgramBasicsData & { year: string }) => Promise<ProgramId | null>;
 }
 
-/* ========================================================================== */
-/* COMPONENT                                                                  */
-/* ========================================================================== */
-
+/* COMPONENT */
 export default function ProgramConfigModal({
   mode,
   open,
@@ -40,10 +34,8 @@ export default function ProgramConfigModal({
   onClose,
   onSubmit,
 }: ProgramConfigModalProps) {
-  /* ------------------------------------------------------------------------ */
-  /* STATE                                                                    */
-  /* ------------------------------------------------------------------------ */
 
+  /* STATE */
   const [activeTab] = useState<SetupTab>("basic");
 
   const [basicsData, setBasicsData] = useState<ProgramBasicsData>({

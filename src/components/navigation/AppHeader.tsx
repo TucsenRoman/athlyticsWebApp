@@ -8,7 +8,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 // COMPONENTS
-import ProgramSelector from "@/features/program/components/ProgramSelector";
+import ProgramDriveTrigger from "@/features/program/components/ProgramDriveTrigger";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 import AccountMenu from "../layout/AccountMenu";
 import { useDemo } from "@/contexts/DemoContext";
@@ -161,12 +161,8 @@ export default function AppHeader() {
 
             {programScoped && (
               <DesktopNavPill>
-                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text2)] hover:bg-[var(--accent-glass)] hover:text-[var(--accent)] cursor-pointer">
-                  <ProgramSelector
-                    selectedProgramId={selectedProgramId}
-                    onProgramChange={setSelectedProgramId}
-                    programsOverride={demoMode ? programs : undefined}
-                  />
+                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text)] hover:bg-[var(--accent-glass)] hover:text-[var(--accent)] cursor-pointer">
+                  <ProgramDriveTrigger />
                 </div>
               </DesktopNavPill>
             )}
@@ -324,7 +320,7 @@ function DesktopNavButton({
         ${
           active
             ? "text-[var(--accent)] bg-[var(--accent-glass)]"
-            : "text-[var(--text2)] hover:bg-[var(--gray-lt2)]"
+            : "text-[var(--text)] hover:bg-[var(--gray-lt2)]"
         }
       `}
     >

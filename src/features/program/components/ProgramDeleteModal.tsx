@@ -41,7 +41,7 @@ export default function ProgramDeleteModal({
         </p>
 
         <div className="flex flex-col gap-2 mt-5">
-          <Button variant="destructive" onClick={onConfirm}>
+          <Button variant="danger" onClick={onConfirm}>
             Delete Program
           </Button>
 

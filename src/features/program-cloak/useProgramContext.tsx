@@ -54,6 +54,8 @@ export interface Program {
   school: string | null;
   sport: string | null;
   year: string | null;
+  archived?: boolean
+  archived_at?: string | null
 }
 
 /*
@@ -69,6 +71,9 @@ interface ProgramContextType {
 
   /* Program list (demo only) */
   programs: Program[];
+
+  /* Capability flag */
+  hasPrograms: boolean;
 
   /* Mutations (demo only) */
   addProgram: (program: Program) => void;
@@ -181,6 +186,9 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     setSelectedProgramId,
 
     programs: demoMode ? demoProgramState : [],
+    hasPrograms: demoMode
+    ? demoProgramState.length > 0
+    : true, // real mode programs exist elsewhere by design
 
     addProgram,
     updateProgram,

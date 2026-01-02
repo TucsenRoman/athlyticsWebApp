@@ -179,7 +179,7 @@ export default function AccountMenu() {
                 </div>
 
                 <div className="flex justify-start items-center gap-2 text-xs text-[var(--text-muted)] truncate">
-                  <span className="truncate">{username}</span>
+                  <span className="truncate">@{username}</span>
                   {/* <button
                     className="
                       flex justify-center items-center

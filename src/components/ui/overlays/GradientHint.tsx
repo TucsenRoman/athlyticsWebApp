@@ -21,6 +21,7 @@ type GradientHintProps = {
   extent?: string // e.g. "200px", "12rem", "40%"
   radius?: GradientRadius
   className?: string
+  debug?: boolean
 }
 
 /* ========================================================================== */
@@ -64,6 +65,7 @@ export function GradientHint({
   extent = "200px",
   radius = "none",
   className,
+  debug = false,
 }: GradientHintProps) {
   const isVertical = direction === "top" || direction === "bottom"
 
@@ -81,7 +83,10 @@ export function GradientHint({
         z-10
         ${DIRECTION_MAP[direction]}
         ${RADIUS_MAP[radius]}
-        from-[var(--gray-3)]
+        ${debug
+          ? "from-red-500"
+          : "from-[var(--gray-3)]"
+        }
         to-transparent
         `,
         className
