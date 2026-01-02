@@ -27,7 +27,7 @@ export default function BillingSettingsPage() {
         </button>
 
         <div>
-          <h1 className="text-lg font-semibold text-[var(--text-dark)]">
+          <h1 className="text-lg font-semibold text-[var(--text-dk)]">
             Plan & Billing
           </h1>
           <p className="text-sm text-[var(--text)]">
@@ -85,8 +85,8 @@ function CurrentPlanCard({ plan }: { plan: PricingPlan }) {
     <div className="rounded-xl border border-[var(--border)] p-5 flex items-center justify-between">
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <Medal className="w-4 h-4 text-[var(--accent)]" />
-          <span className="font-medium text-[var(--text-dark)]">
+          <Medal className="w-4 h-4 text-[var(--dom-dk)]" />
+          <span className="font-medium text-[var(--text-dk)]">
             {plan.name}
           </span>
         </div>
@@ -96,7 +96,7 @@ function CurrentPlanCard({ plan }: { plan: PricingPlan }) {
         </p>
       </div>
 
-      <span className="text-xs px-3 py-1 rounded-full bg-[var(--accent-bg)] text-[var(--accent)]">
+      <span className="text-xs px-3 py-1 rounded-full bg-[var(--dom-bg)] text-[var(--dom-dk)]">
         Active
       </span>
     </div>
@@ -112,7 +112,7 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
     <div
       className={`
         rounded-xl border p-6 flex justify-between gap-6
-        ${plan.highlight ? "border-[var(--accent)]" : "border-[var(--border)]"}
+        ${plan.highlight ? "border-[var(--dom-dk)]" : "border-[var(--border)]"}
       `}
     >
       <div className="space-y-3">
@@ -120,11 +120,11 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
           <Icon
             className={`w-4 h-4 ${
               plan.highlight
-                ? "text-[var(--accent)]"
+                ? "text-[var(--dom-dk)]"
                 : "text-[var(--text)]"
             }`}
           />
-          <span className="font-medium text-[var(--text-dark)]">
+          <span className="font-medium text-[var(--text-dk)]">
             {plan.name}
           </span>
         </div>
@@ -136,7 +136,7 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
         <ul className="space-y-1 text-sm text-[var(--text)]">
           {plan.features.map(feature => (
             <li key={feature} className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-[var(--text-light)]" />
+              <Check className="w-4 h-4 text-[var(--text-lt)]" />
               {feature}
             </li>
           ))}
@@ -145,7 +145,7 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
 
       <div className="flex flex-col items-end justify-between">
         <div className="text-right">
-          <div className="text-2xl font-semibold text-[var(--text-dark)]">
+          <div className="text-2xl font-semibold text-[var(--text-dk)]">
             {plan.price.monthly}
           </div>
           <div className="text-xs text-[var(--text)]">per month</div>
@@ -156,8 +156,8 @@ function PlanCard({ plan }: { plan: PricingPlan }) {
             px-4 py-2 rounded-md text-sm font-medium
             ${
               plan.highlight
-                ? "bg-[var(--accent)] text-white"
-                : "bg-[var(--gray-200)] text-[var(--text-dark)]"
+                ? "bg-[var(--dom-dk)] text-white"
+                : "bg-[var(--gray-200)] text-[var(--text-dk)]"
             }
           `}
         >

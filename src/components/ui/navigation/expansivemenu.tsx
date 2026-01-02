@@ -373,7 +373,7 @@ export default function ExpansiveMenu({
         <motion.div
           animate={{ rotate: isNested ? 0 : open ? effectiveRotation : 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          className="flex items-center justify-center h-full w-full"
+          className="flex items-center justify-center h-full w-full will-change-transform"
         >
           <span
             style={{

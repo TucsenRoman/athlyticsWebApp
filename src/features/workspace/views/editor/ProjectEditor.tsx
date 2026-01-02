@@ -254,7 +254,7 @@ export default function ProjectEditor({
   /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="relative w-full h-[calc(100dvh-<header-height>)] flex flex-col bg-[var(--accent-bg)]">
+    <div className="relative w-full h-[calc(100dvh-<header-height>)] flex flex-col bg-[var(--dom-bg)]">
 
       {/* MAIN AREA */}
       <div className="flex-1 flex flex-col min-h-0">

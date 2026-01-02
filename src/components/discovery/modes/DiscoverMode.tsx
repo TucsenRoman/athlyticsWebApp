@@ -165,7 +165,7 @@ export default function DiscoverMode({
             {featured.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-sm font-semibold text-[hsl(var(--accent))]">
+                  <h2 className="text-sm font-semibold text-[hsl(var(--dom-dk))]">
                     Trending for your filters
                   </h2>
                   <span className="text-xs text-[hsl(var(--gray-500))]">
@@ -235,7 +235,7 @@ export default function DiscoverMode({
 function SectionHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <h2 className="text-sm font-semibold text-[hsl(var(--accent))]">
+      <h2 className="text-sm font-semibold text-[hsl(var(--dom-dk))]">
         {title}
       </h2>
       <p className="text-xs text-[hsl(var(--gray-500))] max-w-md">{subtitle}</p>
@@ -264,7 +264,7 @@ function CommunityCard({
         bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]
         px-4 py-3 text-left transition
         border border-[hsl(var(--border))]
-        ${featured ? "ring-1 ring-[hsl(var(--accent))]" : "hover:shadow-lg"}
+        ${featured ? "ring-1 ring-[hsl(var(--dom-dk))]" : "hover:shadow-lg"}
       `}
     >
       {/* TOP ROW */}
@@ -416,9 +416,9 @@ function CommunityCard({
             className="
               inline-flex items-center justify-center rounded-full px-3 py-1
               text-[11px] font-medium transition
-              bg-[hsl(var(--accent))]/20
-              text-[hsl(var(--accent))]
-              hover:bg-[hsl(var(--accent))]/30
+              bg-[hsl(var(--dom-dk))]/20
+              text-[hsl(var(--dom-dk))]
+              hover:bg-[hsl(var(--dom-dk))]/30
             "
           >
             Install

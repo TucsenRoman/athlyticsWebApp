@@ -18,7 +18,7 @@ export default function AttendanceStatusBanner({
           text-sm
         "
       >
-        <div className="font-medium text-[var(--text-dark)]">
+        <div className="font-medium text-[var(--text-dk)]">
           No attendance recorded for this date.
         </div>
         <div className="text-xs mt-1 text-[var(--gray-600)]">
@@ -36,7 +36,7 @@ export default function AttendanceStatusBanner({
           p-4 rounded-lg
           bg-[var(--fvr-yellow-bg)]
           border border-[var(--fvr-yellow)]
-          text-[var(--text-dark)]
+          text-[var(--text-dk)]
           text-sm
         "
       >
@@ -57,13 +57,13 @@ export default function AttendanceStatusBanner({
     <div
       className="
         p-4 rounded-lg
-        bg-[var(--accent-bg)]
-        border border-[var(--accent)]
-        text-[var(--text-dark)]
+        bg-[var(--dom-bg)]
+        border border-[var(--dom-dk)]
+        text-[var(--text-dk)]
         text-sm
       "
     >
-      <div className="font-medium text-[var(--accent)]">
+      <div className="font-medium text-[var(--dom-dk)]">
         Attendance submitted for this date.
       </div>
       <div className="text-xs mt-1 text-[var(--gray-700)]">

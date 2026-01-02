@@ -75,7 +75,7 @@ export default function NotificationSettingsPage() {
 function Header({ title, description }: { title: string; description: string }) {
   return (
     <header>
-      <h1 className="text-lg font-semibold text-[var(--text-dark)]">{title}</h1>
+      <h1 className="text-lg font-semibold text-[var(--text-dk)]">{title}</h1>
       <p className="text-sm text-[var(--text)]">{description}</p>
     </header>
   );
@@ -119,13 +119,13 @@ function Row({
   const pill =
     tone === "good"
       ? "bg-[var(--success-bg)] text-[var(--success)]"
-      : "bg-[var(--gray-200)] text-[var(--text-dark)]";
+      : "bg-[var(--gray-200)] text-[var(--text-dk)]";
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-ltt)] px-4 py-3">
       <div className="flex items-center gap-3 min-w-0">
         <span className="text-[var(--text)]">{icon}</span>
-        <span className="text-sm font-medium text-[var(--text-dark)]">{label}</span>
+        <span className="text-sm font-medium text-[var(--text-dk)]">{label}</span>
       </div>
       <span className={`text-xs px-2 py-1 rounded-full ${pill}`}>{value}</span>
     </div>
@@ -149,7 +149,7 @@ function MicroCard({
           {title}
         </span>
       </div>
-      <div className="mt-2 text-sm font-medium text-[var(--text-dark)]">{value}</div>
+      <div className="mt-2 text-sm font-medium text-[var(--text-dk)]">{value}</div>
     </div>
   );
 }

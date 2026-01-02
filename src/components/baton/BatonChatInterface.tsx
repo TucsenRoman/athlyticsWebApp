@@ -138,9 +138,9 @@ function Message({
           text-sm
           `,
           isUser
-            ? "bg-[var(--accent-bg)] text-[var(--text-dark)]"
+            ? "bg-[var(--dom-bg)] text-[var(--text-dark)]"
             : accent
-            ? "bg-[var(--accent-bg)] text-[var(--text-dark)]"
+            ? "bg-[var(--dom-bg)] text-[var(--text-dark)]"
             : "bg-[var(--gray-lt)] text-[var(--text-dark)]"
         )}
       >

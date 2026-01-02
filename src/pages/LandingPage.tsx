@@ -61,7 +61,7 @@ export default function LandingPage() {
   }, [user, navigate]);
 
   return (
-    <div className="min-h-screen w-full bg-transparent text-[var(--text-dark)]">
+    <div className="min-h-screen w-full bg-transparent text-[var(--text-dk)]">
       {/* HERO */}
       <section className="
         relative
@@ -77,9 +77,9 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           className="relative text-5xl md:text-7xl font-black tracking-tight max-w-4xl mx-auto"
         >
-          The <span className="text-[--accent-md]">Coaching</span> platform
+          The <span className="text-[var(--dom-md)]">Coaching</span> platform
           <br />
-          built for <span className="text-[--accent-md]">Reality.</span>
+          built for <span className="text-[var(--dom-md)]">Reality.</span>
         </motion.h1>
 
         <motion.p
@@ -100,16 +100,14 @@ export default function LandingPage() {
             className="relative mt-12 flex justify-center gap-4 flex-wrap"
           >
             <Button
-              variant="none"
               onClick={() => setShowAuth(true)}
-              className="px-10 py-4 rounded-lg border border-[--border] text-lg text-[--accent] font-semibold shadow-sm"
+              className="px-10 py-4 rounded-lg border border-[--border] text-lg text-[--dom-dk] font-semibold shadow-sm"
             >
               Sign In or Up
             </Button>
             <Button
-              variant="none"
               onClick={() => navigate("/radar")}
-              className="px-10 py-4 rounded-lg bg-[--accent] text-lg text-white font-semibold shadow-md"
+              className="px-10 py-4 rounded-lg bg-[--dom-dk] text-lg text-white font-semibold shadow-md"
             >
               Explore without Sign Up
             </Button>
@@ -143,7 +141,7 @@ export default function LandingPage() {
             {/* IMAGE */}
             {/* GENERATION PROMPT: generate an image of someone's pov using the app on their phone with a football turf field in the backdrop. should display the included image on the screen, make it a realism image */}
             <div className="relative">
-              <div className="absolute -inset-4 bg-[var(--accent)]/10 blur-3xl rounded-full" />
+              <div className="absolute -inset-4 bg-[var(--dom-dk)]/10 blur-3xl rounded-full" />
 
               <div className="relative overflow-hidden rounded-[var(--radius)] border border-[var(--border)] shadow-2xl">
                 <img
@@ -177,7 +175,7 @@ export default function LandingPage() {
             {/* IMAGE */}
             {/* GENERATION PROMPT: generate an image of someone's pov using the app on their phone with a football turf field in the backdrop. should display the included image on the screen, make it a realism image */}
             <div className="relative">
-              <div className="absolute -inset-4 bg-[var(--accent)]/10 blur-3xl rounded-full" />
+              <div className="absolute -inset-4 bg-[var(--dom-dk)]/10 blur-3xl rounded-full" />
 
               <div className="relative overflow-hidden rounded-[var(--radius)] border border-[var(--border)] shadow-2xl">
                 <img
@@ -280,8 +278,8 @@ export default function LandingPage() {
                           transition-colors
                           ${
                             v.status === "Available"
-                              ? "text-[var(--accent)]"
-                              : "text-[var(--text-muted)] group-hover:text-[var(--accent)]"
+                              ? "text-[var(--dom-dk)]"
+                              : "text-[var(--text-muted)] group-hover:text-[var(--dom-dk)]"
                           }
                         `}
                       />
@@ -298,8 +296,8 @@ export default function LandingPage() {
                     <span
                       className={`text-xs font-medium ${
                         v.status === "Available"
-                          ? "text-[var(--accent)]"
-                          : "text-[var(--text-muted)] group-hover:text-[var(--accent)]"
+                          ? "text-[var(--dom-dk)]"
+                          : "text-[var(--text-muted)] group-hover:text-[var(--dom-dk)]"
                       }`}
                     >
                       {v.status === "Available" ? "Live" : "Preview"}
@@ -356,7 +354,7 @@ export default function LandingPage() {
                 className="bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius)] p-8"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <f.icon className="w-5 h-5 text-[var(--accent)]" />
+                  <f.icon className="w-5 h-5 text-[var(--dom-dk)]" />
                   <h3 className="text-xl font-semibold">{f.title}</h3>
                 </div>
 
@@ -368,7 +366,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA — Decision Panel */}
-      <section className="py-32 bg-[var(--bg-gray-dk)] text-white">
+      <section className="py-32 bg-[var(--gray-18)] text-white">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-12 items-stretch">
 
@@ -378,18 +376,17 @@ export default function LandingPage() {
                 <h3 className="text-xl font-semibold mb-4">
                   Explore the system
                 </h3>
-                <p className="text-sm text-[var(--text-light)] leading-relaxed">
+                <p className="text-sm text-[var(--text-lt)] leading-relaxed">
                   Browse and interact with the Radar and Workspace views to get a feel for the future.
                 </p>
               </div>
               <Button
-                variant="none"
                 onClick={() => navigate("/discovery")}
-                className="mt-8 w-fit border border-[--border-dark] text-white px-6 py-2.5 rounded-md text-sm"
+                className="mt-8 w-fit border border-[--border-dk] text-white px-6 py-2.5 rounded-md text-sm"
               >
                 Explore Athlytics
               </Button>
-              <span className="absolute bottom-5 left-12 text-xs text-[--accent]">No sign up required.</span>
+              <span className="absolute bottom-5 left-12 text-xs text-[--dom-dk]">No sign up required.</span>
             </div>
 
             {/* RIGHT: SIGN IN */}
@@ -398,16 +395,15 @@ export default function LandingPage() {
                 <h3 className="text-xl font-semibold mb-4">
                   Start running your program
                 </h3>
-                <p className="text-sm text-[var(--text-light)] leading-relaxed">
+                <p className="text-sm text-[var(--text-lt)] leading-relaxed">
                   Sign in to build schedules, manage rosters, and organize the season
                   in one place.
                 </p>
               </div>
 
               <Button
-                variant="none"
                 onClick={() => setShowAuth(true)}
-                className="mt-8 w-fit bg-[var(--accent)] text-white px-6 py-2.5 rounded-md text-sm"
+                className="mt-8 w-fit bg-[var(--dom-dk)] text-white px-6 py-2.5 rounded-md text-sm"
               >
                 Sign In or Create Account
               </Button>
@@ -425,7 +421,7 @@ export default function LandingPage() {
         }}
         brand={
           <>
-            <h3 className="text-lg font-bold text-[var(--text-dark)]">
+            <h3 className="text-lg font-bold text-[var(--text-dk)]">
               Athlytics
             </h3>
             <p className="text-sm max-w-md mx-auto text-[var(--text-muted)]">

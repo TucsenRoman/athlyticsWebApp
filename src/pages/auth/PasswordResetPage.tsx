@@ -59,7 +59,7 @@ export default function PasswordResetPage() {
 
   return (
     <div className="mx-auto max-w-sm py-16">
-      <h1 className="text-lg font-semibold text-[var(--text-dark)] mb-2">
+      <h1 className="text-lg font-semibold text-[var(--text-dk)] mb-2">
         Reset your password
       </h1>
 
@@ -97,7 +97,7 @@ export default function PasswordResetPage() {
             className="
               w-full
               rounded-lg
-              bg-[var(--accent)]
+              bg-[var(--dom-dk)]
               px-4 py-2
               text-sm font-medium text-white
               hover:opacity-90
@@ -144,7 +144,7 @@ function Field({
           px-3 py-2
           text-sm
           focus:outline-none
-          focus:ring-2 focus:ring-[var(--accent)]
+          focus:ring-2 focus:ring-[var(--dom-dk)]
         "
       />
     </div>

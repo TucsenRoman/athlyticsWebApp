@@ -1,12 +1,19 @@
-// src/features/program-cloak/program.types.ts
+// src/features/program/program.types.ts
+export type ProgramState = "active" | "archived" | "deleted"
 
 export type ProgramId = number | `demo-${string}`;
 
 export interface Program {
-  id: ProgramId;
-  name: string;
-  organization_id?: number | null;
-  created_at?: string;
+  id: ProgramId
+  school: string
+  sport: string
+  year: string
+  gender: string
+  level: string
+  state: ProgramState
+  season_start?: string | null
+  season_end?: string | null
+  created_at?: string
 }
 
 /* LOADING STATUS */

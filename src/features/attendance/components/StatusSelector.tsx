@@ -155,7 +155,7 @@ export default function StatusSelector({
             <span
               className={`
                 hidden md:block text-sm font-medium ml-1
-                ${value === "present" ? "text-[var(--text-dark)]" : "text-[var(--text)]"}
+                ${value === "present" ? "text-[var(--text-dk)]" : "text-[var(--text)]"}
               `}
             >
               Present
@@ -177,7 +177,7 @@ export default function StatusSelector({
             <span
               className={`
                 hidden md:block text-sm font-medium ml-1
-                ${value === "absent" ? "text-[var(--text-dark)]" : "text-[var(--text)]"}
+                ${value === "absent" ? "text-[var(--text-dk)]" : "text-[var(--text)]"}
               `}
             >
               Absent
@@ -199,7 +199,7 @@ export default function StatusSelector({
             <span
               className={`
                 hidden md:block text-sm font-medium ml-1
-                ${value === "tardy" ? "text-[var(--text-dark)]" : "text-[var(--text)]"}
+                ${value === "tardy" ? "text-[var(--text-dk)]" : "text-[var(--text)]"}
               `}
             >
               Tardy
@@ -221,7 +221,7 @@ export default function StatusSelector({
             <span
               className={`
                 hidden md:block text-sm font-medium ml-1
-                ${value === "other" ? "text-[var(--text-dark)]" : "text-[var(--text)]"}
+                ${value === "other" ? "text-[var(--text-dk)]" : "text-[var(--text)]"}
               `}
             >
               Other
@@ -240,7 +240,7 @@ export default function StatusSelector({
           <div
             className="
               bg-[var(--bg)] rounded-xl p-6 w-[90%] max-w-md shadow-lg
-              border border-[var(--border-dark)]
+              border border-[var(--border-dk)]
             "
             onClick={(e) => e.stopPropagation()}
           >
@@ -270,7 +270,7 @@ export default function StatusSelector({
                 onClick={saveNote}
                 className="
                   px-4 py-2 rounded-lg text-[var(--text-white)]
-                  bg-[var(--accent)] hover:bg-[var(--accent-dark)]
+                  bg-[var(--dom-dk)] hover:bg-[var(--dom-dk)]
                 "
               >
                 Save

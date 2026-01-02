@@ -20,7 +20,7 @@ import { PushPanel } from "@/components/ui";
 import BatonChatInterface from "@/components/baton/BatonChatInterface";
 import { BotMessageSquare } from "lucide-react";
 
-import { ProfileProvider } from "@/features/user-scope/profile/ProfileProvider";
+import { ProfileProvider } from "@/features/profile/ProfileProvider";
 
 // PAGES
 import LandingPage from "@/pages/LandingPage";
@@ -32,14 +32,14 @@ import NotFound from "@/pages/NotFound";
 
 // SETTINGS PAGES
 import SettingsLayout from "@/pages/settings/SettingsLayout";
-import ProfileSettingsPage from "@/pages/settings/profile/ProfileSettingsPage";
-import AppearanceSettingsPage from "@/pages/settings/appearance/AppearanceSettingsPage";
-import NotificationSettingsPage from "@/pages/settings/notifications/NotificationSettingsPage";
+import ProfileSettingsPage from "@/pages/settings/ProfileSettingsPage";
+import AppearanceSettingsPage from "@/pages/settings/AppearanceSettingsPage";
+import NotificationSettingsPage from "@/pages/settings/NotificationSettingsPage";
 import SecuritySettingsPage from "@/pages/settings/security/SecuritySettingsPage";
-import StorageSettingsPage from "@/pages/settings/storage/StorageSettingsPage";
-import ExperimentsSettingsPage from "@/pages/settings/experiments/ExperimentsSettingsPage";
-import BillingSettingsPage from "@/pages/settings/billing/BillingSettingsPage";
-import SupportSettingsPage from "@/pages/settings/support/SupportSettingsPage";
+import StorageSettingsPage from "@/pages/settings/StorageSettingsPage";
+import ExperimentsSettingsPage from "@/pages/settings/ExperimentsSettingsPage";
+import BillingSettingsPage from "@/pages/settings/BillingSettingsPage";
+import SupportSettingsPage from "@/pages/settings/SupportSettingsPage";
 import AIAssistantSettingsPage from "@/pages/settings/AIAssistantSettingsPage";
 
 // PREVIEW PAGES

@@ -103,7 +103,7 @@ export default function EditorFooter({
         h-14 flex items-center justify-between
         px-3 border-t border-[var(--border)]
         bg-[var(--bg)]
-        text-[var(--text-dark)]
+        text-[var(--text-dk)]
         select-none
       "
     >
@@ -123,8 +123,8 @@ export default function EditorFooter({
 
                 ${
                   active
-                    ? "bg-[var(--accent-bg)] text-[var(--text-accent)] shadow-md font-medium"
-                    : "bg-[var(--gray-ltt)] text-[var(--text-dark)] hover:bg-[var(--gray-200)] shadow"
+                    ? "bg-[var(--dom-bg)] text-[var(--text-dom-md)] shadow-md font-medium"
+                    : "bg-[var(--gray-ltt)] text-[var(--text-dk)] hover:bg-[var(--gray-200)] shadow"
                 }
               `}
             >
@@ -140,8 +140,8 @@ export default function EditorFooter({
                   p-1 rounded-full cursor-pointer transition
                   ${
                     active
-                      ? "hover:bg-[var(--accent-bg)] text-[var(--text-accent)]"
-                      : "hover:bg-[var(--gray-300)] text-[var(--text-dark)]"
+                      ? "hover:bg-[var(--dom-bg)] text-[var(--text-dom-md)]"
+                      : "hover:bg-[var(--gray-300)] text-[var(--text-dk)]"
                   }
                 `}
               >
@@ -180,7 +180,7 @@ export default function EditorFooter({
               w-48 bg-[var(--bg)]
               border border-[var(--border)]
               rounded-xl shadow-xl py-1
-              text-[var(--text-dark)]
+              text-[var(--text-dk)]
             "
           >
             {activeLedger && (
@@ -202,7 +202,7 @@ export default function EditorFooter({
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
-                text-[var(--text-dark)]
+                text-[var(--text-dk)]
                 hover:bg-[var(--gray-ltt)]
               "
             >
@@ -217,7 +217,7 @@ export default function EditorFooter({
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
-                text-[var(--text-dark)]
+                text-[var(--text-dk)]
                 hover:bg-[var(--gray-ltt)]
               "
             >

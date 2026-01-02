@@ -78,10 +78,10 @@ export default function OpenExistingProject({
           className="
             px-6 pt-6 pb-3 
             border-b border-[var(--border)]
-            text-[var(--text-dark)]
+            text-[var(--text-dk)]
           "
         >
-          <DialogTitle className="text-[var(--text-dark)]">
+          <DialogTitle className="text-[var(--text-dk)]">
             Select Ledger
           </DialogTitle>
         </DialogHeader>
@@ -92,7 +92,7 @@ export default function OpenExistingProject({
             placeholder="Search ledgers…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="text-[var(--text-dark)]"
+            className="text-[var(--text-dk)]"
           />
         </div>
 
@@ -125,7 +125,7 @@ export default function OpenExistingProject({
                           ${
                             disabled
                               ? "bg-[var(--gray-ltt)] text-[var(--text)] cursor-not-allowed"
-                              : "text-[var(--text-dark)] hover:bg-[var(--gray-ltt)]"
+                              : "text-[var(--text-dk)] hover:bg-[var(--gray-ltt)]"
                           }
                         `}
                       >

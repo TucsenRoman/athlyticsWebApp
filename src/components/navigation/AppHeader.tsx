@@ -149,19 +149,19 @@ export default function AppHeader() {
                       : "bg-[--gray-lt] hover:bg-[var(--gray-lt2)] shadow-lg"
                     : logoInactive
                       ? ""
-                      : "hover:bg-[var(--accent-glass)]"
+                      : "hover:bg-[var(--dom-glass)]"
                 }
               `}
             >          
                 <img src="/logos/athlytics-logo.png" className="w-8 h-8" />
                 {!programScoped && !landingScrolled && 
-                  <span className="text-xl text-[--accent] font-bold">ATHLYTICS</span>
+                  <span className="text-xl text-[--dom-dk] font-bold">ATHLYTICS</span>
                 }
             </div>
 
             {programScoped && (
               <DesktopNavPill>
-                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text)] hover:bg-[var(--accent-glass)] hover:text-[var(--accent)] cursor-pointer">
+                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text)] hover:bg-[var(--dom-glass)] hover:text-[var(--dom-dk)] cursor-pointer">
                   <ProgramDriveTrigger />
                 </div>
               </DesktopNavPill>
@@ -197,7 +197,7 @@ export default function AppHeader() {
                 {/* {!user && isLandingPage && scrolled &&
                   <div>
                     <div className="flex flex-row justify-center items-center h-8 w-[150px] rounded-full shadow-lg">
-                      <span className="text-sm font-medium text-[--accent-md]">Explore for free →</span>
+                      <span className="text-sm font-medium text-[var(--dom-md)]">Explore for free →</span>
                     </div>
                   </div>
                   // ~Add more tags describing the visitor's state.
@@ -319,8 +319,8 @@ function DesktopNavButton({
         ${widthClass}
         ${
           active
-            ? "text-[var(--accent)] bg-[var(--accent-glass)]"
-            : "text-[var(--text)] hover:bg-[var(--gray-lt2)]"
+            ? "text-[var(--dom-dk)] bg-[var(--dom-glass)]"
+            : "text-[var(--text)] hover:bg-[var(--gray-5)]"
         }
       `}
     >

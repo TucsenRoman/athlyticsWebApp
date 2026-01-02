@@ -78,7 +78,7 @@
 // function Header({ title, description }: { title: string; description: string }) {
 //   return (
 //     <header>
-//       <h1 className="text-lg font-semibold text-[var(--text-dark)]">{title}</h1>
+//       <h1 className="text-lg font-semibold text-[var(--text-dk)]">{title}</h1>
 //       <p className="text-sm text-[var(--text)]">{description}</p>
 //     </header>
 //   );
@@ -122,14 +122,14 @@
 //       ? "bg-[var(--success-bg)] text-[var(--success)]"
 //       : badgeTone === "info"
 //         ? "bg-[var(--edit-bg)] text-[var(--edit)]"
-//         : "bg-[var(--gray-200)] text-[var(--text-dark)]";
+//         : "bg-[var(--gray-200)] text-[var(--text-dk)]";
 
 //   return (
 //     <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-ltt)] px-4 py-3">
 //       <div className="flex items-center gap-3 min-w-0">
 //         <span className="text-[var(--text)]">{icon}</span>
 //         <div className="min-w-0">
-//           <div className="text-sm font-medium text-[var(--text-dark)]">{label}</div>
+//           <div className="text-sm font-medium text-[var(--text-dk)]">{label}</div>
 //           <div className="text-sm text-[var(--text)] truncate">{value}</div>
 //         </div>
 //       </div>
@@ -152,7 +152,7 @@
 //   const pill =
 //     status === "Current"
 //       ? "bg-[var(--success-bg)] text-[var(--success)]"
-//       : "bg-[var(--gray-200)] text-[var(--text-dark)]";
+//       : "bg-[var(--gray-200)] text-[var(--text-dk)]";
 
 //   return (
 //     <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-ltt)] px-4 py-3">
@@ -161,7 +161,7 @@
 //           <Icon className="h-4 w-4" />
 //         </span>
 //         <div className="min-w-0">
-//           <div className="text-sm font-medium text-[var(--text-dark)]">{device}</div>
+//           <div className="text-sm font-medium text-[var(--text-dk)]">{device}</div>
 //           <div className="text-sm text-[var(--text)] truncate">{location}</div>
 //         </div>
 //       </div>

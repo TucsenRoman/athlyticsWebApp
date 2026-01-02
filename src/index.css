@@ -52,11 +52,21 @@ body,
     --gray-dk: var(--gray-15);
 
     /* BRAND ACCENT */
-    --accent: rgb(248, 118, 42);
-    --accent-md: rgb(251, 173, 127);  /* ~60% accent */
-    --accent-lt: rgb(252, 200, 170);  /* ~40% accent */
-    --accent-bg: rgb(254, 241, 233);  /* ~10% accent */
-    --accent-glass: rgb(248, 118, 42, 0.1);
+    /* Dominant: rgb(248, 118, 42) */
+    --dom-dk: rgb(235, 111, 40);
+    --dom-md: rgb(251, 173, 127);  /* ~60% accent */
+    --dom-lt: rgb(252, 200, 170);  /* ~40% accent */
+    --dom-bg: rgb(254, 241, 233);  /* ~10% accent */
+    --dom-glass: rgb(248, 118, 42, 0.1);
+
+    /* ACCENT: rgb(128, 174, 243) */
+    --acc-dk: rgb(128, 174, 243);
+    --acc-md: rgb(181, 207, 245);
+    --acc-lt: rgb(211, 226, 249);
+    --acc-bg: rgb(225, 236, 251);
+    --acc-glass: rgb(181, 207, 245, 0.1);
+
+    /* --acc-ink: rgb(54, 79, 165); */
 
     /* TEXT */
     --vBlack: var(--black);
@@ -65,10 +75,6 @@ body,
     --text-lt: var(--gray-11);
     --text: var(--gray-14);
     --text-dk: var(--gray-15);
-
-    --text2: var(--mole);
-    --text-light: var(--mole);
-    --text-dark: var(--mole);
 
     /* BORDERS */
     --border-lt: var(--gray-2);
@@ -85,10 +91,12 @@ body,
     --edit: rgb(33, 158, 188);
     --edit-bg: rgb(33, 158, 188, 0.1);
     --danger: rgb(217, 4, 41);
-    --danger-bg: rgb(217, 4, 41, 0.1);
+    --danger-bg: rgb(217 4 41 / 0.1);
     /* --info: #219ebc; */
     --link-bg: rgba(89, 220, 253, 0.2);
-    --archive: rgb(255, 251, 19);;
+    --archive: var(--fvr-yellow-md);
+    --archive-txt: var(--fvr-yellow);
+    --archive-bg: var(--fvr-yellow-lt);
 
 
     /* SCHEDULE SLOTS */
@@ -111,12 +119,11 @@ body,
     --radius: 0.75rem;
 
     /* MOLES */
-    --mole: rgb(78, 58, 1);
+    --mole: rgb(255, 0, 0);
     --debug: red;
     --bg-gray-lt: var(--fvr-blue);
     --bg-gray-lt-hv: var(--fvr-blue-lt);
     --bg-gray-md: var(--slot-purple);
-    --bg-gray-dk: var(--slot-green);
     --gray-lt-hv: var(--fvr-coral-lt);
     --text-accent: yellow;
     --border-dark: red;
@@ -124,57 +131,54 @@ body,
 }
 
 /* ========================================================================== */
-/*  FLAVORS — SOLID / MEDIUM / LIGHT                                          */
+/*  FLAVORS — SOLID / MEDIUM / LIGHT (SOFTENED)                                */
 /* ========================================================================== */
 
 :root {
-  /* TEST */
-  --fvr-test: ;
-
   /* BLUE */
-  --fvr-blue: rgb(99, 132, 204);
-  --fvr-blue-md: rgb(99 132 204 / 0.20);
-  --fvr-blue-lt: rgb(99 132 204 / 0.10);
+  --fvr-blue:     rgb(99, 132, 204);
+  --fvr-blue-md:  rgb(164, 186, 229);   /* was lt */
+  --fvr-blue-lt:  rgb(208, 221, 242);   /* new softer lt */
 
   /* SLATE */
-  --fvr-slate: rgb(139, 157, 180);
-  --fvr-slate-md: rgb(139 157 180 / 0.20);
-  --fvr-slate-lt: rgb(139 157 180 / 0.10);
+  --fvr-slate:    rgb(139, 157, 180);
+  --fvr-slate-md: rgb(201, 211, 224);
+  --fvr-slate-lt: rgb(226, 232, 240);
 
   /* PURPLE */
-  --fvr-purple: rgb(181, 152, 254);
-  --fvr-purple-md: rgb(181 152 254 / 0.20);
-  --fvr-purple-lt: rgb(181 152 254 / 0.10);
+  --fvr-purple:     rgb(181, 152, 254);
+  --fvr-purple-md:  rgb(224, 212, 255);
+  --fvr-purple-lt:  rgb(238, 230, 255);
 
   /* YELLOW */
-  --fvr-yellow: rgb(240, 197, 70);
-  --fvr-yellow-md: rgb(240 197 70 / 0.20);
-  --fvr-yellow-lt: rgb(240 197 70 / 0.10);
+  --fvr-yellow:     rgb(240, 197, 70);
+  --fvr-yellow-md:  rgb(252, 235, 180);
+  --fvr-yellow-lt:  rgb(255, 245, 215);
 
   /* RED */
-  --fvr-red: rgb(230, 21, 21);
-  --fvr-red-md: rgb(230 21 21 / 0.20);
-  --fvr-red-lt: rgb(230 21 21 / 0.10);
+  --fvr-red:     rgb(230, 21, 21);
+  --fvr-red-md:  rgb(248, 160, 160);
+  --fvr-red-lt:  rgb(252, 210, 210);
 
   /* CORAL */
-  --fvr-coral: rgb(232, 159, 150);
-  --fvr-coral-md: rgb(232 159 150 / 0.20);
-  --fvr-coral-lt: rgb(232 159 150 / 0.10);
+  --fvr-coral:     rgb(232, 159, 150);
+  --fvr-coral-md:  rgb(248, 220, 215);
+  --fvr-coral-lt:  rgb(252, 238, 235);
 
   /* TEAL */
-  --fvr-teal: rgb(102, 217, 204);
-  --fvr-teal-md: rgb(102 217 204 / 0.20);
-  --fvr-teal-lt: rgb(102 217 204 / 0.10);
+  --fvr-teal:     rgb(102, 217, 204);
+  --fvr-teal-md:  rgb(200, 245, 238);
+  --fvr-teal-lt:  rgb(225, 250, 246);
 
   /* GREEN */
-  --fvr-green: rgb(54, 138, 86);
-  --fvr-green-md: rgb(54 138 86 / 0.20);
-  --fvr-green-lt: rgb(54 138 86 / 0.10);
+  --fvr-green:     rgb(54, 138, 86);
+  --fvr-green-md:  rgb(150, 205, 175);
+  --fvr-green-lt:  rgb(200, 230, 215);
 
   /* INDIGO */
-  --fvr-indigo: rgb(79, 70, 229);
-  --fvr-indigo-md: rgb(79 70 229 / 0.20);
-  --fvr-indigo-lt: rgb(79 70 229 / 0.10);
+  --fvr-indigo:     rgb(79, 70, 229);
+  --fvr-indigo-md:  rgb(175, 170, 245);
+  --fvr-indigo-lt:  rgb(215, 212, 250);
 }
 
 /* ========================================================================== */

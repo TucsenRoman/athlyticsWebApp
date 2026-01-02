@@ -75,6 +75,8 @@ const ProgramDriveTrigger = forwardRef<
       year: p.year,
       school: p.school ?? null,
       state: p.state,
+      created_at: p.created_at,
+      last_used_at: p.last_used_at,
     }))
   }, [programs])
 
@@ -106,7 +108,7 @@ const ProgramDriveTrigger = forwardRef<
             flex items-center gap-2
             h-full w-[150px] px-3
             rounded-xl backdrop-blur
-            text-[var(--accent)]
+            text-[var(--dom-dk)]
             font-bold
             transition
           "
@@ -176,11 +178,10 @@ const ProgramDriveTrigger = forwardRef<
 
       <ProgramDriveModal
         open={driveOpen}
-        programs={programLites}
         selectedProgramId={selectedProgramId}
         onSelect={(id) => {
           setSelectedProgramId(id)
-          setDriveOpen(false)
+          if (id != null) setDriveOpen(false)
         }}
         onArchive={archiveProgram}
         onRestore={restoreProgram}

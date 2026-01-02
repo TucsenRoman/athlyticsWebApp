@@ -50,7 +50,7 @@ const TabsTrigger = React.forwardRef<
       // base
       "relative inline-flex items-center justify-center gap-2",
       "px-3 py-1.5 text-sm font-medium",
-      "rounded-md transition-colors",
+      "rounded-md border border-transparent transition-colors",
 
       // text
       "text-[var(--text)]",
@@ -59,7 +59,7 @@ const TabsTrigger = React.forwardRef<
       "hover:bg-[var(--gray-4)]",
 
       // focus
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-md)] focus-visible:ring-offset-2",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dom-md)] focus-visible:ring-offset-2",
 
       // disabled
       "disabled:pointer-events-none disabled:opacity-50",
@@ -71,7 +71,7 @@ const TabsTrigger = React.forwardRef<
       "data-[state=active]:bg-[var(--gray-4)]",
       "data-[state=active]:text-[var(--text-dk)]",
       "data-[state=active]:shadow-sm",
-      "data-[state=active]:border data-[state=active]:border-[var(--border)]",
+      // "data-[state=active]:border data-[state=active]:border-[var(--border)]",
 
       // optional icon/span behavior (preserved)
       "[&_span]:data-[state=inactive]:hidden",
@@ -98,10 +98,10 @@ const TabsContent = React.forwardRef<
     ref={ref}
     className={cn(
       // spacing
-      "mt-3",
+      // "mt-0",
 
       // focus
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-md)] focus-visible:ring-offset-2",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--dom-md)] focus-visible:ring-offset-2",
 
       className,
     )}

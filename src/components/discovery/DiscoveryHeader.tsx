@@ -166,7 +166,7 @@ export default function DiscoveryHeader({
                 bg-[hsl(var(--card))] border border-[hsl(var(--border))]
                 text-[hsl(var(--foreground))]
                 placeholder:text-[hsl(var(--gray-500))]
-                focus-visible:ring-2 focus-visible:ring-[hsl(var(--accent))]
+                focus-visible:ring-2 focus-visible:ring-[hsl(var(--dom-dk))]
                 transition
               "
             />
@@ -205,7 +205,7 @@ function ModeTab({
         inline-flex items-center gap-1 px-3 py-1 rounded-full text-base transition shadow-lg
         ${
           active
-            ? "bg-[hsl(var(--accent))]/20 text-[hsl(var(--accent))] font-semibold"
+            ? "bg-[hsl(var(--dom-dk))]/20 text-[hsl(var(--dom-dk))] font-semibold"
             : "text-[hsl(var(--gray-600))] hover:bg-[hsl(var(--gray-200))]"
         }
       `}

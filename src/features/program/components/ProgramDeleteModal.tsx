@@ -31,7 +31,7 @@ export default function ProgramDeleteModal({
 
         <p className="text-center text-sm text-[var(--text)]">
           Are you sure you want to delete{" "}
-          <span className="font-semibold text-[var(--accent)]">
+          <span className="font-semibold text-[var(--dom-dk)]">
             {program?.school} {program?.sport}, {program?.season_year}
           </span>
           ? This action{" "}

@@ -45,7 +45,7 @@ export default function MobileNav() {
           className={cn(
             "p-2", // ~Was at p-6. Why?
             active
-              ? "bg-[var(--accent-bg)] text-[var(--accent)] rounded-full"
+              ? "bg-[var(--dom-bg)] text-[var(--dom-dk)] rounded-full"
               : "text-[var(--text)]"
           )}        >
           <Icon fill="transparent" /* ~Maybe use white fill. */ /> 

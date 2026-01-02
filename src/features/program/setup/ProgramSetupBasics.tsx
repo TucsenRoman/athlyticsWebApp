@@ -202,7 +202,7 @@ export default function ProgramSetupBasics({
           />
         </div>
 
-        <span className="text-center text-xs text-[var(--accent)]">
+        <span className="text-center text-xs text-[var(--dom-dk)]">
           Extend the range to include pre- or post-season events.
         </span>
       </Field>

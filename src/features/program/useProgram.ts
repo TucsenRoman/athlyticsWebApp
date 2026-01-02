@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import type { ProgramId } from "@/features/program-cloak/useProgramContext"
 
@@ -14,6 +14,8 @@ export type ProgramRecord = {
   year: string
   school: string | null
   state: "active" | "archived" | "deleted" | string
+  created_at: string
+  last_used_at: string | null
 }
 
 /* ========================================================================== */
@@ -25,38 +27,34 @@ export function useProgram() {
   const [loading, setLoading] = useState(true)
 
   /* ---------------------------------------------------------------------- */
-  /* LOAD                                                                    */
+  /* CORE LOADER (single source of truth)                                    */
+  /* ---------------------------------------------------------------------- */
+
+  const loadPrograms = useCallback(async () => {
+    setLoading(true)
+
+    const { data, error } = await supabase
+      .from("programs")
+      .select("id, sport, year, school, state, created_at, last_used_at")
+      .order("created_at", { ascending: true })
+
+    if (error) {
+      console.error("Failed to load programs:", error)
+      setPrograms([])
+    } else {
+      setPrograms(data ?? [])
+    }
+
+    setLoading(false)
+  }, [])
+
+  /* ---------------------------------------------------------------------- */
+  /* INITIAL LOAD                                                            */
   /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
-    let mounted = true
-
-    const loadPrograms = async () => {
-      setLoading(true)
-
-      const { data, error } = await supabase
-        .from("programs")
-        .select("id, sport, year, school, state")
-        .order("created_at", { ascending: true })
-
-      if (!mounted) return
-
-      if (error) {
-        console.error("Failed to load programs:", error)
-        setPrograms([])
-      } else {
-        setPrograms(data ?? [])
-      }
-
-      setLoading(false)
-    }
-
     loadPrograms()
-
-    return () => {
-      mounted = false
-    }
-  }, [])
+  }, [loadPrograms])
 
   /* ---------------------------------------------------------------------- */
   /* MUTATIONS                                                               */
@@ -66,7 +64,7 @@ export function useProgram() {
     programId: ProgramId,
     state: "active" | "archived" | "deleted",
   ) {
-    // 🚨 hard guard: demo programs never touch DB
+    // 🚨 demo programs never touch DB
     if (typeof programId !== "number") {
       console.warn("Skipping DB update for demo program:", programId)
       return
@@ -85,12 +83,8 @@ export function useProgram() {
       return
     }
 
-    const { data } = await supabase
-      .from("programs")
-      .select("id, sport, year, school, state")
-      .order("created_at", { ascending: true })
-
-    setPrograms(data ?? [])
+    // ✅ re-sync after mutation
+    await loadPrograms()
   }
 
   const archiveProgram = (id: ProgramId) =>
@@ -109,8 +103,13 @@ export function useProgram() {
   return {
     programs,
     loading,
+
+    // mutations
     archiveProgram,
     restoreProgram,
     deleteProgram,
+
+    // explicit refresh for creates / external mutations
+    refresh: loadPrograms,
   }
 }

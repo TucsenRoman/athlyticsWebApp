@@ -68,7 +68,7 @@ export default function Search<T>({
             h-full pl-9 pr-3 text-sm rounded-sm
             border border-[var(--border)]
             bg-[var(--bg)]
-            text-[var(--text-dark)]
+            text-[var(--text-dk)]
             focus:outline-none
             focus:ring-0
             focus:border-[var(--border)]

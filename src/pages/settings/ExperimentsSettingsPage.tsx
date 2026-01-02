@@ -22,7 +22,7 @@ const MOCK = [
     title: "New UI polish",
     description: "Refined surfaces and micro-interactions across the app.",
     status: "Enabled",
-    flavor: "bg-[var(--accent-bg)]",
+    flavor: "bg-[var(--dom-bg)]",
     icon: <Sparkles className="h-4 w-4" />,
   },
 ];
@@ -46,7 +46,7 @@ export default function ExperimentsSettingsPage() {
               <div className="flex items-start gap-3">
                 <span className="text-[var(--text)] mt-[2px]">{f.icon}</span>
                 <div>
-                  <div className="text-sm font-medium text-[var(--text-dark)]">
+                  <div className="text-sm font-medium text-[var(--text-dk)]">
                     {f.title}
                   </div>
                   <div className="text-sm text-[var(--text)] mt-1">
@@ -61,7 +61,7 @@ export default function ExperimentsSettingsPage() {
                   ${
                     f.status === "Enabled"
                       ? "bg-[var(--success-bg)] text-[var(--success)]"
-                      : "bg-[var(--gray-200)] text-[var(--text-dark)]"
+                      : "bg-[var(--gray-200)] text-[var(--text-dk)]"
                   }
                 `}
               >
@@ -76,7 +76,7 @@ export default function ExperimentsSettingsPage() {
         <div className="rounded-lg bg-[var(--gray-50)] border border-[var(--border)] p-4">
           <div className="flex items-center gap-2">
             <FlaskConical className="h-4 w-4 text-[var(--text)]" />
-            <span className="text-sm font-medium text-[var(--text-dark)]">
+            <span className="text-sm font-medium text-[var(--text-dk)]">
               Note
             </span>
           </div>
@@ -94,7 +94,7 @@ export default function ExperimentsSettingsPage() {
 function Header({ title, description }: { title: string; description: string }) {
   return (
     <header>
-      <h1 className="text-lg font-semibold text-[var(--text-dark)]">{title}</h1>
+      <h1 className="text-lg font-semibold text-[var(--text-dk)]">{title}</h1>
       <p className="text-sm text-[var(--text)]">{description}</p>
     </header>
   );

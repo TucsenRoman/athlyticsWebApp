@@ -92,7 +92,7 @@ export function PushPanel({
                   h-7 w-7
                   rounded-md
                   flex items-center justify-center
-                  hover:bg-[var(--accent-bg)]
+                  hover:bg-[var(--dom-bg)]
                   transition-colors
                 "
               >
@@ -100,7 +100,7 @@ export function PushPanel({
               </button>
             )}
             
-            <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-dark)]">
+            <div className="flex items-center gap-2 text-sm font-medium text-[var(--text-dk)]">
               {titleIcon && (
                 <span className="flex items-center justify-center">
                   {titleIcon}

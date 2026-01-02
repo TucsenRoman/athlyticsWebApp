@@ -350,7 +350,7 @@ export default function ScheduleView({
                         <Divider tone="dark" />
                       )}
                       
-                      <h3 className="text-sm font-semibold text-[var(--text-dark)]">
+                      <h3 className="text-sm font-semibold text-[var(--text-dk)]">
                         {FULL_DAY_LABELS[dayIdx]}
                       </h3>
 

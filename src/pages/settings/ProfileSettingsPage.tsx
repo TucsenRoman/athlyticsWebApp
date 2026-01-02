@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react"
 import { Pencil, UserRound, Languages, Camera } from "lucide-react"
 
-import { useProfileContext } from "@/features/user-scope/profile/ProfileProvider"
-import AvatarSelector from "@/features/user-scope/profile/AvatarSelector"
-import { AVATAR_MAP } from "@/features/user-scope/profile/avatarMap"
+import { useProfileContext } from "@/features/profile/ProfileProvider"
+import AvatarSelector from "@/features/profile/AvatarModal"
+import { AVATAR_MAP } from "@/features/profile/avatarMap"
 import {
   AvatarId,
   isAvatarId,
-} from "@/features/user-scope/profile/avatars"
+} from "@/features/profile/avatars"
 import { Button } from "@/components/ui"
 
 /* ========================================================================== */
@@ -85,7 +85,7 @@ export default function ProfileSettingsPage() {
       {/* ================= HEADER ================= */}
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-[var(--text-dark)]">
+          <h1 className="text-lg font-semibold text-[var(--text-dk)]">
             Profile
           </h1>
           <p className="text-sm text-[var(--text)]">
@@ -192,7 +192,7 @@ export default function ProfileSettingsPage() {
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center bg-[var(--gray-lt)]">
-                <span className="text-lg font-semibold text-[var(--text2)]">
+                <span className="text-lg font-semibold text-[var(--text)]">
                   {initials}
                 </span>
               </div>
@@ -232,7 +232,7 @@ export default function ProfileSettingsPage() {
                 "
               />
             ) : (
-              <div className="text-lg font-medium text-[var(--text-dark)] truncate">
+              <div className="text-lg font-medium text-[var(--text-dk)] truncate">
                 {draft.fullName}
               </div>
             )}
@@ -281,7 +281,7 @@ export default function ProfileSettingsPage() {
             ${editing ? "bg-[color-mix(in srgb,var(--edit-bg) 30%,transparent)]" : "bg-[var(--gray-lt)]"}
           `}
         >
-          <div className="text-[10px] uppercase tracking-wide text-[var(--text2)]">
+          <div className="text-[10px] uppercase tracking-wide text-[var(--text)]">
             Bio
           </div>
 
@@ -302,7 +302,7 @@ export default function ProfileSettingsPage() {
               placeholder="Tell people a little about yourself"
             />
           ) : (
-            <p className="text-sm text-[var(--text-dark)]">
+            <p className="text-sm text-[var(--text-dk)]">
               {draft.bio || "No bio yet."}
             </p>
           )}
@@ -379,8 +379,8 @@ function DetailRow({
       "
     >
       <div className="flex items-center gap-2">
-        {icon && <span className="text-[var(--text2)]">{icon}</span>}
-        <span className="text-sm font-medium text-[var(--text-dark)]">
+        {icon && <span className="text-[var(--text)]">{icon}</span>}
+        <span className="text-sm font-medium text-[var(--text-dk)]">
           {label}
         </span>
       </div>

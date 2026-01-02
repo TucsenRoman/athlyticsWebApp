@@ -202,7 +202,7 @@ function Wheel<T extends number | string>({
           <div
             key={String(v)}
             className={`snap-center cursor-pointer py-0 leading-tight ${
-              v === selected ? "text-[var(--accent)]" : "text-[var(--gray-600)]"
+              v === selected ? "text-[var(--dom-dk)]" : "text-[var(--gray-600)]"
             }`}
           >
             {formatter(v)}
@@ -213,7 +213,7 @@ function Wheel<T extends number | string>({
       {/* Fades */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-white to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] bg-[var(--accent-light)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] bg-[var(--dom-lt)]" />
     </div>
   );
 }

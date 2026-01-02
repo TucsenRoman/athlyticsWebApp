@@ -88,7 +88,7 @@ export default function AvatarSelector({
       >
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-          <h3 className="text-sm font-semibold text-[var(--text-dark)]">
+          <h3 className="text-sm font-semibold text-[var(--text-dk)]">
             Choose Avatar
           </h3>
 
@@ -116,7 +116,7 @@ export default function AvatarSelector({
                   rounded-lg p-1 border transition
                   ${
                     selected === null
-                      ? "border-[var(--accent)] bg-[var(--accent-bg)]"
+                      ? "border-[var(--dom-dk)] bg-[var(--dom-bg)]"
                       : "border-transparent hover:bg-[var(--gray-lt)]"
                   }
                 `}
@@ -153,7 +153,7 @@ export default function AvatarSelector({
                 onClick={() => onSelect(id)}
                 className="
                   rounded-lg p-1 border transition
-                  border-[var(--accent)] bg-[var(--accent-bg)]
+                  border-[var(--dom-dk)] bg-[var(--dom-bg)]
                 "
               >
                 <div className="h-[140px] w-[140px] rounded-full overflow-hidden bg-[var(--gray-lt)]">

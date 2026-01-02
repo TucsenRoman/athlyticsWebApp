@@ -29,7 +29,7 @@ export default function ScheduleSlotDetails({
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[60]">
-      <div className="bg-[var(--surface)] text-[var(--text-dark)] rounded-xl w-[340px] shadow-xl p-4 relative">
+      <div className="bg-[var(--surface)] text-[var(--text-dk)] rounded-xl w-[340px] shadow-xl p-4 relative">
 
         {/* HEADER */}
         <div className="flex items-start justify-between">

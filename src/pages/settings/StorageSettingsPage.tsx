@@ -29,7 +29,7 @@ export default function StorageSettingsPage() {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Archive className="h-4 w-4 text-[var(--success)]" />
-              <span className="text-sm font-medium text-[var(--text-dark)]">
+              <span className="text-sm font-medium text-[var(--text-dk)]">
                 Storage used
               </span>
             </div>
@@ -58,7 +58,7 @@ export default function StorageSettingsPage() {
             >
               <div className="flex items-center gap-3">
                 <span className="text-[var(--text)]">{b.icon}</span>
-                <span className="text-sm font-medium text-[var(--text-dark)]">
+                <span className="text-sm font-medium text-[var(--text-dk)]">
                   {b.label}
                 </span>
               </div>
@@ -71,7 +71,7 @@ export default function StorageSettingsPage() {
       <SectionLabel>Cleanup</SectionLabel>
       <Card>
         <div className="rounded-lg bg-[var(--gray-50)] border border-[var(--border)] p-4">
-          <div className="text-sm font-medium text-[var(--text-dark)]">
+          <div className="text-sm font-medium text-[var(--text-dk)]">
             Recommended cleanup
           </div>
           <p className="text-sm text-[var(--text)] mt-1">
@@ -80,7 +80,7 @@ export default function StorageSettingsPage() {
           <button
             className="
               mt-3 px-4 py-2 rounded-lg
-              bg-[var(--accent)] text-white
+              bg-[var(--dom-dk)] text-white
               hover:opacity-90 transition-opacity
             "
           >
@@ -97,7 +97,7 @@ export default function StorageSettingsPage() {
 function Header({ title, description }: { title: string; description: string }) {
   return (
     <header>
-      <h1 className="text-lg font-semibold text-[var(--text-dark)]">{title}</h1>
+      <h1 className="text-lg font-semibold text-[var(--text-dk)]">{title}</h1>
       <p className="text-sm text-[var(--text)]">{description}</p>
     </header>
   );

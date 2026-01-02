@@ -47,7 +47,7 @@ export default function TabToggler<T extends string>({
               className={cn(
                 "flex items-center gap-1 h-6 px-2 rounded-full transition cursor-pointer select-none",
                 active
-                  ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+                  ? "bg-[var(--dom-bg)] text-[var(--dom-dk)]"
                   : "text-[var(--text)]"
               )}
             >

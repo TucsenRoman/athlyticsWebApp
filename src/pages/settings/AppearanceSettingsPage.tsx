@@ -61,7 +61,7 @@ export default function AppearanceSettingsPage() {
         <Divider />
 
         <div className="rounded-lg bg-[var(--fvr-blue-lt)] border border-[var(--border)] p-4">
-          <div className="text-sm font-medium text-[var(--text-dark)]">
+          <div className="text-sm font-medium text-[var(--text-dk)]">
             Preview
           </div>
           <p className="text-sm text-[var(--text)] mt-1">
@@ -78,7 +78,7 @@ export default function AppearanceSettingsPage() {
 function Header({ title, description }: { title: string; description: string }) {
   return (
     <header>
-      <h1 className="text-lg font-semibold text-[var(--text-dark)]">{title}</h1>
+      <h1 className="text-lg font-semibold text-[var(--text-dk)]">{title}</h1>
       <p className="text-sm text-[var(--text)]">{description}</p>
     </header>
   );
@@ -123,13 +123,13 @@ function ThemeTile({
         rounded-xl border p-4
         flex flex-col items-start gap-2
         transition-all cursor-pointer
-        ${active ? "border-[var(--accent)] bg-[var(--accent-bg)] shadow-sm" : "border-[var(--border)] bg-[var(--gray-50)] hover:shadow-inner"}
+        ${active ? "border-[var(--dom-dk)] bg-[var(--dom-bg)] shadow-sm" : "border-[var(--border)] bg-[var(--gray-50)] hover:shadow-inner"}
       `}
     >
-      <span className={active ? "text-[var(--accent)]" : "text-[var(--text)]"}>
+      <span className={active ? "text-[var(--dom-dk)]" : "text-[var(--text)]"}>
         {icon}
       </span>
-      <span className="text-sm font-medium text-[var(--text-dark)]">{title}</span>
+      <span className="text-sm font-medium text-[var(--text-dk)]">{title}</span>
       <span className="text-xs text-[var(--text)]">
         {active ? "Selected" : "Click to select"}
       </span>
@@ -152,7 +152,7 @@ function Row({
     <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-ltt)] px-4 py-3">
       <div className="flex items-center gap-3 min-w-0">
         <span className="text-[var(--text)]">{icon}</span>
-        <span className="text-sm font-medium text-[var(--text-dark)]">{label}</span>
+        <span className="text-sm font-medium text-[var(--text-dk)]">{label}</span>
         {badge && (
           <span className="text-xs px-2 py-[2px] rounded-full bg-[var(--fvr-green-lt)] text-[var(--success)] border border-[var(--border)]">
             {badge}

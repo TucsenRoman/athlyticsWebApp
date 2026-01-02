@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { SETTINGS_NAV } from "@/features/user-scope/settings/settingsNav"
+import { SETTINGS_NAV } from "@/components/navigation/settingsNav"
 
 import { LogOut, Share, Share2 } from "lucide-react";
 
@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/data_display/avatar";
 import { Divider, Button } from "@/components/ui";
 
-import { useProfileContext } from "@/features/user-scope/profile/ProfileProvider"
-import { AVATAR_MAP } from "@/features/user-scope/profile/avatarMap"
+import { useProfileContext } from "@/features/profile/ProfileProvider"
+import { AVATAR_MAP } from "@/features/profile/avatarMap"
 
 /* ========================================================================== */
 /* COMPONENT                                                                  */
@@ -102,7 +102,7 @@ export default function AccountMenu() {
 
   /* AUTHENTICATED RENDER */
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative flex justify-center items-center h-10 w-10" ref={menuRef}>
       {/* TRIGGER */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -110,10 +110,9 @@ export default function AccountMenu() {
           overflow-hidden
         "
       >
-        <Avatar className="h-full w-full rounded-full">
+        <Avatar className="h-full w-full rounded-full border borer-[var(--gray-lt)]">
           <AvatarImage
             src={avatarSrc ?? undefined}
-            className="h-10 w-10"
           />
 
           {/* OUTER PILL (matches nav pill shell) */}
@@ -136,8 +135,8 @@ export default function AccountMenu() {
                 transition-colors
                 ${
                   open
-                    ? "bg-[var(--accent-glass)] text-[var(--accent)]"
-                    : "bg-transparent text-[var(--text2)] hover:bg-[var(--gray-lt2)]"
+                    ? "bg-[var(--dom-glass)] text-[var(--dom-dk)]"
+                    : "bg-transparent text-[var(--text)] hover:bg-[var(--gray-lt2)]"
                 }
               `}
             >
@@ -151,7 +150,7 @@ export default function AccountMenu() {
       {open && (
         <div
           className="
-            absolute right-0 mt-2 z-50
+            absolute top-12 right-0 mt-2 z-50
             w-64 rounded-xl p-2
             bg-[var(--bg)]
             border border-[var(--border)]
@@ -174,7 +173,7 @@ export default function AccountMenu() {
               </Avatar>
 
               <div className="min-w-0 flex-1">
-                <div className="flex justify-start gap-2 font-semibold text-[var(--text-dark)] truncate">
+                <div className="flex justify-start gap-2 font-semibold text-[var(--text-dk)] truncate">
                   {displayName}
                 </div>
 
@@ -185,7 +184,7 @@ export default function AccountMenu() {
                       flex justify-center items-center
                       h-5 w-5
                       text-[var(--text)]
-                      hover:text-[var(--text2)]
+                      hover:text-[var(--text)]
                       transition-all
                     "
                     onClick={() =>
@@ -260,10 +259,10 @@ function MenuItem({
         ${danger ? "hover:bg-[var(--danger-bg)]" : "hover:bg-[var(--gray-lt)]"}
       `}
     >
-      <span className={danger ? "text-[var(--danger)]" : "text-[var(--text2)]"}>
+      <span className={danger ? "text-[var(--danger)]" : "text-[var(--text)]"}>
         {icon}
       </span>
-      <span className={`text-sm font-semibold ${danger ? "text-[var(--danger)]" : "text-[var(--text2)]"}`}>
+      <span className={`text-sm font-semibold ${danger ? "text-[var(--danger)]" : "text-[var(--text)]"}`}>
         {label}
       </span>
     </button>

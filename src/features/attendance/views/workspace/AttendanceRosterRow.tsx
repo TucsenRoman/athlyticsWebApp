@@ -38,9 +38,9 @@ export default function AttendanceRosterRow({
         flex items-center justify-between
         px-4 py-2 h-14
         border-b border-[var(--border)]
-        text-[var(--text-dark)]
+        text-[var(--text-dk)]
         min-w-0
-        hover:bg-[var(--accent-bg)]
+        hover:bg-[var(--dom-bg)]
       `,
         className
       )}

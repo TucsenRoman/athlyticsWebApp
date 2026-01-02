@@ -106,7 +106,7 @@ function Section({
   return (
     <div className="flex flex-col gap-3">
       <div>
-        <h3 className="text-sm font-medium text-[var(--text-dark)]">
+        <h3 className="text-sm font-medium text-[var(--text-dk)]">
           {title}
         </h3>
         {description && (

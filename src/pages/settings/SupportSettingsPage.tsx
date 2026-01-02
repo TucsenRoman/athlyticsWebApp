@@ -28,12 +28,12 @@ export default function SupportSettingsPage() {
       <Card>
         {/* ASSISTANT HEADER */}
         <div className="flex items-center gap-3 w-full">
-          <div className="h-8 w-8 rounded-lg bg-[var(--accent-bg)] flex items-center justify-center">
-            <BotMessageSquare className="h-4 w-4 text-[var(--accent)]" />
+          <div className="h-8 w-8 rounded-lg bg-[var(--dom-bg)] flex items-center justify-center">
+            <BotMessageSquare className="h-4 w-4 text-[var(--dom-dk)]" />
           </div>
 
           <div>
-            <div className="text-sm font-medium text-[var(--text-dark)]">
+            <div className="text-sm font-medium text-[var(--text-dk)]">
               Athlytics Assistant
             </div>
             <div className="flex justify-between w-full text-xs text-[var(--text)]">
@@ -57,11 +57,11 @@ export default function SupportSettingsPage() {
         >
           {/* ASSISTANT MESSAGE */}
           <div className="flex items-start gap-2">
-            <div className="h-6 w-6 rounded-full bg-[var(--accent-bg)] flex items-center justify-center">
-              <BotMessageSquare className="h-3 w-3 text-[var(--accent)]" />
+            <div className="h-6 w-6 rounded-full bg-[var(--dom-bg)] flex items-center justify-center">
+              <BotMessageSquare className="h-3 w-3 text-[var(--dom-dk)]" />
             </div>
 
-            <div className="rounded-lg bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-dark)] border border-[var(--border)]">
+            <div className="rounded-lg bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-dk)] border border-[var(--border)]">
               Hi! I can help you understand features, troubleshoot issues, or guide you
               to the right settings.
             </div>
@@ -69,18 +69,18 @@ export default function SupportSettingsPage() {
 
           {/* USER MESSAGE (MOCK) */}
           <div className="flex items-start gap-2 justify-end">
-            <div className="rounded-lg bg-[var(--gray-200)] px-3 py-2 text-sm text-[var(--text-dark)]">
+            <div className="rounded-lg bg-[var(--gray-200)] px-3 py-2 text-sm text-[var(--text-dk)]">
               How do I upgrade my plan?
             </div>
           </div>
 
           {/* ASSISTANT RESPONSE (MOCK) */}
           <div className="flex items-start gap-2">
-            <div className="h-6 w-6 rounded-full bg-[var(--accent-bg)] flex items-center justify-center">
-              <BotMessageSquare className="h-3 w-3 text-[var(--accent)]" />
+            <div className="h-6 w-6 rounded-full bg-[var(--dom-bg)] flex items-center justify-center">
+              <BotMessageSquare className="h-3 w-3 text-[var(--dom-dk)]" />
             </div>
 
-            <div className="rounded-lg bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-dark)] border border-[var(--border)]">
+            <div className="rounded-lg bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-dk)] border border-[var(--border)]">
               You can upgrade anytime from the <strong className="px-2 rounded-lg bg-[var(--link-bg)] cursor-pointer">Plan & Billing</strong> page.
               Changes take effect immediately.
             </div>
@@ -97,7 +97,7 @@ export default function SupportSettingsPage() {
               border border-[var(--border)]
               bg-[var(--gray-lt)]
               px-3 py-2
-              text-sm text-[var(--text-dark)]
+              text-sm text-[var(--text-dk)]
               placeholder:text-[var(--text)]
               cursor-not-allowed
             "
@@ -108,8 +108,8 @@ export default function SupportSettingsPage() {
             className="
               px-4 py-2 rounded-lg
               text-sm font-medium
-              bg-[var(--accent-bg)]
-              text-[var(--accent)]
+              bg-[var(--dom-bg)]
+              text-[var(--dom-dk)]
               cursor-not-allowed
             "
           >
@@ -138,7 +138,7 @@ export default function SupportSettingsPage() {
             >
               <div className="flex items-center gap-3">
                 <span className="text-[var(--text)]">{l.icon}</span>
-                <span className="text-sm font-medium text-[var(--text-dark)]">{l.label}</span>
+                <span className="text-sm font-medium text-[var(--text-dk)]">{l.label}</span>
               </div>
               <span className="text-xs text-[var(--text)]">Open</span>
             </button>
@@ -153,10 +153,10 @@ export default function SupportSettingsPage() {
 
         <Divider />
 
-        <div className="rounded-lg bg-[var(--accent-bg)] border border-[var(--border)] p-4">
+        <div className="rounded-lg bg-[var(--dom-bg)] border border-[var(--border)] p-4">
           <div className="flex items-center gap-2">
-            <MessageSquareHeart className="h-4 w-4 text-[var(--accent)]" />
-            <span className="text-sm font-medium text-[var(--text-dark)]">
+            <MessageSquareHeart className="h-4 w-4 text-[var(--dom-dk)]" />
+            <span className="text-sm font-medium text-[var(--text-dk)]">
               Priority support
             </span>
           </div>
@@ -182,7 +182,7 @@ export default function SupportSettingsPage() {
 function Header({ title, description }: { title: string; description: string }) {
   return (
     <header>
-      <h1 className="text-lg font-semibold text-[var(--text-dark)]">{title}</h1>
+      <h1 className="text-lg font-semibold text-[var(--text-dk)]">{title}</h1>
       <p className="text-sm text-[var(--text)]">{description}</p>
     </header>
   );
@@ -211,7 +211,7 @@ function Divider() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-lt)] px-4 py-3">
-      <span className="text-sm font-medium text-[var(--text-dark)]">{label}</span>
+      <span className="text-sm font-medium text-[var(--text-dk)]">{label}</span>
       <span className="text-sm text-[var(--text)]">{value}</span>
     </div>
   );

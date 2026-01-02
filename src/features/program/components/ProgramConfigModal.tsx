@@ -23,7 +23,12 @@ export interface ProgramConfigModalProps {
   open: boolean;
   program: any | null;
   onClose: () => void;
-  onSubmit: (data: ProgramBasicsData & { year: string }) => Promise<ProgramId | null>;
+  onSubmit: (
+    data: ProgramBasicsData & {
+      year: string
+      id?: ProgramId
+    }
+  ) => Promise<ProgramId | null>
 }
 
 /* COMPONENT */
@@ -88,23 +93,24 @@ export default function ProgramConfigModal({
   /* ------------------------------------------------------------------------ */
 
   const handleFinalSubmit = async () => {
-    const now = new Date();
+    const now = new Date()
     const startDate = basicsData.seasonStart
       ? new Date(basicsData.seasonStart)
-      : null;
+      : null
 
     const year =
       startDate?.getFullYear().toString() ??
-      now.getFullYear().toString();
+      now.getFullYear().toString()
 
     await onSubmit({
       ...basicsData,
       sport: resolvedSport,
       year,
-    });
-
-    handleClose();
-  };
+      ...(mode === "edit" && program?.id
+        ? { id: program.id }
+        : {}),
+    })
+  }
 
   const handleClose = () => {
     setBasicsData({
@@ -123,7 +129,13 @@ export default function ProgramConfigModal({
   /* ------------------------------------------------------------------------ */
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+      <Dialog
+        open={open}
+        modal={false}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) handleClose()
+        }}
+      >
       <DialogContent
         className="
           w-[98vw]
@@ -136,7 +148,7 @@ export default function ProgramConfigModal({
       >
         {/* HEADER ---------------------------------------------------------- */}
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-[var(--text-dark)]">
+          <DialogTitle className="text-2xl font-bold text-[var(--text-dk)]">
             {mode === "add" ? "Create Program" : "Edit Program"}
           </DialogTitle>
         </DialogHeader>

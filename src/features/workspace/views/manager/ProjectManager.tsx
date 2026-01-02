@@ -62,7 +62,7 @@ function Collapsible({
         className="
           w-full flex justify-between items-center 
           px-4 py-3 text-left
-          text-[var(--text-dark)]
+          text-[var(--text-dk)]
           hover:bg-[var(--gray-50)]
           transition-colors
         "
@@ -291,10 +291,10 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
   /* ------------------------------------------------------------------------ */
 
   return (
-    <div className="w-full h-full overflow-auto p-6 flex flex-col gap-6 bg-[var(--bg)] text-[var(--text-dark)]">
+    <div className="w-full h-full overflow-auto p-6 flex flex-col gap-6 bg-[var(--bg)] text-[var(--text-dk)]">
       {/* HEADER */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-[var(--text-dark)]">
+        <h1 className="text-xl font-semibold text-[var(--text-dk)]">
           {programName} Overview
         </h1>
 
@@ -303,7 +303,7 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
             className="
               flex items-center gap-2 
               px-4 py-2 rounded-lg text-sm
-              bg-[var(--danger)] text-[var(--text-light)]
+              bg-[var(--danger)] text-[var(--text-lt)]
               hover:opacity-80 transition
             "
             onClick={deleteSelected}
@@ -339,7 +339,7 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
                 flex flex-col gap-2
               "
             >
-              <div className="flex items-center gap-3 text-[var(--text-dark)]">
+              <div className="flex items-center gap-3 text-[var(--text-dk)]">
                 <input
                   type="checkbox"
                   checked={selected.has(`pkg:${pkg.id}`)}
@@ -369,7 +369,7 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
                     border border-[var(--border)]
                     bg-[var(--bg)]
                     flex items-center gap-3
-                    text-[var(--text-dark)]
+                    text-[var(--text-dk)]
                   "
                 >
                   <input
@@ -399,7 +399,7 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
               border border-[var(--border)]
               bg-[var(--bg)]
               flex items-center gap-3
-              text-[var(--text-dark)]
+              text-[var(--text-dk)]
             "
           >
             <input
@@ -426,7 +426,7 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
               border border-[var(--border)]
               bg-[var(--bg)]
               flex items-center justify-between
-              text-[var(--text-dark)]
+              text-[var(--text-dk)]
             "
           >
             <div className="flex items-center gap-3">

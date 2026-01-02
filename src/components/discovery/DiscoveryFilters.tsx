@@ -64,7 +64,7 @@ export default function DiscoveryFilters({
               px-3 py-1 rounded-full flex items-center gap-1 transition
               ${
                 active === f.id
-                  ? "bg-[hsl(var(--gray-300))] text-[hsl(var(--accent))] shadow-sm font-medium"
+                  ? "bg-[hsl(var(--gray-300))] text-[hsl(var(--dom-dk))] shadow-sm font-medium"
                   : "text-[hsl(var(--gray-600))] hover:bg-[hsl(var(--gray-200))]"
               }
             `}

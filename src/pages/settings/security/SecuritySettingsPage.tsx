@@ -110,7 +110,7 @@ function Header({
 }) {
   return (
     <header>
-      <h1 className="text-lg font-semibold text-[var(--text-dark)]">
+      <h1 className="text-lg font-semibold text-[var(--text-dk)]">
         {title}
       </h1>
       <p className="text-sm text-[var(--text)]">{description}</p>
@@ -154,7 +154,7 @@ function ActionRow({
       <div className="flex items-start gap-3">
         <span className="text-[var(--text)]">{icon}</span>
         <div>
-          <div className="text-sm font-medium text-[var(--text-dark)]">
+          <div className="text-sm font-medium text-[var(--text-dk)]">
             {label}
           </div>
           <div className="text-sm text-[var(--text)]">

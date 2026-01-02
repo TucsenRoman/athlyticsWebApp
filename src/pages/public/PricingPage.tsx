@@ -46,7 +46,7 @@ export default function PricingPage() {
         <p className="text-sm text-[var(--text-muted)] mb-4">
           Not sure which plan fits?
         </p>
-        <button className="inline-flex items-center gap-2 text-sm font-medium text-[var(--accent)] hover:underline">
+        <button className="inline-flex items-center gap-2 text-sm font-medium text-[var(--dom-dk)] hover:underline">
           Compare plans
         </button>
       </section>
@@ -74,7 +74,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
         p-8
         ${
           plan.highlight
-            ? "border-[var(--accent)] shadow-xl"
+            ? "border-[var(--dom-dk)] shadow-xl"
             : "border-[var(--border)]"
         }
       `}
@@ -102,7 +102,7 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
       <ul className="flex flex-col gap-3 mb-8">
         {plan.features.map((feature, i) => (
           <li key={i} className="flex items-center gap-3 text-sm">
-            <Check className="w-4 h-4 text-[var(--accent)]" />
+            <Check className="w-4 h-4 text-[var(--dom-dk)]" />
             <span>{feature}</span>
           </li>
         ))}
@@ -118,8 +118,8 @@ function PricingCard({ plan }: { plan: PricingPlan }) {
           transition-all
           ${
             plan.highlight
-              ? "bg-[var(--accent)] text-white hover:brightness-110"
-              : "border border-[var(--border)] hover:bg-[var(--accent-bg)]"
+              ? "bg-[var(--dom-dk)] text-white hover:brightness-110"
+              : "border border-[var(--border)] hover:bg-[var(--dom-bg)]"
           }
         `}
       >

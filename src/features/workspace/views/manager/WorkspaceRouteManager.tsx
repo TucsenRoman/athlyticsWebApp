@@ -196,7 +196,7 @@ export default function WorkspaceRouteManager({
         <button
           className="
             flex items-center gap-2 px-4 py-2 rounded-lg
-            bg-[hsl(var(--accent))] text-white
+            bg-[hsl(var(--dom-dk))] text-white
             hover:brightness-110 active:scale-[0.97]
             transition
           "

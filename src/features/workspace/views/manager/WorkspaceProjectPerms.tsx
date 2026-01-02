@@ -93,7 +93,7 @@ export default function WorkspaceProjectPerms({
 
     switch (role) {
       case "Admin":
-        return `${base} bg-[hsl(var(--accent)/0.15)] text-[hsl(var(--accent))]`;
+        return `${base} bg-[hsl(var(--dom-dk)/0.15)] text-[hsl(var(--dom-dk))]`;
       case "Editor":
         return `${base} bg-[hsl(var(--gray-200))] text-[hsl(var(--gray-700))]`;
       case "Viewer":
@@ -132,7 +132,7 @@ export default function WorkspaceProjectPerms({
         <button
           className="
             flex items-center gap-2 px-4 py-2 rounded-lg
-            bg-[hsl(var(--accent))] text-white
+            bg-[hsl(var(--dom-dk))] text-white
             hover:brightness-110 active:scale-[0.97]
             transition
           "

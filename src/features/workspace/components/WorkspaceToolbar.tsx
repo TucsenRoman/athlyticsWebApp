@@ -74,7 +74,7 @@ export function ModeTab({
       onClick={onClick}
       className={`
         flex items-center gap-1 h-6 px-2 rounded-full transition
-        ${active ? "bg-[var(--accent-bg)] text-[var(--accent)]" : "text-[var(--text)]"}
+        ${active ? "bg-[var(--dom-bg)] text-[var(--dom-dk)]" : "text-[var(--text)]"}
       `}
     >
       {/* ICON */}
@@ -196,7 +196,7 @@ export default function WorkspaceToolbar({
       
       {/* MAX / MIN BUTTON ---------------------------------------------- */}
       <Button
-        variant="toolbar"
+        variant="stick"
         title={headerCollapsed ? "Minimize" : "Maximize"}
         onClick={() => {
           window.dispatchEvent(new CustomEvent("toggle-header"));
@@ -204,7 +204,7 @@ export default function WorkspaceToolbar({
         }}
       >
         {headerCollapsed ? (
-          <Minimize className="h-4 w-4 text-[var(--accent)]" />
+          <Minimize className="h-4 w-4 text-[var(--dom-dk)]" />
         ) : (
           <Maximize className="h-4 w-4 text-[var(--text)]" />
         )}

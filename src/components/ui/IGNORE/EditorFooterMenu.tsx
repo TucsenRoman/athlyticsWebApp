@@ -80,7 +80,7 @@ export default function EditorFooterMenu({
 
             ${
               open
-                ? "bg-transparent hover:bg-[var(--accent-bg)] text-[var(--text-accent)]"
+                ? "bg-transparent hover:bg-[var(--dom-bg)] text-[var(--text-dom-md)]"
                 : "bg-[var(--bg)] hover:bg-[var(--gray-200)] text-[var(--text)]"
             }
           `}
@@ -124,7 +124,7 @@ export default function EditorFooterMenu({
                     transition-all duration-200
                   "
                 >
-                  <div className="text-[var(--text-dark)]">
+                  <div className="text-[var(--text-dk)]">
                     {item.icon}
                   </div>
                 </button>

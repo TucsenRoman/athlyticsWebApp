@@ -5,7 +5,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
 
 import { Divider } from "@/components/ui";
-import { SETTINGS_NAV } from "@/features/user-scope/settings/settingsNav";
+import { SETTINGS_NAV } from "@/components/navigation/settingsNav";
 
 export default function SettingsLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function SettingsLayout() {
       >
         {/* HEADER */}
         <div className="px-4 pt-4 pb-3">
-          <div className="text-lg font-semibold text-[var(--text-dark)]">
+          <div className="text-lg font-semibold text-[var(--text-dk)]">
             User Settings
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function SettingsLayout() {
           >
             <Menu size={18} />
           </button>
-          <div className="text-lg font-semibold text-[var(--text-dark)]">
+          <div className="text-lg font-semibold text-[var(--text-dk)]">
             Settings
           </div>
         </div>
@@ -115,14 +115,14 @@ function SettingsModeTile({
             ${
               isActive
                 ? `
-                  bg-[var(--accent-glass)]
-                  text-[var(--accent)]
+                  bg-[var(--dom-glass)]
+                  text-[var(--dom-dk)]
                   shadow-md
-                  border border-[var(--accent)]
+                  border border-[var(--dom-dk)]
                 `
                 : `
                   bg-[var(--gray-100)]
-                  text-[var(--text2)]
+                  text-[var(--text)]
                   border border-transparent
                   hover:border-[var(--border)]
                 `
@@ -137,7 +137,7 @@ function SettingsModeTile({
               ${
                 isActive
                   ? "bg-transparent"
-                  : "bg-[var(--gray-lt)] text-[var(--text2)]"
+                  : "bg-[var(--gray-lt)] text-[var(--text)]"
               }
             `}
           >

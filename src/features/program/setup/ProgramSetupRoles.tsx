@@ -420,7 +420,7 @@ export default function ProgramSetupRoles({
                   {/* ROLE HEADER */}
                   <div className="flex items-center gap-2">
                     {/* <span className={`h-2.5 w-2.5 rounded-full bg-[var(--fvr-${role.flavor}-md)]`} /> */}
-                    <span className="font-medium text-[var(--text-dark)]">
+                    <span className="font-medium text-[var(--text-dk)]">
                       {role.name}
                     </span>
                   </div>
@@ -447,7 +447,7 @@ export default function ProgramSetupRoles({
                     {role.permissions.length > 3 && (
                       <button
                         onClick={() => setExpandedRole(expanded ? null : role.id)}
-                        className="text-[var(--accent)] whitespace-nowrap shrink-0"
+                        className="text-[var(--dom-dk)] whitespace-nowrap shrink-0"
                       >
                         {expanded ? "View less" : "View all >"}
                       </button>

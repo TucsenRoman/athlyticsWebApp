@@ -68,8 +68,8 @@ const SelectContent = React.forwardRef<
       className={cn(
         "relative z-50 max-h-[250px] min-w-[8rem] overflow-hidden",
         "rounded-lg border bg-[var(--gray-2)] text-[var(--gray-12)]",
-        "data-[highlighted]:text-[var(--accent)]",
-        "data-[highlighted]:[&_*]:text-[var(--accent)]",
+        "data-[highlighted]:text-[var(--dom-dk)]",
+        "data-[highlighted]:[&_*]:text-[var(--dom-dk)]",
         "shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
@@ -111,7 +111,7 @@ const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full select-none items-center rounded-sm py-3 pl-10 pr-4 min-h-[44px] text-base outline-none cursor-pointer touch-manipulation transition-colors",
-      "data-[highlighted]:bg-[var(--gray-3)] data-[highlighted]:text-[var(--text-dark)]",
+      "data-[highlighted]:bg-[var(--gray-3)] data-[highlighted]:text-[var(--text-dk)]",
       "data-[state=checked]:bg-[var(--gray-lt)]",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,

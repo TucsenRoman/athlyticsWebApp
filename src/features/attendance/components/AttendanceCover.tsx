@@ -56,7 +56,7 @@ export default function AttendanceCover({
   return (
     <div
       className="
-        border border-[var(--border-dark)]
+        border border-[var(--border-dk)]
         rounded-2xl bg-[var(--bg)]
         px-6 py-8
         shadow-lg
@@ -65,7 +65,7 @@ export default function AttendanceCover({
     >
       {/* HEADER */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-[var(--text-dark)]">
+        <h2 className="text-xl font-semibold text-[var(--text-dk)]">
           Attendance Overview
         </h2>
 
@@ -90,8 +90,8 @@ export default function AttendanceCover({
             border border-[var(--border)]
           "
         >
-          <UsersRound size={20} className="text-[var(--text-dark)] mb-1" />
-          <span className="text-xl font-semibold text-[var(--text-dark)]">
+          <UsersRound size={20} className="text-[var(--text-dk)] mb-1" />
+          <span className="text-xl font-semibold text-[var(--text-dk)]">
             {rosterCount}
           </span>
           <span className="text-xs text-[var(--text)]">Athletes</span>
@@ -105,8 +105,8 @@ export default function AttendanceCover({
             border border-[var(--border)]
           "
         >
-          <Clock size={20} className="text-[var(--text-dark)] mb-1" />
-          <span className="text-xl font-semibold text-[var(--text-dark)]">
+          <Clock size={20} className="text-[var(--text-dk)] mb-1" />
+          <span className="text-xl font-semibold text-[var(--text-dk)]">
             {percentText}
           </span>
           <span className="text-xs text-[var(--text)]">
@@ -122,7 +122,7 @@ export default function AttendanceCover({
             border border-[var(--border)]
           "
         >
-          <CalendarDays size={20} className="text-[var(--text-dark)] mb-1" />
+          <CalendarDays size={20} className="text-[var(--text-dk)] mb-1" />
           <span className="text-xs text-[var(--text)]">
             {lastTaken}
           </span>
@@ -137,9 +137,9 @@ export default function AttendanceCover({
           className="
             px-6 py-3
             rounded-full
-            bg-[var(--accent)]
+            bg-[var(--dom-dk)]
             text-white font-semibold
-            hover:bg-[var(--accent-dark)]
+            hover:bg-[var(--dom-dk)]
             transition
             shadow-md
           "

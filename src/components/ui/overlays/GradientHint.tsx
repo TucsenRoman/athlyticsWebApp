@@ -18,33 +18,29 @@ type GradientRadius =
 
 type GradientHintProps = {
   direction?: GradientDirection
-  extent?: string // e.g. "200px", "12rem", "40%"
+  extent?: string              // "200px", "12rem", "40%", etc
   radius?: GradientRadius
+  fromColor?: string           // CSS color or var()
   className?: string
   debug?: boolean
 }
 
 /* ========================================================================== */
-/* STYLES                                                                     */
+/* CONSTANTS                                                                  */
 /* ========================================================================== */
 
-const DIRECTION_MAP: Record<GradientDirection, string> = {
-  bottom: `
-    absolute bottom-0 left-0 right-0
-    bg-gradient-to-t
-  `,
-  top: `
-    absolute top-0 left-0 right-0
-    bg-gradient-to-b
-  `,
-  left: `
-    absolute top-0 bottom-0 left-0
-    bg-gradient-to-r
-  `,
-  right: `
-    absolute top-0 bottom-0 right-0
-    bg-gradient-to-l
-  `,
+const DIRECTION_POSITION_MAP: Record<GradientDirection, string> = {
+  bottom: "absolute bottom-0 left-0 right-0",
+  top: "absolute top-0 left-0 right-0",
+  left: "absolute top-0 bottom-0 left-0",
+  right: "absolute top-0 bottom-0 right-0",
+}
+
+const DIRECTION_GRADIENT_MAP: Record<GradientDirection, string> = {
+  bottom: "to top",
+  top: "to bottom",
+  left: "to right",
+  right: "to left",
 }
 
 const RADIUS_MAP: Record<GradientRadius, string> = {
@@ -64,6 +60,7 @@ export function GradientHint({
   direction = "bottom",
   extent = "200px",
   radius = "none",
+  fromColor = "var(--gray-3)",
   className,
   debug = false,
 }: GradientHintProps) {
@@ -71,23 +68,19 @@ export function GradientHint({
 
   return (
     <div
-      style={
-        isVertical
-          ? { height: extent }
-          : { width: extent }
-      }
+      style={{
+        ...(isVertical ? { height: extent } : { width: extent }),
+        backgroundImage: debug
+          ? undefined
+          : `linear-gradient(${DIRECTION_GRADIENT_MAP[direction]}, ${fromColor}, transparent)`,
+      }}
       className={cn(
         `
         pointer-events-none
-        absolute
         z-10
-        ${DIRECTION_MAP[direction]}
+        ${DIRECTION_POSITION_MAP[direction]}
         ${RADIUS_MAP[radius]}
-        ${debug
-          ? "from-red-500"
-          : "from-[var(--gray-3)]"
-        }
-        to-transparent
+        ${debug ? "bg-gradient-to-t from-red-500 to-transparent" : ""}
         `,
         className
       )}

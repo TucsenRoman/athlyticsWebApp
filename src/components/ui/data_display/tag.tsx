@@ -17,8 +17,8 @@ const VARIANTS: Record<TagVariant, string> = {
     uppercase font-semibold tracking-wide
   `,
   accent: `
-    bg-[hsl(var(--tag-accent))]/15
-    text-[hsl(var(--tag-accent))]
+    bg-[hsl(var(--tag-dom-md))]/15
+    text-[hsl(var(--tag-dom-md))]
   `,
 };
 

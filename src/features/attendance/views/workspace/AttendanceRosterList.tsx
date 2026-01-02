@@ -29,7 +29,7 @@ export default function AttendanceRosterList({
   }
 
   return (
-    <div className="flex flex-col rounded-lg overflow-hidden border border-[var(--border-dark)] bg-[var(--bg)]">
+    <div className="flex flex-col rounded-lg overflow-hidden border border-[var(--border-dk)] bg-[var(--bg)]">
       {roster.map((athlete, i) => {
         const status = statusMap[athlete.key] ?? "present";
         const note = noteMap[athlete.key] ?? "";

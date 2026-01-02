@@ -29,7 +29,7 @@ export default function AssistantSettingsPage() {
     <div className="space-y-10">
       {/* HEADER ------------------------------------------------------------ */}
       <header>
-        <h1 className="text-lg font-semibold text-[var(--text-dark)]">
+        <h1 className="text-lg font-semibold text-[var(--text-dk)]">
           Assistant
         </h1>
         <p className="text-sm text-[var(--text)]">
@@ -57,8 +57,8 @@ export default function AssistantSettingsPage() {
 
                   ${
                     active
-                      ? "border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)]"
-                      : "border-[var(--border)] text-[var(--text-dark)] hover:bg-[var(--gray-lt)]"
+                      ? "border-[var(--dom-dk)] bg-[var(--dom-bg)] text-[var(--dom-dk)]"
+                      : "border-[var(--border)] text-[var(--text-dk)] hover:bg-[var(--gray-lt)]"
                   }
                 `}
               >
@@ -145,7 +145,7 @@ function Section({
       <div className="flex items-start gap-3">
         <span className="text-[var(--text)]">{icon}</span>
         <div>
-          <h2 className="font-medium text-[var(--text-dark)]">{title}</h2>
+          <h2 className="font-medium text-[var(--text-dk)]">{title}</h2>
           <p className="text-sm text-[var(--text)]">{description}</p>
         </div>
       </div>
@@ -165,7 +165,7 @@ function Toggle({
   return (
     <div className="flex items-center justify-between rounded-lg bg-[var(--gray-lt)] px-4 py-3">
       <div>
-        <div className="text-sm font-medium text-[var(--text-dark)]">{label}</div>
+        <div className="text-sm font-medium text-[var(--text-dk)]">{label}</div>
         <div className="text-xs text-[var(--text)]">{description}</div>
       </div>
 
@@ -191,7 +191,7 @@ function Radio({
 
         ${
           active
-            ? "bg-[var(--accent-bg)] border border-[var(--accent)]"
+            ? "bg-[var(--dom-bg)] border border-[var(--dom-dk)]"
             : "bg-[var(--gray-lt)] hover:bg-[var(--gray-200)]"
         }
       `}
@@ -199,11 +199,11 @@ function Radio({
       <div
         className={`
           mt-1 h-3 w-3 rounded-full border
-          ${active ? "bg-[var(--accent)] border-[var(--accent)]" : "border-[var(--gray-400)]"}
+          ${active ? "bg-[var(--dom-dk)] border-[var(--dom-dk)]" : "border-[var(--gray-400)]"}
         `}
       />
       <div>
-        <div className="text-sm font-medium text-[var(--text-dark)]">{label}</div>
+        <div className="text-sm font-medium text-[var(--text-dk)]">{label}</div>
         <div className="text-xs text-[var(--text)]">{hint}</div>
       </div>
     </div>

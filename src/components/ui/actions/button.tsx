@@ -27,21 +27,21 @@ const buttonVariants = cva(
           "none",
 
         solid:
-          "bg-[var(--accent-md)] hover:bg-[var(--accent-lt)] text-white hover:text-[var(--accent)]",
+          "bg-[var(--dom-dk)] hover:bg-[var(--dom-lt)] text-white hover:text-[var(--dom-dk)]",
 
         stick: [
           "h-[32px] w-[32px] p-0 rounded-full",
-          "bg-[var(--gray-5)] hover:bg-[var(--accent-bg)]",
-          "text-[var(--text)] data-[active=true]:text-[var(--accent-md)]",
-          "data-[active=true]:bg-[var(--accent-bg)] data-[active=true]:hover:bg-[var(--accent-bg)]",
+          "bg-[var(--gray-5)] hover:bg-[var(--dom-bg)]",
+          "text-[var(--text)] data-[active=true]:text-[var(--dom-dk)]",
+          "data-[active=true]:bg-[var(--dom-bg)] data-[active=true]:hover:bg-[var(--dom-bg)]",
         ].join(" "),
 
         float: [
           "h-[32px] w-[32px] p-0 rounded-full",
-          "bg-[var(--gray-5)] hover:bg-[var(--accent-bg)]",
+          "bg-[var(--gray-5)] hover:bg-[var(--gray-6)]",
           "text-[var(--text)]",
-          "data-[active=true]:text-[var(--accent-md)]",
-          "data-[active=true]:hover:bg-[var(--accent-bg)]",
+          "data-[active=true]:text-[var(--dom-dk)]",
+          "data-[active=true]:hover:bg-[var(--dom-bg)]",
           "shadow-md hover:shadow-lg",
         ].join(" "),
 
@@ -49,19 +49,19 @@ const buttonVariants = cva(
           "bg-[var(--danger-bg)] hover:bg-[var(--danger)] text-[var(--danger)] hover:text-white",
 
         outline:
-          "border border-[var(--border)] hover:border-transparent bg-transparent hover:bg-[var(--gray-lt2)] text-[var(--text-dark)]",
+          "border border-[var(--border)] hover:border-transparent bg-transparent hover:bg-[var(--gray-lt)] text-[var(--text-dk)] hover:text-[var(--acc-dk)]",
 
         secondary:
           "bg-[var(--gray-lt)] text-[var(--gray-dk)] hover:brightness-105",
 
         ghost:
-          "w-10 bg-transparent hover:bg-white/40 text-[var(--text-dark)]",
+          "w-10 bg-transparent hover:bg-white/40 text-[var(--text-dk)]",
 
         link:
-          "text-[var(--accent)] underline-offset-4 hover:underline",
+          "text-[var(--dom-dk)] underline-offset-4 hover:underline",
 
         success:
-          "bg-[var(--success)] text-[var(--text-dark)] hover:brightness-105",
+          "bg-[var(--success)] text-[var(--text-dk)] hover:brightness-105",
 
         info:
           "bg-[var(--info)] text-[var(--white)] hover:brightness-105",
@@ -76,16 +76,16 @@ const buttonVariants = cva(
         xs: "h-6 w-6",
         sm: "h-8 w-8",
         md: "h-10 w-10",
-        lg: "h-12 h-12",
+        lg: "h-12 w-12",
         mobile: "",
       },
 
       irregular: {
         default: "none",
-        xs: "h-6 min-w-6",
-        sm: "h-8 min-w-8",
-        md: "h-10 min-w-10",
-        lg: "h-12 min-h-12",
+        xs: "h-6 w-auto px-4",
+        sm: "h-8 w-auto px-4",
+        md: "h-10 w-auto px-4",
+        lg: "h-12 w-auto px-4",
         mobile: "",
       },
 
@@ -95,7 +95,7 @@ const buttonVariants = cva(
         sm: "[&_svg]:h-[16px] [&_svg]:w-[16px]",
         md: "[&_svg]:h-[20px] [&_svg]:w-[20px]",
         lg: "[&_svg]:h-[24px] [&_svg]:w-[24px]",
-        xlg: "[&_svg]:h-[32px] [&_svg]:w-[32px]",
+        xl: "[&_svg]:h-[32px] [&_svg]:w-[32px]",
       },
     },
 

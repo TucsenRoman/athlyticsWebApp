@@ -71,7 +71,7 @@ export default function PageFooter({
           {links.map((group) => (
             <div key={group.key} className="flex flex-col gap-0.5">
               {group.title && (
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-[--text-dark]">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-[--text-dk]">
                   {group.title}
                 </h4>
               )}

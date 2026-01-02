@@ -68,7 +68,7 @@ export default function AttendanceFilterDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm p-4 rounded-xl border border-[var(--border)]">
         <DialogHeader>
-          <DialogTitle className="text-[var(--text-dark)] flex items-center gap-2">
+          <DialogTitle className="text-[var(--text-dk)] flex items-center gap-2">
             <Filter className="h-4 w-4" /> Filter Athletes
           </DialogTitle>
         </DialogHeader>
@@ -81,7 +81,7 @@ export default function AttendanceFilterDialog({
             onClick={() => setActiveCategory("position")}
             className={`rounded-full px-3 py-1 text-xs ${
               activeCategory === "position"
-                ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+                ? "bg-[var(--dom-bg)] text-[var(--dom-dk)]"
                 : "text-[var(--text)] hover:bg-[var(--gray-200)]"
             }`}
           >
@@ -94,7 +94,7 @@ export default function AttendanceFilterDialog({
             onClick={() => setActiveCategory("group")}
             className={`rounded-full px-3 py-1 text-xs ${
               activeCategory === "group"
-                ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+                ? "bg-[var(--dom-bg)] text-[var(--dom-dk)]"
                 : "text-[var(--text)] hover:bg-[var(--gray-200)]"
             }`}
           >
@@ -107,7 +107,7 @@ export default function AttendanceFilterDialog({
             onClick={() => setActiveCategory("squad")}
             className={`rounded-full px-3 py-1 text-xs ${
               activeCategory === "squad"
-                ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+                ? "bg-[var(--dom-bg)] text-[var(--dom-dk)]"
                 : "text-[var(--text)] hover:bg-[var(--gray-200)]"
             }`}
           >
@@ -120,7 +120,7 @@ export default function AttendanceFilterDialog({
             onClick={() => setActiveCategory("tag")}
             className={`rounded-full px-3 py-1 text-xs ${
               activeCategory === "tag"
-                ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+                ? "bg-[var(--dom-bg)] text-[var(--dom-dk)]"
                 : "text-[var(--text)] hover:bg-[var(--gray-200)]"
             }`}
           >
@@ -142,8 +142,8 @@ export default function AttendanceFilterDialog({
                   border border-[var(--border)]
                   ${
                     isSelected
-                      ? "bg-[var(--accent-bg)] text-[var(--accent)]"
-                      : "bg-[var(--gray-50)] text-[var(--text-dark)] hover:bg-[var(--gray-lttt)]"
+                      ? "bg-[var(--dom-bg)] text-[var(--dom-dk)]"
+                      : "bg-[var(--gray-50)] text-[var(--text-dk)] hover:bg-[var(--gray-lttt)]"
                   }
                 `}
               >
@@ -163,7 +163,7 @@ export default function AttendanceFilterDialog({
             className="
               rounded-full px-4 py-1 text-xs
               bg-[var(--gray-200)]
-              text-[var(--text-dark)]
+              text-[var(--text-dk)]
               hover:bg-[var(--gray-300)]
             "
           >
@@ -175,8 +175,8 @@ export default function AttendanceFilterDialog({
             onClick={applyFilters}
             className="
               rounded-full px-4 py-1 text-xs
-              bg-[var(--accent)] text-white
-              hover:bg-[color-mix(in_srgb,var(--accent)_85%,black)]
+              bg-[var(--dom-dk)] text-white
+              hover:bg-[color-mix(in_srgb,var(--dom-dk)_85%,black)]
             "
           >
             Apply Filters

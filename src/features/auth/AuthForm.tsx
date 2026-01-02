@@ -214,7 +214,7 @@ export default function AuthForm() {
     const def = fieldDefs[key];
 
     return (
-      <div key={key} className="flex flex-col gap-1">
+      <div key={key} className="flex flex-col gap-1 mt-3">
         <Label htmlFor={key} className="text-white">
           {def.label}
         </Label>
@@ -278,7 +278,7 @@ export default function AuthForm() {
         )}
 
         <Button
-          variant="ghost"
+          variant="outline"
           type="submit"
           disabled={loading}
           className="w-full h-11 mb-4 py-4 rounded-xl text-xl font-semibold"
@@ -331,8 +331,8 @@ export default function AuthForm() {
                   value={tab.key}
                   className="
                     h-8 w-full
-                    rounded-lg hover:bg-white/30 data-[state=active]:bg-[var(--accent-md)]
-                    !text-[var(--text-dark)] data-[state=active]:!text-white
+                    rounded-lg hover:bg-white/30 data-[state=active]:bg-[var(--dom-md)]
+                    !text-[var(--text-dk)] data-[state=active]:!text-white
                     transition-all
                   "
                 >

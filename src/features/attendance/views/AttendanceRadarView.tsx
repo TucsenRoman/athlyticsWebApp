@@ -286,7 +286,7 @@ export default function AttendanceRadarView() {
   /* ------------------------------------------------------------------------ */
 
   const attendanceInfoContent = (
-    <div className="space-y-2 text-sm text-[var(--text-dark)]">
+    <div className="space-y-2 text-sm text-[var(--text-dk)]">
       <div className="flex items-center gap-2">
         <UsersRound size={14} />
         <span>Total: {info.total}</span>
@@ -349,7 +349,7 @@ export default function AttendanceRadarView() {
                 `}
               >
                 <div className="flex flex-col min-w-0 leading-tight">
-                  <span className="font-medium text-[var(--text-dark)] truncate">
+                  <span className="font-medium text-[var(--text-dk)] truncate">
                     {full.split(" ")[0]}
                   </span>
                   <span className="text-xs text-[var(--text)] truncate">

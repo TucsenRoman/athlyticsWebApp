@@ -10,11 +10,11 @@ export default function TrainingPreviewPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-dark)] overflow-y-auto">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-dk)] overflow-y-auto">
       {/* HEADER */}
       <section className="px-6 pt-28 pb-16">
         <div className="max-w-5xl mx-auto">
-          <span className="text-xs font-medium text-[var(--accent)] uppercase tracking-wide">
+          <span className="text-xs font-medium text-[var(--dom-dk)] uppercase tracking-wide">
             Preview · In Development
           </span>
 
@@ -59,7 +59,7 @@ export default function TrainingPreviewPage() {
               key={c.title}
               className="border border-[var(--border)] rounded-[var(--radius)] p-8 bg-[var(--bg)]"
             >
-              <c.icon className="w-5 h-5 text-[var(--accent)] mb-4" />
+              <c.icon className="w-5 h-5 text-[var(--dom-dk)] mb-4" />
               <h3 className="text-xl font-semibold mb-3">{c.title}</h3>
               <p className="text-[var(--text)]">{c.body}</p>
             </div>
@@ -131,20 +131,19 @@ export default function TrainingPreviewPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-6 bg-[var(--bg-gray-dk)] text-white">
+      <section className="py-24 px-6 bg-[var(--gray-dk)] text-white">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-10">
           <div>
             <h3 className="text-2xl font-bold mb-2">
               Want to see what’s live?
             </h3>
-            <p className="text-sm text-[var(--text-light)]">
+            <p className="text-sm text-[var(--text-lt)]">
               Explore Radar and Workspace to see how Athlytics works today.
             </p>
           </div>
 
           <div className="flex gap-4">
             <Button
-              variant="none"
               onClick={() => navigate("/radar")}
               className="border border-white/20 px-5 py-2.5 text-white"
             >
@@ -152,9 +151,8 @@ export default function TrainingPreviewPage() {
             </Button>
 
             <Button
-              variant="none"
               onClick={() => navigate("/workspace")}
-              className="bg-[var(--accent)] px-5 py-2.5 text-white"
+              className="bg-[var(--dom-dk)] px-5 py-2.5 text-white"
             >
               Open Workspace
             </Button>
