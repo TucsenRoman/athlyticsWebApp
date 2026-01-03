@@ -60,6 +60,7 @@ export * from "./layout/card";
 export * from "./layout/carousel";
 export * from "./layout/divider";
 export * from "./layout/drawer";
+export * from "./layout/pill";
 export * from "./layout/push-panel";
 export * from "./layout/resizable";
 export * from "./layout/scroll-area";

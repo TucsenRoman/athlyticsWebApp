@@ -218,7 +218,6 @@ export default function ProgramDriveModal({
       return out
     }
 
-
   /* DERIVED LISTS */
   const allPrograms = useMemo(
     () => filterAndSort(getAllPrograms(programs)),
@@ -250,7 +249,7 @@ export default function ProgramDriveModal({
         onEscapeKeyDown={(e) => {
           if (configOpen || deleteOpen) e.preventDefault()
         }}
-        className="gap-0 max-w-3xl p-0 overflow-hidden bg-[var(--gray-5)]"
+        className="gap-0 max-w-3xl p-0 overflow-hidden bg-[var(--gray-5)] border-0"
       >
         {/* HEADER */}
         <div className="flex justify-between gap-2 h-12 py-2 px-4">
@@ -261,7 +260,7 @@ export default function ProgramDriveModal({
           
           <div className="flex items-center gap-2">
             {/* SEARCH */}
-            <div className="flex items-center gap-2 px-2 w-full max-w-[200px] h-8 rounded-full border border-transparent focus-within:border-[var(--border-dk)] bg-[var(--gray-7)] text-xs text-[var(--text-dk)] shadow-inner transition-colors">
+            <div className="flex items-center gap-2 px-2 w-full max-w-[200px] h-8 rounded-full border border-transparent focus-within:border-[var(--border-dk)] bg-[var(--gray-7)] text-xs text-[var(--text-lt)] focus-within:text-[var(--text)] shadow-inner transition-colors">
               <Search className="h-4 w-4" />
               <Input
                 tabIndex={-1}
@@ -544,6 +543,7 @@ export default function ProgramDriveModal({
             </Button> */}
 
             {/* ADD PROGRAM */}
+            {/* ~Later use expansive menu for template, blank, etc. */}
             <Button
               variant="float"
               regular="md"

@@ -110,7 +110,7 @@ export default function AccountMenu() {
           overflow-hidden
         "
       >
-        <Avatar className="h-full w-full rounded-full border borer-[var(--gray-lt)]">
+        <Avatar className="h-full w-full rounded-full border-2 border-[var(--gray-8)]">
           <AvatarImage
             src={avatarSrc ?? undefined}
           />

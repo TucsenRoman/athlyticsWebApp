@@ -133,20 +133,22 @@ const ProgramDriveTrigger = forwardRef<
   /* ---------------------------------------------------------------------- */
 
   const HeaderTrigger = (
-    <button
-      ref={triggerRef}
-      onClick={() => setDriveOpen(true)}
-      className="
-        flex items-center gap-2
-        h-full min-w-[150px] px-3
-        rounded-xl backdrop-blur
-        font-bold
-        transition
-      "
-    >
-      <span className="text-sm truncate">{label}</span>
-      <ChevronDown size={16} strokeWidth={2.5} />
-    </button>
+    <div className="flex justify-center items-center p-1 h-10 rounded-lg bg-[var(--gray-7)] shadow-inner">
+      <button
+        ref={triggerRef}
+        onClick={() => setDriveOpen(true)}
+        className="
+          flex items-center gap-2
+          h-8 min-w-[150px] px-3
+          rounded-xl hover:bg-[var(--gray-8)]
+          text-[var(--text)] font-bold
+          transition-all cursor-pointer
+        "
+      >
+        <span className="text-sm truncate">{label}</span>
+        <ChevronDown size={16} strokeWidth={2.5} />
+      </button>
+    </div>
   )
 
   const EmptyTrigger = (

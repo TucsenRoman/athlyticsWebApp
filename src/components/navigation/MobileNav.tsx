@@ -34,13 +34,14 @@ export default function MobileNav() {
     <div className="
       md:hidden fixed bottom-0 inset-x-0
       flex items-center justify-around
-      m-1 h-16
-      backdrop-blur-lg rounded-lg shadow-inner
+      h-[60px]
+      bg-[var(--gray-5)]
+      shadow-inner
     ">
       {buttons.map(({ icon: Icon, route, active }) => (
         <Button
           key={route}
-          iconSize="xlg"
+          iconSize="xl"
           onClick={() => navigate(route)}
           className={cn(
             "p-2", // ~Was at p-6. Why?

@@ -20,7 +20,7 @@ export function CardInfo({ icon: Icon = Info, content }: CardInfoProps) {
     <Popover>
       <PopoverTrigger asChild>
         <button className="flex items-center justify-center w-7 h-7">
-          <Icon size={22} className="text-[var(--gray-300)]" />
+          <Icon size={22} />
         </button>
       </PopoverTrigger>
 
@@ -29,8 +29,8 @@ export function CardInfo({ icon: Icon = Info, content }: CardInfoProps) {
         align="end"
         className="
           w-max max-w-full rounded-lg p-4
-          bg-[var(--bg)]
-          border border-[var(--border)]
+          bg-[var(--gray-11)]
+          border-none
           shadow-lg
         "
       >

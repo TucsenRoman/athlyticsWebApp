@@ -32,7 +32,7 @@ import {
   UsersRound,
   CalendarDays,
 } from "lucide-react";
-import { Divider } from "@/components/ui";
+import { GradientHint } from "@/components/ui";
 
 /* -------------------------------------------------------------------------- */
 /*  COMPONENT                                                                  */
@@ -292,8 +292,6 @@ export default function AttendanceRadarView() {
         <span>Total: {info.total}</span>
       </div>
 
-      <Divider />
-
       <div className="flex items-center gap-2">
         <BadgeCheck size={14} className="text-[var(--fvr-green)]" />
         <span>Present: {info.present}</span>
@@ -318,20 +316,20 @@ export default function AttendanceRadarView() {
 
   return (
     <CardFormatter
-      title="Attendance"
+      title="Today's Attendance"
       icon={UsersRound}
       infoContent={attendanceInfoContent}
-      actions={
-        <div className="flex items-center gap-2 text-sm text-[var(--text)]">
-          <CalendarDays size={16} />
-          <span>{format(new Date(), "MMM d, yyyy")}</span>
-        </div>
-      }
+      // actions={
+      //   <div className="flex items-center gap-2 text-sm text-[var(--text)]">
+      //     <CalendarDays size={16} />
+      //     <span>{format(new Date(), "MMM d, yyyy")}</span>
+      //   </div>
+      // }
     >
       {loading ? (
         <p className="text-sm text-[var(--text)]">Loading…</p>
       ) : (
-        <div className="flex flex-col h-full overflow-y-auto rounded-sm">
+        <div className="flex flex-col pb-12 snap-center">
           {roster.map((athlete: any, i: number) => {
             const full = athlete.name.trim();
             const key = athlete.key;

@@ -24,41 +24,37 @@ export default function RadarToolbar({
 }: RadarToolbarProps) {
   return (
     <div
-      className="
-        flex items-center gap-2
-        w-full px-4
-        bg-[var(--bg)]
-      "
+      className="flex gap-6 px-4 w-auto"
     >
-        {/* CENTER: SEARCH */}
-        <div className="flex-1">
-            <GlobalSearch
-            query={query}
-            onChange={onQueryChange}
-            />
-        </div>
+      {/* CENTER: SEARCH */}
+      <div className="flex-1">
+          <GlobalSearch
+          query={query}
+          onChange={onQueryChange}
+          />
+      </div>
 
-        {/* RIGHT: INDICATORS */}
-        <div className="flex items-center gap-2 shrink-0">
-            <button
-            className="
-                flex items-center justify-center
-                bg-none
-                transition
-            "
-            >
-            <CloudOff className="w-4 h-4 text-[var(--warning)]" />
-            </button>
-            <button
-            className="
-                flex items-center justify-center
-                bg-none
-                transition
-            "
-            >
-            <RotateCcw className="w-4 h-4 text-[var(--warning)]" />
-            </button>
-        </div>
+      {/* RIGHT: INDICATORS */}
+      {/* <div className="flex items-center gap-2 shrink-0">
+          <button
+          className="
+              flex items-center justify-center
+              bg-none
+              transition
+          "
+          >
+          <CloudOff className="w-4 h-4 text-[var(--warning)]" />
+          </button>
+          <button
+          className="
+              flex items-center justify-center
+              bg-none
+              transition
+          "
+          >
+          <RotateCcw className="w-4 h-4 text-[var(--warning)]" />
+          </button>
+      </div> */}
     </div>
   );
 }

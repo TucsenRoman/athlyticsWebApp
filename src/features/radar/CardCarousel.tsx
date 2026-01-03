@@ -15,6 +15,7 @@ import WeatherCard from "@/features/radar/cards/WeatherCard";
 import CalendarCard from "@/features/schedule/views/ScheduleRadarView";
 import PostMeetSummaryCard from "@/features/radar/cards/PostMeetSummaryCard";
 import PerformanceSummaryCard from "@/features/radar/cards/PerformanceSummaryCard";
+import { GradientHint } from "@/components/ui";
 
 const ALL_CARDS = [
   { id: "attendance", element: <AttendanceCard /> },
@@ -25,8 +26,6 @@ const ALL_CARDS = [
   // { id: "postmeet", element: <PostMeetSummaryCard /> },
   // { id: "performance", element: <PerformanceSummaryCard /> },
 ];
-
-const CARD_HEIGHT = "h-full";
 
 /* ------------------------------------------------------- */
 /* PIN BUTTON                                              */
@@ -41,7 +40,7 @@ function PinButton({ pinned, onToggle }: { pinned: boolean; onToggle: () => void
       <Pin
         size={22}
         className={`transition-all duration-200 ${
-          pinned ? "text-[var(--dom-md)] rotate-45 fill-[var(--dom-bg)]" : "text-[var(--text)]"
+          pinned ? "text-[var(--acc-dk)] rotate-45 fill-[var(--acc-lt)]" : "text-[var(--gray-10)]"
         }`}
       />
     </button>
@@ -123,22 +122,16 @@ export default function FixedCardsSystem() {
   };
 
   return (
-    <div className="relative w-full h-full">
-
-      {/* GRADIENT EDGES */}
-      {/* <div className="pointer-events-none absolute left-0 top-0 h-full w-10 bg-gradient-to-r from-white to-transparent z-30" />
-      <div className="pointer-events-none absolute right-0 top-0 h-full w-10 bg-gradient-to-l from-white to-transparent z-30" /> */}
-
+    <div className="relative w-full h-full min-h-0 overflow-hidden">
       {/* SCROLL AREA */}
       <div
         ref={scrollRef}
         onScroll={onScroll}
         className="
-          w-full h-full
-          flex
+          flex w-full h-full min-h-0
+          px-3
           overflow-x-auto overflow-y-hidden
           snap-x snap-mandatory
-          px-3
         "
       >
         {sortedCards.map((card) => {
@@ -148,13 +141,11 @@ export default function FixedCardsSystem() {
             <div
               key={card.id}
               className="
-                shrink-0
-                w-full
-                snap-center
-                px-1
+                shrink-0 w-full h-full min-h-0
+                snap-center px-1
               "
             >
-              <div className={`${CARD_HEIGHT} rounded-xl overflow-hidden`}>
+              <div className="h-full min-h-0 rounded-xl overflow-hidden">
                 <CardWithPin pinned={pinned} onToggle={() => togglePin(card.id)}>
                   {card.element}
                 </CardWithPin>
@@ -165,7 +156,7 @@ export default function FixedCardsSystem() {
       </div>
 
       {/* PAGINATION */}
-      <div
+      {/* <div
         className="
           sticky
           bottom-[5px]
@@ -187,7 +178,6 @@ export default function FixedCardsSystem() {
             shadow-lg
           "
         >
-          {/* First */}
           <button
             onClick={() => scrollToIndex(0)}
             className="rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition active:scale-95 text-neutral-700 dark:text-neutral-300"
@@ -195,7 +185,6 @@ export default function FixedCardsSystem() {
             <ChevronsLeft size={20} strokeWidth={2} />
           </button>
 
-          {/* Prev */}
           <button
             onClick={() => scrollToIndex(currentIndex - 1)}
             className="rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition active:scale-95 text-neutral-700 dark:text-neutral-300"
@@ -203,12 +192,10 @@ export default function FixedCardsSystem() {
             <ChevronLeft size={20} strokeWidth={2} />
           </button>
 
-          {/* Indicator */}
           <div className="flex items-center justify-center px-1 text-neutral-800 dark:text-neutral-200 font-semibold text-sm select-none">
             {currentIndex + 1}/{totalCards}
           </div>
 
-          {/* Next */}
           <button
             onClick={() => scrollToIndex(currentIndex + 1)}
             className="rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition active:scale-95 text-neutral-700 dark:text-neutral-300"
@@ -216,7 +203,6 @@ export default function FixedCardsSystem() {
             <ChevronRight size={20} strokeWidth={2} />
           </button>
 
-          {/* Last */}
           <button
             onClick={() => scrollToIndex(totalCards - 1)}
             className="rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition active:scale-95 text-neutral-700 dark:text-neutral-300"
@@ -224,7 +210,7 @@ export default function FixedCardsSystem() {
             <ChevronsRight size={20} strokeWidth={2} />
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

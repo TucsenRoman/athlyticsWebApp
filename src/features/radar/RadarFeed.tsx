@@ -52,13 +52,7 @@ export default function RadarViewFeed({
       FAIL_MESSAGES[Math.floor(Math.random() * FAIL_MESSAGES.length)];
 
     return (
-      <div
-        className="
-          px-4 mt-4 pb-20 space-y-4
-          overflow-y-auto
-          h-full
-        "
-      >
+      <div className="px-4 mt-4 space-y-4 overflow-hidden">
         {results.length > 0 ? (
           results.map((node, i) => (
             <SearchResultCardShell key={i}>{node}</SearchResultCardShell>
@@ -87,7 +81,8 @@ export default function RadarViewFeed({
   }
 
   return (
-    <div className="relative w-full h-[90%]">
+    <div className="relative flex-1 min-h-0 overflow-hidden">
+    {/* <div className="relative w-auto h-[90%] rounded-lg mx-1 py-4 bg-[var(--gray-8)] shadow-inner"> */}
       <CardCarousel />
     </div>
   );

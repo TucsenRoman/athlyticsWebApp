@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, Search } from "lucide-react";
 
 interface RadarViewSearchBarProps {
   query: string;
@@ -10,22 +10,25 @@ export default function GlobalSearch({
   onChange,
 }: RadarViewSearchBarProps) {
   return (
-    <div className="relative w-full min-h-content flex justify-center md:justify-start">
+    // <div className="flex items-center gap-2 px-2 w-full max-w-[200px] h-8 rounded-full border border-transparent focus-within:border-[var(--border-dk)] bg-[var(--gray-7)] text-xs text-[var(--text-dk)] shadow-inner transition-colors">
+    //   <Search className="h-4 w-4" />
+    //   <Input
+    //     tabIndex={-1}
+    //     className="p-0 pb-[2px] border-0 bg-transparent text-sm truncate"
+    //     placeholder="Search programs"
+    //     value={query}
+    //     onChange={(e) => setQuery(e.target.value)}
+    //   />
+    // </div>
+    <div className="relative min-h-content flex items-center gap-2 px-2 w-full md:max-w-[250px] h-8 rounded-full border border-transparent focus-within:border-[var(--border-dk)] bg-[var(--gray-7)] text-xs text-[var(--text-lt)] focus-within:text-[var(--text)] shadow-inner transition-colors">
       {/* INPUT */}
+      <Search className="h-4 w-4" />
       <input
         value={query}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search anything..."
-        className="
-          w-full h-10
-          rounded-2xl
-          px-4 pr-12
-          bg-[var(--bg)]
-          border border-[var(--border)]
-          text-base text-[var(--text)]
-          outline-none
-          transition
-        "
+        maxLength={30}
+        placeholder="Search anything"
+        className="mr-4 p-0 bg-transparent text-sm truncate"
       />
 
       {/* CLEAR */}
@@ -33,13 +36,13 @@ export default function GlobalSearch({
         <button
           onClick={() => onChange("")}
           className="
-            absolute right-4 top-1/2 -translate-y-1/2
+            absolute right-1 top-1/2 -translate-y-1/2
             p-1 rounded-full
             hover:bg-neutral-300/50
             transition
           "
         >
-          <X className="w-5 h-5 text-[var(--text)]" />
+          <X className="w-4 h-4 text-[var(--text)]" />
         </button>
       )}
     </div>

@@ -114,15 +114,15 @@ export default function AppHeader() {
                 : "relative"
             }
             z-50
-            h-14 px-3 flex items-center justify-between
+            h-[56px] px-3 flex items-center justify-between
             transition-all duration-500
             border-b
             ${
               isLandingPage
                 ? scrolled
                   ? "bg-transparent border-transparent"
-                  : "bg-white border-[var(--border)]"
-                : "bg-[var(--bg)] border-[var(--border)]"
+                  : "bg-[var(--vWhite)] border-[var(--border)]"
+                : "bg-[var(--gray-5)] border-[var(--border)]"
             }
           `}
         >
@@ -146,7 +146,7 @@ export default function AppHeader() {
                   landingScrolled
                     ? logoInactive
                       ? "bg-[--gray-lt]"
-                      : "bg-[--gray-lt] hover:bg-[var(--gray-lt2)] shadow-lg"
+                      : "bg-[--gray-lt] hover:bg-[var(--gray-18)] shadow-lg"
                     : logoInactive
                       ? ""
                       : "hover:bg-[var(--dom-glass)]"
@@ -160,11 +160,7 @@ export default function AppHeader() {
             </div>
 
             {programScoped && (
-              <DesktopNavPill>
-                <div className="group flex items-center rounded-xl h-8 transition-all text-[var(--text)] hover:bg-[var(--dom-glass)] hover:text-[var(--dom-dk)] cursor-pointer">
-                  <ProgramDriveTrigger />
-                </div>
-              </DesktopNavPill>
+              <ProgramDriveTrigger />
             )}
           </div>
 
@@ -258,7 +254,7 @@ export default function AppHeader() {
                 <AccountMenu />
               </div>
             )}
-          </div>          
+          </div>
         </div>
       )}
     </>
@@ -279,7 +275,7 @@ function DesktopNavPill({ children, landingScrolled = false }: DesktopNavPillPro
     <div
       className={`
         flex justify-center items-center gap-1 h-10 w-full px-1 py-1 rounded-xl
-        transition-all duration-300 bg-[var(--gray-lt)]
+        transition-all duration-300 bg-[var(--gray-7)] shadow-inner
         ${
           landingScrolled
             ? "shadow-lg"
@@ -320,7 +316,7 @@ function DesktopNavButton({
         ${
           active
             ? "text-[var(--dom-dk)] bg-[var(--dom-glass)]"
-            : "text-[var(--text)] hover:bg-[var(--gray-5)]"
+            : "text-[var(--text)] hover:bg-[var(--gray-8)]"
         }
       `}
     >

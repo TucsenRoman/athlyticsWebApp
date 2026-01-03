@@ -2,6 +2,7 @@
 
 import { cn } from "@/utils/utils";
 import { CardInfo } from "@/components/layout/CardInfo";
+import { Divider, GradientHint } from "../ui";
 
 export default function CardFormatter({
   title,
@@ -22,61 +23,66 @@ export default function CardFormatter({
 }) {
   return (
     <div
-      onClick={onClick}
-      className={cn(
-        `
-        h-full w-full
-        rounded-lg
-        border border-[var(--border)]
-        bg-[var(--bg)]
-        p-4 pt-2
-        shadow-lg
-        flex flex-col gap-3
-        transition
-      `,
-        onClick && "cursor-pointer",
-        className
-      )}
+      className="
+        flex flex-col
+        w-auto h-full min-h-0
+        rounded-lg bg-[var(--gray-7)]
+        transition shadow-inner
+      "
     >
       {/* Header */}
-      <div
-        className="
-          relative
-          flex items-center justify-center
-          border-b border-[var(--border)]
-          pb-2
-        "
-      >
+      <div className="relative flex items-center justify-center py-2 px-4">
         {/* Centered Icon + Title */}
-        <div className="flex items-center gap-2 pointer-events-none">
-          <Icon className="w-5 h-5 text-[var(--text-dk)]" />
-          <span className="text-lg font-semibold text-[var(--text-dk)]">
+        <div className="flex items-center gap-2 text-[var(--text-dk)] pointer-events-none">
+          {/* <Icon className="w-5 h-5" /> */}
+          <div className="flex items-center text-xl font-bold">
             {title}
-          </span>
+          </div>
         </div>
 
         {/* Header Info Button (top-right) */}
         {infoContent && (
-          <div className="absolute top-0 right-0 text-[var(--text)]">
+          <div className="absolute top-2 right-4 text-[var(--gray-10)]">
             <CardInfo content={infoContent} />
           </div>
         )}
       </div>
 
-      {/* -------------------------------------------------------------- */}
-      {/* Subheader (ACTIONS ONLY)                                       */}
-      {/* -------------------------------------------------------------- */}
-      {actions && (
-        <div className="flex justify-between items-center gap-2">
-          {actions}
-        </div>
-      )}
+      <Divider color="var(--border-dk)" inset={2.5}/>
 
-      {/* -------------------------------------------------------------- */}
-      {/* Content                                                        */}
-      {/* -------------------------------------------------------------- */}
-      <div className="relative flex flex-col gap-3 overflow-auto pb-5">
-        {children}
+      <div
+        className="
+          relative flex flex-col gap-1
+          p-1 pt-3 h-full
+          rounded-lg
+          overflow-hidden
+        "
+      >
+        {/* Subheader (ACTIONS ONLY) */}
+        {actions && (
+          <>
+            <div className="flex justify-between items-center gap-2">
+              {actions}
+            </div>
+
+            <Divider color="var(--border-dk)"/>
+          </>
+        )}
+
+        {/* Content */}
+        <div
+          className="
+            relative flex flex-col flex-1 gap-3
+            min-h-0 rounded-lg
+            overflow-x-hidden overflow-y-auto
+            snap-y snap-mandatory
+          "
+        >
+          {/* <div className="pb-[50px] rounded-sm overflow-y-auto overflow-x-hidden"> */}
+            {children}
+          {/* </div> */}
+        </div>
+        <GradientHint fromColor="var(--gray-7)" extent="60px" radius="sm"/>
       </div>
     </div>
   );
