@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@/utils/utils";
-import { CardInfo } from "@/components/layout/CardInfo";
-import { Divider, GradientHint } from "../ui";
+import { CardInfo } from "@/features/radar/components/CardInfo";
+import { Divider, GradientHint } from "../../../components/ui";
 
 export default function CardFormatter({
   title,
@@ -48,7 +48,7 @@ export default function CardFormatter({
         )}
       </div>
 
-      <Divider color="var(--border-dk)" inset={2.5}/>
+      <Divider color="var(--border-dk)" inset={6}/>
 
       <div
         className="
@@ -64,8 +64,6 @@ export default function CardFormatter({
             <div className="flex justify-between items-center gap-2">
               {actions}
             </div>
-
-            <Divider color="var(--border-dk)"/>
           </>
         )}
 

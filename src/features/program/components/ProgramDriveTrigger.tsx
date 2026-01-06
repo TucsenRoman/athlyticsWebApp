@@ -6,9 +6,11 @@ import React, {
   useRef,
   useState,
   useMemo,
+  useEffect,
 } from "react"
 
-import type { ProgramId } from "@/features/program-cloak/useProgramContext"
+import { useAuth } from "@/contexts/AuthContext"
+import type { ProgramId } from "@/features/program-cloak/useProgramContext" // ~Still needed?
 import { useProgramContext } from "@/features/program-cloak/useProgramContext"
 import { useProgram } from "@/features/program/useProgram"
 
@@ -80,6 +82,21 @@ const ProgramDriveTrigger = forwardRef<
     }))
   }, [programs])
 
+  /* AUTH GATE */
+  const { user, loading: authLoading } = useAuth()
+
+  if (authLoading) {
+    return null
+  }
+
+  // if (!user) {
+  //   return null
+  // }
+
+  if (loading) {
+    return null
+  }
+
   /* ---------------------------------------------------------------------- */
   /* DERIVED                                                                 */
   /* ---------------------------------------------------------------------- */
@@ -100,21 +117,20 @@ const ProgramDriveTrigger = forwardRef<
 
   if (!loading && !hasPrograms) {
     return (
-      <>
+      <div className="flex justify-center items-center p-1 h-10 rounded-lg bg-[var(--gray-7)] shadow-inner">
         <Button
           iconSize="none"
           onClick={() => setCreateOpen(true)}
           className="
             flex items-center gap-2
-            h-full w-[150px] px-3
-            rounded-xl backdrop-blur
-            text-[var(--dom-dk)]
-            font-bold
-            transition
+            h-8 w-fit px-3
+            rounded-xl hover:bg-[var(--gray-8)]
+            text-[var(--text)] font-bold
+            transition-all cursor-pointer
           "
         >
-          Create Program
           <Plus size={16} strokeWidth={2.5} />
+          Program
         </Button>
 
         <ProgramConfigModal
@@ -124,7 +140,7 @@ const ProgramDriveTrigger = forwardRef<
           onClose={() => setCreateOpen(false)}
           onSubmit={async () => null}
         />
-      </>
+      </div>
     )
   }
 

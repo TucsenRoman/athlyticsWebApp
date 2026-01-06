@@ -12,7 +12,11 @@ html,
 body,
 #root {
   height: 100%;
-  /* background: transparent; */
+}
+
+html,
+body {
+  background: var(--gray-18);
 }
 
 /* ========================================================================== */
@@ -22,19 +26,19 @@ body,
 @layer base {
   :root {
     /* GRAYS */
-    --white:  #ffffff;
+    --white:  rgb(255, 255, 255);
     --gray-2:  #fafafa;
-    --gray-3:  #f5f5f5;
+    --gray-3:  rgb(245, 245, 245);
     --gray-4:  #f0f0f0;
     --gray-5:  #ebebeb;
     --gray-6:  #e4e4e4;
     --gray-7:  #dcdcdc;
     --gray-8:  #d1d1d1;
-    --gray-9:  #c4c4c4;
+    --gray-9:  rgb(196, 196, 196);
     --gray-10: #b3b3b3;
     --gray-11: #a1a1a1;
     --gray-12: #8c8c8c;
-    --gray-13: #787878;
+    --gray-13: rgb(120, 120, 120);
     --gray-14: #666666;
     --gray-15: #565656;
     --gray-16: #474747;
@@ -64,7 +68,7 @@ body,
     --acc-md: rgb(181, 207, 245);
     --acc-lt: rgb(211, 226, 249);
     --acc-bg: rgb(225, 236, 251);
-    --acc-glass: rgb(181, 207, 245, 0.1);
+    --acc-glass: rgb(128, 174, 243, 0.15);
 
     /* --acc-ink: rgb(54, 79, 165); */
 
@@ -74,7 +78,7 @@ body,
     
     --text-lt: var(--gray-11);
     --text: var(--gray-14);
-    --text-dk: var(--gray-15);
+    --text-dk: var(--gray-16);
 
     /* BORDERS */
     --border-lt: var(--gray-2);
@@ -296,5 +300,33 @@ input:-webkit-autofill {
   @keyframes archiveFlash {
     0%, 100% { background-color: transparent; }
     50% { background-color: color-mix(in srgb, var(--archive) 15%, transparent); }
+  }
+
+  .rounded-t-elongated {
+    border-top-left-radius: 40px 20px;
+    border-top-right-radius: 40px 20px;
+  }
+
+  .rounded-elongated {
+    border-top-left-radius: 40px 20px;
+    border-top-right-radius: 40px 20px;
+    border-bottom-left-radius: 40px 20px;
+    border-bottom-right-radius: 40px 20px;
+  }
+}
+
+@layer components {
+  .dom-glass {
+    background-color: var(--dom-glass);
+    backdrop-filter: blur(2.5px);
+    -webkit-backdrop-filter: blur(2.5px);
+  }
+}
+
+@layer components {
+  .acc-glass {
+    background-color: var(--acc-glass);
+    backdrop-filter: blur(2.5px);
+    -webkit-backdrop-filter: blur(2.5px);
   }
 }

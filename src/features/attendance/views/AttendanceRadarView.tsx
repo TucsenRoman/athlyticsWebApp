@@ -21,7 +21,7 @@ import {
 import AttendanceCover from "@/features/attendance/components/AttendanceCover";
 import StatusSelector from "@/features/attendance/components/StatusSelector";
 
-import CardFormatter from "@/components/layout/CardFormatter";
+import CardFormatter from "@/features/radar/components/CardFormatter";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
 
 import {

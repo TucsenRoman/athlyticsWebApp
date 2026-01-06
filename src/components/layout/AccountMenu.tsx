@@ -226,6 +226,7 @@ export default function AccountMenu() {
             onClick={async () => {
               await signOut();
               setOpen(false);
+              navigate("/auth", { replace: true });
             }}
           />
         </div>

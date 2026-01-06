@@ -89,8 +89,8 @@ export default function PageFooter({
       {/* BOTTOM BAR */}
       {bottomBar && (
         <>
-          <Divider inset={5} />
-          <div className="p-4 text-xs text-center text-[--text]">
+          <Divider color="var(--gray-6)" inset={10} />
+          <div className="p-4 pt-2 text-xs text-center text-[--text]">
             {bottomBar}
           </div>
         </>

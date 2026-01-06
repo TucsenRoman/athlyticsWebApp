@@ -11,7 +11,7 @@ export default function SettingsLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="relative flex h-full min-h-0 bg-[var(--bg)]">
+    <div className="relative flex h-full min-h-0 bg-[var(--gray-8)] shadow-inner">
 
       {/* MOBILE OVERLAY */}
       {sidebarOpen && (
@@ -24,27 +24,24 @@ export default function SettingsLayout() {
       {/* SIDEBAR ---------------------------------------------------------- */}
       <aside
         className={`
-          fixed z-40 inset-y-0 left-0
-          w-72
-          bg-[var(--bg)]
-          border-r border-[var(--border)]
-          flex flex-col
+          fixed z-40 inset-y-0 left-0 flex flex-col w-72
+          bg-[var(--gray-8)] shadow-inner
           transform transition-transform duration-300
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           md:relative md:translate-x-0
         `}
       >
         {/* HEADER */}
-        <div className="px-4 pt-4 pb-3">
+        <div className="p-4">
           <div className="text-lg font-semibold text-[var(--text-dk)]">
             User Settings
           </div>
         </div>
 
-        <Divider inset={5} />
+        {/* <Divider color="var(--gray-7)" inset={10} /> */}
 
         {/* MODE RAIL */}
-        <div className="px-3 py-4 flex flex-col gap-2">
+        <div className="p-3 flex flex-col gap-2">
           {SETTINGS_NAV
             .filter((item) => item.enabled !== false)
             .map((item) => (
@@ -69,7 +66,7 @@ export default function SettingsLayout() {
               h-9 w-9 rounded-lg
               flex items-center justify-center
               border border-[var(--border)]
-              bg-[var(--gray-100)]
+              text-[var(--text-dk)]
             "
           >
             <Menu size={18} />
@@ -121,7 +118,7 @@ function SettingsModeTile({
                   border border-[var(--dom-dk)]
                 `
                 : `
-                  bg-[var(--gray-100)]
+                  bg-[var(--gray-7)]
                   text-[var(--text)]
                   border border-transparent
                   hover:border-[var(--border)]

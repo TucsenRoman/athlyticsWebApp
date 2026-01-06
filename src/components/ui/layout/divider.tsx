@@ -10,7 +10,7 @@ type DividerOrientation = "horizontal" | "vertical"
 
 interface DividerProps {
   orientation?: DividerOrientation
-  inset?: number            // percentage (0–50)
+  inset?: number            // px
   color?: string            // CSS var(), rgba, hex
   thickness?: string        // "1px", "2px", etc
   className?: string
@@ -45,15 +45,15 @@ export function Divider({
     ...(isHorizontal
       ? {
           height: thickness,
-          width: `calc(100% - ${inset * 2}%)`,
-          marginLeft: `${inset}%`,
-          marginRight: `${inset}%`,
+          width: `calc(100% - ${inset * 2}px)`,
+          marginLeft: `${inset}px`,
+          marginRight: `${inset}px`,
         }
       : {
           width: thickness,
-          height: `calc(100% - ${inset * 2}%)`,
-          marginTop: `${inset}%`,
-          marginBottom: `${inset}%`,
+          height: `calc(100% - ${inset * 2}px)`,
+          marginTop: `${inset}px`,
+          marginBottom: `${inset}px`,
         }),
   }
 

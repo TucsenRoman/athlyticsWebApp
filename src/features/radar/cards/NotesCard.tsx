@@ -1,4 +1,4 @@
-import CardFormatter from "@/components/layout/CardFormatter";
+import CardFormatter from "@/features/radar/components/CardFormatter";
 import { StickyNote, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/actions/button";
 import { Textarea } from "@/components/ui/forms/textarea";

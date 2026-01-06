@@ -12,6 +12,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/naviga
 
 import fillerBackground from "@/assets/backgrounds/filler-bg-2.png";
 import { z } from "zod";
+import { X } from "lucide-react";
+
+interface AuthFormProps {
+  onClose?: () => void;
+}
 
 /* -------------------------------------------------------------------------- */
 /*  TYPES                                                                     */
@@ -86,7 +91,7 @@ const tabs: {
 /*  COMPONENT                                                                */
 /* -------------------------------------------------------------------------- */
 
-export default function AuthForm() {
+export default function AuthForm({ onClose }: AuthFormProps) {
   const navigate = useNavigate();
   const location = useLocation();
   // REDIRECT
@@ -99,7 +104,6 @@ export default function AuthForm() {
       redirectAfterAuth();
     }
   }, [user, authLoading]);
-
 
   // FORGOT PASSWORD (RESET)
   const [resetSent, setResetSent] = useState(false)
@@ -307,15 +311,31 @@ export default function AuthForm() {
         className="
           flex flex-col gap-2
           mx-2 w-full max-w-md 
-          rounded-3xl border-none bg-white/30 backdrop-blur-xl hover:backdrop-blur-2xl
+          rounded-3xl border-none bg-[var(--acc-glass)] backdrop-blur-xl hover:backdrop-blur-2xl
           shadow-2xl
           transition-all duration-500 overflow-hidden
         "
       >
-        <div>
-          <div className="mt-4 pb-4 text-center text-3xl font-bold tracking-tight text-white">
-            Athlytics
-          </div>
+        {/* CLOSE BUTTON */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="
+            absolute top-3 right-3
+            h-8 w-8
+            flex items-center justify-center
+            rounded-full
+            text-white/70 hover:text-white
+            hover:bg-white/10
+            transition
+          "
+        >
+          <X size={18} />
+        </button>
+
+        <div className="mt-4 pb-4 text-center text-3xl font-bold tracking-tight text-white">
+          Athlytics
         </div>
 
         <div className="mx-4">

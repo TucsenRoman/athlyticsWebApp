@@ -48,6 +48,7 @@ import DiscoveryPreviewPage from "./pages/public/DiscoveryPreview";
 import PricingPage from "./pages/public/PricingPage";
 import MobileNav from "./components/navigation/MobileNav";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
+import MarketingPageShell from "./components/layout/MarketingPageShell";
 
 const queryClient = new QueryClient();
 
@@ -88,17 +89,17 @@ function RouterContent() {
       <Route
         path="/"
         element={
-          <PageShell>
+          <MarketingPageShell>
             <LandingPage />
-          </PageShell>
+          </MarketingPageShell>
         }
       />
       <Route
         path="/auth"
         element={
-          <PageShell>
+          <MarketingPageShell>
             <Auth />
-          </PageShell>
+          </MarketingPageShell>
         }
       />
       <Route

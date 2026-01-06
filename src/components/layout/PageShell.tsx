@@ -19,11 +19,10 @@ export default function PageShell({ children }: PageShellProps) {
         relative flex flex-col overflow-hidden
         min-h-[100dvh]
 
-        /* layout tokens */
-        [--app-header-h:56px]
-        [--mobile-nav-h:60px]
-
         bg-[var(--gray-5)]
+
+        [--app-header-h:56px]
+        [--mobile-nav-h:80px]
       "
     >
       {/* {isDemo && (
@@ -34,18 +33,18 @@ export default function PageShell({ children }: PageShellProps) {
 
       <AppHeader />
 
-      <Divider thickness="1.5px" color="var(--gray-8)" inset={1}/>
+      <Divider thickness="1.5px" color="var(--gray-7)" inset={5} />
 
       <div
-        id="app-scroll-container"
+        // id="app-scroll-container"
         className="
           w-full overflow-hidden
           bg-[var(--gray-5)]
 
-          /* remaining viewport after header + nav */
-          h-[calc(100dvh-var(--app-header-h)-var(--mobile-nav-h))]
-          md:h-[calc(100dvh-var(--app-header-h))]
+          h-[calc(100dvh-var(--app-header-h))]
         "
+        // -var(--mobile-nav-h)
+        // md:h-[calc(100dvh-var(--app-header-h))]
       >
         {children}
       </div>

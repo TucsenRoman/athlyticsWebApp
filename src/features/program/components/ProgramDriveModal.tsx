@@ -22,26 +22,20 @@ import {
   Archive,
   Trash2,
   Users,
-  HardDrive,
   Search,
-  Check,
   Pencil,
   Plus,
   Clock,
-  ArrowDownAZ,
   AArrowDown,
-  FolderOpen,
-  ChevronLeft,
   RotateCcw,
-  Settings,
   Settings2,
-  CircleQuestionMark,
+  ArrowUpRight,
 } from "lucide-react"
 
 import type { ProgramLite } from "../programLite.types"
 import type { ProgramId } from "@/features/program-cloak/useProgramContext"
 
-import { getAllPrograms } from "../selectors/getAllPrograms"
+import { getActivePrograms } from "../selectors/getActivePrograms"
 import { getArchivedPrograms } from "../selectors/getArchivedPrograms"
 import { getDeletedPrograms } from "../selectors/getDeletedPrograms"
 import { Divider, GradientHint } from "@/components/ui"
@@ -219,8 +213,8 @@ export default function ProgramDriveModal({
     }
 
   /* DERIVED LISTS */
-  const allPrograms = useMemo(
-    () => filterAndSort(getAllPrograms(programs)),
+  const activePrograms = useMemo(
+    () => filterAndSort(getActivePrograms(programs)),
     [programs, query, sortMode],
   )
 
@@ -282,7 +276,7 @@ export default function ProgramDriveModal({
                 className={[
                   "h-6 w-8 rounded-full grid place-items-center transition",
                   sortMode === "recent_use"
-                    ? "bg-[var(--acc-bg)] text-[var(--acc-dk)]"
+                    ? "bg-[var(--dom-glass)] text-[var(--dom-dk)]"
                     : "text-[var(--text)] hover:bg-[var(--gray-5)]",
                 ].join(" ")}
                 aria-pressed={sortMode === "recent_use"}
@@ -297,7 +291,7 @@ export default function ProgramDriveModal({
                 className={[
                   "h-6 w-8 rounded-full grid place-items-center transition",
                   sortMode === "alpha_asc"
-                    ? "bg-[var(--acc-bg)] text-[var(--acc-dk)]"
+                    ? "bg-[var(--dom-glass)] text-[var(--dom-dk)]"
                     : "text-[var(--text)] hover:bg-[var(--gray-5)]",
                 ].join(" ")}
                 aria-pressed={sortMode === "alpha_asc"}
@@ -311,26 +305,27 @@ export default function ProgramDriveModal({
 
         <div className="relative m-1 mt-0 rounded-lg border border-[var(--border)] bg-[var(--gray-8)] overflow-hidden shadow-inner">
           {/* TABS */}
-          <Tabs defaultValue="all">
+          <Tabs defaultValue="active">
             <TabsList className="flex justify-between h-10 min-w-[250px] w-full border-0 bg-0">
               <div className="flex gap-2">
                 <TabsTrigger
-                  value="all"
+                  value="active"
                   className="
                     px-4 text-xs
                     data-[state=active]:bg-[var(--gray-3)]
-                    data-[state=inactive]:text-[var(--text-dk)]
+                    data-[state=inactive]:text-[var(--text-lt)]
                     data-[state=active]:text-[var(--text)]
                   "
                 >
-                  All
+                  Active
+                  {/* ~Alternate wording: Live. */}
                 </TabsTrigger>
                 <TabsTrigger
                   value="archived"
                   className="
                     px-4 text-xs
                     data-[state=active]:bg-[var(--archive-bg)]
-                    data-[state=inactive]:text-[var(--text-dk)]
+                    data-[state=inactive]:text-[var(--text-lt)]
                     data-[state=active]:text-[var(--archive-txt)]
                   "
                 >
@@ -341,7 +336,7 @@ export default function ProgramDriveModal({
                   className="
                     px-4 text-xs
                     data-[state=active]:bg-[var(--danger-bg)]
-                    data-[state=inactive]:text-[var(--text-dk)]
+                    data-[state=inactive]:text-[var(--text-lt)]
                     data-[state=active]:text-[var(--danger)]
                   "
                 >
@@ -353,9 +348,9 @@ export default function ProgramDriveModal({
             <Divider color="var(--border-dk)" inset={1} />
 
             <div className="px-6 pt-4 pb-[100px] h-[50vh] overflow-y-auto">
-              <TabsContent value="all" className="flex flex-col">
+              <TabsContent value="active" className="flex flex-col">
                 <ProgramList
-                  programs={allPrograms}
+                  programs={activePrograms}
                   selectedProgramId={selectedProgramId}
                   focusedProgramId={focusedProgramId}
                   hoveredProgramId={hoveredProgramId}
@@ -426,7 +421,7 @@ export default function ProgramDriveModal({
                 />
               </TabsContent>
 
-              <GradientHint debug={false} fromColor="var(--gray-8)"  extent="100px" radius="lg" />
+              <GradientHint fromColor="var(--gray-8)" extent="100px" radius="lg" />
             </div>
           </Tabs>
 
@@ -548,7 +543,7 @@ export default function ProgramDriveModal({
               variant="float"
               regular="md"
               iconSize="lg"
-              className="bg-[var(--acc-bg)] hover:bg-[var(--acc-lt)]"
+              className="bg-[var(--acc-lt)] hover:bg-[var(--acc-bg)] text-[var(--acc-dk)]"
               onClick={() => {
                 setConfigMode("add")
                 setConfigProgram(null)
@@ -556,7 +551,7 @@ export default function ProgramDriveModal({
               }}
               title="Add Program"
             >
-              {/* <div className="hidden md:block">New</div> */}
+              {/* <div className="pb-[3px] text-lg font-semibold">New</div> */}
               <Plus/>
             </Button>
           </div>
@@ -611,7 +606,7 @@ function ProgramList({
   }
 
   return (
-    <div className="flex flex-col gap-2 min-h-16 overflow-hidden">
+    <div className="flex flex-col gap-2 min-h-16 overflow-x-visible">
       {programs.map((p) => {
         const isFocused = focusedProgramId === p.id
         const isHovered = hoveredProgramId === p.id
@@ -619,15 +614,6 @@ function ProgramList({
         const isActive = selectedProgramId === p.id
 
         const actions = [
-          ...(onOpen && !isActive
-            ? [{
-                label: "Open",
-                icon: <FolderOpen className="h-4 w-4" />,
-                flavor: "slate",
-                action: () => onOpen(p.id),
-              } satisfies ExpansiveMenuItem]
-            : []),
-
           ...(onEdit
             ? [{
                 label: "Edit",
@@ -679,7 +665,13 @@ function ProgramList({
         return (
           <div
             key={p.id}
-            onClick={() => setFocusedProgramId(p.id)}
+            onClick={() => {
+              if (focusedProgramId === p.id) {
+                if (onOpen) onOpen(p.id)
+              } else {
+                setFocusedProgramId(p.id)
+              }
+            }}
             onMouseEnter={() => {
               setHoveredProgramId(p.id)
               if (focusedProgramId !== p.id) {
@@ -687,17 +679,41 @@ function ProgramList({
               }
             }}
             onMouseLeave={() => setHoveredProgramId(null)}
-            className={[
-              "relative flex flex-wrap justify-between gap-2 px-4 py-3 cursor-pointer rounded-lg border-2 border-transparent hover:border-[var(--gray-9)] bg-[var(--gray-3)]",
-            ].join(" ")}
+            className="relative flex flex-wrap justify-between items-center gap-2 px-4 py-3 cursor-pointer rounded-lg border-2 border-transparent hover:border-[var(--gray-9)] bg-[var(--gray-3)]"
           >
             {/* ACTIVE LEFT ACCENT */}
             {isActive && (
               <div className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-[var(--dom-md)]" />
             )}
             <div className="flex flex-col">
-              <div className="text-sm font-medium">
+              <div className="flex items-start gap-2 h-6 text-sm font-medium">
                 {p.sport} • {p.year}
+
+                {showActions && (
+                  <div
+                    className="flex items-center gap-2 shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* OPEN / SELECT */}
+                    {onOpen && !isActive && (
+                      <button
+                        type="button"
+                        onClick={() => onOpen(p.id)}
+                        title="Open program"
+                        className={[
+                          "flex justify-center items-center",
+                          "h-6 w-8", 
+                          "rounded-full border border-transparent",
+                          "bg-[var(--acc-bg)] hover:bg-[var(--acc-lt)]",
+                          "text-[var(--acc-dk)]",
+                          "transition",
+                        ].join(" ")}
+                      >
+                        <ArrowUpRight className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2 text-xs text-[var(--text-lt)] truncate">
@@ -715,9 +731,11 @@ function ProgramList({
               >
                 <ExpansiveMenu
                   variant="rainbow"
-                  direction="left"
-                  expand="line"
-                  spacing={42}
+                  // direction="left"
+                  // expand="line"
+                  // spacing={42}
+                  expand="arch"
+                  radius={40}
                   mainRotate={90}
                   mainSize={32}
                   mainIcon={<Settings2 />}

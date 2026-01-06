@@ -1,4 +1,4 @@
-import CardFormatter from "@/components/layout/CardFormatter";
+import CardFormatter from "@/features/radar/components/CardFormatter";
 import { Button } from "@/components/ui/actions/button";
 import {
   CalendarDays,

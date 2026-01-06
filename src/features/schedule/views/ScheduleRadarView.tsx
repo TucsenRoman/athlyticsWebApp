@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import CardFormatter from "@/components/layout/CardFormatter";
+import CardFormatter from "@/features/radar/components/CardFormatter";
 import { CalendarDays, Clock } from "lucide-react";
 
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";

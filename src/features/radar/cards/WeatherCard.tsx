@@ -1,4 +1,4 @@
-import CardFormatter from "@/components/layout/CardFormatter";
+import CardFormatter from "@/features/radar/components/CardFormatter";
 import { CloudSun } from "lucide-react";
 
 export default function WeatherCard() {

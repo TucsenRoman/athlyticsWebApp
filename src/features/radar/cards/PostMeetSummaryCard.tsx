@@ -1,4 +1,4 @@
-import CardFormatter from "@/components/layout/CardFormatter";
+import CardFormatter from "@/features/radar/components/CardFormatter";
 import { Flag } from "lucide-react";
 
 export default function PostMeetSummaryCard() {

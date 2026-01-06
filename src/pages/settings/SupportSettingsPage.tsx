@@ -210,7 +210,7 @@ function Divider() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-lt)] px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-[var(--gray-dk)] px-4 py-3">
       <span className="text-sm font-medium text-[var(--text-dk)]">{label}</span>
       <span className="text-sm text-[var(--text)]">{value}</span>
     </div>

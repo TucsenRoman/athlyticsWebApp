@@ -18,6 +18,7 @@ import {
   LocateFixed,
   PencilRuler,
   User,
+  UserRound,
 } from "lucide-react";
 
 /* -------------------------------------------------------------------------- */
@@ -44,11 +45,11 @@ export default function AppHeader() {
 
   // PAGES
   const isLandingPage = 
-    location.pathname === "/" || 
-    location.pathname === "/auth"; // ~Change to "signin."
+    location.pathname === "/"; 
+    location.pathname === "/auth";
   const activeRadar = location.pathname.startsWith("/radar");
   const activeWorkspace = location.pathname.startsWith("/workspace");
-  const activeSignIn = location.pathname.startsWith("/auth"); // ~Change to "signin."
+  const activeSignIn = location.pathname.startsWith("/auth");
   // const activeTraining = location.pathname.startsWith("/training");
   // const activeDiscovery = location.pathname.startsWith("/discovery");
 
@@ -65,34 +66,48 @@ export default function AppHeader() {
   const handleLogoClick = () => {
     if (logoInactive) return;
 
-    if (location.pathname === "/") {
+    if (!isLandingPage) {
+      navigate("/");
+      return;
+    }
+    
+    if (isLandingPage) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
       const el = document.getElementById("app-scroll-container");
       el?.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      navigate("/");
     }
   };
   const logoInactive = location.pathname === "/" && !landingScrolled;
 
   useEffect(() => {
-    if (!isLandingPage) return;
+    let target: HTMLElement | Window | null = null;
 
-    const el = document.getElementById("app-scroll-container");
-    if (!el) return;
+    if (isLandingPage) {
+      target = window;
+    } else {
+      target = document.getElementById("app-scroll-container");
+    }
+
+    if (!target) return;
 
     const onScroll = () => {
-      setScrolled(el.scrollTop > 8);
+      const scrollTop =
+        target === window
+          ? window.scrollY
+          : (target as HTMLElement).scrollTop;
+
+      setScrolled(scrollTop > 8);
     };
 
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
+    target.addEventListener("scroll", onScroll, { passive: true });
+    return () => target.removeEventListener("scroll", onScroll);
   }, [isLandingPage]);
 
-
-  const showLandingCTA =
-    isLandingPage &&
-    landingScrolled &&
-    !user;
+  // const showLandingCTA =
+  //   isLandingPage &&
+  //   landingScrolled &&
+  //   !user;
 
   // Collapse/expand header toolbar toggle tbn
   const [collapsed, setCollapsed] = useState(false);
@@ -113,10 +128,9 @@ export default function AppHeader() {
                 ? "fixed top-0 left-0 right-0"
                 : "relative"
             }
-            z-50
-            h-[56px] px-3 flex items-center justify-between
+            z-50 flex items-center justify-between
+            h-[56px] px-3
             transition-all duration-500
-            border-b
             ${
               isLandingPage
                 ? scrolled
@@ -146,7 +160,7 @@ export default function AppHeader() {
                   landingScrolled
                     ? logoInactive
                       ? "bg-[--gray-lt]"
-                      : "bg-[--gray-lt] hover:bg-[var(--gray-18)] shadow-lg"
+                      : "bg-[var(--gray-6)] shadow-lg"
                     : logoInactive
                       ? ""
                       : "hover:bg-[var(--dom-glass)]"
@@ -214,6 +228,7 @@ export default function AppHeader() {
                     label="Workspace"
                     active={activeWorkspace}
                     onClick={() => navigate("/workspace")}
+                    widthClass="w-[130px]"
                   />
 
                 {/* FUTURE DEV PROJECTS */}
@@ -242,11 +257,11 @@ export default function AppHeader() {
             {!user ? (
               <DesktopNavPill landingScrolled={landingScrolled}>
                 <DesktopNavButton
-                  icon={<User className="w-4 h-4" strokeWidth={2.5} />}
+                  icon={<UserRound className="w-5 h-5" strokeWidth={2.5} />}
                   label="Sign In"
                   active={activeSignIn}
                   onClick={() => navigate("/auth")}
-                  widthClass="w-[95px]"
+                  widthClass="w-[105px]"
                 />
               </DesktopNavPill>
             ) : (
@@ -311,7 +326,7 @@ function DesktopNavButton({
     <button
       onClick={onClick}
       className={`
-        flex justify-center items-center gap-2 h-8 w-[120px] px-3 rounded-xl transition-colors
+        flex justify-center items-center gap-2 h-8 w-[150px] px-3 rounded-xl transition-colors
         ${widthClass}
         ${
           active
@@ -321,7 +336,7 @@ function DesktopNavButton({
       `}
     >
       {icon}
-      <span className="text-sm font-medium">{label}</span>
+      <span className="text-md font-medium">{label}</span>
     </button>
   );
 }
