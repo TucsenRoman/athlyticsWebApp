@@ -40,11 +40,11 @@ export default function RadarViewScreen() {
   /* RADARVIEW UI                                                           */
   /* ---------------------------------------------------------------------- */
   return (
-    <div className="flex flex-col gap-1 py-1 h-full min-h-0 overflow-hidden">
-      <RadarToolbar
+    <div className="flex flex-col gap-2 py-3 h-full min-h-0 overflow-hidden">
+      {/* <RadarToolbar
         query={query}
         onQueryChange={setQuery}
-      />
+      /> */}
       <RadarFeed query={query} results={results} />
     </div>
   );

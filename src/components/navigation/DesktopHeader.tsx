@@ -1,4 +1,4 @@
-// src/components/navigation/AppHeader.tsx
+// src/components/navigation/DesktopHeader.tsx
 
 "use client";
 
@@ -23,7 +23,7 @@ import {
 
 /* -------------------------------------------------------------------------- */
 
-export default function AppHeader() {
+export default function DesktopHeader() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -121,8 +121,9 @@ export default function AppHeader() {
     <>
       {/* HEADER (Mobile + Desktop) */}
       {!collapsed && (
-        <div 
+        <div
           className={`
+            hidden md:flex w-[100vw] rounded-b-elongated bg-gradient-to-b from-[#D9D9D9] to-[#F1F1F1]
             ${
               isLandingPage
                 ? "fixed top-0 left-0 right-0"
@@ -136,7 +137,7 @@ export default function AppHeader() {
                 ? scrolled
                   ? "bg-transparent border-transparent"
                   : "bg-[var(--vWhite)] border-[var(--border)]"
-                : "bg-[var(--gray-5)] border-[var(--border)]"
+                : "border-[var(--border)] bg-transparent backdrop-blur-[2px]"
             }
           `}
         >
@@ -145,33 +146,35 @@ export default function AppHeader() {
           <div className="flex justify-between items-center gap-2 w-min-content">
             
             {/* LOGO BUTTON */}
-            <div
-              onClick={handleLogoClick}
-              className={`
-                flex flex-row shrink-0 items-center gap-2 
-                px-2 py-1 w-min-content h-10 
-                rounded-md transition-all
-                ${
-                  logoInactive
-                    ? "cursor-default"
-                    : "cursor-pointer"
-                }
-                ${
-                  landingScrolled
-                    ? logoInactive
-                      ? "bg-[--gray-lt]"
-                      : "bg-[var(--gray-6)] shadow-lg"
-                    : logoInactive
-                      ? ""
-                      : "hover:bg-[var(--dom-glass)]"
-                }
-              `}
-            >          
+            {!programScoped && !landingScrolled &&
+              <div
+                onClick={handleLogoClick}
+                className={`
+                  flex flex-row shrink-0 items-center gap-2 
+                  px-2 py-1 w-min-content h-10 
+                  rounded-md transition-all
+                  ${
+                    logoInactive
+                      ? "cursor-default"
+                      : "cursor-pointer"
+                  }
+                  ${
+                    landingScrolled
+                      ? logoInactive
+                        ? "bg-[--gray-lt]"
+                        : "bg-[var(--gray-6)] shadow-lg"
+                      : logoInactive
+                        ? ""
+                        : "hover:bg-[var(--dom-glass)]"
+                  }
+                `}
+              >
                 <img src="/logos/athlytics-logo.png" className="w-8 h-8" />
                 {!programScoped && !landingScrolled && 
                   <span className="text-xl text-[--dom-dk] font-bold">ATHLYTICS</span>
                 }
-            </div>
+              </div>
+            }
 
             {programScoped && (
               <ProgramDriveTrigger />
@@ -265,7 +268,7 @@ export default function AppHeader() {
                 />
               </DesktopNavPill>
             ) : (
-              <div className="flex">
+              <div className="hidden md:flex">
                 <AccountMenu />
               </div>
             )}

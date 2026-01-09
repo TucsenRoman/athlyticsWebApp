@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useCapabilities } from "@/hooks/useCapabilities";
-import MobileNav from "@/components/navigation/MobileNav";
-import AppHeader from "@/components/navigation/AppHeader";
-import { Divider } from "../ui";
+import TabBar from "@/components/navigation/TabBar";
+import MobileHeader from "../navigation/MobileHeader";
+import DesktopHeader from "@/components/navigation/DesktopHeader";
 
 interface PageShellProps {
   children: React.ReactNode;
@@ -16,12 +16,9 @@ export default function PageShell({ children }: PageShellProps) {
   return (
     <div
       className="
-        relative flex flex-col overflow-hidden
+        relative flex flex-col overflow-x-hidden
         min-h-[100dvh]
-
-        bg-[var(--gray-5)]
-
-        [--app-header-h:56px]
+        [--app-header-h:60px]
         [--mobile-nav-h:80px]
       "
     >
@@ -31,25 +28,22 @@ export default function PageShell({ children }: PageShellProps) {
         </div>
       )} */}
 
-      <AppHeader />
-
-      <Divider thickness="1.5px" color="var(--gray-7)" inset={5} />
+      <DesktopHeader />
+      <MobileHeader />
 
       <div
         // id="app-scroll-container"
         className="
-          w-full overflow-hidden
-          bg-[var(--gray-5)]
-
-          h-[calc(100dvh-var(--app-header-h))]
+          w-full min-h-[calc(100dvh-var(--app-header-h))]
+          bg-[#DADADA]
         "
         // -var(--mobile-nav-h)
         // md:h-[calc(100dvh-var(--app-header-h))]
       >
-        {children}
+        {/* {children} */}
       </div>
 
-      <MobileNav />
+      {/* <TabBar /> */}
     </div>
   );
 }

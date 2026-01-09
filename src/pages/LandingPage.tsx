@@ -10,7 +10,7 @@ import PageFooter from "@/components/layout/PageFooter";
 import { Button, Divider } from "@/components/ui";
 import radarImage from "@/assets/images/coach-radar-pov.png"
 import workspaceImage from "@/assets/images/ChatGPT Image Dec 29, 2025, 01_48_48 PM.png"
-import { Dumbbell, Globe, Link2, LocateFixed, MonitorSmartphone, PencilRuler, Sparkles, Users } from "lucide-react";
+import { Dumbbell, Globe, Link2, LocateFixed, MonitorSmartphone, PencilRuler, Proportions, Sparkles, Users } from "lucide-react";
 import AuthForm from "@/features/auth/AuthForm";
 
 export default function LandingPage() {
@@ -339,10 +339,10 @@ export default function LandingPage() {
                     "Runs entirely in the browser with no installs or downloads. Athlytics works anywhere you have an internet connection — in the office, on the field, and anywhere in between.",
                 },
                 {
-                  title: "Device Duality",
-                  icon: MonitorSmartphone,
+                  title: "Device Diversity",
+                  icon: Proportions,
                   body:
-                    "Designed to feel natural on both phones and desktops. Quick actions happen on mobile, while deeper planning and management live comfortably on larger screens.",
+                    "Designed to feel natural on any device screen size. From wearables, to mobile, and desktops. Quick actions for smaller screens, while deeper planning and management live comfortably on larger screens.",
                 },
                 {
                   title: "Program Roles",

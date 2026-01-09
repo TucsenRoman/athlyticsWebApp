@@ -30,6 +30,7 @@ import {
   RotateCcw,
   Settings2,
   ArrowUpRight,
+  ChevronDown,
 } from "lucide-react"
 
 import type { ProgramLite } from "../programLite.types"
@@ -243,8 +244,37 @@ export default function ProgramDriveModal({
         onEscapeKeyDown={(e) => {
           if (configOpen || deleteOpen) e.preventDefault()
         }}
-        className="gap-0 max-w-3xl p-0 overflow-hidden bg-[var(--gray-5)] border-0"
+        className="
+          gap-0 p-0 overflow-hidden
+
+          /* OVERRIDE RADIX CENTERING */
+          translate-x-0 translate-y-0
+          transform-none
+
+          /*  MOBILE: bottom sheet  */
+          fixed top-auto bottom-0 left-0 right-0
+          m-0 pb-[env(safe-area-inset-bottom)]
+          w-full h-[60vh]
+          
+          rounded-t-xl rounded-b-none bg-[var(--gray-5)] border-0
+          shadow-2xl animate-slide-up
+
+          /* DESKTOP: centered modal */
+          md:fixed
+          md:top-1/2
+          md:left-1/2
+          md:-translate-x-1/2
+          md:-translate-y-1/2
+          md:h-auto
+          md:max-w-3xl
+          md:rounded-xl
+          md:animate-none
+        "
       >
+        {/* CLOSE CHEVRON */}
+        {/* <div className="absolute top-[-60px] right-[0px] text-white opacity-25">
+          <ChevronDown size={64}/>
+        </div> */}
         {/* HEADER */}
         <div className="flex justify-between gap-2 h-12 py-2 px-4">
           {/* TITLE */}
@@ -276,8 +306,8 @@ export default function ProgramDriveModal({
                 className={[
                   "h-6 w-8 rounded-full grid place-items-center transition",
                   sortMode === "recent_use"
-                    ? "bg-[var(--dom-glass)] text-[var(--dom-dk)]"
-                    : "text-[var(--text)] hover:bg-[var(--gray-5)]",
+                    ? "bg-[var(--gray-5)] text-[var(--text)]"
+                    : "text-[var(--text-lt)] hover:bg-[var(--gray-5)]",
                 ].join(" ")}
                 aria-pressed={sortMode === "recent_use"}
                 title="Recent Use"
@@ -291,8 +321,8 @@ export default function ProgramDriveModal({
                 className={[
                   "h-6 w-8 rounded-full grid place-items-center transition",
                   sortMode === "alpha_asc"
-                    ? "bg-[var(--dom-glass)] text-[var(--dom-dk)]"
-                    : "text-[var(--text)] hover:bg-[var(--gray-5)]",
+                    ? "bg-[var(--gray-5)] text-[var(--text)]"
+                    : "text-[var(--text-lt)] hover:bg-[var(--gray-5)]",
                 ].join(" ")}
                 aria-pressed={sortMode === "alpha_asc"}
                 title="Alphabetical"
@@ -306,15 +336,16 @@ export default function ProgramDriveModal({
         <div className="relative m-1 mt-0 rounded-lg border border-[var(--border)] bg-[var(--gray-8)] overflow-hidden shadow-inner">
           {/* TABS */}
           <Tabs defaultValue="active">
-            <TabsList className="flex justify-between h-10 min-w-[250px] w-full border-0 bg-0">
-              <div className="flex gap-2">
+            <TabsList className="relative flex justify-between h-10 min-w-[250px] w-full border-0 bg-0">
+              <GradientHint fromColor="var(--gray-8)" extent="20px" direction="left" />
+              <div className="flex gap-2 pl-4 pr-[100px] rounded-t-md overflow-x-scroll md:overflow-x-hidden">
                 <TabsTrigger
                   value="active"
                   className="
                     px-4 text-xs
-                    data-[state=active]:bg-[var(--gray-3)]
+                    data-[state=active]:bg-[var(--acc-bg)]
                     data-[state=inactive]:text-[var(--text-lt)]
-                    data-[state=active]:text-[var(--text)]
+                    data-[state=active]:text-[var(--acc-dk)]
                   "
                 >
                   Active
@@ -343,11 +374,12 @@ export default function ProgramDriveModal({
                   Deleted
                 </TabsTrigger>
               </div>
+              <GradientHint fromColor="var(--gray-8)" extent="100px" direction="right" />
             </TabsList>
 
-            <Divider color="var(--border-dk)" inset={1} />
+            <Divider color="var(--gray-9)" inset={10} />
 
-            <div className="px-6 pt-4 pb-[100px] h-[50vh] overflow-y-auto">
+            <div className="px-6 pt-4 pb-[200px] h-[50vh] overflow-y-auto">
               <TabsContent value="active" className="flex flex-col">
                 <ProgramList
                   programs={activePrograms}
@@ -540,10 +572,11 @@ export default function ProgramDriveModal({
             {/* ADD PROGRAM */}
             {/* ~Later use expansive menu for template, blank, etc. */}
             <Button
+              // color="primary"
               variant="float"
               regular="md"
               iconSize="lg"
-              className="bg-[var(--acc-lt)] hover:bg-[var(--acc-bg)] text-[var(--acc-dk)]"
+              className="hover:bg-[var(--acc-bg)] hover:text-[var(--acc-dk)]"
               onClick={() => {
                 setConfigMode("add")
                 setConfigProgram(null)
@@ -683,7 +716,7 @@ function ProgramList({
           >
             {/* ACTIVE LEFT ACCENT */}
             {isActive && (
-              <div className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-[var(--dom-md)]" />
+              <div className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-[var(--acc-md)]" />
             )}
             <div className="flex flex-col">
               <div className="flex items-start gap-2 h-6 text-sm font-medium">
@@ -726,16 +759,14 @@ function ProgramList({
             {/* INLINE ACTIONS -------------------------------------------- */}
             {showActions && (
               <div
-                className="shrink-0 w-fit h-fit"
+                className="absolute top-[25%] right-[10px] shrink-0 w-fit h-fit"
                 onClick={(e) => e.stopPropagation()}
               >
                 <ExpansiveMenu
                   variant="rainbow"
-                  // direction="left"
-                  // expand="line"
-                  // spacing={42}
+                  direction="left"
                   expand="arch"
-                  radius={40}
+                  radius={48}
                   mainRotate={90}
                   mainSize={32}
                   mainIcon={<Settings2 />}

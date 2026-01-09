@@ -26,7 +26,7 @@ export default function CardFormatter({
       className="
         flex flex-col
         w-auto h-full min-h-0
-        rounded-lg bg-[var(--gray-7)]
+        border border-[var(--gray-2)] rounded-lg bg-[var(--gray-2)]
         transition shadow-inner
       "
     >
@@ -48,7 +48,7 @@ export default function CardFormatter({
         )}
       </div>
 
-      <Divider color="var(--border-dk)" inset={6}/>
+      <Divider color="var(--gray-5)" inset={6}/>
 
       <div
         className="
@@ -80,7 +80,7 @@ export default function CardFormatter({
             {children}
           {/* </div> */}
         </div>
-        <GradientHint fromColor="var(--gray-7)" extent="60px" radius="sm"/>
+        <GradientHint fromColor="var(--gray-4)" extent="60px" radius="sm"/>
       </div>
     </div>
   );

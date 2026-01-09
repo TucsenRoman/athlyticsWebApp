@@ -30,10 +30,11 @@ export interface ProgramDriveTriggerHandle {
   open: () => void
 }
 
-type TriggerVariant = "header" | "empty"
+type TriggerVariant = "mobile" | "empty"
 
 interface ProgramDriveTriggerProps {
   variant?: TriggerVariant
+    className?: string
 }
 
 /* ========================================================================== */
@@ -43,7 +44,7 @@ interface ProgramDriveTriggerProps {
 const ProgramDriveTrigger = forwardRef<
   ProgramDriveTriggerHandle,
   ProgramDriveTriggerProps
->(({ variant = "header" }, ref) => {
+>(({ variant = "mobile" }, ref) => {
   /* ---------------------------------------------------------------------- */
   /* DATA                                                                    */
   /* ---------------------------------------------------------------------- */
@@ -145,26 +146,55 @@ const ProgramDriveTrigger = forwardRef<
   }
 
   /* ---------------------------------------------------------------------- */
-  /* TRIGGERS                                                                */
+  /* TRIGGERS                                                               */
   /* ---------------------------------------------------------------------- */
 
-  const HeaderTrigger = (
-    <div className="flex justify-center items-center p-1 h-10 rounded-lg bg-[var(--gray-7)] shadow-inner">
-      <button
-        ref={triggerRef}
-        onClick={() => setDriveOpen(true)}
-        className="
-          flex items-center gap-2
-          h-8 min-w-[150px] px-3
-          rounded-xl hover:bg-[var(--gray-8)]
-          text-[var(--text)] font-bold
-          transition-all cursor-pointer
-        "
-      >
-        <span className="text-sm truncate">{label}</span>
-        <ChevronDown size={16} strokeWidth={2.5} />
-      </button>
-    </div>
+  const DesktopTrigger = (
+    <button
+      ref={triggerRef}
+      onClick={() => setDriveOpen(true)}
+      className="
+        flex items-center gap-2
+        h-10 w-fit px-3
+        rounded-2xl bg-gradient-to-br from-[var(--dom-glass)] to-[var(--acc-glass)] hover:brightness-105
+        text-md text-[var(--text)] font-bold
+        transition-all cursor-pointer shadow-inner
+      "
+    >
+      <span className="truncate">{label}</span>
+      {/* <ChevronDown size={16} strokeWidth={2.5} className="w-4 h-4 opacity-60" /> */}
+    </button>
+  )
+
+  const MobileTrigger = (
+    <button
+      ref={triggerRef}
+      onClick={() => setDriveOpen(true)}
+      className="
+        relative flex items-center gap-1
+        pl-3 w-fit h-12
+        text-left text-[var(--text)] font-bold 
+        transition-all cursor-pointer
+      "
+    >
+      {!selectedProgram ? (
+        <span className="flex items-center opacity-60">Select Program</span>
+      ) : (
+        <div className="flex flex-col leading-tight truncate">
+          <div className="absolute top-[25%] left-[3px] w-[2px] h-[24px] bg-gradient-to-b from-[var(--acc-dk)] to-[#6F8AB4]"></div>
+          <span className="w-full max-w-[150px] h-[28px] text-[21px] font-semibold">
+            {selectedProgram.sport}
+          </span>
+
+          {selectedProgram.year && (
+            <span className="w-[141px] h-[13px] text-[9px] font-light truncate">
+              {selectedProgram.year} • {selectedProgram.school}
+            </span>
+          )}
+        </div>
+      )}
+      <ChevronDown size={16} strokeWidth={2.5} className="w-4 h-4 opacity-60" />
+    </button>
   )
 
   const EmptyTrigger = (
@@ -172,11 +202,9 @@ const ProgramDriveTrigger = forwardRef<
       ref={triggerRef}
       onClick={() => setDriveOpen(true)}
       className="
-        h-[38px]
-        px-4
-        rounded-full
         flex items-center gap-2
-        bg-[var(--gray-lt)]
+        h-[38px] px-4
+        rounded-full bg-[var(--gray-lt)]
         border border-[var(--border)]
         backdrop-blur-sm
       "
@@ -192,7 +220,7 @@ const ProgramDriveTrigger = forwardRef<
 
   return (
     <>
-      {variant === "empty" ? EmptyTrigger : HeaderTrigger}
+      {variant === "empty" ? EmptyTrigger : MobileTrigger}
 
       <ProgramDriveModal
         open={driveOpen}

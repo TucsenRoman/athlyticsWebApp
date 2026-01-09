@@ -2,8 +2,8 @@
 "use client";
 
 import React from "react";
-import AppHeader from "@/components/navigation/AppHeader";
-import MobileNav from "@/components/navigation/MobileNav";
+import AppHeader from "@/components/navigation/DesktopHeader";
+import MobileNav from "@/components/navigation/TabBar";
 import { Divider } from "@/components/ui";
 
 export default function MarketingPageShell({

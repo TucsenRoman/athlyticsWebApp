@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { SETTINGS_NAV } from "@/components/navigation/settingsNav"
 
-import { LogOut, Share, Share2 } from "lucide-react";
+import { Hand, LogOut, Share, Share2, SunMoon } from "lucide-react";
 
 import {
   Avatar,
@@ -107,10 +107,11 @@ export default function AccountMenu() {
       <button
         onClick={() => setOpen((v) => !v)}
         className="
-          overflow-hidden
+          flex items-center justify-center
+          h-8 w-10 rounded-full
         "
       >
-        <Avatar className="h-full w-full rounded-full border-2 border-[var(--gray-8)]">
+        <Avatar className="h-full w-full rounded-full border-2 border-[var(--gray-2)]">
           <AvatarImage
             src={avatarSrc ?? undefined}
           />
@@ -150,7 +151,7 @@ export default function AccountMenu() {
       {open && (
         <div
           className="
-            absolute top-12 right-0 mt-2 z-50
+            absolute top-12 right-0 mt-2 z-[1000]
             w-64 rounded-xl p-2
             bg-[var(--bg)]
             border border-[var(--border)]
@@ -163,7 +164,7 @@ export default function AccountMenu() {
             {/* TOP ROW */}
             <div className="flex items-center gap-3">
               <Avatar
-                className="h-14 w-14 rounded-xl cursor-pointer"
+                className="h-12 w-12 rounded-full cursor-pointer"
                 onClick={() => go("/settings/profile")}
               >
                 {avatarSrc && <AvatarImage src={avatarSrc} />}
@@ -202,7 +203,7 @@ export default function AccountMenu() {
             </div>
           </div>
 
-          <Divider />
+          <Divider debug />
 
           {/* SETTINGS */}
           {SETTINGS_NAV
@@ -216,7 +217,25 @@ export default function AccountMenu() {
               />
             ))}
 
-          <Divider />
+          <Divider debug />
+
+          <span>Apperance</span>
+
+          {/* THEME */}
+          <MenuItem
+            icon={<SunMoon />}
+            label="Theme"
+            onClick={async () => { null }}
+          />
+
+          {/* ORIENTATION */}
+          <MenuItem
+            icon={<Hand />}
+            label="Orientation"
+            onClick={async () => { null }}
+          />
+
+          <Divider debug />
 
           {/* LOGOUT */}
           <MenuItem

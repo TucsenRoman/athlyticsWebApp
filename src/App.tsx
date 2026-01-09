@@ -46,7 +46,7 @@ import AIAssistantSettingsPage from "@/pages/settings/AIAssistantSettingsPage";
 import TrainingPreviewPage from "./pages/public/TrainingPreview";
 import DiscoveryPreviewPage from "./pages/public/DiscoveryPreview";
 import PricingPage from "./pages/public/PricingPage";
-import MobileNav from "./components/navigation/MobileNav";
+import MobileNav from "./components/navigation/TabBar";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import MarketingPageShell from "./components/layout/MarketingPageShell";
 
