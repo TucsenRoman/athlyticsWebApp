@@ -10,26 +10,24 @@ import { useAuth } from "@/contexts/AuthContext";
 // COMPONENTS
 import ProgramDriveTrigger from "@/features/program/components/ProgramDriveTrigger";
 import { useProgramContext } from "@/features/program-cloak/useProgramContext";
-import AccountMenu from "../layout/AccountMenu";
 import { useDemo } from "@/contexts/DemoContext";
 
 // ICONS
 import {
-    Bell,
-  LocateFixed,
-  PencilRuler,
+  Bell,
   Search,
-  User,
-  UserRound,
 } from "lucide-react";
-import GlobalSearch from "@/features/radar/GlobalSearch";
-import { Divider } from "../ui";
+import { useProgram } from "@/features/program/useProgram";
 
 /* -------------------------------------------------------------------------- */
 
 export default function MobileHeader() {
   const navigate = useNavigate();
   const location = useLocation();
+  const programApi = useProgram()
+
+  // FUTURE DEV
+  const hasNotification = true;
 
   // NO AUTH → SIGN IN BUTTON
   const { user } = useAuth();
@@ -48,8 +46,8 @@ export default function MobileHeader() {
   const { demoMode } = useDemo();
 
   // PAGES
-  const isLandingPage = 
-    location.pathname === "/"; 
+  const isLandingPage =
+    location.pathname === "/" ||
     location.pathname === "/auth";
   const activeRadar = location.pathname.startsWith("/radar");
   const activeWorkspace = location.pathname.startsWith("/workspace");
@@ -115,33 +113,78 @@ export default function MobileHeader() {
 
   // Collapse/expand header toolbar toggle tbn
   const [collapsed, setCollapsed] = useState(false);
+
   useEffect(() => {
     const toggle = () => setCollapsed(prev => !prev);
     window.addEventListener("toggle-header", toggle);
     return () => window.removeEventListener("toggle-header", toggle);
   }, []);
 
+
   return (
     <>
-      {/* <Divider color="var(--gray-8)" inset={10} /> */}
       {/* MOBILE HEADER */}
       {programScoped && !collapsed && (
-        <div className="md:hidden flex flex-row justify-between items-center gap-4 pl-4 pr-2 py-2 h-[60px] w-[100vw] rounded-b-elongated bg-gradient-to-b from-[#D9D9D9] to-[#F1F1F1]">
-          <ProgramDriveTrigger variant="mobile" />
+        <div className="animate-slide-down-top md:hidden flex flex-row justify-between items-start gap-0 pl-4 pr-2 py-1 h-[60px] w-[100vw] rounded-b-elongated bg-gradient-to-b from-[var(--gray-6)] to-[var(--gray-2)]">
+          <ProgramDriveTrigger
+            variant="header"
+            programs={programApi.programs}
+            loading={programApi.loading}
+            archiveProgram={programApi.archiveProgram}
+            restoreProgram={programApi.restoreProgram}
+            deleteProgram={programApi.deleteProgram}
+            refreshPrograms={programApi.refresh}
+          />
 
-          <div className="flex items-start gap-2 h-full text-[#BFBFBF]">
-            <div className="flex justify-center items-center mt-1 w-10 h-8 rounded-full border border-[#FFFFFF] bg-[#F7F7F7] shadow-[inset_0px_1px_10px_rgba(0,0,0,0.15)]">
-              <Search className="w-4 h-4" />
+          <div className="flex justify-end items-start gap-2 h-full w-full text-[var(--gray-10)]">
+            <div 
+              className="relative flex justify-center items-center mt-1.5 w-10 h-8 rounded-full border border-[var(--gray-3)] bg-[#F7F7F7] shadow-inner"
+              onClick={null}
+            >
+              <Search className="w-5 h-5" />
             </div>
-            {/* <div className="relative flex justify-center items-center mt-1 w-[42px] h-[32px] rounded-full border border-[#FFFFFF] bg-[#F7F7F7] shadow-[inset_0px_1px_10px_rgba(0,0,0,0.15)]">
-              <Bell className="w-4 h-4" />
-              <div className="absolute top-[6.5px] right-[13px] w-[7px] h-[7px] rounded-full border border-[#F7F7F7] bg-[var(--acc-dk)]" />
-            </div> */}
+            <div 
+              className="relative flex justify-center items-center mt-1.5 w-10 h-8 rounded-full border border-[var(--gray-3)] bg-[#F7F7F7] shadow-inner"
+              onClick={null}
+            >
+              <Bell className="w-5 h-5" />
+              {hasNotification &&
+                <div className="absolute top-[4.5px] right-[11px] w-[7px] h-[7px] rounded-full border border-[#F7F7F7] bg-[var(--acc-dk)]" />
+              }
+            </div>
 
-            <AccountMenu />
+            {/* {!collapsed &&
+              <div
+                className="flex justify-center items-center mt-1.5 w-10 h-8 rounded-full border border-[var(--gray-3)] bg-[#F7F7F7] shadow-[inset_0px_1px_10px_rgba(0,0,0,0.15)] transition-opacity"
+                title={collapsed ? "Expand header" : "Collapse header"}
+                onClick={() => setCollapsed(prev => !prev)}
+              >
+                <Maximize className="h-4 w-4" />
+              </div>
+            } */}
+
+            {/* <AccountMenu /> */}
           </div>
         </div>
       )}
+
+      {/* FULLSCREEN BTN */}
+      {/* {programScoped && collapsed && (
+        <div className="md:hidden flex justify-between items-center px-4 py-1 w-full h-10 ">
+          <GlobalSearch
+            query=""
+            onChange={() => {}}
+          />
+
+          <Button
+            className="flex justify-center items-center w-10 h-8 rounded-full border border-[var(--gray-3)] bg-[var(--acc-bg)] shadow-[inset_0px_1px_10px_rgba(0,0,0,0.15)] transition-opacity"
+            title={collapsed ? "Expand header" : "Collapse header"}
+            onClick={() => setCollapsed(prev => !prev)}
+          >
+            <Minimize className="h-4 w-4 text-[var(--acc-md)]" />
+          </Button>
+        </div>
+      )} */}
     </>
   );
 }

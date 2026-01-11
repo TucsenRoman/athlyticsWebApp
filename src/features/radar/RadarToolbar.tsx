@@ -27,7 +27,7 @@ export default function RadarToolbar({
       className="flex gap-6 px-4 w-auto"
     >
       {/* CENTER: SEARCH */}
-      <div className="flex-1">
+      <div className="hidden md:flex flex-1">
           <GlobalSearch
           query={query}
           onChange={onQueryChange}

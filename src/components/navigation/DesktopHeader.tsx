@@ -20,12 +20,14 @@ import {
   User,
   UserRound,
 } from "lucide-react";
+import { useProgram } from "@/features/program/useProgram";
 
 /* -------------------------------------------------------------------------- */
 
 export default function DesktopHeader() {
   const navigate = useNavigate();
   const location = useLocation();
+  const programApi = useProgram()
 
   // NO AUTH → SIGN IN BUTTON
   const { user } = useAuth();
@@ -177,7 +179,15 @@ export default function DesktopHeader() {
             }
 
             {programScoped && (
-              <ProgramDriveTrigger />
+              <ProgramDriveTrigger
+                variant="header"
+                programs={programApi.programs}
+                loading={programApi.loading}
+                archiveProgram={programApi.archiveProgram}
+                restoreProgram={programApi.restoreProgram}
+                deleteProgram={programApi.deleteProgram}
+                refreshPrograms={programApi.refresh}
+              />
             )}
           </div>
 

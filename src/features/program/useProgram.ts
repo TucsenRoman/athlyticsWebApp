@@ -3,27 +3,14 @@
 import { useEffect, useState, useCallback } from "react"
 import { supabase } from "@/integrations/supabase/client"
 import type { ProgramId } from "@/features/program-cloak/useProgramContext"
-
-/* ========================================================================== */
-/* TYPES                                                                      */
-/* ========================================================================== */
-
-export type ProgramRecord = {
-  id: ProgramId
-  sport: string
-  year: string
-  school: string | null
-  state: "active" | "archived" | "deleted" | string
-  created_at: string
-  last_used_at: string | null
-}
+import type { ProgramLite } from "./programLite.types"
 
 /* ========================================================================== */
 /* HOOK                                                                       */
 /* ========================================================================== */
 
 export function useProgram() {
-  const [programs, setPrograms] = useState<ProgramRecord[]>([])
+  const [programs, setPrograms] = useState<ProgramLite[]>([])
   const [loading, setLoading] = useState(true)
 
   /* ---------------------------------------------------------------------- */
@@ -35,7 +22,9 @@ export function useProgram() {
 
     const { data, error } = await supabase
       .from("programs")
-      .select("id, sport, year, school, state, created_at, last_used_at")
+      .select(
+        "id, sport, year, school, gender, state, created_at, last_used_at"
+      )
       .order("created_at", { ascending: true })
 
     if (error) {

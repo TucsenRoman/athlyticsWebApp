@@ -16,7 +16,9 @@ body,
 
 html,
 body {
-  background: #D9D9D9;
+  background: var(--gray-6);
+  /* background: var(--acc-lt); */
+  /* background: #D9D9D9; */
 }
 
 /*  COLOR TOKENS */
@@ -64,7 +66,7 @@ body {
     --acc-dk: rgb(128, 174, 243);
     --acc-md: rgb(181, 207, 245);
     --acc-lt: rgb(211, 226, 249);
-    --acc-bg: rgb(225, 236, 251);
+    --acc-bg: rgb(230, 237, 248);
     --acc-glass: rgb(128, 174, 243, 0.15);
 
     /* --acc-ink: rgb(54, 79, 165); */
@@ -270,7 +272,7 @@ input:-webkit-autofill {
   padding: 0;
 }
 
-/* FLASHING ANIMATION */
+/* UTILITIES */
 @layer utilities {
   .flash-edit {
     animation: editFlash 1.2s infinite;
@@ -299,19 +301,26 @@ input:-webkit-autofill {
     50% { background-color: color-mix(in srgb, var(--archive) 15%, transparent); }
   }
 
+  .rounded-x-elongated {
+    border-top-left-radius: 40px 20px;
+    border-top-right-radius: 40px 20px;
+    border-bottom-left-radius: 40px 20px;
+    border-bottom-right-radius: 40px 20px;
+  }
+
+  .rounded-y-elongated {
+    border-top-left-radius: 20px 40px;
+    border-top-right-radius: 20px 40px;
+    border-bottom-left-radius: 20px 40px;
+    border-bottom-right-radius: 20px 40px;
+  }
+
   .rounded-t-elongated {
     border-top-left-radius: 40px 20px;
     border-top-right-radius: 40px 20px;
   }
 
   .rounded-b-elongated {
-    border-bottom-left-radius: 40px 20px;
-    border-bottom-right-radius: 40px 20px;
-  }
-
-  .rounded-elongated {
-    border-top-left-radius: 40px 20px;
-    border-top-right-radius: 40px 20px;
     border-bottom-left-radius: 40px 20px;
     border-bottom-right-radius: 40px 20px;
   }
@@ -334,7 +343,7 @@ input:-webkit-autofill {
 }
 
 
-/* MODAL STATE ANIMATION */
+/* SLIDE UP ANIMATION */
 @keyframes slide-up {
   from {
     transform: translateY(100%);
@@ -344,6 +353,20 @@ input:-webkit-autofill {
   }
 }
 
-.animate-slide-up {
+.animate-slide-up-btm {
   animation: slide-up 0.25s ease-out;
+}
+
+/* SLIDE DOWN FROM TOP */
+@keyframes slide-down {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down-top {
+  animation: slide-down 0.25s ease-out;
 }

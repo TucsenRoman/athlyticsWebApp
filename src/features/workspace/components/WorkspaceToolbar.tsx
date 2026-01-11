@@ -13,7 +13,7 @@ import {
   Dumbbell,
 } from "lucide-react";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/actions/button";
 
 // VIEW IMPORTS
@@ -124,6 +124,12 @@ export default function WorkspaceToolbar({
   const [query, setQuery] = useState("");
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
 
+  useEffect(() => {
+    const sync = () => setHeaderCollapsed(prev => !prev);
+    window.addEventListener("toggle-header", sync);
+    return () => window.removeEventListener("toggle-header", sync);
+  }, []);
+
   const handleSearch = (value: string) => {
     setQuery(value);
     if (mode === "manager") onManagerSearch?.(value);
@@ -195,7 +201,7 @@ export default function WorkspaceToolbar({
       {/* <BatonTrigger /> */}
       
       {/* MAX / MIN BUTTON ---------------------------------------------- */}
-      <Button
+      {/* <Button
         variant="stick"
         title={headerCollapsed ? "Minimize" : "Maximize"}
         onClick={() => {
@@ -208,7 +214,7 @@ export default function WorkspaceToolbar({
         ) : (
           <Maximize className="h-4 w-4 text-[var(--text)]" />
         )}
-      </Button>
+      </Button> */}
     </div>
   );
 }

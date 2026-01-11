@@ -31,6 +31,11 @@ import {
   BadgeHelp,
   UsersRound,
   CalendarDays,
+  Split,
+  Mars,
+  Venus,
+  AArrowDown,
+  VenusAndMars,
 } from "lucide-react";
 import { GradientHint } from "@/components/ui";
 
@@ -319,12 +324,49 @@ export default function AttendanceRadarView() {
       title="Today's Attendance"
       icon={UsersRound}
       infoContent={attendanceInfoContent}
-      // actions={
-      //   <div className="flex items-center gap-2 text-sm text-[var(--text)]">
-      //     <CalendarDays size={16} />
-      //     <span>{format(new Date(), "MMM d, yyyy")}</span>
-      //   </div>
-      // }
+      actions={
+        <>
+          {/* <div
+            className="flex items-center gap-1 mr-7 h-8 rounded-full border border-[var(--border)] bg-[var(--gray-7)] p-1 shadow-inner"
+            title="Sort"
+          >
+            <button
+              type="button"
+              className={[
+                "h-6 w-8 rounded-full grid place-items-center transition",
+                loading
+                  ? "bg-[var(--gray-5)] text-[var(--text)]"
+                  : "text-[var(--text-lt)] hover:bg-[var(--gray-5)]",
+              ].join(" ")}
+              aria-pressed="recent_use"
+              title="Recent Use"
+            >
+              <AArrowDown className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className={[
+                "h-6 w-8 rounded-full grid place-items-center transition",
+                loading
+                  ? "bg-[var(--gray-5)] text-[var(--text)]"
+                  : "text-[var(--text-lt)] hover:bg-[var(--gray-5)]",
+              ].join(" ")}
+              aria-pressed="recent_use"
+              title="Recent Use"
+            >
+              <VenusAndMars className="h-4 w-4" />
+            </button>
+          </div> */}
+          {/* <div className="flex items-center gap-2 px-2 h-8 rounded-lg border border-[var(--gray-7)] hover:border-[var(--gray-9)] text-sm text-[var(--text-lt)] hover:text-[var(--text)] shadow-inner cursor-pointer transition-all">
+            <span>Split</span>
+            <Split className="w-4 h-4 rotate-90"/>
+          </div> */}
+          {/* <div>
+            <CalendarDays size={16} />
+            <span>{format(new Date(), "MMM d, yyyy")}</span>
+          </div> */}
+        </>
+      }
     >
       {loading ? (
         <p className="text-sm text-[var(--text)]">Loading…</p>

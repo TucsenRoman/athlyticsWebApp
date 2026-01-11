@@ -43,7 +43,6 @@ import { Divider, GradientHint } from "@/components/ui"
 import ProgramDeleteModal from "./ProgramDeleteModal"
 import ProgramConfigModal from "./ProgramConfigModal"
 import { supabase } from "@/integrations/supabase/client"
-import { useProgram } from "../useProgram"
 import ExpansiveMenu, { type ExpansiveMenuItem } from "@/components/ui/navigation/expansivemenu";
 /* ========================================================================== */
 /* TYPES                                                                      */
@@ -51,12 +50,14 @@ import ExpansiveMenu, { type ExpansiveMenuItem } from "@/components/ui/navigatio
 
 interface ProgramDriveModalProps {
   open: boolean
+  programs: ProgramLite[]
   selectedProgramId: ProgramId | null
   onSelect: (id: ProgramId | null) => void
-  onArchive: (id: ProgramId) => void | Promise<void>
-  onRestore: (id: ProgramId) => void | Promise<void>
-  onSoftDelete: (id: ProgramId) => void | Promise<void>
+  onArchive: (id: ProgramId) => Promise<void>
+  onRestore: (id: ProgramId) => Promise<void>
+  onSoftDelete: (id: ProgramId) => Promise<void>
   onClose: () => void
+  refreshPrograms: () => Promise<void>
 }
 
 /* ========================================================================== */
@@ -65,15 +66,15 @@ interface ProgramDriveModalProps {
 
 export default function ProgramDriveModal({
   open,
+  programs,
   selectedProgramId,
   onSelect,
   onArchive,
   onRestore,
   onSoftDelete,
   onClose,
+  refreshPrograms,
 }: ProgramDriveModalProps) {
-  const { programs, refresh } = useProgram()
-
   const [focusedProgramId, setFocusedProgramId] =
     useState<ProgramId | null>(null)
   const [hoveredProgramId, setHoveredProgramId] =
@@ -92,7 +93,7 @@ export default function ProgramDriveModal({
 
   /* REFRESH AFTER MUTATIONS */
   const afterMutation = async () => {
-    await refresh()
+    await refreshPrograms()
     setFocusedProgramId(null)
   }
 
@@ -158,7 +159,7 @@ export default function ProgramDriveModal({
 
   // REFRESH HANDLER
   const handleProgramSaved = async (_programId: ProgramId) => {
-    await refresh()
+    await refreshPrograms()
     setConfigOpen(false)
   }
 
@@ -246,6 +247,7 @@ export default function ProgramDriveModal({
         }}
         className="
           gap-0 p-0 overflow-hidden
+          flex flex-col
 
           /* OVERRIDE RADIX CENTERING */
           translate-x-0 translate-y-0
@@ -254,10 +256,10 @@ export default function ProgramDriveModal({
           /*  MOBILE: bottom sheet  */
           fixed top-auto bottom-0 left-0 right-0
           m-0 pb-[env(safe-area-inset-bottom)]
-          w-full h-[60vh]
+          w-full h-[calc(100dvh-70px)]
           
           rounded-t-xl rounded-b-none bg-[var(--gray-5)] border-0
-          shadow-2xl animate-slide-up
+          shadow-2xl animate-slide-up-btm
 
           /* DESKTOP: centered modal */
           md:fixed
@@ -333,9 +335,9 @@ export default function ProgramDriveModal({
           </div>
         </div>
 
-        <div className="relative m-1 mt-0 rounded-lg border border-[var(--border)] bg-[var(--gray-8)] overflow-hidden shadow-inner">
+        <div className="relative mx-1 mb-1 flex-1 min-h-0 flex flex-col rounded-lg border border-[var(--border)] bg-[var(--gray-8)] overflow-hidden shadow-inner">
           {/* TABS */}
-          <Tabs defaultValue="active">
+          <Tabs defaultValue="active" className="flex-1 min-h-0 flex flex-col">
             <TabsList className="relative flex justify-between h-10 min-w-[250px] w-full border-0 bg-0">
               <GradientHint fromColor="var(--gray-8)" extent="20px" direction="left" />
               <div className="flex gap-2 pl-4 pr-[100px] rounded-t-md overflow-x-scroll md:overflow-x-hidden">
@@ -379,7 +381,7 @@ export default function ProgramDriveModal({
 
             <Divider color="var(--gray-9)" inset={10} />
 
-            <div className="px-6 pt-4 pb-[200px] h-[50vh] overflow-y-auto">
+            <div className="px-6 pt-4 pb-[200px] flex-1 min-h-0 overflow-y-auto">
               <TabsContent value="active" className="flex flex-col">
                 <ProgramList
                   programs={activePrograms}
@@ -395,7 +397,7 @@ export default function ProgramDriveModal({
                       .update({ last_used_at: new Date().toISOString() })
                       .eq("id", Number(id))
 
-                    await refresh()
+                    await refreshPrograms()
                     
                     // then proceed
                     onSelect(id)
@@ -453,7 +455,7 @@ export default function ProgramDriveModal({
                 />
               </TabsContent>
 
-              <GradientHint fromColor="var(--gray-8)" extent="100px" radius="lg" />
+              <GradientHint fromColor="var(--gray-8)" extent="150px" radius="lg" />
             </div>
           </Tabs>
 
@@ -720,7 +722,7 @@ function ProgramList({
             )}
             <div className="flex flex-col">
               <div className="flex items-start gap-2 h-6 text-sm font-medium">
-                {p.sport} • {p.year}
+                {p.gender} {p.sport} • {p.year}
 
                 {showActions && (
                   <div

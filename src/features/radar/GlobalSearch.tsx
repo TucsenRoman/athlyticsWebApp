@@ -20,7 +20,7 @@ export default function GlobalSearch({
     //     onChange={(e) => setQuery(e.target.value)}
     //   />
     // </div>
-    <div className="relative min-h-content flex items-center gap-2 px-2 w-full md:max-w-[250px] h-8 rounded-full border border-transparent focus-within:border-[var(--border-dk)] bg-[var(--gray-2)] text-xs text-[var(--text-lt)] focus-within:text-[var(--text)] shadow-inner transition-colors">
+    <div className="relative min-h-content flex items-center gap-2 px-2 w-full max-w-[250px] h-8 rounded-full border border-transparent focus-within:border-[var(--border-dk)] bg-[var(--gray-2)] text-xs text-[var(--text-lt)] focus-within:text-[var(--text)] shadow-inner transition-colors">
       {/* INPUT */}
       <Search className="h-4 w-4" />
       <input

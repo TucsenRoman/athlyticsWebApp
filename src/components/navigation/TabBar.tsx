@@ -1,183 +1,259 @@
-import { Sparkles, PencilRuler, Dumbbell, LocateFixed, ChevronLeft, ChevronRight, User } from "lucide-react";
+// src/components/navigation/TabBar.tsx
+
+import { PencilRuler, LocateFixed, User, type LucideIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui";
 import { cn } from "@/utils/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { useProfileContext } from "@/features/profile/ProfileProvider";
 import { AVATAR_MAP } from "@/features/profile/avatarMap";
+import { useUIPrefs } from "@/contexts/UIPrefsContext";
+
+type TabButton = {
+  key: "profile" | "radar" | "workspace";
+  label: string;
+  route: string;
+  active: boolean;
+  icon: LucideIcon;
+};
+
+const DOCK_W = 55;
+const COLLAPSED_H = 55;
 
 export default function TabBar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = useProfileContext()
+  const { profile } = useProfileContext();
+  const { dockSide } = useUIPrefs();
 
-  const buttons = [
-  {
-    key: "profile",
-    label: "Profile",
-    route: "/settings/profile",
-    active: location.pathname.startsWith("/settings/profile"),
-    type: "avatar",
-  },
-  {
-    key: "radar",
-    icon: LocateFixed,
-    label: "Radar",
-    route: "/radar",
-    active: location.pathname.startsWith("/radar"),
-    type: "icon",
-  },
-  {
-    key: "workspace",
-    icon: PencilRuler,
-    label: "Workspace",
-    route: "/workspace",
-    active: location.pathname.startsWith("/workspace"),
-    type: "icon",
-  },
-    // {
-    //   icon: Dumbbell,
-    //   route: "/training",
-    //   active: location.pathname.startsWith("/training"),
-    // },
-    // {
-    //   icon: Sparkles,
-    //   route: "/discovery",
-    //   active: location.pathname.startsWith("/discovery"),
-    // },
-  ];
+  const profileActive = location.pathname.startsWith("/settings/profile");
 
-  // useEffect(() => {
-  //   const meta = document.querySelector(
-  //     'meta[name="theme-color"]'
-  //   ) as HTMLMetaElement | null;
+  const baseButtons: TabButton[] = useMemo(
+    () => [
+      {
+        key: "radar",
+        icon: LocateFixed,
+        label: "Radar",
+        route: "/radar",
+        active: location.pathname.startsWith("/radar"),
+      },
+      {
+        key: "workspace",
+        icon: PencilRuler,
+        label: "Workspace",
+        route: "/workspace",
+        active: location.pathname.startsWith("/workspace"),
+      },
+    ],
+    [location.pathname]
+  );
 
-  //   if (!meta) return;
+  const activeBtn: TabButton = useMemo(() => {
+    if (profileActive) {
+      return {
+        key: "profile",
+        icon: User, // icon fallback (avatar renders separately)
+        label: "Profile",
+        route: "/settings/profile",
+        active: true,
+      };
+    }
+    return baseButtons.find((b) => b.active) ?? baseButtons[0];
+  }, [profileActive, baseButtons]);
 
-  //   // 🚨 DEBUG COLOR — impossible to miss
-  //   meta.setAttribute("content", "#ff0000");
+  // When collapsed: show ONLY the active button (including profile)
+  // When expanded: show profile + all nav buttons
+  const [collapsed, setCollapsed] = useState(false);
 
-  //   return () => {
-  //     meta.setAttribute("content", "#ffffff");
-  //   };
-  // }, []);
+  const visibleButtons: TabButton[] = useMemo(() => {
+    if (collapsed) return [activeBtn];
+    return [
+      {
+        key: "profile",
+        icon: User,
+        label: "Profile",
+        route: "/settings/profile",
+        active: profileActive,
+      },
+      ...baseButtons,
+    ];
+  }, [collapsed, activeBtn, baseButtons, profileActive]);
 
-  const [open, setOpen] = useState(true);
+  // refs
+  const dockRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  const toggle = () => setOpen(v => !v);
+  // Measure actual expanded content height (no dead space)
+  const [expandedH, setExpandedH] = useState<number>(COLLAPSED_H);
 
+  /* -------------------------------------------------------------------------- */
+  /* EXTERNAL TRIGGERS                                                          */
+  /* window.dispatchEvent(new Event("tabbar-collapse"))                          */
+  /* window.dispatchEvent(new Event("tabbar-expand"))                            */
+  /* -------------------------------------------------------------------------- */
+  useEffect(() => {
+    const onCollapse = () => setCollapsed(true);
+    const onExpand = () => setCollapsed(false);
+
+    window.addEventListener("tabbar-collapse", onCollapse);
+    window.addEventListener("tabbar-expand", onExpand);
+
+    return () => {
+      window.removeEventListener("tabbar-collapse", onCollapse);
+      window.removeEventListener("tabbar-expand", onExpand);
+    };
+  }, []);
+
+  /* -------------------------------------------------------------------------- */
+  /* COLLAPSE ON CLICK OUTSIDE                                                  */
+  /* -------------------------------------------------------------------------- */
+  useEffect(() => {
+    if (collapsed) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const el = dockRef.current;
+      if (!el) return;
+
+      if (!el.contains(e.target as Node)) setCollapsed(true);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [collapsed]);
+
+  /* -------------------------------------------------------------------------- */
+  /* MEASURE EXPANDED HEIGHT (CONTENT-DRIVEN)                                    */
+  /* -------------------------------------------------------------------------- */
+  useLayoutEffect(() => {
+    if (collapsed) return;
+
+    const measure = () => {
+      const el = contentRef.current;
+      if (!el) return;
+      const h = el.scrollHeight;
+      setExpandedH(Math.max(COLLAPSED_H, h));
+    };
+
+    measure();
+
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(measure)
+        : null;
+
+    if (ro && contentRef.current) ro.observe(contentRef.current);
+
+    return () => {
+      if (ro) ro.disconnect();
+    };
+  }, [collapsed, location.pathname, profile?.avatarUrl]);
+
+  /* -------------------------------------------------------------------------- */
+  /* CLICK BEHAVIOR                                                             */
+  /* - collapsed: tap expands (no nav)                                           */
+  /* - expanded: tap navigates + collapses                                       */
+  /* -------------------------------------------------------------------------- */
+  const onTap = (route: string) => {
+    if (collapsed) {
+      setCollapsed(false);
+      return;
+    }
+
+    navigate(route);
+    setCollapsed(true);
+  };
+
+  /* -------------------------------------------------------------------------- */
+  /* RENDER HELPERS                                                             */
+  /* -------------------------------------------------------------------------- */
+  const avatarSrc =
+    profile?.avatarUrl ? AVATAR_MAP[profile.avatarUrl] : undefined;
+
+  const renderBtnIcon = (btn: TabButton) => {
+    if (btn.key === "profile") {
+      return (
+        <div className="h-9 w-9 rounded-full overflow-hidden bg-[var(--gray-5)]">
+          {avatarSrc ? (
+            <img src={avatarSrc} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <User className="h-full w-full p-1.5 text-[var(--gray-6)]" />
+          )}
+        </div>
+      );
+    }
+
+    const color = btn.active ? "text-[var(--acc-dk)]" : "text-[var(--gray-11)]";
+
+    return (
+      <div className="h-9 w-9 flex items-center justify-center">
+        <btn.icon className={cn("block h-7 w-7", color)} />
+      </div>
+    );
+  };
+
+  /* -------------------------------------------------------------------------- */
+  /* MOTION                                                                     */
+  /* -------------------------------------------------------------------------- */
+  const spring = { type: "spring" as const, stiffness: 420, damping: 36 };
 
   return (
-    <>
-      <div className="md:hidden fixed bottom-0 right-0 z-50 flex items-end gap-2 w-[100vw]">
-        {/* <div
-          onClick={toggle}
+    <div 
+      className={cn(
+        "fixed bottom-4 z-50 md:hidden",
+        dockSide === "right" ? "right-8" : "left-8"
+      )}
+    >
+      <motion.div
+        ref={dockRef}
+        layout={false}
+        initial={false}
+        animate={{ height: collapsed ? COLLAPSED_H : expandedH }}
+        transition={spring}
+        style={{ width: DOCK_W }}
+        className={cn(
+          "overflow-hidden relative flex flex-col items-center",
+          "rounded-full border border-white/25 backdrop-blur-[3px]",
+          "bg-[var(--acc-glass)] shadow-[-8px_5px_20px_rgba(0,0,0,0.2)]"
+        )}
+      >
+        {/* CONTENT (DEFINES EXPANDED HEIGHT) */}
+        <motion.div
+          ref={contentRef}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.1, ease: "easeOut" }}
           className={cn(
-            "flex justify-center items-center mb-2 h-6 w-8 rounded-full border-[0px] shadow-[0px_2px_2px_rgba(0,0,0,0.1)] transition-transform",
-            open
-              ? "border-[var(--border-dk)] bg-gradient-to-br from-[var(--gray-9)] to-[var(--gray-11)] text-[var(--gray-3)]"
-              : "border-[var(--acc-dk)] bg-gradient-to-br from-[var(--acc-lt)] to-[var(--acc-md)] text-[var(--acc-dk)]",
-            
+            "flex flex-col items-center justify-center",
+            collapsed ? "pt-2" : "pb-5 gap-2"
           )}
         >
-          <ChevronRight className={`pl-[2px] ${!open && "rotate-180"}`} />
-        </div> */}
-        <div
-          className={cn(
-            `
-              flex justify-center items-center gap-2
-              pl-0 h-[45px]
-              rounded-tl-[20px]
-              bg-gradient-to-b from-transparent to-[var(--gray-6)]
-              shadow-[-1px_-1px_10px_rgba(0,0,0,0.1)]
-              backdrop-blur-[2px] backdrop-saturate-150
-              transition-[width,opacity,transform] duration-200 ease-out
-              overflow-hidden
-            `,
-            open
-              ? "w-full opacity-100 translate-x-0"
-              : "w-0 opacity-0 translate-x-4"
-          )}
-          // style={{
-          //   mask: "url(#inverse-scoop-bl)",
-          //   WebkitMask: "url(#inverse-scoop-bl)",
-          // }}
-        >
-        {/* <svg
-          width="72"
-          height="50"
-          viewBox="0 0 72 50"
-          className="absolute bottom-0 left-[-50px] pointer-events-none"
-        >
-          <g transform="translate(72,0) scale(-1,1)">
-            <path
-              d="
-                M 0 16
-                C 12 16, 20 10, 36 10
-                C 52 10, 60 16, 72 16
-                L 72 50
-                L 0 50
-                Z
-              "
-              fill="rgb(220, 38, 38)"
-            />
-          </g>
-        </svg> */}
-        {buttons.map((btn) => {
-          const activeStyles = btn.active
-            ? "bg-[var(--acc-lt)] rounded-full text-[var(--acc-dk)] shadow-inner"
-            : "text-[var(--text)]"
+          {visibleButtons.map((btn) => {
+            const color = btn.active
+              ? "text-[var(--acc-dk)]"
+              : "text-[var(--gray-11)]";
 
-          return (
-            <div
-              key={btn.key}
-              onClick={() => navigate(btn.route)}
-              className={cn(
-                "flex flex-col justify-center items-center h-8 w-14 text-xs",
-                activeStyles
-              )}
-            >
-              {btn.type === "avatar" ? (
-                <div className="h-[48px] w-[48px] rounded-full overflow-hidden bg-[var(--gray-5)]">
-                  {profile?.avatarUrl ? (
-                    <img
-                      src={AVATAR_MAP[profile.avatarUrl]}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <User className="h-full w-full text-[var(--gray-6)]" />
-                  )}
-                </div>
-              ) : (
-                <btn.icon
-                  className="w-[80%] h-[80%]"
-                  fill={btn.active ? "none" : "var(--gray-5)"}
-                />
-              )}
-            </div>
-          )
-        })}
-          {/* {buttons.map(({ icon: Icon, label, route, active }) => (
-            <div
-              key={route}
-              onClick={() => navigate(route)}
-              className={cn(
-                "flex flex-col justify-center items-center h-8 w-14 text-xs",
-                active
-                  ? "bg-[var(--acc-lt)] rounded-full text-[var(--acc-dk)] shadow-inner"
-                  : "text-[var(--text)]"
-              )}
-              // bg-gradient-to-br from-[var(--acc-lt)] to-[var(--acc-lt)]
-            >
-              <Icon 
-                className="w-[80%] h-[80%]"
-                fill={active ? "none" : "var(--gray-5)"}
-              />
-            </div>
-          ))} */}
-        </div>
-      </div>
-    </>
+            return (
+              <button
+                key={btn.key}
+                onClick={() => onTap(btn.route)}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1",
+                  // keep this minimal so collapse fits inside COLLAPSED_H
+                  collapsed ? "p-0" : "p-2",
+                )}
+              >
+                {renderBtnIcon(btn)}
+
+                {/* labels only when expanded */}
+                {/* {!collapsed && btn.key !== "profile" && (
+                  <span className={cn("text-[9px] leading-none", color)}>
+                    {btn.label}
+                  </span>
+                )} */}
+              </button>
+            );
+          })}
+        </motion.div>
+      </motion.div>
+    </div>
   );
 }

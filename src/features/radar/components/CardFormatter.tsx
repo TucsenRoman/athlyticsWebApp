@@ -53,7 +53,7 @@ export default function CardFormatter({
       <div
         className="
           relative flex flex-col gap-1
-          p-1 pt-3 h-full
+          p-1 h-full
           rounded-lg
           overflow-hidden
         "

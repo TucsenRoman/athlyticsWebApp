@@ -62,7 +62,7 @@ function Pill({
           flex items-center justify-center
           rounded-full transition
           w-8 h-8 md:w-8 md:h-8
-          ${active ? colorClasses[status] : "text-[var(--text)]"}
+          ${active ? colorClasses[status] : "text-[var(--gray-9)]"}
         `}
       >
         <Icon size={24} className="md:hidden" strokeWidth={2} />
@@ -125,7 +125,7 @@ export default function StatusSelector({
           >
             <OverlayIcon
               size={18}
-              stroke="var(--gray-md2)"
+              stroke="var(--gray-12)"
               fill="var(--gray-lt)"
             />
           </button>

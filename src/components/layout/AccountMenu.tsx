@@ -16,6 +16,8 @@ import { Divider, Button } from "@/components/ui";
 
 import { useProfileContext } from "@/features/profile/ProfileProvider"
 import { AVATAR_MAP } from "@/features/profile/avatarMap"
+import { useUIPrefs } from "@/contexts/UIPrefsContext";
+import { cn } from "@/utils/utils";
 
 /* ========================================================================== */
 /* COMPONENT                                                                  */
@@ -27,6 +29,8 @@ export default function AccountMenu() {
 
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const { dockSide, toggleDockSide } = useUIPrefs(); 
 
   const go = (path: string) => {
     navigate(path);
@@ -102,16 +106,16 @@ export default function AccountMenu() {
 
   /* AUTHENTICATED RENDER */
   return (
-    <div className="relative flex justify-center items-center h-10 w-10" ref={menuRef}>
+    <div className="relative flex justify-center items-center h-fit w-fit" ref={menuRef}>
       {/* TRIGGER */}
       <button
         onClick={() => setOpen((v) => !v)}
         className="
           flex items-center justify-center
-          h-8 w-10 rounded-full
+          h-8 w-12 rounded-full
         "
       >
-        <Avatar className="h-full w-full rounded-full border-2 border-[var(--gray-2)]">
+        <Avatar className="h-full w-full rounded-full">
           <AvatarImage
             src={avatarSrc ?? undefined}
           />
@@ -119,7 +123,6 @@ export default function AccountMenu() {
           {/* OUTER PILL (matches nav pill shell) */}
           <AvatarFallback
             className="
-              h-10 w-12
               flex items-center justify-center
               rounded-full
               bg-[var(--gray-lt)]
@@ -131,8 +134,7 @@ export default function AccountMenu() {
                 flex items-center justify-center
                 h-8 w-10
                 rounded-full
-                font-semibold
-                text-base
+                text-base font-semibold
                 transition-colors
                 ${
                   open
@@ -153,7 +155,7 @@ export default function AccountMenu() {
           className="
             absolute top-12 right-0 mt-2 z-[1000]
             w-64 rounded-xl p-2
-            bg-[var(--bg)]
+            bg-[var(--gray-5)]
             border border-[var(--border)]
             shadow-lg backdrop-blur-xl
             flex flex-col gap-1
@@ -168,7 +170,7 @@ export default function AccountMenu() {
                 onClick={() => go("/settings/profile")}
               >
                 {avatarSrc && <AvatarImage src={avatarSrc} />}
-                <AvatarFallback className="bg-[var(--gray-300)] rounded-xl">
+                <AvatarFallback className="bg-[var(--debug)] rounded-xl">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -229,10 +231,22 @@ export default function AccountMenu() {
           />
 
           {/* ORIENTATION */}
+          {/* ORIENTATION */}
           <MenuItem
-            icon={<Hand />}
+            icon={
+              <Hand
+                className={cn(
+                  "transition-transform duration-200",
+                  dockSide === "left"
+                    ? "scale-x-[-0.85]" // flipped + narrower
+                    : "scale-x-[0.85]"  // normal + narrower
+                )}
+              />
+            }
             label="Orientation"
-            onClick={async () => { null }}
+            onClick={() => {
+              toggleDockSide();
+            }}
           />
 
           <Divider debug />
