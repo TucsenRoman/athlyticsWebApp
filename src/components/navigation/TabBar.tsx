@@ -200,9 +200,10 @@ export default function TabBar() {
     <div 
       className={cn(
         "fixed bottom-4 z-50 md:hidden",
+        "right-8"
         // dockSide === "right" ? "right-8" : "left-8"
       )}
-    >
+    >~
       <motion.div
         ref={dockRef}
         layout={false}
