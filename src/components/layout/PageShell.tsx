@@ -5,7 +5,7 @@ import { useCapabilities } from "@/hooks/useCapabilities";
 import TabBar from "@/components/navigation/TabBar";
 import MobileHeader from "../navigation/MobileHeader";
 import DesktopHeader from "@/components/navigation/DesktopHeader";
-import { UIPrefsProvider } from "@/contexts/UIPrefsContext";
+// import { UIPrefsProvider } from "@/contexts/UIPrefsContext";
 
 interface PageShellProps {
   children: React.ReactNode;
