@@ -7,7 +7,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useProfileContext } from "@/features/profile/ProfileProvider";
 import { AVATAR_MAP } from "@/features/profile/avatarMap";
-import { useUIPrefs } from "@/contexts/UIPrefsContext";
+// import { useUIPrefs } from "@/contexts/UIPrefsContext";
 
 type TabButton = {
   key: "profile" | "radar" | "workspace";
@@ -24,7 +24,7 @@ export default function TabBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useProfileContext();
-  const { dockSide } = useUIPrefs();
+  // const { dockSide } = useUIPrefs();
 
   const profileActive = location.pathname.startsWith("/settings/profile");
 
@@ -200,7 +200,7 @@ export default function TabBar() {
     <div 
       className={cn(
         "fixed bottom-4 z-50 md:hidden",
-        dockSide === "right" ? "right-8" : "left-8"
+        // dockSide === "right" ? "right-8" : "left-8"
       )}
     >
       <motion.div
