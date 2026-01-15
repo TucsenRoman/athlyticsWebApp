@@ -15,7 +15,7 @@ export default function PageShell({ children }: PageShellProps) {
   const { isDemo } = useCapabilities();
 
   return (
-    <UIPrefsProvider>
+    // <UIPrefsProvider>
       <div
         className="
           relative flex flex-col overflow-x-hidden
@@ -46,6 +46,6 @@ export default function PageShell({ children }: PageShellProps) {
 
         <TabBar />
       </div>
-    </UIPrefsProvider>
+    // </UIPrefsProvider>
   );
 }
