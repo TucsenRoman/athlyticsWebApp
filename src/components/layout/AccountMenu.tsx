@@ -16,7 +16,7 @@ import { Divider, Button } from "@/components/ui";
 
 import { useProfileContext } from "@/features/profile/ProfileProvider"
 import { AVATAR_MAP } from "@/features/profile/avatarMap"
-import { useUIPrefs } from "@/contexts/UIPrefsContext";
+// import { useUIPrefs } from "@/contexts/UIPrefsContext";
 import { cn } from "@/utils/utils";
 
 /* ========================================================================== */
@@ -30,7 +30,7 @@ export default function AccountMenu() {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const { dockSide, toggleDockSide } = useUIPrefs(); 
+  // const { dockSide, toggleDockSide } = useUIPrefs(); 
 
   const go = (path: string) => {
     navigate(path);
@@ -232,7 +232,7 @@ export default function AccountMenu() {
 
           {/* ORIENTATION */}
           {/* ORIENTATION */}
-          <MenuItem
+          {/* <MenuItem
             icon={
               <Hand
                 className={cn(
@@ -247,7 +247,7 @@ export default function AccountMenu() {
             onClick={() => {
               toggleDockSide();
             }}
-          />
+          /> */}
 
           <Divider debug />
 
