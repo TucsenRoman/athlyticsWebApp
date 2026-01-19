@@ -25,7 +25,8 @@ export function useProgram() {
       .select(
         "id, sport, year, school, gender, state, created_at, last_used_at"
       )
-      .order("created_at", { ascending: true })
+      .order("last_used_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
 
     if (error) {
       console.error("Failed to load programs:", error)

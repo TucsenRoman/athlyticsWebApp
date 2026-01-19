@@ -17,6 +17,7 @@ import {
   PanelLeftOpen,
   Sparkles,
   UserRoundCog,
+  Bell,
 } from "lucide-react";
 import { Divider } from "../ui";
 
@@ -65,7 +66,7 @@ interface AppNavPanelProps {
 const DEFAULT_TABS: TabItem[] = [
   { key: "profile", label: "Profile", icon: UserRoundCog, active: false },
   { key: "program", label: "Program", icon: Box, active: true },
-  { key: "discovery", label: "WIP", icon: Sparkles, active: false },
+  { key: "discovery", label: "Discovery", icon: Sparkles, active: false },
 ];
 
 /* ========================================================================== */
@@ -130,7 +131,7 @@ export default function AppNavPanel({
         {children}
       </div>
 
-      {/* CLOSED RAIL (visible when drawer is closed) */}
+      {/* CLOSED RAIL */}
       <div
         className={cn(
           "fixed left-0 top-0 z-40 h-[100dvh]",
@@ -144,12 +145,11 @@ export default function AppNavPanel({
             "flex flex-col justify-around items-center",
             "h-full w-full",
             // dark sheet like image
-            "bg-gradient-to-b from-black/50 via-black/45 to-black/55",
+            "bg-[#181818]",
             "backdrop-blur-md",
             "border-r border-white/10"
           )}
         >
-          {/* top chevron */}
           <div className="flex h-[64px] items-center justify-center">
             <button
               type="button"
@@ -196,7 +196,6 @@ export default function AppNavPanel({
 
           <Divider color="var(--gray-12)" inset={5} />
 
-          {/* bottom active tab icon */}
           <div className="flex items-center justify-center h-[64px]">
             <button
               type="button"
@@ -220,8 +219,8 @@ export default function AppNavPanel({
         onClick={() => setOpen(false)}
         className={cn(
           "fixed inset-0 z-40",
-          "bg-black/35",
-          "backdrop-blur-[2px]",
+          // "bg-black/35",
+          // "backdrop-blur-[2px]",
           "transition-opacity duration-200",
           isOpen ? "opacity-100" : "pointer-events-none opacity-0"
         )}
@@ -235,7 +234,7 @@ export default function AppNavPanel({
           "transition-transform duration-200 ease-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
           // tuned “glass” look like screenshot
-          "bg-gradient-to-b from-[#111113]/95 via-[#0E0E10]/92 to-[#0B0B0C]/95",
+          "bg-[#181818]",
           "backdrop-blur-xl",
           "border-r border-white/10",
           "shadow-[0_30px_90px_rgba(0,0,0,0.45)]"
@@ -249,24 +248,39 @@ export default function AppNavPanel({
                 <div className="truncate text-xl font-semibold text-[var(--text-lt)]">
                   {title}
                 </div>
-                <div className="truncate text-xs text-[var(--text-dk)]">
+                <div className="truncate text-xs text-[var(--text)]">
                   {subtitle}
                 </div>
               </div>
 
-              {showCollapseChevron && (
+              <div className="flex gap-0.5">
                 <button
                   type="button"
-                  aria-label="Collapse panel"
-                  onClick={() => setOpen(false)}
+                  aria-label="Notifications"
+                  onClick={null}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full",
+                    "relative flex h-9 w-9 items-center justify-center rounded-full",
                     "text-[var(--text)] hover:bg-white/10"
                   )}
                 >
-                  <PanelLeftClose className="h-6 w-6" />
+                  <Bell className="h-5 w-5" />
+                  <div className="absolute top-[6.5px] right-[9.5px] w-[8px] h-[8px] rounded-full border border-[var(--gray-19)] bg-[#596f7e] shadow-inner" />
                 </button>
-              )}
+              
+                {showCollapseChevron && (
+                  <button
+                    type="button"
+                    aria-label="Collapse panel"
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-full",
+                      "text-[var(--text)] hover:bg-white/10"
+                    )}
+                  >
+                    <PanelLeftClose className="h-6 w-6" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
