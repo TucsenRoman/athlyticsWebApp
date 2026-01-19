@@ -43,10 +43,10 @@ export default function WorkspacePage() {
   /* MODE                                                                   */
   /* ---------------------------------------------------------------------- */
 
-  const [mode, setMode] = useState<WorkspaceMode>("manager");
+  const [mode, setMode] = useState<WorkspaceMode>("drive");
 
   /* ---------------------------------------------------------------------- */
-  /* LEDGER (MANAGER / EDITOR)                                               */
+  /* LEDGER (DRIVE / EDITOR)                                               */
   /* ---------------------------------------------------------------------- */
 
   const {
@@ -146,7 +146,7 @@ export default function WorkspacePage() {
         mode={mode}
         programId={effectiveProgramId}
 
-        /* MANAGER */
+        /* DRIVE */
 
         /* EDITOR */
         ledgerId={ledgerId}

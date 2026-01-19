@@ -112,7 +112,7 @@ export default function AccountMenu() {
         onClick={() => setOpen((v) => !v)}
         className="
           flex items-center justify-center
-          h-8 w-12 rounded-full
+          h-8 w-8 rounded-full
         "
       >
         <Avatar className="h-full w-full rounded-full">
@@ -132,7 +132,7 @@ export default function AccountMenu() {
             <div
               className={`
                 flex items-center justify-center
-                h-8 w-10
+                h-full w-full
                 rounded-full
                 text-base font-semibold
                 transition-colors

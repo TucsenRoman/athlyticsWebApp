@@ -13,7 +13,7 @@ import {
   ToolCase,
 } from "lucide-react";
 
-interface ManagerToolsProps {
+interface DriveToolsProps {
   onOpenPackageHub?: () => void;
   onDuplicateLedger?: () => void;
   onFavoriteLedger?: () => void;
@@ -22,19 +22,19 @@ interface ManagerToolsProps {
   onOpenMap?: () => void;
 }
 
-export default function ManagerTools({
+export default function DriveTools({
   onOpenPackageHub,
   onDuplicateLedger,
   onFavoriteLedger,
   onBulkTools,
   onOpenInsights,
   onOpenMap,
-}: ManagerToolsProps) {
+}: DriveToolsProps) {
   /* ---------------------------------------------------------------------- */
   /* MENU ITEMS                                                             */
   /* ---------------------------------------------------------------------- */
 
-  const managerMenuItems = [
+  const driveMenuItems = [
     {
       label: "Package Hub",
       icon: <Package className="h-4 w-4" />,
@@ -80,7 +80,7 @@ export default function ManagerTools({
   return (
     <div>
       <ExpansiveMenu
-        items={managerMenuItems}
+        items={driveMenuItems}
         expand="line"
         direction="left"
         spacing={36}

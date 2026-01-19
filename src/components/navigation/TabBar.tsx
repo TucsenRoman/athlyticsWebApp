@@ -203,7 +203,7 @@ export default function TabBar() {
         "right-8"
         // dockSide === "right" ? "right-8" : "left-8"
       )}
-    >~
+    >
       <motion.div
         ref={dockRef}
         layout={false}

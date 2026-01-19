@@ -4,14 +4,14 @@
 /* VIEWS (PUBLIC WORKSPACE MODES)                                              */
 /* -------------------------------------------------------------------------- */
 
-export { default as ProjectManager } from "./views/manager/ProjectManager";
+export { default as ProjectManager } from "./views/drive/ProjectManager";
 export { default as ProjectEditor } from "./views/editor/ProjectEditor";
 
 /* -------------------------------------------------------------------------- */
 /* TOOLS (TOOLBAR ADD-ONS)                                                     */
 /* -------------------------------------------------------------------------- */
 
-export { default as ManagerTools } from "./views/manager/ManagerTools";
+export { default as DriveTools } from "./views/drive/DriveTools";
 export { default as EditorTools } from "./views/editor/EditorTools";
 
 /* -------------------------------------------------------------------------- */

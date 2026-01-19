@@ -21,41 +21,6 @@ export default function SettingsLayout() {
         />
       )}
 
-      {/* SIDEBAR ---------------------------------------------------------- */}
-      <aside
-        className={`
-          fixed z-40 inset-y-0 left-0 flex flex-col w-72
-          bg-[var(--gray-8)] shadow-inner
-          transform transition-transform duration-300
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          md:relative md:translate-x-0
-        `}
-      >
-        {/* HEADER */}
-        <div className="p-4">
-          <div className="text-lg font-semibold text-[var(--text-dk)]">
-            User Settings
-          </div>
-        </div>
-
-        {/* <Divider color="var(--gray-7)" inset={10} /> */}
-
-        {/* MODE RAIL */}
-        <div className="p-3 flex flex-col gap-2">
-          {SETTINGS_NAV
-            .filter((item) => item.enabled !== false)
-            .map((item) => (
-              <SettingsModeTile
-                key={item.id}
-                to={item.route}
-                icon={item.icon}
-                label={item.label}
-                onSelect={() => setSidebarOpen(false)}
-              />
-            ))}
-        </div>
-      </aside>
-
       {/* CONTENT ---------------------------------------------------------- */}
       <main className="flex-1 min-w-0 overflow-y-auto md:ml-0">
         {/* MOBILE HEADER */}

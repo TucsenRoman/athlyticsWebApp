@@ -11,6 +11,7 @@ import {
   CalendarCog,
   CalendarFold,
   Dumbbell,
+  Box,
 } from "lucide-react";
 
 import React, { useEffect, useState } from "react";
@@ -19,7 +20,7 @@ import { Button } from "@/components/ui/actions/button";
 // VIEW IMPORTS
 import { AttendanceTools } from "@/features/attendance";
 import { ScheduleTools } from "@/features/schedule";
-import { ManagerTools, EditorTools, type WorkspaceMode } from "@/features/workspace";
+import { DriveTools, EditorTools, type WorkspaceMode } from "@/features/workspace";
 
 import BatonTrigger from "@/components/baton/BatonTrigger";
 import TabToggler from "@/components/ui/navigation/tabtoggler";
@@ -30,10 +31,10 @@ import TabToggler from "@/components/ui/navigation/tabtoggler";
 
 export interface ToolbarProps {
   mode: WorkspaceMode;
-  setMode: React.Dispatch<React.SetStateAction<WorkspaceMode>>;
+  setMode: React.Dispatch<React.SetStateAction<WorkspacseMode>>;
   path: string[];
 
-  onManagerSearch?: (query: string) => void;
+  onDriveSearch?: (query: string) => void;
   onEditorSearch?: (query: string) => void;
 
   // ATTENDANCE
@@ -74,7 +75,7 @@ export function ModeTab({
       onClick={onClick}
       className={`
         flex items-center gap-1 h-6 px-2 rounded-full transition
-        ${active ? "bg-[var(--dom-bg)] text-[var(--dom-dk)]" : "text-[var(--text)]"}
+        ${active ? "bg-[var(--acc-bg)] text-[var(--acc-dk)]" : "text-[var(--text)]"}
       `}
     >
       {/* ICON */}
@@ -132,15 +133,15 @@ export default function WorkspaceToolbar({
 
   const handleSearch = (value: string) => {
     setQuery(value);
-    if (mode === "manager") onManagerSearch?.(value);
+    if (mode === "drive") onManagerSearch?.(value);
     if (mode === "editor") onEditorSearch?.(value);
   };
 
   const MODE_TABS = [
-    { value: "manager", label: "Manager", icon: <Settings className="h-4 w-4" /> },
+    { value: "drive", label: "Drive", icon: <Box className="h-4 w-4" /> },
     { value: "editor", label: "Editor", icon: <Edit3 className="h-4 w-4" /> },
-    { value: "attendance", label: "Attendance", icon: <UsersRound className="h-4 w-4" /> },
-    { value: "schedule", label: "Schedule", icon: <CalendarFold className="h-4 w-4" /> },
+    // { value: "attendance", label: "Attendance", icon: <UsersRound className="h-4 w-4" /> },
+    // { value: "schedule", label: "Schedule", icon: <CalendarFold className="h-4 w-4" /> },
   ] as const;
   type WorkspaceMode = (typeof MODE_TABS)[number]["value"];
 
@@ -158,7 +159,7 @@ export default function WorkspaceToolbar({
 
         {/* RIGHT SECTION ---------------------------------------------------- */}
         <div className="h-auto md:h-8">
-          {mode === "manager" && <ManagerTools />}
+          {mode === "drive" && <DriveTools />}
           {mode === "editor" && 
             <EditorTools
               onFind={() => {

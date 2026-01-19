@@ -114,7 +114,7 @@ function RouterContent() {
 
       {/* PROGRAM-SCOPED */}
       <Route
-        path="/radar"
+        path="/program/radar"
         element={
           <PageShell>
             <RequireProgram>
@@ -125,7 +125,7 @@ function RouterContent() {
       />
 
       <Route
-        path="/workspace"
+        path="/program/workspace"
         element={
           <PageShell>
             <RequireProgram>

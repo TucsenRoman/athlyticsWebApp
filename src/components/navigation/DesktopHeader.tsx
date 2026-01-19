@@ -226,7 +226,7 @@ export default function DesktopHeader() {
                   // ~Add more tags describing the visitor's state.
                 } */}
                 <DesktopNavPill landingScrolled={landingScrolled}>
-                  <DesktopNavButton
+                  {/* <DesktopNavButton
                     icon={<LocateFixed className="w-5 h-5" />}
                     label="Radar"
                     // icon={<SunMedium className="w-5 h-5" />}
@@ -234,7 +234,7 @@ export default function DesktopHeader() {
                     active={activeRadar}
                     onClick={() => navigate("/radar")}
                     widthClass="w-[90px]"
-                  />
+                  /> */}
 
                   <DesktopNavButton
                     icon={<PencilRuler className="w-4 h-4" />}
@@ -279,7 +279,9 @@ export default function DesktopHeader() {
               </DesktopNavPill>
             ) : (
               <div className="hidden md:flex">
-                <AccountMenu />
+                <DesktopNavPill>
+                    <AccountMenu />
+                </DesktopNavPill>
               </div>
             )}
           </div>
@@ -302,7 +304,7 @@ function DesktopNavPill({ children, landingScrolled = false }: DesktopNavPillPro
   return (
     <div
       className={`
-        flex justify-center items-center gap-1 h-10 w-full px-1 py-1 rounded-xl
+        flex justify-center items-center gap-1 h-10 w-full px-1 py-1 rounded-[19px]
         transition-all duration-300 bg-[var(--gray-7)] shadow-inner
         ${
           landingScrolled
@@ -339,11 +341,11 @@ function DesktopNavButton({
     <button
       onClick={onClick}
       className={`
-        flex justify-center items-center gap-2 h-8 w-[150px] px-3 rounded-xl transition-colors
+        flex justify-center items-center gap-2 h-8 w-[150px] px-3 rounded-[20px] transition-colors
         ${widthClass}
         ${
           active
-            ? "text-[var(--dom-dk)] bg-[var(--dom-glass)]"
+            ? "text-[var(--acc-dk)] bg-[var(--acc-lt)]"
             : "text-[var(--text)] hover:bg-[var(--gray-8)]"
         }
       `}
