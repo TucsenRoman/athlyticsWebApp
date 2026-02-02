@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+// src/features/ledger/sheet/TableCell.tsx
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/forms/input";
 import {
   Select,
@@ -17,7 +20,6 @@ import {
 } from "@/components/ui/overlays/dialog";
 import { SquarePen, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-
 import { searchHighlight } from "@/utils/searchHighlight";
 
 // 🧱 DND Kit imports
@@ -37,27 +39,46 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 /* -------------------------------------------------------------------------- */
-/*                              TYPES / INTERFACES                             */
+/*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
 
-interface LedgerCellProps {
+interface TableCellProps {
   entryId: string;
   header: any;
   value: any;
+
+  /**
+   * Parent-owned commit handler.
+   * Must merge into the row's existing `values` object and write to DB,
+   * so this cell stays UI-only and does not double-write.
+   */
   onChange: (val: any) => void;
-  routeSyncRef?: any;
 
   searchQuery?: string;
-
-  // ✅ FIX: TypeScript was complaining. Add disabled here.
   disabled?: boolean;
 }
 
+function parseOptions(raw: any): string[] {
+  try {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw.filter((x) => typeof x === "string");
+    if (typeof raw === "string" && raw.trim() !== "") {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.filter((x) => typeof x === "string")
+        : [];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 /* -------------------------------------------------------------------------- */
-/*                             Sortable Option Row                            */
+/*                             SORTABLE OPTION ROW                            */
 /* -------------------------------------------------------------------------- */
 
-function SortableOption({
+function SortableOptionRow({
   id,
   value,
   onEdit,
@@ -71,7 +92,7 @@ function SortableOption({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition: isDragging ? "none" : transition,
     zIndex: isDragging ? 999 : "auto",
@@ -88,7 +109,7 @@ function SortableOption({
       <GripVertical
         {...attributes}
         {...listeners}
-        className="w-4 h-4 cursor-grab text-muted-foreground"
+        className="w-4 h-4 cursor-grab text-[var(--debug)]"
       />
       <Input
         value={value}
@@ -97,10 +118,10 @@ function SortableOption({
         className="flex-1 h-7"
       />
       <Button
-        size="icon"
         variant="ghost"
         onClick={onDelete}
-        className="text-muted-foreground hover:text-red-500"
+        className="text-[var(--debug)] hover:-[var(--debug)]"
+        type="button"
       >
         ✕
       </Button>
@@ -109,100 +130,63 @@ function SortableOption({
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Ledger Cell Main                              */
+/*                                TABLE CELL                                  */
 /* -------------------------------------------------------------------------- */
 
-function LedgerCell({
+function TableCell({
   entryId,
   header,
   value,
   onChange,
-  routeSyncRef,
   disabled = false,
   searchQuery,
-}: LedgerCellProps) {
+}: TableCellProps) {
   const [localValue, setLocalValue] = useState(value ?? "");
   const [openOptionsEditor, setOpenOptionsEditor] = useState(false);
+
   const [options, setOptions] = useState<string[]>([]);
   const [editedOptions, setEditedOptions] = useState<string[]>([]);
-  const syncTimeout = useRef<NodeJS.Timeout | null>(null);
 
   /* -------------------------------- Sync external value -------------------------------- */
   useEffect(() => {
     setLocalValue(value ?? "");
+    // only resync when the header id changes or value changes
   }, [value, header?.id]);
 
   /* --------------------------- Extract dropdown options --------------------------- */
   useEffect(() => {
-    try {
-      if (!header) {
-        setOptions([]);
-        setEditedOptions([]);
-        return;
-      }
+    const parsed = parseOptions(header?.options);
+    setOptions(parsed);
+    setEditedOptions(parsed);
+  }, [header?.options, header?.id]);
 
-      let parsed: any[] = [];
-
-      if (Array.isArray(header.options)) parsed = header.options;
-      else if (typeof header.options === "string" && header.options.trim() !== "") {
-        parsed = JSON.parse(header.options);
-      }
-
-      if (!Array.isArray(parsed)) parsed = [];
-
-      setOptions(parsed);
-      setEditedOptions(parsed);
-    } catch {
-      setOptions([]);
-      setEditedOptions([]);
-    }
-  }, [header]);
+  /* --------------------------- Commit value (parent handles DB) --------------------------- */
+  const commit = (val: any) => {
+    if (disabled) return;
+    onChange(val);
+  };
 
   /* --------------------------- Save dropdown options --------------------------- */
-
   const handleSaveOptions = async () => {
-    const clean = (editedOptions ?? []).filter((o) => o.trim() !== "");
+    if (disabled) return;
+
+    const clean = (editedOptions ?? [])
+      .map((o) => String(o ?? "").trim())
+      .filter((o) => o !== "");
+
     try {
       const { error } = await supabase
-        .from("ledger_headers")
+        .from("table_columns")
         .update({ options: clean })
-        .eq("id", header.id);
+        .eq("id", header?.id);
+
       if (error) throw error;
 
       setOptions(clean);
+      setEditedOptions(clean);
       setOpenOptionsEditor(false);
     } catch (err) {
       console.error("❌ Failed to update dropdown options:", err);
-    }
-  };
-
-  /* ------------------------------- Trigger route sync ------------------------------ */
-  const triggerSync = () => {
-    if (!routeSyncRef?.current?.runInitialSync) return;
-    if (syncTimeout.current) clearTimeout(syncTimeout.current);
-
-    syncTimeout.current = setTimeout(() => {
-      console.log("🔁 [LedgerCell] Running route sync");
-      routeSyncRef.current.runInitialSync();
-    }, 300);
-  };
-
-  /* -------------------------------- Save cell value -------------------------------- */
-  const saveValue = async (val: any) => {
-    if (disabled) return;
-
-    try {
-      const { error } = await supabase
-        .from("ledger_entries")
-        .update({ values: { [header.id]: val } })
-        .eq("id", entryId);
-      if (error) throw error;
-
-      console.log("💾 Saved cell value:", { entryId, col: header.name, val });
-      onChange(val);
-      triggerSync();
-    } catch (err) {
-      console.error("❌ Failed to save cell:", err);
     }
   };
 
@@ -216,6 +200,8 @@ function LedgerCell({
     const oldIndex = (editedOptions ?? []).findIndex((_, i) => `${i}` === active.id);
     const newIndex = (editedOptions ?? []).findIndex((_, i) => `${i}` === over.id);
 
+    if (oldIndex < 0 || newIndex < 0) return;
+
     setEditedOptions((prev) => arrayMove(prev ?? [], oldIndex, newIndex));
   };
 
@@ -223,7 +209,7 @@ function LedgerCell({
   /*                                   RENDER                                   */
   /* -------------------------------------------------------------------------- */
 
-  /* ------------------------------ Dropdown type ------------------------------ */
+  // Dropdown
   if (header?.type === "select") {
     return (
       <>
@@ -232,7 +218,7 @@ function LedgerCell({
           value={localValue ?? ""}
           onValueChange={(val) => {
             setLocalValue(val);
-            saveValue(val);
+            commit(val);
           }}
         >
           <SelectTrigger className="h-7 text-sm bg-transparent border-none shadow-none focus:ring-0">
@@ -241,7 +227,7 @@ function LedgerCell({
 
           <SelectContent>
             {(options ?? []).map((opt, i) => (
-              <SelectItem key={i} value={opt}>
+              <SelectItem key={`${opt}-${i}`} value={opt}>
                 {opt}
               </SelectItem>
             ))}
@@ -252,10 +238,10 @@ function LedgerCell({
             <div className="flex items-center justify-center py-1">
               <Button
                 variant="ghost"
-                size="sm"
                 disabled={disabled}
                 className="text-xs text-muted-foreground flex gap-1"
                 onClick={() => setOpenOptionsEditor(true)}
+                type="button"
               >
                 <SquarePen className="w-3.5 h-3.5" />
                 Manage Options
@@ -284,8 +270,8 @@ function LedgerCell({
               >
                 <div className="space-y-2">
                   {(editedOptions ?? []).map((opt, i) => (
-                    <SortableOption
-                      key={i}
+                    <SortableOptionRow
+                      key={`${i}`}
                       id={`${i}`}
                       value={opt}
                       onEdit={(val) => {
@@ -308,6 +294,8 @@ function LedgerCell({
               variant="outline"
               className="mt-3"
               onClick={() => setEditedOptions([...(editedOptions ?? []), ""])}
+              type="button"
+              disabled={disabled}
             >
               + Add Option
             </Button>
@@ -316,10 +304,13 @@ function LedgerCell({
               <Button
                 variant="secondary"
                 onClick={() => setOpenOptionsEditor(false)}
+                type="button"
               >
                 Cancel
               </Button>
-              <Button onClick={handleSaveOptions}>Save</Button>
+              <Button onClick={handleSaveOptions} type="button" disabled={disabled}>
+                Save
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -327,7 +318,7 @@ function LedgerCell({
     );
   }
 
-  /* ------------------------------- Checkbox type ------------------------------- */
+  // Checkbox
   if (header?.type === "checkbox") {
     return (
       <div className="flex justify-center items-center">
@@ -338,7 +329,7 @@ function LedgerCell({
           onChange={(e) => {
             const val = e.target.checked;
             setLocalValue(val);
-            saveValue(val);
+            commit(val);
           }}
           className="w-4 h-4 cursor-pointer disabled:opacity-50"
         />
@@ -346,49 +337,40 @@ function LedgerCell({
     );
   }
 
-  /* -------------------------- Text / number / time -------------------------- */
+  // Text / number / time
+  const isNumber = header?.type === "number";
+  const isTime = header?.type === "time";
 
-  if (header?.type !== "select" && header?.type !== "checkbox") {
-    const isNumber = header?.type === "number";
-    const isTime = header?.type === "time";
-    const isEditing = routeSyncRef?.current?.editingCell === entryId;
-
-    // 🔍 Highlight mode (Ctrl+F style)
-    if (!isEditing && !isNumber && !isTime && searchQuery) {
-      return (
-        <div
-          className="h-7 text-sm w-full flex items-center px-2"
-          dangerouslySetInnerHTML={{
-            __html: searchHighlight(localValue ?? "", searchQuery),
-          }}
-        />
-      );
-    }
-
-    // ✏️ Editable input mode
+  // Highlight mode (Ctrl+F style) — only for text
+  if (!isNumber && !isTime && searchQuery) {
     return (
-      <Input
-        disabled={disabled}
-        type={isNumber ? "number" : isTime ? "time" : "text"}
-        value={localValue ?? ""}
-        onChange={(e) => setLocalValue(e.target.value)}
-        onBlur={() => {
-          if (!disabled && localValue !== value) saveValue(localValue);
+      <div
+        className="h-7 text-sm w-full flex items-center px-2"
+        dangerouslySetInnerHTML={{
+          __html: searchHighlight(String(localValue ?? ""), searchQuery),
         }}
-        onKeyDown={(e) => {
-          if (
-            !disabled &&
-            (e.key === "Enter" || e.key === "Tab") &&
-            localValue !== value
-          ) {
-            e.preventDefault();
-            e.currentTarget.blur();
-          }
-        }}
-        className="h-7 text-sm w-full border-none bg-transparent focus:ring-0 disabled:opacity-50"
       />
     );
   }
+
+  return (
+    <Input
+      disabled={disabled}
+      type={isNumber ? "number" : isTime ? "time" : "text"}
+      value={localValue ?? ""}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={() => {
+        if (!disabled && localValue !== value) commit(localValue);
+      }}
+      onKeyDown={(e) => {
+        if (!disabled && (e.key === "Enter" || e.key === "Tab") && localValue !== value) {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+      className="h-7 text-sm w-full border-none bg-transparent focus:ring-0 disabled:opacity-50"
+    />
+  );
 }
 
-export default React.memo(LedgerCell);
+export default React.memo(TableCell);

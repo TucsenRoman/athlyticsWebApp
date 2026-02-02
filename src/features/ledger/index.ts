@@ -4,16 +4,17 @@
 /* SHEET (core ledger UI composition)                                        */
 /* -------------------------------------------------------------------------- */
 
-export { default as LedgerSheet } from "./sheet/LedgerSheet";
-export { default as LedgerCell } from "./sheet/LedgerCell";
+export { default as TableSheet } from "./sheet/TableSheet";
+export { default as TableCell } from "./sheet/TableCell";
 export { default as LedgerDropdown } from "./sheet/LedgerDropdown";
 export { default as LedgerFooter } from "./sheet/LedgerFooter";
-export { default as LedgerHeaders } from "./sheet/LedgerHeaders";
+export { default as TableHeaders } from "./sheet/TableHeaders";
 
 /* -------------------------------------------------------------------------- */
 /* ACTIONS (user-driven operations & dialogs)                                */
 /* -------------------------------------------------------------------------- */
 
+// ~Replace ledger with file and have it work for all file types including folders (future).
 export { default as CopyLedger } from "./actions/CopyLedger";
 export { default as MoveLedger } from "./actions/MoveLedger";
 export { default as RouteConnect } from "./actions/RouteConnect";

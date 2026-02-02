@@ -44,8 +44,7 @@ export default function PageShell({
         <div
           // id="app-scroll-container"
           className="
-            pl-[64px]
-            w-[100vw] h-[100dvh]
+            flex-1 min-h-0 w-full
           "
           // h-[calc(100dvh-var(--app-header-h))]
           // h-[calc(100dvh-var(--app-header-h)-var(--tab-bar-h))]

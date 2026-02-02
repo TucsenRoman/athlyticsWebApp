@@ -1,285 +1,337 @@
-"use client";
+// src/features/workspace/views/editor/ProjectEditor.tsx
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import * as React from "react"
+import { useEffect, useState, useCallback } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
-import LedgerSheet from "@/features/ledger/sheet/LedgerSheet";
-import EditorFooter from "./EditorFooter";
+import EditorFooter from "./EditorFooter"
 
-import type { Tables } from "@/integrations/supabase/types";
+// Keep your existing sheet import for now (you can rename the folder/module later)
+import TableSheet from "@/features/ledger/sheet/TableSheet"
+
+import type { Tables } from "@/types/supabase"
 
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
 /* -------------------------------------------------------------------------- */
 
-interface ProjectEditorProps {
-  ledgerId: string;
-  setLedgerId: React.Dispatch<React.SetStateAction<string>>;
-  programId: number;
-  searchQuery: string;
-}
+type FileRow = Tables<"files">
+type TableColumnRow = Tables<"table_columns">
+type TableRowRow = Tables<"table_rows">
+type TableRouteRow = Tables<"table_routes">
 
-type Ledger = Tables<"ledgers">;
-type LedgerHeader = Tables<"ledger_headers">;
-type LedgerEntry = Tables<"ledger_entries">;
+type FileTab = { id: string; name: string }
+
+type ProjectEditorProps = {
+  programId: number
+  fileId: string
+  setFileId: (id: string) => void
+  searchQuery: string
+  setSearchQuery: (q: string) => void
+}
 
 /* -------------------------------------------------------------------------- */
 /* MAIN COMPONENT                                                             */
 /* -------------------------------------------------------------------------- */
 
 export default function ProjectEditor({
-  ledgerId,
-  setLedgerId,
   programId,
+  fileId,
+  setFileId,
   searchQuery,
+  setSearchQuery: _setSearchQuery,
 }: ProjectEditorProps) {
-  const [ledger, setLedger] = useState<Ledger | null>(null);
-  const [headers, setHeaders] = useState<LedgerHeader[]>([]);
-  const [entries, setEntries] = useState<LedgerEntry[]>([]);
-  const [routes, setRoutes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [fileRow, setFileRow] = useState<FileRow | null>(null)
+  const [headers, setHeaders] = useState<TableColumnRow[]>([])
+  const [entries, setEntries] = useState<TableRowRow[]>([])
+  const [routes, setRoutes] = useState<TableRouteRow[]>([])
+  const [loading, setLoading] = useState(false)
 
-  /* All ledgers for program (DB) */
-  const [ledgers, setLedgers] = useState<{ id: string; name: string }[]>([]);
+  // All files for this program
+  const [allFiles, setAllFiles] = useState<FileTab[]>([])
 
-  /* UI: Open Tabs */
-  const [openLedgers, setOpenLedgers] = useState<
-    { id: string; name: string }[]
-  >([]);
+  // UI: open tabs
+  const [openFiles, setOpenFiles] = useState<FileTab[]>([])
 
   /* ---------------------------------------------------------------------- */
-  /* SYNC ACTIVE LEDGER → OPEN TABS                                         */
+  /* LOAD ALL FILES FOR PROGRAM                                             */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
-    if (!ledgerId) return;
-    const found = ledgers.find((l) => l.id === ledgerId);
-    if (!found) return;
+    let mounted = true
+    if (!programId) return
 
-    setOpenLedgers((prev) =>
-      prev.some((l) => l.id === found.id) ? prev : [...prev, found]
-    );
-  }, [ledgerId, ledgers]);
-
-  /* ---------------------------------------------------------------------- */
-  /* CUSTOM SCROLLBAR                                                       */
-  /* ---------------------------------------------------------------------- */
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [thumb, setThumb] = useState({ height: 0, top: 0 });
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const update = () => {
-      const { scrollTop, scrollHeight, clientHeight } = el;
-
-      const ratio = clientHeight / scrollHeight;
-      const height = Math.max(30, clientHeight * ratio);
-      const maxScroll = scrollHeight - clientHeight;
-      const top = (scrollTop / maxScroll) * (clientHeight - height) || 0;
-
-      setThumb({ height, top });
-    };
-
-    update();
-    el.addEventListener("scroll", update);
-    window.addEventListener("resize", update);
-
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [headers.length, entries.length]);
-
-  /* ---------------------------------------------------------------------- */
-  /* LOAD ALL LEDGERS FOR PROGRAM                                           */
-  /* ---------------------------------------------------------------------- */
-  useEffect(() => {
-    if (!programId) return;
-
-    async function load() {
+    ;(async () => {
       const { data, error } = await supabase
-        .from("ledgers")
+        .from("files")
         .select("id, name")
         .eq("program_id", programId)
-        .order("created_at");
+        .order("created_at", { ascending: true })
 
-      if (error) return console.error(error);
-      setLedgers(data ?? []);
+      if (!mounted) return
+
+      if (error) {
+        console.error("ProjectEditor: failed to load files:", error)
+        setAllFiles([])
+        return
+      }
+
+      setAllFiles(
+        (data ?? []).map((r) => ({
+          id: r.id,
+          name: r.name ?? "Untitled",
+        }))
+      )
+    })()
+
+    return () => {
+      mounted = false
     }
-
-    load();
-  }, [programId]);
+  }, [programId])
 
   /* ---------------------------------------------------------------------- */
-  /* LOAD ACTIVE LEDGER DATA                                                */
+  /* SYNC ACTIVE FILE → OPEN TABS                                            */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
-    if (!ledgerId) {
-      setLedger(null);
-      setHeaders([]);
-      setEntries([]);
-      return;
-    }
+    if (!fileId) return
+    const found = allFiles.find((f) => f.id === fileId)
+    if (!found) return
 
-    async function load() {
-      setLoading(true);
-
-      const { data: ledgerData } = await supabase
-        .from("ledgers")
-        .select("*")
-        .eq("id", ledgerId)
-        .maybeSingle();
-
-      const { data: headerData } = await supabase
-        .from("ledger_headers")
-        .select("*")
-        .eq("ledger_id", ledgerId)
-        .order("order_index");
-
-      const { data: entryData } = await supabase
-        .from("ledger_entries")
-        .select("*")
-        .eq("ledger_id", ledgerId)
-        .order("created_at");
-
-      setLedger(ledgerData);
-      setHeaders(headerData || []);
-      setEntries(entryData || []);
-      await loadRoutes();
-
-      setLoading(false);
-    }
-
-    load();
-  }, [ledgerId]);
+    setOpenFiles((prev) => (prev.some((x) => x.id === found.id) ? prev : [...prev, found]))
+  }, [fileId, allFiles])
 
   /* ---------------------------------------------------------------------- */
-  /* ROUTES                                                                 */
+  /* ROUTES                                                                  */
   /* ---------------------------------------------------------------------- */
-
-  const loadRoutes = async () => {
-    if (!ledgerId) return;
-
-    const { data } = await supabase
-      .from("ledger_routes")
-      .select("*")
-      .or(`source_ledger_id.eq.${ledgerId},target_ledger_id.eq.${ledgerId}`)
-      .order("created_at");
-
-    setRoutes(data || []);
-  };
-
-  /* ---------------------------------------------------------------------- */
-  /* CRUD HELPERS                                                           */
-  /* ---------------------------------------------------------------------- */
-
-  const reloadHeaders = async () => {
-    const { data } = await supabase
-      .from("ledger_headers")
-      .select("*")
-      .eq("ledger_id", ledgerId)
-      .order("order_index");
-
-    setHeaders(data || []);
-  };
-
-  const reloadEntries = async () => {
-    const { data } = await supabase
-      .from("ledger_entries")
-      .select("*")
-      .eq("ledger_id", ledgerId)
-      .order("created_at");
-
-    setEntries(data || []);
-  };
-
-  const handleCreateLedger = async () => {
-    if (!programId) return;
-
-    const newName = `New Ledger ${ledgers.length + 1}`;
+  const loadRoutes = useCallback(async () => {
+    if (!fileId) return
 
     const { data, error } = await supabase
-      .from("ledgers")
+      .from("table_routes")
+      .select("*")
+      .or(`source_file_id.eq.${fileId},target_file_id.eq.${fileId}`)
+      .order("created_at", { ascending: true })
+
+    if (error) {
+      console.error("ProjectEditor: failed to load routes:", error)
+      setRoutes([])
+      return
+    }
+
+    setRoutes((data ?? []) as any)
+  }, [fileId])
+
+  /* ---------------------------------------------------------------------- */
+  /* LOAD ACTIVE FILE DATA                                                   */
+  /* ---------------------------------------------------------------------- */
+  useEffect(() => {
+    let mounted = true
+
+    if (!fileId) {
+      setFileRow(null)
+      setHeaders([])
+      setEntries([])
+      setRoutes([])
+      return
+    }
+
+    ;(async () => {
+      setLoading(true)
+
+      // file
+      const { data: fileData, error: fileErr } = await supabase
+        .from("files")
+        .select("*")
+        .eq("id", fileId)
+        .maybeSingle()
+
+      if (!mounted) return
+
+      if (fileErr) console.error("ProjectEditor: files lookup failed:", fileErr)
+      setFileRow((fileData as any) ?? null)
+
+      // columns (headers)
+      const { data: headerData, error: headerErr } = await supabase
+        .from("table_columns")
+        .select("*")
+        .eq("file_id", fileId)
+        .order("order_index", { ascending: true })
+
+      if (!mounted) return
+
+      if (headerErr) {
+        console.error("ProjectEditor: failed to load headers:", headerErr)
+        setHeaders([])
+      } else {
+        setHeaders((headerData ?? []) as any)
+      }
+
+      // rows (entries)
+      const { data: entryData, error: entryErr } = await supabase
+        .from("table_rows")
+        .select("*")
+        .eq("file_id", fileId)
+        .order("created_at", { ascending: true })
+
+      if (!mounted) return
+
+      if (entryErr) {
+        console.error("ProjectEditor: failed to load entries:", entryErr)
+        setEntries([])
+      } else {
+        setEntries((entryData ?? []) as any)
+      }
+
+      await loadRoutes()
+
+      if (!mounted) return
+      setLoading(false)
+    })()
+
+    return () => {
+      mounted = false
+    }
+  }, [fileId, loadRoutes])
+
+  /* ---------------------------------------------------------------------- */
+  /* CRUD HELPERS                                                            */
+  /* ---------------------------------------------------------------------- */
+
+  const reloadHeaders = useCallback(async () => {
+    if (!fileId) return
+
+    const { data, error } = await supabase
+      .from("table_columns")
+      .select("*")
+      .eq("file_id", fileId)
+      .order("order_index", { ascending: true })
+
+    if (error) {
+      console.error("ProjectEditor: reloadHeaders failed:", error)
+      return
+    }
+
+    setHeaders((data ?? []) as any)
+  }, [fileId])
+
+  const reloadEntries = useCallback(async () => {
+    if (!fileId) return
+
+    const { data, error } = await supabase
+      .from("table_rows")
+      .select("*")
+      .eq("file_id", fileId)
+      .order("created_at", { ascending: true })
+
+    if (error) {
+      console.error("ProjectEditor: reloadEntries failed:", error)
+      return
+    }
+
+    setEntries((data ?? []) as any)
+  }, [fileId])
+
+  const handleCreateFile = useCallback(async () => {
+    if (!programId) return
+
+    const newName = `New File ${allFiles.length + 1}`
+
+    const { data, error } = await supabase
+      .from("files")
       .insert({
         name: newName,
         program_id: programId,
+        type: "table", // matches Database Enums
       })
-      .select()
-      .maybeSingle();
+      .select("id, name")
+      .maybeSingle()
 
-    if (error) return console.error(error);
+    if (error) {
+      console.error("ProjectEditor: create file failed:", error)
+      return
+    }
 
-    setLedgers((prev) => [...prev, data!]);
-    setLedgerId(data!.id);
-  };
+    const created: FileTab = { id: data!.id, name: data!.name ?? newName }
+    setAllFiles((prev) => [...prev, created])
+    setOpenFiles((prev) => [...prev, created])
+    setFileId(created.id)
+  }, [programId, allFiles.length, setFileId])
 
-  const handleDeleteLedger = async (id: string) => {
-    if (!id) return;
+  const handleDeleteFile = useCallback(
+    async (id: string) => {
+      if (!id) return
 
-    await supabase.from("ledgers").delete().eq("id", id);
-
-    const remaining = ledgers.filter((l) => l.id !== id);
-    setLedgers(remaining);
-
-    setOpenLedgers((prev) => prev.filter((l) => l.id !== id));
-
-    const next = remaining[remaining.length - 1];
-    setLedgerId(next?.id || "");
-  };
-
-  const handleCloseTab = (id: string) => {
-    setOpenLedgers((prev) => {
-      const filtered = prev.filter((l) => l.id !== id);
-
-      if (ledgerId === id) {
-        const next = filtered[filtered.length - 1];
-        setLedgerId(next?.id || "");
+      const { error } = await supabase.from("files").delete().eq("id", id)
+      if (error) {
+        console.error("ProjectEditor: delete file failed:", error)
+        return
       }
 
-      return filtered;
-    });
-  };
+      const remaining = allFiles.filter((f) => f.id !== id)
+      setAllFiles(remaining)
+      setOpenFiles((prev) => prev.filter((f) => f.id !== id))
+
+      if (fileId === id) {
+        const next = remaining[remaining.length - 1]
+        setFileId(next?.id ?? "")
+      }
+    },
+    [allFiles, fileId, setFileId]
+  )
+
+  const handleCloseTab = useCallback(
+    (id: string) => {
+      setOpenFiles((prev) => {
+        const filtered = prev.filter((f) => f.id !== id)
+
+        if (fileId === id) {
+          const next = filtered[filtered.length - 1]
+          setFileId(next?.id ?? "")
+        }
+
+        return filtered
+      })
+    },
+    [fileId, setFileId]
+  )
 
   /* ---------------------------------------------------------------------- */
   /* UI FLAGS                                                                */
   /* ---------------------------------------------------------------------- */
 
-  const noLedgerSelected = !ledgerId;
-  const ledgerMissing = ledgerId && !ledger && !loading;
+  const noFileSelected = !fileId
+  const fileMissing = !!fileId && !fileRow && !loading
 
   /* ---------------------------------------------------------------------- */
-  /* RENDER                                                                 */
+  /* RENDER                                                                  */
   /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="relative w-full h-[calc(100dvh-<header-height>)] flex flex-col bg-[var(--dom-bg)]">
-
+    <div className="flex flex-col flex-1 h-[calc(100dvh)] min-h-0 w-full">
       {/* MAIN AREA */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {noLedgerSelected ? (
-          <div className="flex justify-center items-center flex-1 py-24 text-[var(--text)]">
-            No ledger selected.
+      <div className="flex-1 min-h-0 overflow-hidden pl-6 pr-1 pt-2">
+        {noFileSelected ? (
+          <div className="flex items-center justify-center h-full text-[var(--text)]">
+            No file selected.
           </div>
         ) : loading ? (
-          <div className="flex justify-center items-center flex-1 py-24 text-[var(--text)]">
+          <div className="flex items-center justify-center h-full text-[var(--text)]">
             Loading...
           </div>
-        ) : ledgerMissing ? (
-          <div className="flex justify-center items-center flex-1 py-24 text-[var(--text)]">
-            Ledger not found.
+        ) : fileMissing ? (
+          <div className="flex items-center justify-center h-full text-[var(--text)]">
+            File not found.
           </div>
         ) : (
-          <div ref={scrollRef} className="relative flex-1 min-h-0 overflow-hidden">
-            <LedgerSheet
-              ledgerId={ledgerId}
-              headers={headers}
-              entries={entries}
-              setEntries={setEntries}
+          <div className="h-full min-h-0 overflow-hidden rounded-2xl border border-[var(--gray-18)] bg-[var(--gray-20)]">
+            <TableSheet
+              tableId={fileId}
+              headers={headers as any}
+              entries={entries as any}
+              setEntries={setEntries as any}
               reloadHeaders={reloadHeaders}
               reloadEntries={reloadEntries}
-              routes={routes}
+              routes={routes as any}
               reloadRoutes={loadRoutes}
               searchQuery={searchQuery}
             />
@@ -287,18 +339,21 @@ export default function ProjectEditor({
         )}
       </div>
 
-      {/* FOOTER */}
-      <EditorFooter
-        openLedgers={openLedgers}
-        activeLedgerId={ledgerId}
-        setActiveLedgerId={setLedgerId}
-        onCreateLedger={handleCreateLedger}
-        onManageRoutes={() => console.log("manage routes")}
-        onSettings={() => console.log("settings")}
-        onCloseTab={handleCloseTab}
-        onDelete={handleDeleteLedger}
-        programId={programId}
-      />
+      <div className="px-6">
+        {/* FOOTER */}
+        <EditorFooter
+          programId={programId}
+          openFiles={openFiles}
+          activeFileId={fileId}
+          setActiveFileId={(id) => setFileId(id)}
+          onCreateFile={handleCreateFile}
+          onSelectFile={(id) => setFileId(id)}
+          onCloseTab={handleCloseTab}
+          onManageRoutes={() => console.log("manage routes")}
+          onSettings={() => console.log("settings")}
+          onDeleteFile={handleDeleteFile}
+        />
+      </div>
     </div>
-  );
+  )
 }

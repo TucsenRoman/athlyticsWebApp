@@ -11,7 +11,7 @@ export default function SettingsLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="relative flex h-full min-h-0 bg-[var(--gray-8)] shadow-inner">
+    <div className="relative flex h-full min-h-0 shadow-inner">
 
       {/* MOBILE OVERLAY */}
       {sidebarOpen && (
@@ -24,7 +24,7 @@ export default function SettingsLayout() {
       {/* CONTENT ---------------------------------------------------------- */}
       <main className="flex-1 min-w-0 overflow-y-auto md:ml-0">
         {/* MOBILE HEADER */}
-        <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-[var(--bg)] md:hidden">
+        {/* <div className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b border-[var(--border)] bg-[var(--bg)] md:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
             className="
@@ -39,7 +39,7 @@ export default function SettingsLayout() {
           <div className="text-lg font-semibold text-[var(--text-dk)]">
             Settings
           </div>
-        </div>
+        </div> */}
 
         <div className="max-w-4xl px-6 md:px-8 py-8">
           <Outlet />
@@ -83,7 +83,7 @@ function SettingsModeTile({
                   border border-[var(--dom-dk)]
                 `
                 : `
-                  bg-[var(--gray-7)]
+                  bg-[var(--gray-)]
                   text-[var(--text)]
                   border border-transparent
                   hover:border-[var(--border)]

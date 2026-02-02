@@ -20,6 +20,9 @@ import {
   Tags,
   UserRound,
   ChevronDown,
+  Archive,
+  Trash2,
+  Settings,
 } from "lucide-react"
 
 import {
@@ -36,6 +39,7 @@ import type { ProgramLite } from "../programLite.types"
 import type { ProgramId } from "@/features/program-cloak/useProgramContext"
 import ProgramConfigModal from "./ProgramConfigModal"
 import { supabase } from "@/integrations/supabase/client"
+import ExpansiveMenu from "@/components/ui/navigation/expansivemenu"
 
 
 /* ========================================================================== */
@@ -266,8 +270,41 @@ export default function ProgramDrivePanel({
       setConfigOpen(false)
     }
 
+    const floatingItems = React.useMemo(
+    () => [
+      // {
+      //   id: "add",
+      //   label: "Add program",
+      //   icon: <Plus className="h-4 w-4" />,
+      //   action: openAddProgram,
+      //   flavor: "slate" as const,
+      // },
+      {
+        id: "archived",
+        label: "Archived",
+        icon: <Archive className="h-4 w-4" />,
+        // action: () => setFilterOpen(true),
+        flavor: "yellow" as const,
+      },
+      {
+        id: "deleted",
+        label: "Deleted",
+        icon: <Trash2 className="h-4 w-4" />,
+        // action: () => setFilterOpen(true),
+        flavor: "red" as const,
+      },
+
+      // TODO: add more actions you want in the floating utils
+      // Example ideas:
+      // - Refresh list: action: () => refresh()
+      // - Collapse/expand sections
+      // - “Archive mode” toggle, etc.
+    ],
+    [openAddProgram]
+  )
+
   return (
-    <div className={cn("relative flex flex-col gap-2 h-full", className)}>
+    <div className={cn("relative flex flex-col gap-2 h-full min-h-0", className)}>
       {/* TOP UTILITIES ROW (search bar + smaller tools) */}
       <div className="flex items-center justify-between gap-3 px-1">
         {/* SEARCH BAR */}
@@ -351,7 +388,7 @@ export default function ProgramDrivePanel({
 
       </div>
 
-      <div className="flex flex-col gap-10 overflow-y-auto overflow-x-hidden pb-[100px]">
+      <div className="flex-1 min-h-0 flex flex-col gap-10 overflow-y-auto overflow-x-hidden pb-[100px]">
         {/* SECTION: YOUR PROGRAMS */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between px-2 text-[var(--text-lt)]">
@@ -437,6 +474,7 @@ export default function ProgramDrivePanel({
             <div className="flex items-center gap-1">
               <UsersRound className="w-3 h-3" />
               <SectionLabel>Shared Programs</SectionLabel>
+              {/* Collaborative instead of shared? */}
             </div>
 
             <button
@@ -593,14 +631,27 @@ export default function ProgramDrivePanel({
         {/* <GradientHint fromColor="#181818" extent="100px" /> */}
       </div>
       
-      {/* FLOATING ADD */}
-      <div className="z-50 fixed bottom-20 right-4">
+      {/* FLOATING UTILITIES */}
+      <div className="z-50 absolute bottom-4 right-4 flex items-end gap-2">
+      {/* <div className="z-50 absolute bottom-20 right-4 flex gap-2 items-end"> */}
+        {/* <ExpansiveMenu
+          items={floatingItems}
+          expand="line"
+          direction="left"          
+          spacing={32}
+          variant="rainbow"
+          mainIcon={<Settings />}
+          mainSize={28}
+          mainRotate={29}
+          defaultState="closed"
+          autoClose
+        /> */}
         <Button
           type="button"
           variant="float"
           regular="md"
           iconSize="lg"
-          className="bg-[var(--gray-10)] hover:bg-white/12 text-[var(--text-dk)]"
+          // className="bg-[var(--gray-10)] hover:bg-white/12 text-[var(--text-dk)]"
           aria-label="Add program"
           onClick={openAddProgram}
         >

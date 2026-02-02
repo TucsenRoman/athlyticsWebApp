@@ -15,13 +15,14 @@ import type { ProgramId } from "@/features/program-cloak/useProgramContext" // ~
 import { useProgramContext } from "@/features/program-cloak/useProgramContext"
 import { useProgram } from "@/features/program/useProgram"
 
-import { ChevronDown, Plus } from "lucide-react"
+import { ChevronDown, Ellipsis, Plus, SquarePen } from "lucide-react"
 import { Button } from "@/components/ui/actions/button"
 
 import ProgramDriveModal from "./ProgramDriveModal"
 import ProgramConfigModal from "./ProgramConfigModal"
 
 import type { ProgramLite } from "../programLite.types"
+import { Divider } from "@/components/ui"
 
 /* ========================================================================== */
 /* TYPES                                                                      */
@@ -31,7 +32,7 @@ export interface ProgramDriveTriggerHandle {
   open: () => void
 }
 
-type TriggerVariant = "header" | "empty"
+type TriggerVariant = "header" | "appNavPanel" | "empty"
 
 interface ProgramDriveTriggerProps {
   variant?: TriggerVariant
@@ -153,7 +154,7 @@ const ProgramDriveTrigger = forwardRef<
 
   if (!loading && !hasPrograms) {
     return (
-      <div className="flex justify-center items-center p-1 h-10 rounded-lg bg-[var(--gray-7)] shadow-inner">
+      <div className="flex justify-center items-center p-1 h-12 rounded-lg bg-[var(--gray-7)] shadow-inner">
         <Button
           iconSize="none"
           onClick={() => setCreateOpen(true)}
@@ -225,6 +226,56 @@ const ProgramDriveTrigger = forwardRef<
     </button>
   )
 
+  const appNavPanel = (
+    <button
+      ref={triggerRef}
+      onClick={() => setDriveOpen(true)}
+      className="
+        relative flex justify-between items-center gap-1
+        px-4 py-2 w-full
+        text-left text-[var(--text-lt)] font-bold 
+        transition-all cursor-
+        rounded-2xl border-2 border-[var(--gray-19)] bg-[var(--gray-18)] hover:bg-[var(--gray-17)]
+      "
+    >
+      {!selectedProgram ? (
+        <>
+          <span className="flex items-center opacity-60">Select Program</span>
+          <ChevronDown size={16} strokeWidth={2.5} className="w-4 h-4 opacity-60" />
+        </>
+      ) : (
+        <>
+          <div className="flex flex-col leading-tight">
+            {/* <div className="absolute top-[25%] left-[3px] w-[3px] h-6 rounded-full bg-gradient-to-b from-[var(--acc-dk)] to-[#6F8AB4]" /> */}
+            <span
+              ref={sportRef}
+              className="
+                flex items-center gap-2
+                max-w-full
+              "
+            >
+              <span className="truncate text-[21px] font-semibold">
+                {selectedProgram.sport}
+              </span>
+
+              <span className="text-sm font-medium opacity-50 shrink-0">
+                {formatGenderAbbrev(selectedProgram.gender)}
+              </span>
+            </span>
+
+            <span className="w-full h-4 text-[10px] font-normal truncate">
+              {selectedProgram.year} <span className="opacity-50">•</span>{" "}
+              {selectedProgram.school}
+            </span>
+          </div>
+          {/* <div className="p-1 rounded-full hover:bg-[var(--gray-15)] transition-all duration-300">
+            <Ellipsis size={16} strokeWidth={2.5} className="w-4 h-4 opacity-60" />
+          </div> */}
+        </>
+      )}
+    </button>
+  )
+
   const EmptyTrigger = (
     <Button
       ref={triggerRef}
@@ -246,9 +297,15 @@ const ProgramDriveTrigger = forwardRef<
   /* RENDER                                                                  */
   /* ---------------------------------------------------------------------- */
 
+  const TRIGGERS: Record<TriggerVariant, React.ReactNode> = {
+    header: HeaderTrigger,
+    appNavPanel: appNavPanel,
+    empty: EmptyTrigger,
+  }
+
   return (
     <>
-      {variant === "empty" ? EmptyTrigger : HeaderTrigger}
+      {TRIGGERS[variant]}
 
       <ProgramDriveModal
         open={driveOpen}

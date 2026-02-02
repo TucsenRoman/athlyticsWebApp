@@ -1,38 +1,45 @@
 // src/features/workspace/components/WorkspaceModeOutlet.tsx
-"use client";
+"use client"
 
-import { ProjectManager, ProjectEditor } from "@/features/workspace";
-import { AttendanceWorkspaceView } from "@/features/attendance";
-import { ScheduleWorkspaceView } from "@/features/schedule";
+import ProjectManager from "@/features/workspace/views/manager/ProjectManager"
+import ProjectEditor from "@/features/workspace/views/editor/ProjectEditor"
+import { AttendanceWorkspaceView } from "@/features/attendance"
+import { ScheduleWorkspaceView } from "@/features/schedule"
 
-import type { WorkspaceMode } from "@/features/workspace";
+import type { WorkspaceMode } from "@/features/workspace/types/workspace.types"
 
 interface Props {
-  mode: WorkspaceMode;
-  programId: number | null;
+  mode: WorkspaceMode
+  setMode: (next: WorkspaceMode) => void
+  path: string[]
+  programId: number | null
+  demoMode: boolean
 
   // editor
-  ledgerId: string;
-  setLedgerId: (id: string) => void;
-  searchQuery: string;
+  fileId: string
+  setFileId: (id: string) => void
+  searchQuery: string
+  setSearchQuery: (q: string) => void
 
   // schedule
-  scheduleWeekIndex: number;
-  setScheduleWeekIndex: (n: number) => void;
-  showAddSlot: boolean;
-  setShowAddSlot: (v: boolean) => void;
+  scheduleWeekIndex: number
+  setScheduleWeekIndex: (n: number) => void
+  showAddSlot: boolean
+  setShowAddSlot: (v: boolean) => void
 
   // attendance
-  attendanceDate: string;
-  attendanceHasSession: boolean;
-  setAttendanceHasSession: (v: boolean) => void;
-  attendanceIsDirty: boolean;
-  setAttendanceIsDirty: (v: boolean) => void;
-  attendanceExceptionCount: number;
-  setAttendanceExceptionCount: (n: number) => void;
-  attendanceSaveFailed: boolean;
-  setAttendanceSaveFailed: (v: boolean) => void;
-  onSubmitAttendance: () => void;
+  attendanceDate: string
+  setAttendanceDate: (v: string) => void
+  attendanceHasSession: boolean
+  setAttendanceHasSession: (v: boolean) => void
+  attendanceIsDirty: boolean
+  setAttendanceIsDirty: (v: boolean) => void
+  attendanceExceptionCount: number
+  setAttendanceExceptionCount: (n: number) => void
+  attendanceSaveFailed: boolean
+  setAttendanceSaveFailed: (v: boolean) => void
+  onSubmitAttendance: () => void
+  onResetAttendance: () => void
 }
 
 export default function WorkspaceModeOutlet(props: Props) {
@@ -40,9 +47,10 @@ export default function WorkspaceModeOutlet(props: Props) {
     mode,
     programId,
 
-    ledgerId,
-    setLedgerId,
+    fileId,
+    setFileId,
     searchQuery,
+    setSearchQuery,
 
     scheduleWeekIndex,
     setScheduleWeekIndex,
@@ -59,23 +67,28 @@ export default function WorkspaceModeOutlet(props: Props) {
     attendanceSaveFailed,
     setAttendanceSaveFailed,
     onSubmitAttendance,
-  } = props;
+  } = props
 
-  if (!programId) return null;
+  if (!programId) return null
 
   switch (mode) {
     case "manager":
-      return <ProjectManager programId={programId} />;
+      return (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ProjectManager programId={programId} />
+        </div>
+      )
 
     case "editor":
       return (
         <ProjectEditor
           programId={programId}
-          ledgerId={ledgerId}
-          setLedgerId={setLedgerId}
+          fileId={fileId}
+          setFileId={setFileId}
           searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
         />
-      );
+      )
 
     case "attendance":
       return (
@@ -91,7 +104,7 @@ export default function WorkspaceModeOutlet(props: Props) {
           setAttendanceSaveFailed={setAttendanceSaveFailed}
           onSubmitAttendance={onSubmitAttendance}
         />
-      );
+      )
 
     case "schedule":
       return (
@@ -102,9 +115,9 @@ export default function WorkspaceModeOutlet(props: Props) {
           triggerAddSlot={showAddSlot}
           setTriggerAddSlot={setShowAddSlot}
         />
-      );
+      )
 
     default:
-      return null;
+      return null
   }
 }

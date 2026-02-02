@@ -1,275 +1,222 @@
-import { useState, useMemo, useEffect } from "react";
+"use client"
+
+import { useEffect, useMemo, useState } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/overlays/dialog";
-
-import { Button } from "@/components/ui/actions/button";
+} from "@/components/ui/overlays/dialog"
+import { Button } from "@/components/ui/actions/button"
 import {
   Select,
   SelectTrigger,
-  SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/forms/select";
+  SelectValue,
+} from "@/components/ui/forms/select"
+import { supabase } from "@/integrations/supabase/client"
 
-import { supabase } from "@/integrations/supabase/client";
-
-import {
-  LedgerHeader,
-  LedgerRouteRecord,
-  buildChainMap,
-  buildColumnRouteInfo,
-  validateAndBuildCreateRoute,
-} from "@/utils/chain-utils";
-
-import { syncRoutes } from "@/lib/route-sync";
-
-const isIndependent = (h: LedgerHeader) =>
-  !h.route_class || h.route_class === "independent";
-
-const isPrimary = (h: LedgerHeader) => h.route_class === "primary";
-
-export interface RouteConnectProps {
-  open: boolean;
-  onClose: () => void;
-  column: LedgerHeader | null;
-  headers: LedgerHeader[];
-  routes: LedgerRouteRecord[];
-  ledgerNames: Record<string, string>;
-  reloadHeaders: () => Promise<void> | void;
-  reloadRoutes: () => Promise<void> | void;
+type ProgramLite = {
+  id: number
+  school: string | null
+  sport: string | null
+  level: string | null
+  gender: string | null
+  year: string | null
+  last_used_at?: string | null
+  created_at?: string | null
 }
 
-export default function RouteConnect({
-  open,
-  onClose,
-  column,
-  headers,
-  routes,
-  ledgerNames,
-  reloadHeaders,
-  reloadRoutes,
-}: RouteConnectProps) {
-  const [secondaryId, setSecondaryId] = useState<string | null>(null);
-  const [primaryId, setPrimaryId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+interface MoveLedgerProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  ledgerId: string // legacy prop name (this is now files.id)
+}
 
-  const chainMap = useMemo(() => buildChainMap(headers, routes), [headers, routes]);
+export default function MoveLedger({ open, onOpenChange, ledgerId }: MoveLedgerProps) {
+  const [programs, setPrograms] = useState<ProgramLite[]>([])
+  const [selectedProgram, setSelectedProgram] = useState<string>("")
+  const [loading, setLoading] = useState(false)
 
-  const columnInfo = useMemo(
-    () => buildColumnRouteInfo(headers, chainMap),
-    [headers, chainMap]
-  );
-
-  const availableSecondaries = useMemo(() => {
-    return headers.filter((h) => {
-      if (!isIndependent(h)) return false;
-      if (h.id === primaryId) return false;
-      return true;
-    });
-  }, [headers, primaryId]);
-
-  const availablePrimaries = useMemo(() => {
-    return headers.filter((h) => {
-      if (!isIndependent(h) && !isPrimary(h)) return false;
-      if (h.id === secondaryId) return false;
-      return true;
-    });
-  }, [headers, secondaryId]);
-
-  const notEnough =
-    availableSecondaries.length < 2 || availablePrimaries.length < 2;
+  const canSubmit = useMemo(() => !!selectedProgram && !!ledgerId && !loading, [selectedProgram, ledgerId, loading])
 
   useEffect(() => {
-    if (!secondaryId || !open) return;
-    if (!headers.some((h) => h.id === secondaryId)) setSecondaryId(null);
-  }, [headers, open, secondaryId]);
+    if (!open) return
 
-  useEffect(() => {
-    if (!primaryId || !open) return;
-    if (!headers.some((h) => h.id === primaryId)) setPrimaryId(null);
-  }, [headers, open, primaryId]);
+    let mounted = true
 
-  /* ---------------------------------------------------------
-   * CREATE ROUTE
-   * --------------------------------------------------------- */
-  async function handleCreate() {
-    if (!secondaryId || !primaryId) {
-      return;
-    }
+    async function loadPrograms() {
+      const { data: auth } = await supabase.auth.getUser()
+      const user = auth?.user
+      if (!user) return
 
-    const { validation, mutation } = validateAndBuildCreateRoute(
-      headers,
-      routes,
-      secondaryId,
-      primaryId
-    );
+      const { data: owned, error: ownedErr } = await supabase
+        .from("programs")
+        .select("id, school, sport, level, gender, year, last_used_at, created_at")
+        .eq("user_id", user.id)
+        .order("last_used_at", { ascending: false })
 
-    if (!validation.ok || !mutation) {
-      return;
-    }
+      if (ownedErr) console.error(ownedErr)
 
-    const { headersToUpdate, routesToInsert } = mutation;
-    setSaving(true);
+      const { data: roles, error: rolesErr } = await supabase
+        .from("program_roles")
+        .select("program_id")
+        .eq("user_id", user.id)
 
-    try {
-      /* ---- Update header route_class values ---- */
-      if (headersToUpdate.length) {
-        const groups: Record<"independent" | "primary" | "secondary", string[]> = {
-          independent: [],
-          primary: [],
-          secondary: [],
-        };
+      if (rolesErr) console.error(rolesErr)
 
-        for (const h of headersToUpdate) {
-          const cls = (h.route_class ?? "independent").trim().toLowerCase();
-          if (cls === "primary") groups.primary.push(h.id!);
-          else if (cls === "secondary") groups.secondary.push(h.id!);
-          else groups.independent.push(h.id!);
-        }
+      const roleIds = Array.from(new Set((roles ?? []).map((r: any) => r.program_id).filter(Boolean))) as number[]
 
-        for (const [cls, ids] of Object.entries(groups)) {
-          if (ids.length > 0) {
-            await supabase
-              .from("ledger_headers")
-              .update({ route_class: cls as "independent" | "primary" | "secondary" })
-              .in("id", ids);
-          }
-        }
+      let viaRoles: ProgramLite[] = []
+      if (roleIds.length > 0) {
+        const { data: rolePrograms, error: roleProgramsErr } = await supabase
+          .from("programs")
+          .select("id, school, sport, level, gender, year, last_used_at, created_at")
+          .in("id", roleIds)
+          .order("last_used_at", { ascending: false })
+
+        if (roleProgramsErr) console.error(roleProgramsErr)
+        viaRoles = (rolePrograms ?? []) as any
       }
 
-      /* ---- Insert new route row(s) ---- */
-      if (routesToInsert.length) {
-        await supabase.from("ledger_routes").insert(
-          routesToInsert.map((r) => ({
-            source_ledger_id: r.source_ledger_id!,
-            source_column_id: r.source_column_id!,
-            target_ledger_id: r.target_ledger_id!,
-            target_column_id: r.target_column_id!,
-            active: true,
-          }))
-        );
-      }
+      const byId = new Map<number, ProgramLite>()
+      ;(owned ?? []).forEach((p: any) => byId.set(p.id, p))
+      ;(viaRoles ?? []).forEach((p: any) => byId.set(p.id, p))
 
-      /* ---- Reload everything ---- */
-      await reloadHeaders();
-      await reloadRoutes();
+      const merged = Array.from(byId.values()).sort((a, b) => {
+        const aT = a.last_used_at ?? a.created_at ?? ""
+        const bT = b.last_used_at ?? b.created_at ?? ""
+        return bT.localeCompare(aT)
+      })
 
-      /* ---- Run global sync (this handles all entity-key logic) ---- */
-      const primaryHeader = headers.find((h) => h.id === primaryId);
-      if (primaryHeader) {
-        await syncRoutes(primaryHeader.ledger_id);
-      }
-
-      closeDialog();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
+      if (mounted) setPrograms(merged)
     }
+
+    loadPrograms()
+    return () => {
+      mounted = false
+    }
+  }, [open])
+
+  async function detachFromOldProgramPackages(oldProgramId: number, fileId: string) {
+    const { data: oldPkgs, error: oldPkgsErr } = await supabase
+      .from("packages")
+      .select("id")
+      .eq("program_id", oldProgramId)
+
+    if (oldPkgsErr) return
+
+    const oldPkgIds = (oldPkgs ?? []).map((p: any) => p.id).filter(Boolean) as string[]
+    if (oldPkgIds.length === 0) return
+
+    await supabase
+      .from("package_items")
+      .delete()
+      .eq("ledger_id", fileId) // legacy column name in schema
+      .in("package_id", oldPkgIds)
   }
 
-  function closeDialog() {
-    setPrimaryId(null);
-    setSecondaryId(null);
-    onClose();
+  async function attachToFirstPackage(programIdNum: number, fileId: string) {
+    const { data: pkgs, error } = await supabase
+      .from("packages")
+      .select("id")
+      .eq("program_id", programIdNum)
+      .order("created_at", { ascending: true })
+      .limit(1)
+
+    if (error) return
+    const pkgId = pkgs?.[0]?.id
+    if (!pkgId) return
+
+    await supabase.from("package_items").insert([
+      {
+        package_id: pkgId,
+        ledger_id: fileId, // schema column name
+        order_index: 0,
+      },
+    ])
+  }
+
+  const handleMove = async () => {
+    if (!canSubmit) return
+
+    const targetProgramNum = Number(selectedProgram)
+    if (!Number.isFinite(targetProgramNum)) return
+
+    setLoading(true)
+    try {
+      // read current program_id so we can detach from old program packages
+      const { data: fileRow, error: fileErr } = await supabase
+        .from("files")
+        .select("id, program_id")
+        .eq("id", ledgerId)
+        .single()
+
+      if (fileErr) throw fileErr
+      if (!fileRow?.id) throw new Error("Table not found")
+
+      const oldProgramId = Number(fileRow.program_id)
+      const hasOldProgram = Number.isFinite(oldProgramId)
+
+      // move file
+      const { error: updateErr } = await supabase
+        .from("files")
+        .update({ program_id: targetProgramNum })
+        .eq("id", ledgerId)
+
+      if (updateErr) throw updateErr
+
+      // best-effort cleanup: remove it from old program packages
+      if (hasOldProgram && oldProgramId !== targetProgramNum) {
+        await detachFromOldProgramPackages(oldProgramId, ledgerId)
+      }
+
+      // best-effort: attach to a package in new program so it shows up
+      await attachToFirstPackage(targetProgramNum, ledgerId)
+
+      onOpenChange(false)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && closeDialog()}>
-      <DialogContent className="max-w-md">
-        {!column ? (
-          <div className="text-sm text-muted-foreground p-4">
-            No column selected.
-          </div>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle>Create Route</DialogTitle>
-            </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Move Table to Another Program</DialogTitle>
+        </DialogHeader>
 
-            <div className="mt-3 space-y-4">
-              <div className="p-2 border text-xs rounded bg-neutral-50">
-                <div><b>Total Headers:</b> {headers.length}</div>
-                <div><b>Independent:</b> {availableSecondaries.length}</div>
-                <div><b>Primary-capable:</b> {availablePrimaries.length}</div>
-                <div><b>Current Column Class:</b> {column.route_class ?? "independent"}</div>
-              </div>
+        <div className="space-y-4">
+          <Select onValueChange={setSelectedProgram} value={selectedProgram}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a program..." />
+            </SelectTrigger>
 
-              {notEnough ? (
-                <div className="p-3 rounded-md border border-yellow-400 bg-yellow-50 text-yellow-800 text-sm">
-                  <strong>Not enough columns.</strong>
-                  <br />
-                  You need at least two independent columns to create a route.
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="text-sm font-medium">Secondary Column</label>
-                    <Select
-                      value={secondaryId ?? undefined}
-                      onValueChange={setSecondaryId}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose independent column" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableSecondaries.map((h) => (
-                          <SelectItem key={h.id} value={h.id}>
-                            {ledgerNames[h.ledger_id] ?? "Unknown"} › {h.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            <SelectContent>
+              {programs.map((p) => (
+                <SelectItem key={p.id} value={String(p.id)}>
+                  {(p.school ?? "School")} — {(p.sport ?? "Sport")} ({p.level ?? "Level"},{" "}
+                  {p.gender ?? "Gender"}{p.year ? `, ${p.year}` : ""})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-                  <div>
-                    <label className="text-sm font-medium">Primary Column</label>
-                    <Select
-                      value={primaryId ?? undefined}
-                      onValueChange={setPrimaryId}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose primary column" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availablePrimaries.map((h) => (
-                          <SelectItem key={h.id} value={h.id}>
-                            {ledgerNames[h.ledger_id] ?? "Unknown"} › {h.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <DialogFooter className="mt-6">
-              <Button variant="ghost" onClick={closeDialog} disabled={saving}>
-                Cancel
-              </Button>
-
-              {!notEnough ? (
-                <Button onClick={handleCreate} disabled={saving}>
-                  {saving ? "Creating…" : "Create Route"}
-                </Button>
-              ) : (
-                <Button
-                  variant="secondary"
-                  onClick={() => console.log("Add a column using the Columns menu.")}
-                >
-                  Add Column
-                </Button>
-              )}
-            </DialogFooter>
-          </>
-        )}
+        <DialogFooter className="pt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleMove} disabled={!canSubmit}>
+            {loading ? "Moving..." : "Move Table"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

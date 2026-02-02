@@ -31,15 +31,17 @@ const buttonVariants = cva(
 
         stick: [
           "h-[32px] w-[32px] p-0",
-          "rounded-full bg-[var(--gray-5)] hover:bg-[var(--gray-7)]",
+          "rounded-full",
+          "bg-[var(--gray-10)] hover:bg-white/12 text-[var(--text-dk)]",
           "data-[active=true]:bg-[var(--gray-7)] data-[active=true]:hover:bg-[var(--gray-8)]",
-          "text-[var(--text)] data-[active=true]:text-[var(--text)]",
+          "data-[active=true]:text-[var(--text)]",
         ].join(" "),
 
         float: [
           "h-[32px] w-[32px] p-0 rounded-full",
-          "bg-[var(--gray-5)] hover:bg-[var(--gray-6)]",
-          "text-[var(--text)]",
+          // "bg-[var(--gray-5)] hover:bg-[var(--gray-6)]",
+          "bg-[var(--gray-10)] hover:bg-white/12 text-[var(--text-dk)]",
+          // "text-[var(--text)]",
           "data-[active=true]:text-[var(--acc-dk)]",
           "data-[active=true]:hover:bg-[var(--acc-bg)]",
           "shadow-md hover:shadow-lg",
@@ -77,6 +79,7 @@ const buttonVariants = cva(
         sm: "h-8 w-8",
         md: "h-10 w-10",
         lg: "h-12 w-12",
+        xl: "h-[52px] w-[52px]",
         mobile: "",
       },
 
@@ -86,6 +89,7 @@ const buttonVariants = cva(
         sm: "h-8 w-auto px-4",
         md: "h-10 w-auto px-4",
         lg: "h-12 w-auto px-4",
+        xl: "h-14 w-auto px-4",
         mobile: "",
       },
 
@@ -93,9 +97,9 @@ const buttonVariants = cva(
       iconSize: {
         none: "none",
         sm: "[&_svg]:h-[16px] [&_svg]:w-[16px]",
-        md: "[&_svg]:h-[20px] [&_svg]:w-[20px]",
-        lg: "[&_svg]:h-[24px] [&_svg]:w-[24px]",
-        xl: "[&_svg]:h-[32px] [&_svg]:w-[32px]",
+        md: "[&_svg]:h-[26px] [&_svg]:w-[26px]",
+        lg: "[&_svg]:h-[32px] [&_svg]:w-[32px]",
+        xl: "[&_svg]:h-[36px] [&_svg]:w-[36px]",
       },
     },
 

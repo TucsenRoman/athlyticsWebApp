@@ -1,727 +1,256 @@
-import { useMemo, useState } from "react";
+"use client"
+
+import { useMemo, useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/overlays/dialog";
-import { Button } from "@/components/ui/actions/button";
-import { supabase } from "@/integrations/supabase/client";
+} from "@/components/ui/overlays/dialog"
+
+import { Button } from "@/components/ui/actions/button"
 import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/overlays/tooltip";
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/forms/select"
+
+import { supabase } from "@/integrations/supabase/client"
 
 import {
-  LedgerHeader,
-  LedgerRouteRecord,
-  RouteClass,
+  LedgerHeader, // legacy type name (represents table_columns row shape in your UI layer)
+  LedgerRouteRecord, // legacy type name (represents table_routes row shape in your UI layer)
   buildChainMap,
   buildColumnRouteInfo,
-  buildRemoveSecondaryMutation,
-  buildRemovePrimaryMutation,
-} from "@/utils/chain-utils";
+  validateAndBuildCreateRoute,
+} from "@/utils/chain-utils"
 
-import {
-  Unlink,
-  Info,
-  Plus,
-  CornerDownRight,
-  Crown,
-  SquareArrowUpRight,
-  Trash2,
-} from "lucide-react";
+import { syncRoutes } from "@/lib/route-sync"
 
-import {
-  ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
-} from "@/components/ui/overlays/context-menu";
+const isIndependent = (h: LedgerHeader) => !h.route_class || h.route_class === "independent"
+const isPrimary = (h: LedgerHeader) => h.route_class === "primary"
 
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter as AlertFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/feedback/alert-dialog";
-
-import { useNavigate } from "react-router-dom";
-
-/* ------------------------------------------------------ */
-/* PRIMARY ROW                                             */
-/* ------------------------------------------------------ */
-
-interface PrimaryRowProps {
-  ledgerId: string;
-  ledgerName: string;
-  columnName: string;
-  busy: boolean;
-  mobileAction: "open" | "remove" | null;
-  requestDeleteChain: () => void;
+export interface RouteConnectProps {
+  open: boolean
+  onClose: () => void
+  column: LedgerHeader | null
+  headers: LedgerHeader[]
+  routes: LedgerRouteRecord[]
+  ledgerNames: Record<string, string> // legacy name; values should map fileId -> name
+  reloadHeaders: () => Promise<void> | void
+  reloadRoutes: () => Promise<void> | void
 }
 
-function PrimaryRow({
-  ledgerId,
-  ledgerName,
-  columnName,
-  busy,
-  mobileAction,
-  requestDeleteChain,
-}: PrimaryRowProps) {
-  const navigate = useNavigate();
-
-  const openLedger = () => {
-    navigate(`/ledgers/${ledgerId}`);
-  };
-
-  function handleMobileTap() {
-    if (!mobileAction || mobileAction === "open") {
-      return openLedger();
-    }
-    if (mobileAction === "remove") {
-      requestDeleteChain();
-      return;
-    }
-  }
-
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
-          className="
-            group
-            relative flex items-center justify-between 
-            text-sm mt-3 py-1 px-3 rounded-md 
-            transition-colors
-            hover:bg-gray-100 cursor-pointer
-          "
-          onClick={handleMobileTap}
-        >
-          <div className="flex items-center gap-2 text-lg">
-            <Crown size={18} className="text-primary" />
-            <span className="font-semibold">{ledgerName}</span>
-            <span className="text-gray-400">&gt;</span>
-            <span>{columnName}</span>
-          </div>
-
-          {/* DESKTOP ICONS */}
-          <div className="hidden md:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-            <button
-              tabIndex={-1}
-              onClick={(e) => {
-                e.stopPropagation();
-                openLedger();
-              }}
-              className="
-                opacity-0 translate-x-1
-                group-hover:opacity-100 group-hover:translate-x-0
-                transition-all duration-150
-                text-gray-500 hover:text-gray-700
-              "
-            >
-              <SquareArrowUpRight size={14} />
-            </button>
-
-            <button
-              tabIndex={-1}
-              disabled={busy}
-              onClick={(e) => {
-                e.stopPropagation();
-                requestDeleteChain();
-              }}
-              className="
-                opacity-0 translate-x-1
-                group-hover:opacity-100 group-hover:translate-x-0
-                transition-all duration-150
-                text-red-600 hover:text-red-700
-                text-xs flex items-center gap-1
-              "
-            >
-              <Trash2 size={12} /> Delete Chain
-            </button>
-          </div>
-        </div>
-      </ContextMenuTrigger>
-
-      <ContextMenuContent className="w-44">
-        <ContextMenuItem onClick={openLedger}>Open</ContextMenuItem>
-        <ContextMenuItem
-          onClick={() =>
-            window.open(`/ledgers/${ledgerId}`, "_blank", "noopener")
-          }
-        >
-          Open in New Tab
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
-  );
-}
-
-/* ------------------------------------------------------ */
-/* SECONDARY ROW                                           */
-/* ------------------------------------------------------ */
-
-interface RouteRowProps {
-  secId: string;
-  h: LedgerHeader;
-  column: LedgerHeader;
-  ledgerNames: Record<string, string>;
-  busy: boolean;
-  columnId: string | null;
-  mobileAction: "open" | "remove" | null;
-  requestRemoveSecondary: (secId: string) => void;
-}
-
-function RouteRow({
-  secId,
-  h,
-  column,
-  ledgerNames,
-  busy,
-  columnId,
-  mobileAction,
-  requestRemoveSecondary,
-}: RouteRowProps) {
-  const navigate = useNavigate();
-  const openLedger = () => navigate(`/ledgers/${h.ledger_id}`);
-
-  function handleMobileTap() {
-    if (!mobileAction || mobileAction === "open") return openLedger();
-    if (mobileAction === "remove") return requestRemoveSecondary(secId);
-  }
-
-  return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
-          className="
-            group
-            relative flex items-center justify-between 
-            text-sm py-1 px-3 rounded-md 
-            transition-colors
-            hover:bg-gray-100 cursor-pointer
-          "
-          onClick={handleMobileTap}
-        >
-          <div className="flex items-center gap-2">
-            <CornerDownRight size={14} className="text-primary" />
-            <span className="font-medium">
-              {ledgerNames[h.ledger_id] ?? "Ledger"}
-            </span>
-            <span className="text-gray-400">&gt;</span>
-            <span>
-              {h.name}
-              {secId === columnId && " (this column)"}
-            </span>
-          </div>
-
-          {/* DESKTOP ICONS */}
-          <div className="hidden md:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-            <button
-              tabIndex={-1}
-              onClick={(e) => {
-                e.stopPropagation();
-                openLedger();
-              }}
-              className="
-                opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0
-                transition-all duration-150 text-gray-500 hover:text-gray-700
-              "
-            >
-              <SquareArrowUpRight size={14} />
-            </button>
-
-            <button
-              tabIndex={-1}
-              onClick={(e) => {
-                e.stopPropagation();
-                requestRemoveSecondary(secId);
-              }}
-              disabled={busy}
-              className="
-                opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0
-                transition-all duration-150 text-red-600 hover:text-red-700
-                text-xs flex items-center gap-1
-              "
-            >
-              <Unlink size={12} /> Remove
-            </button>
-          </div>
-        </div>
-      </ContextMenuTrigger>
-
-      <ContextMenuContent className="w-40">
-        <ContextMenuItem onClick={openLedger}>Open</ContextMenuItem>
-        <ContextMenuItem
-          onClick={() =>
-            window.open(`/ledgers/${h.ledger_id}`, "_blank", "noopener")
-          }
-        >
-          Open in New Tab
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
-  );
-}
-
-/* ------------------------------------------------------ */
-/* MAIN COMPONENT                                          */
-/* ------------------------------------------------------ */
-
-interface RouteInfoProps {
-  open: boolean;
-  onClose: () => void;
-  column: LedgerHeader | null;
-  ledgerNames: Record<string, string>;
-  allHeaders: LedgerHeader[];
-  allRoutes: LedgerRouteRecord[];
-  reloadHeaders: () => void | Promise<void>;
-  reloadRoutes: () => void | Promise<void>;
-  onUpdated?: () => void;
-}
-
-type ConfirmType = "removeSecondary" | "deleteChain" | null;
-
-export default function RouteInfo({
+export default function RouteConnect({
   open,
   onClose,
   column,
+  headers,
+  routes,
   ledgerNames,
-  allHeaders,
-  allRoutes,
   reloadHeaders,
   reloadRoutes,
-  onUpdated,
-}: RouteInfoProps) {
-  const [busy, setBusy] = useState(false);
-  const [mobileAction, setMobileAction] =
-    useState<"open" | "remove" | null>(null);
+}: RouteConnectProps) {
+  const [secondaryId, setSecondaryId] = useState<string | null>(null)
+  const [primaryId, setPrimaryId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  const [confirmType, setConfirmType] = useState<ConfirmType>(null);
-  const [targetSecondaryId, setTargetSecondaryId] = useState<string | null>(
-    null
-  );
+  const chainMap = useMemo(() => buildChainMap(headers, routes), [headers, routes])
+  const columnInfo = useMemo(() => buildColumnRouteInfo(headers, chainMap), [headers, chainMap])
 
-  const columnId = column?.id ?? null;
+  const availableSecondaries = useMemo(() => {
+    return headers.filter((h) => {
+      if (!isIndependent(h)) return false
+      if (h.id === primaryId) return false
+      return true
+    })
+  }, [headers, primaryId])
 
-  /* ---------------- Build chain info ---------------- */
+  const availablePrimaries = useMemo(() => {
+    return headers.filter((h) => {
+      if (!isIndependent(h) && !isPrimary(h)) return false
+      if (h.id === secondaryId) return false
+      return true
+    })
+  }, [headers, secondaryId])
 
-  const chainMap = useMemo(
-    () => buildChainMap(allHeaders, allRoutes),
-    [allHeaders, allRoutes]
-  );
+  const notEnough = availableSecondaries.length < 2 || availablePrimaries.length < 2
 
-  const columnInfoMap = useMemo(
-    () => buildColumnRouteInfo(allHeaders, chainMap),
-    [allHeaders, chainMap]
-  );
+  useEffect(() => {
+    if (!secondaryId || !open) return
+    if (!headers.some((h) => h.id === secondaryId)) setSecondaryId(null)
+  }, [headers, open, secondaryId])
 
-  const info = columnId ? columnInfoMap.get(columnId) ?? null : null;
+  useEffect(() => {
+    if (!primaryId || !open) return
+    if (!headers.some((h) => h.id === primaryId)) setPrimaryId(null)
+  }, [headers, open, primaryId])
 
-  /* ---------------- Enhanced Header ---------------- */
-  const renderHeader = (
-    <DialogHeader
-      className="
-        pb-3 mb-2 
-        border-b 
-        border-gray-200 
-        flex items-center justify-between
-      " // 🔥 CHANGED — adds visual separation
-    >
-      <DialogTitle
-        className="
-          text-base font-semibold flex items-center gap-2
-        "
-      >
-        Route Information
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Info
-              size={14}
-              className="text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
-            />
-          </TooltipTrigger>
+  async function handleCreate() {
+    if (!secondaryId || !primaryId) return
 
-          <TooltipContent
-            side="right"
-            className="max-w-xs text-sm space-y-2"
-          >
-            <p>Routes link columns between ledgers.</p>
-            <p>Primary columns push values to secondaries.</p>
-          </TooltipContent>
-        </Tooltip>
-      </DialogTitle>
-    </DialogHeader>
-  );
+    const { validation, mutation } = validateAndBuildCreateRoute(headers, routes, secondaryId, primaryId)
+    if (!validation.ok || !mutation) return
 
-  if (!column || !info) {
-    return (
-      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-        <DialogContent className="max-w-md">
-          {renderHeader}
+    const { headersToUpdate, routesToInsert } = mutation
+    setSaving(true)
 
-          <div className="text-sm text-muted-foreground pb-4">
-            No route information available.
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  const isPrimary = info.routeClass === "primary";
-  const effectivePrimaryId =
-    isPrimary ? info.columnId : info.chainPrimaryId;
-
-  const chain = effectivePrimaryId ? chainMap[effectivePrimaryId] : undefined;
-  const secondaryIds = chain?.secondaryIds ?? [];
-
-  const chainRoutes = effectivePrimaryId
-    ? allRoutes.filter(
-        (r) => r.active && r.source_column_id === effectivePrimaryId
-      )
-    : [];
-
-  const hasChain = chainRoutes.length > 0;
-
-  /* ------------------------------------------------ */
-  /* Route mutation handlers                          */
-  /* ------------------------------------------------ */
-
-  async function applyRouteMutation(mutation: {
-    headersToUpdate: Partial<LedgerHeader>[];
-    routesToInsert: Partial<LedgerRouteRecord>[];
-    routesToDeleteIds: string[];
-  }): Promise<void> {
-    setBusy(true);
     try {
-      const { headersToUpdate, routesToInsert, routesToDeleteIds } = mutation;
+      // Update column route_class values (table_columns)
+      if (headersToUpdate.length) {
+        const groups: Record<"independent" | "primary" | "secondary", string[]> = {
+          independent: [],
+          primary: [],
+          secondary: [],
+        }
 
-      if (headersToUpdate.length > 0) {
-        const grouped: Record<string, string[]> = {};
         for (const h of headersToUpdate) {
-          if (!h.id || !h.route_class) continue;
-          if (!grouped[h.route_class]) grouped[h.route_class] = [];
-          grouped[h.route_class].push(h.id);
+          const cls = (h.route_class ?? "independent").trim().toLowerCase()
+          if (cls === "primary") groups.primary.push(h.id!)
+          else if (cls === "secondary") groups.secondary.push(h.id!)
+          else groups.independent.push(h.id!)
         }
 
-        for (const [cls, ids] of Object.entries(grouped)) {
-          const { error } = await supabase
-            .from("ledger_headers")
-            .update({ route_class: cls as RouteClass })
-            .in("id", ids);
+        for (const [cls, ids] of Object.entries(groups)) {
+          if (ids.length > 0) {
+            const { error } = await supabase
+              .from("table_columns")
+              .update({ route_class: cls as "independent" | "primary" | "secondary" })
+              .in("id", ids)
 
-          if (error) throw error;
+            if (error) throw error
+          }
         }
       }
 
-      if (routesToInsert.length > 0) {
-        const payload = routesToInsert.map((r) => ({
-          source_ledger_id: r.source_ledger_id!,
+      // Insert route row(s) (table_routes)
+      if (routesToInsert.length) {
+        const payload = routesToInsert.map((r: any) => ({
+          source_file_id: r.source_ledger_id!, // legacy -> real column
           source_column_id: r.source_column_id!,
-          target_ledger_id: r.target_ledger_id!,
+          target_file_id: r.target_ledger_id!, // legacy -> real column
           target_column_id: r.target_column_id!,
-          active: r.active ?? true,
-        }));
+          active: true,
+        }))
 
-        const { error } = await supabase
-          .from("ledger_routes")
-          .insert(payload);
-
-        if (error) throw error;
+        const { error } = await supabase.from("table_routes").insert(payload)
+        if (error) throw error
       }
 
-      if (routesToDeleteIds.length > 0) {
-        const { error } = await supabase
-          .from("ledger_routes")
-          .delete()
-          .in("id", routesToDeleteIds);
+      await reloadHeaders()
+      await reloadRoutes()
 
-        if (error) throw error;
+      // Run global sync (file id)
+      const primaryHeader = headers.find((h) => h.id === primaryId)
+      if (primaryHeader) {
+        await syncRoutes(primaryHeader.ledger_id) // ledger_id should now be file_id in your UI layer
       }
 
-      await reloadHeaders();
-      await reloadRoutes();
-      onUpdated?.();
-      onClose();
+      closeDialog()
     } catch (err) {
-      console.error(err);
+      console.error(err)
     } finally {
-      setBusy(false);
+      setSaving(false)
     }
   }
 
-  async function handleRemoveSecondary(secId: string) {
-    if (!effectivePrimaryId) return;
-
-    const { validation, mutation } = buildRemoveSecondaryMutation(
-      allHeaders,
-      chainRoutes,
-      secId
-    );
-
-    if (!validation.ok) {
-      console.log(validation.reason);
-      return;
-    }
-
-    await applyRouteMutation(mutation);
+  function closeDialog() {
+    setPrimaryId(null)
+    setSecondaryId(null)
+    onClose()
   }
-
-  async function handleRemoveEntireChain() {
-    if (!columnId || !isPrimary) return;
-
-    const { validation, mutation } = buildRemovePrimaryMutation(
-      allHeaders,
-      chainRoutes,
-      columnId
-    );
-
-    if (!validation.ok) {
-      console.log(validation.reason);
-      return;
-    }
-
-    await applyRouteMutation(mutation);
-  }
-
-  function requestRemoveSecondary(secId: string) {
-    setTargetSecondaryId(secId);
-    setConfirmType("removeSecondary");
-  }
-
-  function requestDeleteChain() {
-    setTargetSecondaryId(null);
-    setConfirmType("deleteChain");
-  }
-
-  function closeConfirm() {
-    setConfirmType(null);
-    setTargetSecondaryId(null);
-  }
-
-  async function handleConfirmAction() {
-    if (confirmType === "removeSecondary" && targetSecondaryId) {
-      await handleRemoveSecondary(targetSecondaryId);
-    } else if (confirmType === "deleteChain") {
-      await handleRemoveEntireChain();
-    }
-    closeConfirm();
-  }
-
-  /* ---------------- Primary values ---------------- */
-
-  const primaryHeader =
-    effectivePrimaryId &&
-    allHeaders.find((h) => h.id === effectivePrimaryId);
-
-  const primaryLedgerId = primaryHeader
-    ? primaryHeader.ledger_id
-    : column.ledger_id;
-
-  const primaryLedgerName = primaryHeader
-    ? ledgerNames[primaryHeader.ledger_id]
-    : ledgerNames[column.ledger_id];
-
-  const primaryColumnName = primaryHeader ? primaryHeader.name : column.name;
-
-  /* ------------------------------------------------ */
-  /* RENDER DIALOG                                    */
-  /* ------------------------------------------------ */
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={open} onOpenChange={(v) => !v && closeDialog()}>
       <DialogContent className="max-w-md">
-        {renderHeader}
+        {!column ? (
+          <div className="text-sm text-muted-foreground p-4">No column selected.</div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle>Create Route</DialogTitle>
+            </DialogHeader>
 
-        <PrimaryRow
-          ledgerId={primaryLedgerId}
-          ledgerName={primaryLedgerName}
-          columnName={primaryColumnName}
-          busy={busy}
-          mobileAction={mobileAction}
-          requestDeleteChain={requestDeleteChain}
-        />
+            <div className="mt-3 space-y-4">
+              <div className="p-2 border text-xs rounded bg-neutral-50">
+                <div>
+                  <b>Total Columns:</b> {headers.length}
+                </div>
+                <div>
+                  <b>Independent:</b> {availableSecondaries.length}
+                </div>
+                <div>
+                  <b>Primary-capable:</b> {availablePrimaries.length}
+                </div>
+                <div>
+                  <b>Current Column Class:</b> {column.route_class ?? "independent"}
+                </div>
+              </div>
 
-        {!hasChain && (
-          <div className="text-sm text-muted-foreground mt-2">
-            No active route connections.
-          </div>
-        )}
+              {notEnough ? (
+                <div className="p-3 rounded-md border border-yellow-400 bg-yellow-50 text-yellow-800 text-sm">
+                  <strong>Not enough columns.</strong>
+                  <br />
+                  You need at least two independent columns to create a route.
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-sm font-medium">Secondary Column</label>
+                    <Select value={secondaryId ?? undefined} onValueChange={setSecondaryId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose independent column" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableSecondaries.map((h) => (
+                          <SelectItem key={h.id} value={h.id}>
+                            {(ledgerNames[h.ledger_id] ?? "Table")} › {h.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-        {hasChain && (
-          <div
-            className="
-              border-l border-primary/40 pl-4
-              max-h-48 overflow-y-auto
-              ml-5
-              space-y-3
-            "
-          >
-            {secondaryIds.map((secId) => {
-              const h = allHeaders.find((x) => x.id === secId);
-              if (!h) return null;
+                  <div>
+                    <label className="text-sm font-medium">Primary Column</label>
+                    <Select value={primaryId ?? undefined} onValueChange={setPrimaryId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose primary column" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availablePrimaries.map((h) => (
+                          <SelectItem key={h.id} value={h.id}>
+                            {(ledgerNames[h.ledger_id] ?? "Table")} › {h.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+            </div>
 
-              return (
-                <RouteRow
-                  key={secId}
-                  secId={secId}
-                  h={h}
-                  column={column}
-                  ledgerNames={ledgerNames}
-                  busy={busy}
-                  columnId={columnId}
-                  mobileAction={mobileAction}
-                  requestRemoveSecondary={requestRemoveSecondary}
-                />
-              );
-            })}
-
-            <button
-              className="hidden md:inline-flex group p-1.5 rounded-full transition-colors hover:bg-primary/10"
-              onClick={() => console.log("Trigger RouteConnect from here")}
-            >
-              <Plus
-                size={20}
-                className="text-gray-600 transition-colors group-hover:text-primary"
-              />
-            </button>
-          </div>
-        )}
-
-        {/* MOBILE HINT */}
-        {hasChain && (
-          <div className="md:hidden mt-4 text-center text-sm text-gray-600 font-medium relative h-6">
-            <span
-              className={`
-                absolute inset-0 flex items-center justify-center gap-1
-                transition-opacity duration-200
-                ${mobileAction === "open" ? "opacity-100" : "opacity-0 pointer-events-none"}
-              `}
-            >
-              Tap
-              <Crown size={16} className="text-secondary" />
-              or
-              <CornerDownRight size={16} className="text-secondary" />
-              to go to it.
-            </span>
-
-            <span
-              className={`
-                absolute inset-0 flex items-center justify-center gap-1
-                transition-opacity duration-200
-                ${mobileAction === "remove" ? "opacity-100" : "opacity-0 pointer-events-none"}
-              `}
-            >
-              Tap
-              <Crown size={16} className="text-destructive" />
-              or
-              <CornerDownRight size={16} className="text-destructive" />
-              to remove it.
-            </span>
-          </div>
-        )}
-
-        {/* MOBILE ACTION DOCK */}
-        {hasChain && (
-          <div className="md:hidden flex items-center justify-around py-3 mt-2 bg-gray-50 rounded-lg shadow-inner">
-
-            {/* Add Secondary */}
-            <button
-              onClick={() => console.log("Trigger RouteConnect from here")}
-              className="p-3 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
-            >
-              <Plus size={24} className="text-gray-700" />
-            </button>
-
-            {/* Open Mode */}
-            <button
-              onClick={() =>
-                setMobileAction(mobileAction === "open" ? null : "open")
-              }
-              className={`
-                p-3 rounded-full transition-colors
-                ${mobileAction === "open" ? "bg-secondary/20" : "bg-gray-200"}
-              `}
-            >
-              <SquareArrowUpRight size={24} className="text-secondary" />
-            </button>
-
-            {/* Remove Mode */}
-            <button
-              onClick={() =>
-                setMobileAction(mobileAction === "remove" ? null : "remove")
-              }
-              className={`
-                p-3 rounded-full transition-colors
-                ${mobileAction === "remove" ? "bg-red-200" : "bg-gray-200"}
-              `}
-            >
-              <Unlink size={24} className="text-red-600" />
-            </button>
-
-            {/* 🔥 REMOVED: Delete chain button on mobile */}
-          </div>
-        )}
-
-        <DialogFooter className="hidden md:flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onClose}
-            disabled={busy}
-          >
-            Close
-          </Button>
-        </DialogFooter>
-
-        {/* SHARED ALERT DIALOG */}
-        <AlertDialog
-          open={confirmType !== null}
-          onOpenChange={(open) => {
-            if (!open) closeConfirm();
-          }}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                {confirmType === "removeSecondary"
-                  ? "Remove secondary column?"
-                  : "Delete entire route chain?"}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {confirmType === "removeSecondary"
-                  ? "This will unlink this secondary column."
-                  : "This will remove the entire route chain."}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-
-            <AlertFooter>
-              <AlertDialogCancel onClick={closeConfirm}>
+            <DialogFooter className="mt-6">
+              <Button variant="ghost" onClick={closeDialog} disabled={saving}>
                 Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleConfirmAction}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                {confirmType === "removeSecondary" ? "Remove" : "Delete Chain"}
-              </AlertDialogAction>
-            </AlertFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </Button>
+
+              {!notEnough ? (
+                <Button onClick={handleCreate} disabled={saving}>
+                  {saving ? "Creating…" : "Create Route"}
+                </Button>
+              ) : (
+                <Button variant="secondary" onClick={() => console.log("Add a column using the Columns menu.")}>
+                  Add Column
+                </Button>
+              )}
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
-  );
+  )
 }

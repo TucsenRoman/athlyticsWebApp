@@ -28,7 +28,7 @@ export interface ExpansiveMenuItem {
   id?: string;
   label: string;
   icon: React.ReactNode;
-  action?: () => void;
+  action?: () => void | Promise<void>;
   destructive?: boolean;
   flavor?: Flavor;
   children?: ExpansiveMenuItem[];
@@ -44,9 +44,11 @@ export interface LayeredArchConfig {
 export interface ExpansiveMenuMobileOverrides {
   expand?: ExpansionType;
   direction?: ExpansionDirection;
+  directionDeg?: number;
   spacing?: number;
   radius?: number;
   mainRotate?: number;
+  mainIconSize?: number;
   mainSize?: number;
   offsetX?: number;
   offsetY?: number;
@@ -57,6 +59,7 @@ export interface ExpansiveMenuProps {
 
   expand?: ExpansionType;
   direction?: ExpansionDirection;
+  directionDeg?: number;
 
   spacing?: number;
   radius?: number;
@@ -69,6 +72,8 @@ export interface ExpansiveMenuProps {
   variant?: "solid" | "panel" | "inset" | "rainbow" | "ghost";
 
   mainIcon?: React.ReactNode;
+  mainIconSize?: number;
+  mainSize?: number;
   mainRotate?: number;
 
   defaultState?: DefaultState;
@@ -77,7 +82,6 @@ export interface ExpansiveMenuProps {
   setOpen?: (v: boolean) => void;
 
   layeredArch?: LayeredArchConfig;
-  mainSize?: number;
 
   autoClose?: boolean;
 }
@@ -105,6 +109,20 @@ function getAdaptiveDefault() {
   return window.matchMedia("(min-width: 768px)").matches;
 }
 
+function dirToDeg(dir?: ExpansionDirection) {
+  switch (dir) {
+    case "right":
+      return 90
+    case "down":
+      return 180
+    case "left":
+      return 270
+    case "up":
+    default:
+      return 0
+  }
+}
+
 /* ========================================================================== */
 /* COMPONENT                                                                  */
 /* ========================================================================== */
@@ -113,7 +131,8 @@ export default function ExpansiveMenu({
   items,
 
   expand = "arch",
-  direction = "up",
+  direction,
+  directionDeg,
 
   spacing = 42,
   radius = 56,
@@ -127,8 +146,9 @@ export default function ExpansiveMenu({
   variant = "solid",
 
   mainIcon,
-  mainRotate = 0,
+  mainIconSize = 32,
   mainSize = 32,
+  mainRotate = 0,
 
   defaultState = "closed",
 
@@ -142,8 +162,12 @@ export default function ExpansiveMenu({
   /* -------------------- RESOLVED CONFIG -------------------- */
 
   const effectiveExpand = isMobile && mobile?.expand ? mobile.expand : expand;
-  const effectiveDirection =
-    isMobile && mobile?.direction ? mobile.direction : direction;
+  const effectiveDirectionDeg =
+    isMobile && mobile?.directionDeg !== undefined
+      ? mobile.directionDeg
+      : directionDeg !== undefined
+        ? directionDeg
+        : dirToDeg(direction) // Legacy Fallback
   const effectiveSpacing =
     isMobile && mobile?.spacing !== undefined ? mobile.spacing : spacing;
   const effectiveRadius =
@@ -152,10 +176,19 @@ export default function ExpansiveMenu({
     isMobile && mobile?.mainRotate !== undefined
       ? mobile.mainRotate
       : mainRotate;
-  const effectiveMainSize =
-    isMobile && mobile?.mainSize !== undefined ? mobile.mainSize : mainSize;
+  const effectiveMainIconSize =
+    isMobile && mobile?.mainIconSize !== undefined
+      ? mobile.mainIconSize
+      : mainIconSize
 
-  const iconScale = effectiveMainSize / 32;
+  const effectiveMainSize =
+    isMobile && mobile?.mainSize !== undefined
+      ? mobile.mainSize
+      : mainSize
+
+  const orbPx = Math.max(12, effectiveMainSize)
+
+  const iconScale = effectiveMainIconSize / 32
 
   /* -------------------- OPEN STATE -------------------- */
 
@@ -165,8 +198,9 @@ export default function ExpansiveMenu({
     return getAdaptiveDefault();
   });
 
-  const open = controlledOpen ?? internalOpen;
-  const setOpen = controlledSetOpen ?? setInternalOpen;
+  const isControlled = controlledOpen !== undefined && controlledSetOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = isControlled ? controlledSetOpen : setInternalOpen
 
   /* -------------------- NESTING STATE -------------------- */
 
@@ -193,15 +227,15 @@ export default function ExpansiveMenu({
     const list = displayedItems;
 
     if (effectiveExpand === "line") {
+      const rad = (effectiveDirectionDeg * Math.PI) / 180
       return list.map((_, i) => {
-        const d = (i + 1) * effectiveSpacing;
+        const d = (i + 1) * effectiveSpacing
+        // 0° = up => (x=0, y=-d)
         return {
-          up: { x: 0, y: -d },
-          down: { x: 0, y: d },
-          left: { x: -d, y: 0 },
-          right: { x: d, y: 0 },
-        }[effectiveDirection];
-      });
+          x: Math.sin(rad) * d,
+          y: -Math.cos(rad) * d,
+        }
+      })
     }
 
     if (effectiveExpand === "circle") {
@@ -236,53 +270,36 @@ export default function ExpansiveMenu({
             : -arc / 2 +
               (index / Math.max(itemsPerLayer - 1, 1)) * arc;
 
-        const offset =
-          effectiveDirection === "left"
-            ? Math.PI
-            : effectiveDirection === "down"
-            ? Math.PI / 2
-            : effectiveDirection === "right"
-            ? -Math.PI / 2
-            : 0;
-
-        const angle = baseAngle + offset;
+        const dirRad = (effectiveDirectionDeg * Math.PI) / 180
+        const angle = baseAngle + dirRad
 
         return {
-          x: Math.cos(angle) * layerRadius,
-          y: Math.sin(angle) * layerRadius,
-        };
+          x: Math.sin(angle) * layerRadius,
+          y: -Math.cos(angle) * layerRadius,
+        }
       });
     }
 
     // default: arch
     return list.map((_, i) => {
-      const arc = Math.PI / 2;
+      const arc = Math.PI / 2
       const base =
         list.length === 1
           ? 0
-          : -arc / 2 +
-            (i / Math.max(list.length - 1, 1)) * arc;
+          : -arc / 2 + (i / Math.max(list.length - 1, 1)) * arc
 
-      const offset =
-        effectiveDirection === "left"
-          ? Math.PI
-          : effectiveDirection === "down"
-          ? Math.PI / 2
-          : effectiveDirection === "right"
-          ? -Math.PI / 2
-          : 0;
-
-      const angle = base + offset;
+      const dirRad = (effectiveDirectionDeg * Math.PI) / 180
+      const angle = base + dirRad
 
       return {
-        x: Math.cos(angle) * effectiveRadius,
-        y: Math.sin(angle) * effectiveRadius,
-      };
+        x: Math.sin(angle) * effectiveRadius,
+        y: -Math.cos(angle) * effectiveRadius,
+      }
     });
   }, [
     displayedItems,
     effectiveExpand,
-    effectiveDirection,
+    effectiveDirectionDeg,
     effectiveSpacing,
     effectiveRadius,
     layeredArch,
@@ -290,14 +307,18 @@ export default function ExpansiveMenu({
 
   /* -------------------- MAIN ORB CLICK -------------------- */
 
-  function handleMainClick() {
+  function handleMainClick(e?: React.MouseEvent) {
+    e?.preventDefault()
+    e?.stopPropagation()
+
     if (activeNestKey) {
-      setActiveNestKey(null);
-      return;
+      setActiveNestKey(null)
+      return
     }
-    const next = !open;
-    setOpen(next);
-    if (!next) setActiveNestKey(null);
+
+    const next = !open
+    setOpen(next)
+    if (!next) setActiveNestKey(null)
   }
 
   /* -------------------- BUTTON RENDER -------------------- */
@@ -308,22 +329,41 @@ export default function ExpansiveMenu({
 
     return (
       <Button
+        type="button"
         variant="float"
         iconSize="sm"
         title={item.label}
-        onClick={() => {
+        onClick={async (e) => {
+          e.preventDefault()
+          e.stopPropagation()
+
+          console.log("[ExpansiveMenu] item click:", item.label)
+
+          const hasChildren = !!item.children?.length
+
           if (!activeNestKey && hasChildren) {
-            const rootIndex = items.findIndex((it) => it === item);
-            setActiveNestKey(item.id ?? `${item.label}-${rootIndex}`);
-            return;
+            const rootIndex = items.findIndex((it) => it === item)
+            const key = item.id ?? `${item.label}-${rootIndex}`
+            console.log("[ExpansiveMenu] enter submenu:", key)
+            setActiveNestKey(key)
+            return
           }
 
-          item.action?.();
-          if (autoClose) {
-            setOpen(false);
-            setActiveNestKey(null);
+          try {
+            console.log("[ExpansiveMenu] action start:", item.label)
+            await item.action?.()
+            console.log("[ExpansiveMenu] action done:", item.label)
+          } catch (e) {
+            console.log("[ExpansiveMenu] action error:", item.label, e)
+          } finally {
+            if (autoClose) {
+              console.log("[ExpansiveMenu] autoClose -> closing:", item.label)
+              setOpen(false)
+              setActiveNestKey(null)
+            }
           }
         }}
+
         style={
           variant === "rainbow" && flavor
             ? { backgroundColor: flavor.base }
@@ -355,20 +395,23 @@ export default function ExpansiveMenu({
   }
 
   /* -------------------- RENDER -------------------- */
-
   return (
     <div
       className={`
         relative flex items-center justify-center
-        h-8 w-8 overflow-visible rounded-full transition-all
+        overflow-visible rounded-full transition-all
         ${open ? "shadow-lg" : "shadow-none"}
       `}
+      style={{ width: orbPx, height: orbPx }}
     >
       {/* MAIN ORB */}
       <Button
+        type="button"
         variant="stick"
         data-active={open}
         onClick={handleMainClick}
+        className="rounded-full p-0"
+        style={{ width: orbPx, height: orbPx }}
       >
         <motion.div
           animate={{ rotate: isNested ? 0 : open ? effectiveRotation : 0 }}
@@ -378,8 +421,8 @@ export default function ExpansiveMenu({
           <span
             style={{
               transform: `scale(${iconScale})`,
-              width: effectiveMainSize,
-              height: effectiveMainSize,
+              width: effectiveMainIconSize,
+              height: effectiveMainIconSize,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -393,43 +436,34 @@ export default function ExpansiveMenu({
       {/* ITEMS */}
       {open &&
         (isNested ? (
-          // NESTED — NO ANIMATION
           displayedItems.map((item, i) => {
-            const pos = positions[i] ?? { x: 0, y: 0 };
+            const pos = positions[i] ?? { x: 0, y: 0 }
             return (
               <div
                 key={`nest-${item.id ?? i}`}
                 className="absolute z-[9999] pointer-events-auto"
-                style={{
-                  transform: `translate(${pos.x}px, ${pos.y}px)`,
-                }}
+                style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
               >
                 {renderButton(item, i)}
               </div>
-            );
+            )
           })
         ) : (
-          // ROOT — ANIMATED
           <AnimatePresence>
             {displayedItems.map((item, i) => {
-              const pos = positions[i];
+              const pos = positions[i]
               return (
                 <motion.div
                   key={`root-${item.id ?? i}`}
                   initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    x: pos.x,
-                    y: pos.y,
-                  }}
+                  animate={{ opacity: 1, scale: 1, x: pos.x, y: pos.y }}
                   exit={{ opacity: 0, scale: 0 }}
                   transition={{ duration: 0.25, delay: i * 0.05 }}
                   className="absolute z-[9999] pointer-events-auto"
                 >
                   {renderButton(item, i)}
                 </motion.div>
-              );
+              )
             })}
           </AnimatePresence>
         ))}

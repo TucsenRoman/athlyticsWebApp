@@ -1,54 +1,48 @@
 /* =========================================================================
-   ROUTE ENGINE — ATHLYTICS
+   ROUTE ENGINE — ATHLYTICS (TABLES)
    ========================================================================= */
 
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/types/supabase"
 
-export type LedgerHeader = Tables<"ledger_headers">;
-export type LedgerRouteRecord = Tables<"ledger_routes">;
+/**
+ * ✅ New canonical types (ledger_* is deprecated)
+ */
+export type TableColumn = Tables<"table_columns">
+export type TableRouteRecord = Tables<"table_routes">
 
-export type RouteClass = "independent" | "primary" | "secondary";
+/**
+ * Route class stored on table_columns.route_class
+ */
+export type RouteClass = "independent" | "primary" | "secondary"
 
-// export interface LedgerHeader {
-//   id: string;
-//   ledger_id: string;
-//   name: string;
-//   type: string;
-//   options?: any[];
-//   order_index: number;
-//   route_class: RouteClass | null | undefined;
-// }
-
-// export interface LedgerRouteRecord {
-//   id: string;
-//   source_ledger_id: string;
-//   source_column_id: string;
-//   target_ledger_id: string;
-//   target_column_id: string;
-//   active: boolean;
-//   created_at: string;
-//   updated_at: string;
-// }
+/**
+ * Temporary compatibility exports (remove once you’ve updated imports everywhere)
+ * NOTE: these are intentionally aliases so existing files compile while you migrate.
+ */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export type LedgerHeader = TableColumn
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export type LedgerRouteRecord = TableRouteRecord
 
 /* =========================================================================
    CHAIN MODELS
    ========================================================================= */
 
 export interface Chain {
-  primaryId: string;
-  primaryLedgerId: string;
-  secondaryIds: string[];
+  primaryId: string
+  primaryFileId: string
+  secondaryIds: string[]
 }
 
 export interface ChainMap {
-  [primaryId: string]: Chain;
+  [primaryId: string]: Chain
 }
 
 export interface ColumnRouteInfo {
-  columnId: string;
-  ledgerId: string;
-  routeClass: RouteClass;
-  chainPrimaryId?: string;
+  columnId: string
+  fileId: string
+  routeClass: RouteClass
+  chainPrimaryId?: string
 }
 
 /* =========================================================================
@@ -58,52 +52,74 @@ export interface ColumnRouteInfo {
 function normalizeRouteClass(val: RouteClass | null | undefined): RouteClass {
   return val === "primary" || val === "secondary" || val === "independent"
     ? val
-    : "independent";
+    : "independent"
 }
 
-function getHeader(headers: LedgerHeader[], id: string) {
-  return headers.find((h) => h.id === id) ?? null;
+function getColumn(columns: TableColumn[], id: string) {
+  return columns.find((c) => c.id === id) ?? null
+}
+
+/**
+ * These helpers assume your new table_routes schema uses:
+ *  - source_file_id
+ *  - target_file_id
+ *  - source_column_id
+ *  - target_column_id
+ * If your table uses different names, change them here (single place).
+ */
+function getSourceFileId(r: any): string {
+  return (r?.source_file_id ?? "") as string
+}
+function getTargetFileId(r: any): string {
+  return (r?.target_file_id ?? "") as string
+}
+function getSourceColumnId(r: any): string {
+  return (r?.source_column_id ?? "") as string
+}
+function getTargetColumnId(r: any): string {
+  return (r?.target_column_id ?? "") as string
 }
 
 function columnInAnyChain(
   columnId: string,
   columnInfo: Map<string, ColumnRouteInfo>
 ) {
-  const info = columnInfo.get(columnId);
-  if (!info) return false;
-  return info.routeClass === "primary" || info.routeClass === "secondary";
+  const info = columnInfo.get(columnId)
+  if (!info) return false
+  return info.routeClass === "primary" || info.routeClass === "secondary"
 }
 
 /* =========================================================================
-   ★ NEW: AUTO-REPAIR route_class ↔ routes consistency
+   ★ AUTO-REPAIR route_class ↔ routes consistency
    ========================================================================= */
 
 export function repairRouteClasses(
-  headers: LedgerHeader[],
-  routes: LedgerRouteRecord[]
-): Partial<LedgerHeader>[] {
-  const updates: Partial<LedgerHeader>[] = [];
+  columns: TableColumn[],
+  routes: TableRouteRecord[]
+): Partial<TableColumn>[] {
+  const updates: Partial<TableColumn>[] = []
 
-  const routeSources = new Set(routes.map((r) => r.source_column_id));
-  const routeTargets = new Set(routes.map((r) => r.target_column_id));
+  const routeSources = new Set((routes ?? []).map((r: any) => getSourceColumnId(r)))
+  const routeTargets = new Set((routes ?? []).map((r: any) => getTargetColumnId(r)))
 
-  for (const h of headers) {
-    const correct =
-      routeSources.has(h.id) ? "primary" :
-      routeTargets.has(h.id) ? "secondary" :
-      "independent";
+  for (const c of columns ?? []) {
+    const correct: RouteClass = routeSources.has(c.id)
+      ? "primary"
+      : routeTargets.has(c.id)
+      ? "secondary"
+      : "independent"
 
-    const normalized = normalizeRouteClass(h.route_class);
+    const normalized = normalizeRouteClass((c as any).route_class)
 
     if (normalized !== correct) {
       updates.push({
-        id: h.id,
-        route_class: correct as RouteClass,
-      });
+        id: c.id,
+        route_class: correct,
+      } as Partial<TableColumn>)
     }
   }
 
-  return updates;
+  return updates
 }
 
 /* =========================================================================
@@ -111,36 +127,36 @@ export function repairRouteClasses(
    ========================================================================= */
 
 export function buildChainMap(
-  headers: LedgerHeader[] = [],
-  routes: LedgerRouteRecord[] = []
+  columns: TableColumn[] = [],
+  routes: TableRouteRecord[] = []
 ): ChainMap {
-  if (!Array.isArray(headers)) headers = [];
-  if (!Array.isArray(routes)) routes = [];
+  if (!Array.isArray(columns)) columns = []
+  if (!Array.isArray(routes)) routes = []
 
-  const map: ChainMap = {};
+  const map: ChainMap = {}
 
-  for (const r of routes) {
-    if (!r || !r.active) continue;
+  for (const r of routes as any[]) {
+    if (!r || !r.active) continue
 
-    const p = r.source_column_id;
-    const s = r.target_column_id;
+    const primaryColId = getSourceColumnId(r)
+    const secondaryColId = getTargetColumnId(r)
 
-    if (!p || !s) continue;
+    if (!primaryColId || !secondaryColId) continue
 
-    if (!map[p]) {
-      map[p] = {
-        primaryId: p,
-        primaryLedgerId: r.source_ledger_id,
+    if (!map[primaryColId]) {
+      map[primaryColId] = {
+        primaryId: primaryColId,
+        primaryFileId: getSourceFileId(r),
         secondaryIds: [],
-      };
+      }
     }
 
-    if (!map[p].secondaryIds.includes(s)) {
-      map[p].secondaryIds.push(s);
+    if (!map[primaryColId].secondaryIds.includes(secondaryColId)) {
+      map[primaryColId].secondaryIds.push(secondaryColId)
     }
   }
 
-  return map;
+  return map
 }
 
 /* =========================================================================
@@ -148,41 +164,41 @@ export function buildChainMap(
    ========================================================================= */
 
 export function buildColumnRouteInfo(
-  headers: LedgerHeader[] = [],
+  columns: TableColumn[] = [],
   chainMap: ChainMap = {}
 ): Map<string, ColumnRouteInfo> {
-  if (!Array.isArray(headers)) headers = [];
+  if (!Array.isArray(columns)) columns = []
 
-  const out = new Map<string, ColumnRouteInfo>();
+  const out = new Map<string, ColumnRouteInfo>()
 
   // secondary → primary reverse lookup
-  const secToPrimary = new Map<string, string>();
+  const secToPrimary = new Map<string, string>()
   for (const chain of Object.values(chainMap)) {
     for (const sec of chain.secondaryIds) {
-      secToPrimary.set(sec, chain.primaryId);
+      secToPrimary.set(sec, chain.primaryId)
     }
   }
 
-  for (const h of headers) {
-    const rc = normalizeRouteClass(h.route_class);
+  for (const c of columns as any[]) {
+    const rc = normalizeRouteClass(c.route_class)
 
     const info: ColumnRouteInfo = {
-      columnId: h.id,
-      ledgerId: h.ledger_id,
+      columnId: c.id,
+      fileId: c.file_id,
       routeClass: rc,
-    };
-
-    if (rc === "primary") {
-      info.chainPrimaryId = h.id;
-    } else if (rc === "secondary") {
-      const p = secToPrimary.get(h.id);
-      if (p) info.chainPrimaryId = p;
     }
 
-    out.set(h.id, info);
+    if (rc === "primary") {
+      info.chainPrimaryId = c.id
+    } else if (rc === "secondary") {
+      const p = secToPrimary.get(c.id)
+      if (p) info.chainPrimaryId = p
+    }
+
+    out.set(c.id, info)
   }
 
-  return out;
+  return out
 }
 
 /* =========================================================================
@@ -190,14 +206,14 @@ export function buildColumnRouteInfo(
    ========================================================================= */
 
 export interface RouteMutation {
-  headersToUpdate: Partial<LedgerHeader>[];
-  routesToInsert: Partial<LedgerRouteRecord>[];
-  routesToDeleteIds: string[];
+  columnsToUpdate: Partial<TableColumn>[]
+  routesToInsert: Partial<TableRouteRecord>[]
+  routesToDeleteIds: string[]
 }
 
 export interface ValidationResult {
-  ok: boolean;
-  reason?: string;
+  ok: boolean
+  reason?: string
 }
 
 /* =========================================================================
@@ -205,77 +221,73 @@ export interface ValidationResult {
    ========================================================================= */
 
 export function validateAndBuildCreateRoute(
-  headers: LedgerHeader[] = [],
-  routes: LedgerRouteRecord[] = [],
+  columns: TableColumn[] = [],
+  routes: TableRouteRecord[] = [],
   secondaryId: string,
   primaryId: string
 ) {
   if (!primaryId || !secondaryId) {
-    return { validation: { ok: false, reason: "Missing IDs." } };
+    return { validation: { ok: false, reason: "Missing IDs." } }
   }
 
   if (primaryId === secondaryId) {
-    return { validation: { ok: false, reason: "Cannot self-route." } };
+    return { validation: { ok: false, reason: "Cannot self-route." } }
   }
 
-  const sec = getHeader(headers, secondaryId);
-  const pri = getHeader(headers, primaryId);
+  const sec = getColumn(columns, secondaryId) as any
+  const pri = getColumn(columns, primaryId) as any
 
   if (!sec || !pri) {
-    return { validation: { ok: false, reason: "Invalid columns." } };
+    return { validation: { ok: false, reason: "Invalid columns." } }
   }
 
-  const secClass = normalizeRouteClass(sec.route_class);
-  const priClass = normalizeRouteClass(pri.route_class);
+  const secClass = normalizeRouteClass(sec.route_class)
+  const priClass = normalizeRouteClass(pri.route_class)
 
   if (secClass !== "independent") {
-    return {
-      validation: { ok: false, reason: "Secondary must be independent." },
-    };
+    return { validation: { ok: false, reason: "Secondary must be independent." } }
   }
 
   if (priClass === "secondary") {
-    return {
-      validation: { ok: false, reason: "Cannot attach to a secondary." },
-    };
+    return { validation: { ok: false, reason: "Cannot attach to a secondary." } }
   }
 
-  const existing = routes.find(
+  const exists = (routes as any[]).find(
     (r) =>
       r.active &&
-      r.source_column_id === primaryId &&
-      r.target_column_id === secondaryId
-  );
+      getSourceColumnId(r) === primaryId &&
+      getTargetColumnId(r) === secondaryId
+  )
 
-  if (existing) {
-    return { validation: { ok: false, reason: "Route already exists." } };
+  if (exists) {
+    return { validation: { ok: false, reason: "Route already exists." } }
   }
 
-  const headersToUpdate: Partial<LedgerHeader>[] = [];
-  const routesToInsert: Partial<LedgerRouteRecord>[] = [];
+  const columnsToUpdate: Partial<TableColumn>[] = []
+  const routesToInsert: Partial<TableRouteRecord>[] = []
 
   if (priClass === "independent") {
-    headersToUpdate.push({ id: primaryId, route_class: "primary" });
+    columnsToUpdate.push({ id: primaryId, route_class: "primary" } as any)
   }
 
-  headersToUpdate.push({ id: secondaryId, route_class: "secondary" });
+  columnsToUpdate.push({ id: secondaryId, route_class: "secondary" } as any)
 
   routesToInsert.push({
-    source_ledger_id: pri.ledger_id,
+    source_file_id: pri.file_id,
     source_column_id: pri.id,
-    target_ledger_id: sec.ledger_id,
+    target_file_id: sec.file_id,
     target_column_id: sec.id,
     active: true,
-  });
+  } as any)
 
   return {
     validation: { ok: true },
     mutation: {
-      headersToUpdate,
+      columnsToUpdate,
       routesToInsert,
       routesToDeleteIds: [],
     } satisfies RouteMutation,
-  };
+  }
 }
 
 /* =========================================================================
@@ -283,49 +295,55 @@ export function validateAndBuildCreateRoute(
    ========================================================================= */
 
 export function buildRemoveSecondaryMutation(
-  headers: LedgerHeader[] = [],
-  routes: LedgerRouteRecord[] = [],
+  columns: TableColumn[] = [],
+  routes: TableRouteRecord[] = [],
   secondaryId: string
 ) {
-  const sec = getHeader(headers, secondaryId);
+  const sec = getColumn(columns, secondaryId) as any
   if (!sec || normalizeRouteClass(sec.route_class) !== "secondary") {
-    return { validation: { ok: false, reason: "Not a secondary." } };
+    return { validation: { ok: false, reason: "Not a secondary." } }
   }
 
-  const chain = buildChainMap(headers, routes);
-  const columnInfo = buildColumnRouteInfo(headers, chain);
+  const chain = buildChainMap(columns, routes)
+  const columnInfo = buildColumnRouteInfo(columns, chain)
 
-  const info = columnInfo.get(secondaryId);
+  const info = columnInfo.get(secondaryId)
   if (!info?.chainPrimaryId) {
-    return { validation: { ok: false, reason: "No primary in chain." } };
+    return { validation: { ok: false, reason: "No primary in chain." } }
   }
 
-  const primaryId = info.chainPrimaryId;
+  const primaryId = info.chainPrimaryId
 
-  const route = routes.find(
-    (r) => r.active && r.source_column_id === primaryId && r.target_column_id === secondaryId
-  );
+  const route = (routes as any[]).find(
+    (r) =>
+      r.active &&
+      getSourceColumnId(r) === primaryId &&
+      getTargetColumnId(r) === secondaryId
+  )
 
   if (!route) {
-    return { validation: { ok: false, reason: "Route missing." } };
+    return { validation: { ok: false, reason: "Route missing." } }
   }
 
-  const c = chain[primaryId];
-  const headersToUpdate: Partial<LedgerHeader>[] = [{ id: secondaryId, route_class: "independent" }];
-  const routesToDeleteIds = [route.id];
+  const c = chain[primaryId]
+
+  const columnsToUpdate: Partial<TableColumn>[] = [
+    { id: secondaryId, route_class: "independent" } as any,
+  ]
+  const routesToDeleteIds = [route.id]
 
   if (c && c.secondaryIds.length === 1) {
-    headersToUpdate.push({ id: primaryId, route_class: "independent" });
+    columnsToUpdate.push({ id: primaryId, route_class: "independent" } as any)
   }
 
   return {
     validation: { ok: true },
     mutation: {
-      headersToUpdate,
+      columnsToUpdate,
       routesToInsert: [],
       routesToDeleteIds,
     } satisfies RouteMutation,
-  };
+  }
 }
 
 /* =========================================================================
@@ -333,42 +351,42 @@ export function buildRemoveSecondaryMutation(
    ========================================================================= */
 
 export function buildRemovePrimaryMutation(
-  headers: LedgerHeader[] = [],
-  routes: LedgerRouteRecord[] = [],
+  columns: TableColumn[] = [],
+  routes: TableRouteRecord[] = [],
   primaryId: string
 ) {
-  const pri = getHeader(headers, primaryId);
+  const pri = getColumn(columns, primaryId) as any
   if (!pri || normalizeRouteClass(pri.route_class) !== "primary") {
-    return { validation: { ok: false, reason: "Not a primary." } };
+    return { validation: { ok: false, reason: "Not a primary." } }
   }
 
-  const chain = buildChainMap(headers, routes)[primaryId];
+  const chain = buildChainMap(columns, routes)[primaryId]
 
-  const headersToUpdate: Partial<LedgerHeader>[] = [
-    { id: primaryId, route_class: "independent" },
-  ];
-  const routesToDeleteIds: string[] = [];
+  const columnsToUpdate: Partial<TableColumn>[] = [
+    { id: primaryId, route_class: "independent" } as any,
+  ]
+  const routesToDeleteIds: string[] = []
 
   if (chain) {
     for (const secId of chain.secondaryIds) {
-      headersToUpdate.push({ id: secId, route_class: "independent" });
+      columnsToUpdate.push({ id: secId, route_class: "independent" } as any)
 
-      const route = routes.find(
+      const route = (routes as any[]).find(
         (r) =>
           r.active &&
-          r.source_column_id === primaryId &&
-          r.target_column_id === secId
-      );
-      if (route) routesToDeleteIds.push(route.id);
+          getSourceColumnId(r) === primaryId &&
+          getTargetColumnId(r) === secId
+      )
+      if (route) routesToDeleteIds.push(route.id)
     }
   }
 
   return {
     validation: { ok: true },
     mutation: {
-      headersToUpdate,
+      columnsToUpdate,
       routesToInsert: [],
       routesToDeleteIds,
     } satisfies RouteMutation,
-  };
+  }
 }

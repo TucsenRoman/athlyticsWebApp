@@ -5,8 +5,6 @@ import { useMemo, useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from "@/components/ui/overlays/dialog"
 
 import { Button } from "@/components/ui/actions/button"
@@ -28,9 +26,11 @@ import {
   Clock,
   AArrowDown,
   RotateCcw,
-  Settings2,
   ArrowUpRight,
-  ChevronDown,
+  Ellipsis,
+  UserRound,
+  Tags,
+  UsersRound,
 } from "lucide-react"
 
 import type { ProgramLite } from "../programLite.types"
@@ -43,7 +43,10 @@ import { Divider, GradientHint } from "@/components/ui"
 import ProgramDeleteModal from "./ProgramDeleteModal"
 import ProgramConfigModal from "./ProgramConfigModal"
 import { supabase } from "@/integrations/supabase/client"
-import ExpansiveMenu, { type ExpansiveMenuItem } from "@/components/ui/navigation/expansivemenu";
+import ExpansiveMenu, {
+  type ExpansiveMenuItem,
+} from "@/components/ui/navigation/expansivemenu"
+
 /* ========================================================================== */
 /* TYPES                                                                      */
 /* ========================================================================== */
@@ -75,10 +78,14 @@ export default function ProgramDriveModal({
   onClose,
   refreshPrograms,
 }: ProgramDriveModalProps) {
-  const [focusedProgramId, setFocusedProgramId] =
-    useState<ProgramId | null>(null)
-  const [hoveredProgramId, setHoveredProgramId] =
-    useState<ProgramId | null>(null)
+  const [focusedProgramId, setFocusedProgramId] = useState<ProgramId | null>(
+    null,
+  )
+  const [hoveredProgramId, setHoveredProgramId] = useState<ProgramId | null>(
+    null,
+  )
+
+  const [activeTab, setActiveTab] = useState<TabKey>("yours")
 
   // AUTO-DESELECT
   const deselectIfSelected = (id: ProgramId) => {
@@ -163,6 +170,130 @@ export default function ProgramDriveModal({
     setConfigOpen(false)
   }
 
+  // TABS
+  type DriveTab = {
+    value: "yours" | "shared" | "assigned" | "archived" | "deleted"
+    label: string
+    icon: React.ElementType
+  }
+
+  const DRIVE_TABS: DriveTab[] = [
+    { value: "yours", label: "Yours", icon: UserRound },
+    { value: "shared", label: "Shared", icon: UsersRound },
+    { value: "assigned", label: "Assigned", icon: Tags },
+    { value: "archived", label: "Archived", icon: Archive },
+    { value: "deleted", label: "Deleted", icon: Trash2 },
+  ]
+
+  type TabKey = "yours" | "shared" | "assigned" | "archived" | "deleted"
+
+  type TabDef = {
+    value: TabKey
+    label: string
+    icon: React.ElementType
+    emptyLabel: string
+    render: () => React.ReactNode
+  }
+
+  const tabDefs: TabDef[] = [
+    {
+      value: "yours",
+      label: "Yours",
+      icon: UserRound,
+      emptyLabel: "Your programs will appear here",
+      render: () =>
+        yourPrograms.length > 0 ? (
+          <ProgramList
+            programs={yourPrograms}
+            selectedProgramId={selectedProgramId}
+            focusedProgramId={focusedProgramId}
+            hoveredProgramId={hoveredProgramId}
+            setFocusedProgramId={setFocusedProgramId}
+            setHoveredProgramId={setHoveredProgramId}
+            onOpen={async (id) => {
+              await supabase
+                .from("programs")
+                .update({ last_used_at: new Date().toISOString() })
+                .eq("id", Number(id))
+
+              await refreshPrograms()
+
+              onSelect(id)
+              onClose()
+            }}
+            onEdit={(program) => {
+              setConfigMode("edit")
+              setConfigProgram(program)
+              setConfigOpen(true)
+            }}
+            onDelete={(program) => handleSoftDelete(program.id)}
+            onArchive={handleArchive}
+          />
+        ) : null,
+    },
+    {
+      value: "shared",
+      label: "Shared",
+      icon: UsersRound,
+      emptyLabel: "Shared programs will appear here",
+      render: () => null,
+    },
+    {
+      value: "assigned",
+      label: "Assigned",
+      icon: Tags,
+      emptyLabel: "Assigned programs will appear here",
+      render: () => null,
+    },
+    {
+      value: "archived",
+      label: "Archived",
+      icon: Archive,
+      emptyLabel: "Your archived programs will appear here",
+      render: () =>
+        archivedPrograms.length > 0 ? (
+          <ProgramList
+            programs={archivedPrograms}
+            selectedProgramId={selectedProgramId}
+            focusedProgramId={focusedProgramId}
+            hoveredProgramId={hoveredProgramId}
+            setFocusedProgramId={setFocusedProgramId}
+            setHoveredProgramId={setHoveredProgramId}
+            onRestore={handleRestore}
+            onDelete={(program) => handleSoftDelete(program.id)}
+          />
+        ) : null,
+    },
+    {
+      value: "deleted",
+      label: "Deleted",
+      icon: Trash2,
+      emptyLabel: "Your recently deleted programs will appear here",
+      render: () =>
+        deletedPrograms.length > 0 ? (
+          <ProgramList
+            programs={deletedPrograms}
+            selectedProgramId={selectedProgramId}
+            focusedProgramId={focusedProgramId}
+            hoveredProgramId={hoveredProgramId}
+            setFocusedProgramId={setFocusedProgramId}
+            setHoveredProgramId={setHoveredProgramId}
+            onRestore={handleRestore}
+            onDelete={(program) => {
+              setDeleteProgram({
+                id: program.id,
+                school: program.school ?? "",
+                sport: program.sport ?? "",
+                season_year: program.year ?? "",
+              })
+              setDeleteOpen(true)
+            }}
+            danger
+          />
+        ) : null,
+    },
+  ]
+
   /* FILTER + SEARCH */
   const [query, setQuery] = useState("")
 
@@ -170,52 +301,51 @@ export default function ProgramDriveModal({
   type SortMode = "recent_use" | "alpha_asc"
   const [sortMode, setSortMode] = useState<SortMode>("recent_use")
 
-    const filterAndSort = (list: ProgramLite[]) => {
-      let out = list
+  const filterAndSort = (list: ProgramLite[]) => {
+    let out = list
 
-      // FILTER: text search
-      if (query.trim()) {
-        const q = query.toLowerCase()
-        out = out.filter((p) =>
-          [p.sport, p.year, p.school, String(p.id)].some(
-            (v) => v && v.toLowerCase().includes(q),
-          ),
-        )
-      }
-
-      // SORT helpers
-      const alphaKey = (p: ProgramLite) =>
-        `${p.sport ?? ""} ${p.year ?? ""} ${p.school ?? ""}`.toLowerCase()
-
-      const timeKey = (p: any) => {
-        // True "recent use"
-        if (p.last_used_at) return new Date(p.last_used_at).getTime()
-
-        // Next best fallbacks
-        if (p.updated_at) return new Date(p.updated_at).getTime()
-        if (p.created_at) return new Date(p.created_at).getTime()
-
-        // Final fallback
-        const y = Number(String(p.year ?? "").slice(0, 4))
-        return Number.isFinite(y) ? y : 0
-      }
-
-      out = [...out].sort((a: any, b: any) => {
-        switch (sortMode) {
-          case "alpha_asc":
-            return alphaKey(a).localeCompare(alphaKey(b))
-
-          case "recent_use":
-          default:
-            return timeKey(b) - timeKey(a)
-        }
-      })
-
-      return out
+    // FILTER: text search
+    if (query.trim()) {
+      const q = query.toLowerCase()
+      out = out.filter((p) =>
+        [p.sport, p.year, p.school, String(p.id)].some(
+          (v) => v && v.toLowerCase().includes(q),
+        ),
+      )
     }
 
+    // SORT helpers
+    const alphaKey = (p: ProgramLite) =>
+      `${p.sport ?? ""} ${p.year ?? ""} ${p.school ?? ""}`.toLowerCase()
+
+    const timeKey = (p: any) => {
+      // True "recent use"
+      if (p.last_used_at) return new Date(p.last_used_at).getTime()
+
+      // Next best fallbacks
+      if (p.updated_at) return new Date(p.updated_at).getTime()
+      if (p.created_at) return new Date(p.created_at).getTime()
+
+      // Final fallback
+      const y = Number(String(p.year ?? "").slice(0, 4))
+      return Number.isFinite(y) ? y : 0
+    }
+
+    out = [...out].sort((a: any, b: any) => {
+      switch (sortMode) {
+        case "alpha_asc":
+          return alphaKey(a).localeCompare(alphaKey(b))
+        case "recent_use":
+        default:
+          return timeKey(b) - timeKey(a)
+      }
+    })
+
+    return out
+  }
+
   /* DERIVED LISTS */
-  const activePrograms = useMemo(
+  const yourPrograms = useMemo(
     () => filterAndSort(getActivePrograms(programs)),
     [programs, query, sortMode],
   )
@@ -257,9 +387,12 @@ export default function ProgramDriveModal({
           fixed top-auto bottom-0 left-0 right-0
           m-0 pb-[env(safe-area-inset-bottom)]
           w-full h-[calc(100dvh-70px)]
-          
-          rounded-t-xl rounded-b-none bg-[var(--gray-5)] border-0
-          shadow-2xl animate-slide-up-btm
+
+          rounded-t-xl rounded-b-none
+          bg-[#181818]
+          border-0
+          shadow-2xl
+          animate-slide-up-btm
 
           /* DESKTOP: centered modal */
           md:fixed
@@ -273,24 +406,28 @@ export default function ProgramDriveModal({
           md:animate-none
         "
       >
-        {/* CLOSE CHEVRON */}
-        {/* <div className="absolute top-[-60px] right-[0px] text-white opacity-25">
-          <ChevronDown size={64}/>
-        </div> */}
         {/* HEADER */}
         <div className="flex justify-between gap-2 h-12 py-2 px-4">
           {/* TITLE */}
-          <div className="flex items-center text-xl text-[var(--text-dk)] font-bold">
+          <div className="flex items-center text-xl text-[var(--text-lt)] font-semibold">
             Drive
           </div>
-          
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 mr-8">
             {/* SEARCH */}
-            <div className="flex items-center gap-2 px-2 w-full max-w-[200px] h-8 rounded-full border border-transparent focus-within:border-[var(--border-dk)] bg-[var(--gray-7)] text-xs text-[var(--text-lt)] focus-within:text-[var(--text)] shadow-inner transition-colors">
+            <div 
+              className="
+                flex items-center gap-2
+                px-2 w-full max-w-[220px] h-8 
+                rounded-full border border-[var(--gray-18)] focus-within:border-[var(--gray-17)] 
+                text-xs text-[var(--text-dk)] focus-within:text-[var(--text)] hover:text-[var(--text)]
+                shadow-inner transition-all duration-300
+              "
+            >
               <Search className="h-4 w-4" />
               <Input
                 tabIndex={-1}
-                className="p-0 pb-[2px] border-0 bg-transparent text-sm truncate"
+                className="p-0 pb-[2px] border-0 bg-transparent text-sm truncate focus-visible:ring-0"
                 placeholder="Search programs"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -299,17 +436,17 @@ export default function ProgramDriveModal({
 
             {/* SORT */}
             <div
-              className="flex items-center gap-1 mr-7 h-8 rounded-full border border-[var(--border)] bg-[var(--gray-7)] p-1 shadow-inner"
+              className="flex items-center gap-1 mr-1 h-8 rounded-full border border-[var(--gray-18)] p-1 shadow-inner"
               title="Sort"
             >
               <button
                 type="button"
                 onClick={() => setSortMode("recent_use")}
                 className={[
-                  "h-6 w-8 rounded-full grid place-items-center transition",
+                  "h-6 w-8 rounded-full grid place-items-center transition-all duration-300",
                   sortMode === "recent_use"
-                    ? "bg-[var(--gray-5)] text-[var(--text)]"
-                    : "text-[var(--text-lt)] hover:bg-[var(--gray-5)]",
+                    ? "bg-[var(--gray-18)] text-[var(--text-lt)]"
+                    : "hover:bg-[var(--gray-17)] text-[var(--text)] hover:text-[var(--text-lt)]",
                 ].join(" ")}
                 aria-pressed={sortMode === "recent_use"}
                 title="Recent Use"
@@ -321,10 +458,10 @@ export default function ProgramDriveModal({
                 type="button"
                 onClick={() => setSortMode("alpha_asc")}
                 className={[
-                  "h-6 w-8 rounded-full grid place-items-center transition",
+                  "h-6 w-8 rounded-full grid place-items-center transition-all duration-300",
                   sortMode === "alpha_asc"
-                    ? "bg-[var(--gray-5)] text-[var(--text)]"
-                    : "text-[var(--text-lt)] hover:bg-[var(--gray-5)]",
+                    ? "bg-[var(--gray-18)] text-[var(--text-lt)]"
+                    : "hover:bg-[var(--gray-17)] text-[var(--text)] hover:text-[var(--text-lt)]",
                 ].join(" ")}
                 aria-pressed={sortMode === "alpha_asc"}
                 title="Alphabetical"
@@ -335,127 +472,53 @@ export default function ProgramDriveModal({
           </div>
         </div>
 
-        <div className="relative mx-1 mb-1 flex-1 min-h-0 flex flex-col rounded-lg border border-[var(--border)] bg-[var(--gray-8)] overflow-hidden shadow-inner">
+        {/* <Divider color="var(--gray-18)" inset={5} /> */}
+
+        <div className="relative mx-3 mb-3 flex-1 min-h-0 flex flex-col rounded-xl border border-[var(--gray-18)] bg-[#181818] overflow-hidden shadow-inner">
           {/* TABS */}
-          <Tabs defaultValue="active" className="flex-1 min-h-0 flex flex-col">
-            <TabsList className="relative flex justify-between h-10 min-w-[250px] w-full border-0 bg-0">
-              <GradientHint fromColor="var(--gray-8)" extent="20px" direction="left" />
-              <div className="flex gap-2 pl-4 pr-[100px] rounded-t-md overflow-x-scroll md:overflow-x-hidden">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} defaultValue="yours" className="flex-1 min-h-0 flex flex-col">
+            <TabsList
+              className="
+                relative flex h-10 w-full min-w-[250px]
+                gap-2 pl-3 pr-[100px]
+                overflow-x-auto md:overflow-x-hidden
+                border-0 bg-transparent
+              "
+            >
+              {tabDefs.map((t) => (
                 <TabsTrigger
-                  value="active"
+                  key={t.value}
+                  value={t.value}
                   className="
-                    px-4 text-xs
-                    data-[state=active]:bg-[var(--acc-bg)]
-                    data-[state=inactive]:text-[var(--text-lt)]
-                    data-[state=active]:text-[var(--acc-dk)]
+                    inline-flex items-center gap-2
+                    px-4 text-xs rounded-full
+                    data-[state=active]:bg-[var(--gray-18)]
+                    data-[state=active]:text-[var(--text-lt)]
+                    data-[state=inactive]:text-[var(--text)]
+                    data-[state=inactive]:hover:text-[var(--text-lt)]
+                    data-[state=inactive]:hover:bg-[var(--gray-17)]
                   "
                 >
-                  Active
-                  {/* ~Alternate wording: Live. */}
+                  <t.icon className="h-4 w-4 opacity-80" />
+                  <span>{t.label}</span>
+                  {t.value === "assigned" && activeTab !== "assigned" && (
+                    <div className="absolute top-[3px] right-[14px] w-1.5 h-1.5 rounded-full border-[0.5px] border-[var(--gray-19)] bg-[#596f7e]" />
+                  )}
                 </TabsTrigger>
-                <TabsTrigger
-                  value="archived"
-                  className="
-                    px-4 text-xs
-                    data-[state=active]:bg-[var(--archive-bg)]
-                    data-[state=inactive]:text-[var(--text-lt)]
-                    data-[state=active]:text-[var(--archive-txt)]
-                  "
-                >
-                  Archived
-                </TabsTrigger>
-                <TabsTrigger
-                  value="deleted"
-                  className="
-                    px-4 text-xs
-                    data-[state=active]:bg-[var(--danger-bg)]
-                    data-[state=inactive]:text-[var(--text-lt)]
-                    data-[state=active]:text-[var(--danger)]
-                  "
-                >
-                  Deleted
-                </TabsTrigger>
-              </div>
-              <GradientHint fromColor="var(--gray-8)" extent="100px" direction="right" />
+              ))}
             </TabsList>
 
-            <Divider color="var(--gray-9)" inset={10} />
+            <Divider color="var(--gray-18)" inset={5} />
 
-            <div className="px-6 pt-4 pb-[200px] flex-1 min-h-0 overflow-y-auto">
-              <TabsContent value="active" className="flex flex-col">
-                <ProgramList
-                  programs={activePrograms}
-                  selectedProgramId={selectedProgramId}
-                  focusedProgramId={focusedProgramId}
-                  hoveredProgramId={hoveredProgramId}
-                  setFocusedProgramId={setFocusedProgramId}
-                  setHoveredProgramId={setHoveredProgramId}
-                  onOpen={async (id) => {
-                    // mark as used
-                    await supabase
-                      .from("programs")
-                      .update({ last_used_at: new Date().toISOString() })
-                      .eq("id", Number(id))
-
-                    await refreshPrograms()
-                    
-                    // then proceed
-                    onSelect(id)
-                    onClose()
-                  }}
-                  onEdit={(program) => {
-                    setConfigMode("edit")
-                    setConfigProgram(program)
-                    setConfigOpen(true)
-                  }}
-                  onDelete={(program) => handleSoftDelete(program.id)}
-                  onArchive={handleArchive}
-                />
-              </TabsContent>
-
-              <TabsContent value="archived">
-                <ProgramList
-                  programs={archivedPrograms}
-                  selectedProgramId={selectedProgramId}
-                  focusedProgramId={focusedProgramId}
-                  hoveredProgramId={hoveredProgramId}
-                  setFocusedProgramId={setFocusedProgramId}
-                  setHoveredProgramId={setHoveredProgramId}
-                  onRestore={handleRestore}
-                  onDelete={(program) => handleSoftDelete(program.id)}
-                />
-              </TabsContent>
-
-              <TabsContent value="deleted">
-                <ProgramList
-                  programs={deletedPrograms}
-                  selectedProgramId={selectedProgramId}
-                  focusedProgramId={focusedProgramId}
-                  hoveredProgramId={hoveredProgramId}
-                  setFocusedProgramId={setFocusedProgramId}
-                  setHoveredProgramId={setHoveredProgramId}
-                  onRestore={handleRestore}
-                  onDelete={(program) => {
-                    setDeleteProgram({
-                      id: program.id,
-                      school: program.school ?? "",
-                      sport: program.sport ?? "",
-                      season_year: program.year ?? "",
-                    })
-                    setDeleteOpen(true)
-                  }}
-                  danger
-                />
-              </TabsContent>
-
-              <TabsContent value="shared">
-                <EmptyState
-                  icon={Users}
-                  label="Shared programs will appear here"
-                />
-              </TabsContent>
-
-              <GradientHint fromColor="var(--gray-8)" extent="150px" radius="lg" />
+            <div className="my-1 p-4 pb-[200px] flex-1 min-h-0 overflow-y-auto scrollbar">
+              {tabDefs.map((t) => {
+                const content = t.render()
+                return (
+                  <TabsContent key={t.value} value={t.value} className="flex flex-col">
+                    {content ?? <EmptyState icon={t.icon} label={t.emptyLabel} />}
+                  </TabsContent>
+                )
+              })}
             </div>
           </Tabs>
 
@@ -549,36 +612,16 @@ export default function ProgramDriveModal({
                 setDeleteOpen(false)
                 setDeleteProgram(null)
               }
-              // if not ok, keep modal open so user can retry,
-              // and check console for the error/warn
             }}
           />
 
-          <div className="absolute btm-0 right-0 z-50 bottom-0 flex justify-between items-end gap-2 !p-4">
-            {/* EXTRA BTN */}
-            {/* <Button
-              variant="float"
-              regular="xs"
-              iconSize="md"
-              className="!bg-transparent"
-              onClick={() => {
-                setConfigMode("add")
-                setConfigProgram(null)
-                setConfigOpen(true)
-              }}
-              title="Add Program"
-            >
-              <CircleQuestionMark />
-            </Button> */}
-
-            {/* ADD PROGRAM */}
-            {/* ~Later use expansive menu for template, blank, etc. */}
+          <div className="absolute right-0 bottom-0 z-50 flex items-end gap-2 p-4">
             <Button
-              // color="primary"
+              type="button"
               variant="float"
               regular="md"
               iconSize="lg"
-              className="hover:bg-[var(--acc-bg)] hover:text-[var(--acc-dk)]"
+              className="bg-[#394650] hover:bg-[#596f7e] text-[var(--gray-10)]"
               onClick={() => {
                 setConfigMode("add")
                 setConfigProgram(null)
@@ -586,8 +629,7 @@ export default function ProgramDriveModal({
               }}
               title="Add Program"
             >
-              {/* <div className="pb-[3px] text-lg font-semibold">New</div> */}
-              <Plus/>
+              <Plus />
             </Button>
           </div>
         </div>
@@ -596,7 +638,10 @@ export default function ProgramDriveModal({
   )
 }
 
-/* PROGRAM LIST COMPONENT */
+/* ========================================================================== */
+/* PROGRAM LIST COMPONENT                                                     */
+/* ========================================================================== */
+
 const PROGRAM_ID_PREVIEW_LENGTH = 6
 
 function shortId(id: ProgramId) {
@@ -604,7 +649,7 @@ function shortId(id: ProgramId) {
 }
 
 function ProgramList({
-   programs,
+  programs,
   selectedProgramId,
   focusedProgramId,
   hoveredProgramId,
@@ -632,14 +677,6 @@ function ProgramList({
   onDelete?: (program: ProgramLite) => void
   danger?: boolean
 }) {
-  if (programs.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-16 rounded-lg border border-dashed border-[var(--border-dk)] text-center text-sm text-[var(--text)] font-semibold">
-        No programs found
-      </div>
-    )
-  }
-
   return (
     <div className="flex flex-col gap-2 min-h-16 overflow-x-visible">
       {programs.map((p) => {
@@ -650,50 +687,60 @@ function ProgramList({
 
         const actions = [
           ...(onEdit
-            ? [{
-                label: "Edit",
-                icon: <Pencil className="h-4 w-4" />,
-                flavor: "blue",
-                action: () => onEdit(p),
-              } satisfies ExpansiveMenuItem]
+            ? ([
+                {
+                  label: "Edit",
+                  icon: <Pencil className="h-4 w-4" />,
+                  flavor: "blue",
+                  action: () => onEdit(p),
+                } satisfies ExpansiveMenuItem,
+              ] as const)
             : []),
 
           ...(onArchive && p.state === "active"
-            ? [{
-                label: "Archive",
-                icon: <Archive className="h-4 w-4" />,
-                flavor: "yellow",
-                action: () => onArchive(p.id),
-              } satisfies ExpansiveMenuItem]
+            ? ([
+                {
+                  label: "Archive",
+                  icon: <Archive className="h-4 w-4" />,
+                  flavor: "yellow",
+                  action: () => onArchive(p.id),
+                } satisfies ExpansiveMenuItem,
+              ] as const)
             : []),
 
           ...(onRestore && (p.state === "archived" || p.state === "deleted")
-            ? [{
-                label: "Restore",
-                icon: <RotateCcw className="h-4 w-4" />,
-                flavor: "slate",
-                action: () => onRestore(p.id),
-              } satisfies ExpansiveMenuItem]
+            ? ([
+                {
+                  label: "Restore",
+                  icon: <RotateCcw className="h-4 w-4" />,
+                  flavor: "slate",
+                  action: () => onRestore(p.id),
+                } satisfies ExpansiveMenuItem,
+              ] as const)
             : []),
 
           ...(onDelete && p.state !== "deleted"
-            ? [{
-                label: "Delete",
-                icon: <Trash2 className="h-4 w-4" />,
-                flavor: "red",
-                destructive: true,
-                action: () => onDelete(p),
-              } satisfies ExpansiveMenuItem]
+            ? ([
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  flavor: "red",
+                  destructive: true,
+                  action: () => onDelete(p),
+                } satisfies ExpansiveMenuItem,
+              ] as const)
             : []),
 
           ...(danger && p.state === "deleted"
-            ? [{
-                label: "Delete Forever",
-                icon: <Trash2 className="h-4 w-4" />,
-                flavor: "red",
-                destructive: true,
-                action: () => onDelete(p),
-              } satisfies ExpansiveMenuItem]
+            ? ([
+                {
+                  label: "Delete Forever",
+                  icon: <Trash2 className="h-4 w-4" />,
+                  flavor: "red",
+                  destructive: true,
+                  action: () => onDelete(p),
+                } satisfies ExpansiveMenuItem,
+              ] as const)
             : []),
         ]
 
@@ -714,15 +761,18 @@ function ProgramList({
               }
             }}
             onMouseLeave={() => setHoveredProgramId(null)}
-            className="relative flex flex-wrap justify-between items-center gap-2 px-4 py-3 cursor-pointer rounded-lg border-2 border-transparent hover:border-[var(--gray-9)] bg-[var(--gray-3)]"
+            className="relative flex flex-wrap justify-between items-center gap-2 px-4 py-3 cursor-pointer rounded-xl border border-white/10 hover:border-white/15 bg-white/5"
           >
             {/* ACTIVE LEFT ACCENT */}
             {isActive && (
-              <div className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-[var(--acc-md)]" />
+              <div className="absolute left-1 top-1/2 -translate-y-1/2 h-6 w-1 rounded-full bg-[#596f7e] shadow-inner" />
             )}
-            <div className="flex flex-col">
-              <div className="flex items-start gap-2 h-6 text-sm font-medium">
-                {p.gender} {p.sport} • {p.year}
+
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-start gap-2 h-6 text-sm font-medium text-white/85">
+                <span className="truncate">
+                  {p.gender} {p.sport} • {p.year}
+                </span>
 
                 {showActions && (
                   <div
@@ -737,10 +787,10 @@ function ProgramList({
                         title="Open program"
                         className={[
                           "flex justify-center items-center",
-                          "h-6 w-8", 
-                          "rounded-full border border-transparent",
-                          "bg-[var(--acc-bg)] hover:bg-[var(--acc-lt)]",
-                          "text-[var(--acc-dk)]",
+                          "h-6 w-8",
+                          "rounded-full border border-white/10",
+                          "bg-white/8 hover:bg-white/12",
+                          "text-white/85",
                           "transition",
                         ].join(" ")}
                       >
@@ -751,14 +801,13 @@ function ProgramList({
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-xs text-[var(--text-lt)] truncate">
-                {p.school && <span>{p.school}</span>}
-                {/* <span>•</span> */}
+              <div className="flex items-center gap-2 text-xs text-white/55 truncate">
+                {p.school && <span className="truncate">{p.school}</span>}
                 <span className="opacity-60">#{shortId(p.id)}</span>
               </div>
             </div>
 
-            {/* INLINE ACTIONS -------------------------------------------- */}
+            {/* INLINE ACTIONS */}
             {showActions && (
               <div
                 className="absolute top-[25%] right-[10px] shrink-0 w-fit h-fit"
@@ -771,7 +820,7 @@ function ProgramList({
                   radius={48}
                   mainRotate={90}
                   mainSize={32}
-                  mainIcon={<Settings2 />}
+                  mainIcon={<Ellipsis />}
                   items={actions}
                 />
               </div>
@@ -784,7 +833,7 @@ function ProgramList({
 }
 
 /* ========================================================================== */
-/* EMPTY STATE                                                               */
+/* EMPTY STATE                                                                */
 /* ========================================================================== */
 
 function EmptyState({
@@ -795,7 +844,7 @@ function EmptyState({
   label: string
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-10 text-sm text-[var(--text-lt)]">
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-white/15 p-10 text-sm text-white/55">
       <Icon className="h-6 w-6 opacity-60" />
       {label}
     </div>

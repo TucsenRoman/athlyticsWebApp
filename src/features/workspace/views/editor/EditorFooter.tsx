@@ -1,40 +1,59 @@
-"use client";
+// src/features/workspace/views/editor/EditorFooter.tsx
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import { X, Route, Settings, Trash2 } from "lucide-react";
+import * as React from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import {
+  FilePlus2,
+  MoreHorizontal,
+  Package,
+  Route,
+  Settings,
+  Trash2,
+  X,
+  FileText,
+  Plus,
+} from "lucide-react"
 
-import EditorFooterMenu from "@/components/ui/IGNORE/EditorFooterMenu";
-import { fetchPackageLedgers } from "@/lib/fetchPackageLedgers";
+import ExpansiveMenu, {
+  type ExpansiveMenuItem,
+} from "@/components/ui/navigation/expansivemenu"
+import { fetchPackageFiles } from "@/lib/fetchPackageFiles"
 
-/* TYPES ------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* TYPES                                                                      */
+/* -------------------------------------------------------------------------- */
 
-interface LedgerTab {
-  id: string;
-  name: string;
+export interface FileTab {
+  id: string
+  name: string
 }
 
-interface PackageLedgerGroup {
-  packageName: string;
-  packageId: string;
-  ledgers: LedgerTab[];
+export interface PackageFileGroup {
+  packageName: string
+  packageId: string
+  files: FileTab[]
 }
 
-interface EditorFooterProps {
-  openLedgers: LedgerTab[];
-  activeLedgerId: string;
-  setActiveLedgerId: (id: string) => void;
+export type EditorFooterProps = {
+  programId: number
 
-  onCreateLedger?: () => void;
-  onManageRoutes?: () => void;
-  onSettings?: () => void;
-  onDelete?: (id: string) => void;
-  onCloseTab?: (id: string) => void;
+  openFiles?: FileTab[]
+  activeFileId?: string
+  setActiveFileId: (id: string) => void
 
-  onSelectLedger?: (id: string) => void;
-  programId: number;
+  onCreateFile?: () => void
+  onSelectFile?: (id: string) => void
+  onCloseTab?: (id: string) => void
+
+  onManageRoutes?: () => void
+  onSettings?: () => void
+  onDeleteFile?: (id: string) => void
 }
 
-/* CLICK OUTSIDE ----------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* CLICK OUTSIDE                                                              */
+/* -------------------------------------------------------------------------- */
 
 function useClickOutside(
   refs: React.RefObject<HTMLElement>[],
@@ -42,163 +61,228 @@ function useClickOutside(
 ) {
   useEffect(() => {
     const fn = (e: MouseEvent) => {
-      const target = e.target as Node;
-      const inside = refs.some((r) => r.current?.contains(target));
-      if (!inside) handler();
-    };
+      const target = e.target as Node
+      const inside = refs.some((r) => r.current?.contains(target))
+      if (!inside) handler()
+    }
 
-    window.addEventListener("mousedown", fn);
-    return () => window.removeEventListener("mousedown", fn);
-  }, [refs, handler]);
+    window.addEventListener("mousedown", fn)
+    return () => window.removeEventListener("mousedown", fn)
+  }, [refs, handler])
 }
 
-/* COMPONENT --------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/* COMPONENT                                                                  */
+/* -------------------------------------------------------------------------- */
 
 export default function EditorFooter({
-  openLedgers,
-  activeLedgerId,
-  setActiveLedgerId,
-
-  onCreateLedger,
+  programId,
+  openFiles,
+  activeFileId,
+  setActiveFileId,
+  onCreateFile,
+  onSelectFile,
+  onCloseTab,
   onManageRoutes,
   onSettings,
-  onDelete,
-  onCloseTab,
-  onSelectLedger,
-
-  programId,
+  onDeleteFile,
 }: EditorFooterProps) {
-  const activeLedger = openLedgers.find((l) => l.id === activeLedgerId);
+  const tabs = useMemo<FileTab[]>(() => openFiles ?? [], [openFiles])
+  const activeId = activeFileId ?? ""
+  const activeTab = tabs.find((t) => t.id === activeId) ?? null
 
-  const [addOpen, setAddOpen] = useState(false);
-  const [showOverflow, setShowOverflow] = useState(false);
+  const [addOpen, setAddOpen] = useState(false)
+  const [overflowOpen, setOverflowOpen] = useState(false)
+  const [packageFiles, setPackageFiles] = useState<PackageFileGroup[]>([])
 
-  const [packageLedgers, setPackageLedgers] = useState<PackageLedgerGroup[]>([]);
+  const addRef = useRef<HTMLDivElement>(null)
+  const overflowRef = useRef<HTMLDivElement>(null)
 
-  const addRef = useRef<HTMLDivElement>(null);
-  const overflowRef = useRef<HTMLDivElement>(null);
-
-  /* LOAD PACKAGE → LEDGERS ------------------------------------------------ */
+  /* LOAD PACKAGES → FILES -------------------------------------------------- */
   useEffect(() => {
+    let mounted = true
+
     async function load() {
-      const data = await fetchPackageLedgers(programId);
-      setPackageLedgers(data);
+      const data = await fetchPackageFiles(programId)
+
+      const adapted: PackageFileGroup[] = (data ?? []).map((pkg: any) => ({
+        packageName: pkg.packageName,
+        packageId: pkg.packageId,
+        files: (pkg.files ?? []).map((x: any) => ({ id: x.id, name: x.name })),
+      }))
+
+      if (mounted) setPackageFiles(adapted)
     }
-    load();
-  }, [programId]);
 
-  /* CLICK OUTSIDE --------------------------------------------------------- */
+    if (programId) load()
+    return () => {
+      mounted = false
+    }
+  }, [programId])
+
+  /* MENU ITEMS ------------------------------------------------------------- */
+  const menuItems = useMemo<ExpansiveMenuItem[]>(() => {
+    const pickFile = (id: string) => {
+      setActiveFileId(id)
+      onSelectFile?.(id)
+    }
+
+    const pkgItems: ExpansiveMenuItem[] = packageFiles.map((pkg) => ({
+      id: `pkg-${pkg.packageId}`,
+      label: pkg.packageName || "Package",
+      icon: <Package className="h-4 w-4" />,
+      children: (pkg.files ?? []).map((f) => ({
+        id: f.id,
+        label: f.name || "Untitled",
+        icon: <FileText className="h-4 w-4" />,
+        action: () => pickFile(f.id),
+      })),
+    }))
+
+    return [
+      {
+        id: "new-file",
+        label: "New file",
+        icon: <FilePlus2 className="h-4 w-4" />,
+        action: () => onCreateFile?.(),
+      },
+      ...pkgItems,
+    ]
+  }, [packageFiles, onCreateFile, onSelectFile, setActiveFileId])
+
+  /* CLICK OUTSIDE ---------------------------------------------------------- */
   useClickOutside([addRef, overflowRef], () => {
-    setAddOpen(false);
-    setShowOverflow(false);
-  });
-
-  /* ----------------------------------------------------------------------- */
-  /* RENDER                                                                  */
-  /* ----------------------------------------------------------------------- */
+    setAddOpen(false)
+    setOverflowOpen(false)
+  })
 
   return (
     <div
       className="
-        h-14 flex items-center justify-between
-        px-3 border-t border-[var(--border)]
-        bg-[var(--bg)]
+        flex items-center justify-between
+        h-10
         text-[var(--text-dk)]
         select-none
       "
     >
-      {/* LEFT: OPEN TABS --------------------------------------------------- */}
-      <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-2">
-        {openLedgers.map((ledger) => {
-          const active = ledger.id === activeLedgerId;
+      {/* LEFT: OPEN FILE TABS ---------------------------------------------- */}
+      <div className="flex gap-4">
+        <div className="flex items-center gap-4 overflow-x-auto flex-1 pr-2">
+          {tabs.map((tab) => {
+            const active = tab.id === activeId
 
-          return (
-            <button
-              key={ledger.id}
-              onClick={() => setActiveLedgerId(ledger.id)}
-              className={`
-                relative shrink-0 flex items-center gap-1
-                pl-3 pr-2 py-1 h-6 rounded-full
-                text-sm whitespace-nowrap transition
-
-                ${
-                  active
-                    ? "bg-[var(--dom-bg)] text-[var(--text-dom-md)] shadow-md font-medium"
-                    : "bg-[var(--gray-ltt)] text-[var(--text-dk)] hover:bg-[var(--gray-200)] shadow"
-                }
-              `}
-            >
-              <span className="-translate-y-[1px]">{ledger.name}</span>
-
-              {/* CLOSE TAB */}
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onCloseTab?.(ledger.id);
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveFileId(tab.id)
+                  onSelectFile?.(tab.id)
                 }}
                 className={`
-                  p-1 rounded-full cursor-pointer transition
+                  relative shrink-0 flex justify-between items-center gap-2
+                  pl-3 pr-1 py-1 h-6
+                  rounded-full
+                  text-sm whitespace-nowrap transition-all duration-300
                   ${
                     active
-                      ? "hover:bg-[var(--dom-bg)] text-[var(--text-dom-md)]"
-                      : "hover:bg-[var(--gray-300)] text-[var(--text-dk)]"
+                      ? "bg-[var(--acc-dk)] text-[var(--text-lt)]"
+                      : "hover:bg-[var(--gray-18)] text-[var(--text-dk)] hover:text-[var(--text-lt)]"
                   }
                 `}
               >
-                <X className="w-3 h-3" />
-              </span>
-            </button>
-          );
-        })}
+                <span className="-translate-y-[1px] truncate">{tab.name}</span>
 
-        {/* ADD TAB MENU ---------------------------------------------------- */}
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onCloseTab?.(tab.id)
+                  }}
+                  className={`
+                    p-1 rounded-full cursor-pointer transition-all duration-300
+                    ${
+                      active
+                        ? "hover:bg-[var(--acc-md)]"
+                        : "hover:bg-[var(--gray-17)]"
+                    }
+                  `}
+                  role="button"
+                  aria-label="Close tab"
+                  title="Close"
+                >
+                  <X className="w-3 h-3" />
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* OPEN/ADD NEW */}
         <div className="relative shrink-0" ref={addRef}>
-          <EditorFooterMenu
+          <ExpansiveMenu
+            items={menuItems}
             open={addOpen}
-            setOpen={setAddOpen}
-            existingLedgers={openLedgers}
-            packageLedgers={packageLedgers}
-            onCreateLedger={() => {
-              setAddOpen(false);
-              onCreateLedger?.();
+            setOpen={(v) => {
+              setAddOpen(v)
+              if (v) setOverflowOpen(false)
             }}
-            onSelectLedger={(id) => {
-              setAddOpen(false);
-              onSelectLedger?.(id);
-              setActiveLedgerId(id);
-            }}
+            expand="line"
+            variant="panel"
+            direction="right"
+            radius={62}
+            spacing={44}
+            mainIcon={<Plus className="h-4 w-4" />}
+            mainIconSize={18}
+            mainSize={24}
+            mainRotate={45}
+            defaultState="closed"
+            autoClose
           />
         </div>
       </div>
 
-      {/* RIGHT: OVERFLOW MENU --------------------------------------------- */}
+      {/* RIGHT: OVERFLOW --------------------------------------------------- */}
       <div className="relative" ref={overflowRef}>
-        {showOverflow && (
+        <button
+          onClick={() => {
+            setOverflowOpen((v) => !v)
+            setAddOpen(false)
+          }}
+          className="
+            h-8 w-8 inline-flex items-center justify-center
+            rounded-full
+            hover:bg-[var(--gray-18)]
+            text-[var(--text-dk)]
+          "
+          aria-label="More"
+          title="More"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
+
+        {overflowOpen && (
           <div
             className="
               absolute right-0 bottom-12 z-50
-              w-48 bg-[var(--bg)]
+              w-52 bg-[var(--bg)]
               border border-[var(--border)]
-              rounded-xl shadow-xl py-1
+              rounded-xl py-1
               text-[var(--text-dk)]
             "
           >
-            {activeLedger && (
-              <div
-                className="
-                  px-3 py-1.5 text-xs font-medium
-                  text-[var(--text)]
-                  border-b border-[var(--border)]
-                "
-              >
-                {activeLedger.name}
-              </div>
-            )}
+            <div
+              className="
+                px-3 py-1.5 text-xs font-medium
+                text-[var(--text)]
+                border-b border-[var(--border)]
+              "
+            >
+              {activeTab?.name ?? "No file selected"}
+            </div>
 
             <button
               onClick={() => {
-                setShowOverflow(false);
-                onManageRoutes?.();
+                setOverflowOpen(false)
+                onManageRoutes?.()
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
@@ -212,8 +296,8 @@ export default function EditorFooter({
 
             <button
               onClick={() => {
-                setShowOverflow(false);
-                onSettings?.();
+                setOverflowOpen(false)
+                onSettings?.()
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
@@ -222,28 +306,29 @@ export default function EditorFooter({
               "
             >
               <Settings className="w-4 h-4" />
-              Ledger Settings
+              File Settings
             </button>
 
             <div className="my-1 border-t border-[var(--border)]" />
 
             <button
               onClick={() => {
-                setShowOverflow(false);
-                onDelete?.(activeLedgerId);
+                setOverflowOpen(false)
+                if (activeId) onDeleteFile?.(activeId)
               }}
               className="
                 w-full flex items-center gap-2 px-3 py-2
                 text-[var(--danger)]
                 hover:bg-[var(--danger-bg)]
               "
+              disabled={!activeId}
             >
               <Trash2 className="w-4 h-4" />
-              Close Active Ledger
+              Delete Active File
             </button>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

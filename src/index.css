@@ -16,8 +16,8 @@ body,
 
 html,
 body {
-  background: var(--gray-18);
-  /* background-color: #111113; */
+  /* background: var(--gray-15); */
+  background-color: #111111;
   /* background: var(--acc-lt); */
   /* background: #D9D9D9; */
 }
@@ -44,7 +44,8 @@ body {
     --gray-16: #474747;
     --gray-17: #383838;
     --gray-18: #262626;
-    --gray-19: #1a1a1a;
+    --gray-19: #1b1b1b;
+    --gray-20: #181818;
     --black: #000000;
 
     /* use this to easily toggle light and dark mode */
@@ -64,8 +65,10 @@ body {
     --dom-glass: rgb(248, 118, 42, 0.1);
 
     /* ACCENT: rgb(128, 174, 243) */
-    --acc-dk: rgb(128, 174, 243);
-    --acc-md: rgb(181, 207, 245);
+    /* --acc-dk: rgb(128, 174, 243); */
+    --acc-dk: #394650;
+    /* --acc-md: rgb(181, 207, 245); */
+    --acc-md: #596f7e;
     --acc-lt: rgb(211, 226, 249);
     --acc-bg: rgb(230, 237, 248);
     --acc-glass: rgb(128, 174, 243, 0.15);
@@ -76,9 +79,9 @@ body {
     --vBlack: var(--black);
     --vWhite: var(--white);
     
-    --text-lt: var(--gray-11);
-    --text: var(--gray-14);
-    --text-dk: var(--gray-16);
+    --text-lt: var(--gray-10);
+    --text: var(--gray-12);
+    --text-dk: var(--gray-14);
 
     /* BORDERS */
     --border-lt: var(--gray-2);
@@ -90,11 +93,13 @@ body {
     /* FUNCTION COLORS */
     --success: rgb(87, 136, 64);
     --success-bg: rgba(87, 136, 64, 0.1);
-    --warning: rgb(255, 183, 3);
+    --warning: rgb(204, 155, 32);
+    --warning-lt: rgb(248, 212, 120);
     --warning-bg: rgb(255, 183, 3, 0.1);
     --edit: rgb(33, 158, 188);
     --edit-bg: rgb(33, 158, 188, 0.1);
-    --danger: rgb(217, 4, 41);
+    --danger: rgb(146, 41, 58);
+    --danger-lt: rgb(143, 90, 99);
     --danger-bg: rgb(217 4 41 / 0.1);
     /* --info: #219ebc; */
     --link-bg: rgba(89, 220, 253, 0.2);
@@ -185,27 +190,49 @@ body {
   --fvr-indigo-lt:  rgb(215, 212, 250);
 }
 
-/* ========================================================================== */
-/*  GLOBAL SCROLLBAR RULES (HIDDEN ALWAYS)                                    */
-/* ========================================================================== */
+/* SCROLLBARS */
 
-* {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* ============================== */
+/* Custom scrollbar (opt-in)      */
+/* ============================== */
+.scrollbar {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
 
-*::-webkit-scrollbar {
-  display: none;
+.scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
 }
 
-/* hide scrollbars ONLY where you opt-in */
-.scrollbar-hidden {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.scrollbar-hidden::-webkit-scrollbar {
-  display: none;
+.scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* ============================== */
+/* Hide native scrollbar (opt-in) */
+/* ============================== */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE/Edge legacy */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 /* ========================================================================== */
