@@ -126,7 +126,7 @@ function RouterContent() {
 
       {/* WORKSPACE ROUTES */}
       <Route
-        path="/program/workspace"
+        path="/program/workspace/*"
         element={
           <PageShell>
             <RequireProgram>
@@ -146,7 +146,7 @@ function RouterContent() {
       />
 
       <Route
-        path="/program/manager"
+        path="/program/manager/*"
         element={
           <PageShell>
             <RequireProgram>
@@ -166,7 +166,7 @@ function RouterContent() {
       />
 
       <Route
-        path="/program/calendar"
+        path="/program/editor/*"
         element={
           <PageShell>
             <RequireProgram>
@@ -185,87 +185,65 @@ function RouterContent() {
         }
       />
 
-      {/* EDITOR ROUTES (support both styles) */}
-<Route
-  path="/program/editor"
-  element={
-    <PageShell>
-      <RequireProgram>
-        <PushPanel
-          open={open}
-          width="360px"
-          title="Baton"
-          titleIcon={<BotMessageSquare className="h-4 w-4" />}
-          onClose={() => setOpen(false)}
-          panel={<BatonChatInterface />}
-        >
-          <WorkspacePage />
-        </PushPanel>
-      </RequireProgram>
-    </PageShell>
-  }
-/>
+      <Route
+        path="/program/editor/:fileId"
+        element={
+          <PageShell>
+            <RequireProgram>
+              <PushPanel
+                open={open}
+                width="360px"
+                title="Baton"
+                titleIcon={<BotMessageSquare className="h-4 w-4" />}
+                onClose={() => setOpen(false)}
+                panel={<BatonChatInterface />}
+              >
+                <WorkspacePage />
+              </PushPanel>
+            </RequireProgram>
+          </PageShell>
+        }
+      />
 
-<Route
-  path="/program/editor/:fileId"
-  element={
-    <PageShell>
-      <RequireProgram>
-        <PushPanel
-          open={open}
-          width="360px"
-          title="Baton"
-          titleIcon={<BotMessageSquare className="h-4 w-4" />}
-          onClose={() => setOpen(false)}
-          panel={<BatonChatInterface />}
-        >
-          <WorkspacePage />
-        </PushPanel>
-      </RequireProgram>
-    </PageShell>
-  }
-/>
+      <Route
+        path="/program/analyzer/*"
+        element={
+          <PageShell>
+            <RequireProgram>
+              <PushPanel
+                open={open}
+                width="360px"
+                title="Baton"
+                titleIcon={<BotMessageSquare className="h-4 w-4" />}
+                onClose={() => setOpen(false)}
+                panel={<BatonChatInterface />}
+              >
+                <WorkspacePage />
+              </PushPanel>
+            </RequireProgram>
+          </PageShell>
+        }
+      />
 
-<Route
-  path="/program/:programId/editor"
-  element={
-    <PageShell>
-      <RequireProgram>
-        <PushPanel
-          open={open}
-          width="360px"
-          title="Baton"
-          titleIcon={<BotMessageSquare className="h-4 w-4" />}
-          onClose={() => setOpen(false)}
-          panel={<BatonChatInterface />}
-        >
-          <WorkspacePage />
-        </PushPanel>
-      </RequireProgram>
-    </PageShell>
-  }
-/>
-
-<Route
-  path="/program/:programId/editor/:fileId"
-  element={
-    <PageShell>
-      <RequireProgram>
-        <PushPanel
-          open={open}
-          width="360px"
-          title="Baton"
-          titleIcon={<BotMessageSquare className="h-4 w-4" />}
-          onClose={() => setOpen(false)}
-          panel={<BatonChatInterface />}
-        >
-          <WorkspacePage />
-        </PushPanel>
-      </RequireProgram>
-    </PageShell>
-  }
-/>
-
+      <Route
+        path="/program/calendar/*"
+        element={
+          <PageShell>
+            <RequireProgram>
+              <PushPanel
+                open={open}
+                width="360px"
+                title="Baton"
+                titleIcon={<BotMessageSquare className="h-4 w-4" />}
+                onClose={() => setOpen(false)}
+                panel={<BatonChatInterface />}
+              >
+                <WorkspacePage />
+              </PushPanel>
+            </RequireProgram>
+          </PageShell>
+        }
+      />
 
       {/* PREVIEW */}
       <Route

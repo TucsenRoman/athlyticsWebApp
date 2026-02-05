@@ -39,6 +39,8 @@ export interface LayeredArchConfig {
   startRadius?: number;
   layerGap?: number;
   itemsPerLayer?: number;
+  spacingByLayer?: number[]
+  itemsPerLayerByLayer?: number[] 
 }
 
 export interface ExpansiveMenuMobileOverrides {
@@ -253,22 +255,58 @@ export default function ExpansiveMenu({
         originGap = 0,
         startRadius = effectiveRadius,
         layerGap = effectiveSpacing,
+
+        // fallback (if no by-layer config provided)
         itemsPerLayer = 4,
-      } = layeredArch ?? {};
+
+        itemsPerLayerByLayer,
+        spacingByLayer,
+      } = layeredArch ?? {}
+
+      // resolve capacity for a given layer
+      const capForLayer = (layer: number) =>
+        itemsPerLayerByLayer?.[layer] ?? itemsPerLayer
+
+      // map global index -> (layer, indexWithinLayer, countThisLayer)
+      const locate = (globalIndex: number) => {
+        let layer = 0
+        let offset = globalIndex
+
+        while (true) {
+          const cap = Math.max(1, capForLayer(layer))
+          if (offset < cap) {
+            // count remaining items in this layer
+            const remaining = list.length - globalIndex + offset
+            const countThisLayer = Math.min(cap, remaining)
+            return { layer, index: offset, countThisLayer }
+          }
+          offset -= cap
+          layer += 1
+        }
+      }
 
       return list.map((_, i) => {
-        const layer = Math.floor(i / itemsPerLayer);
-        const index = i % itemsPerLayer;
+        const { layer, index, countThisLayer } = locate(i)
 
-        const layerRadius =
-          originGap + startRadius + layer * layerGap;
+        const layerRadius = originGap + startRadius + layer * layerGap
 
-        const arc = Math.PI / 2;
-        const baseAngle =
-          itemsPerLayer === 1
+        // ✅ per-layer spacing (fallback to global spacing)
+        const spacingPx = spacingByLayer?.[layer] ?? effectiveSpacing
+
+        // spacing(px) -> delta angle (radians) at this radius
+        const r = Math.max(layerRadius, 1)
+        const delta = spacingPx / r
+
+        const totalArc =
+          countThisLayer <= 1
             ? 0
-            : -arc / 2 +
-              (index / Math.max(itemsPerLayer - 1, 1)) * arc;
+            : Math.min(Math.PI * 1.15, delta * (countThisLayer - 1))
+
+        const baseAngle =
+          countThisLayer <= 1
+            ? 0
+            : -totalArc / 2 +
+              (index / Math.max(countThisLayer - 1, 1)) * totalArc
 
         const dirRad = (effectiveDirectionDeg * Math.PI) / 180
         const angle = baseAngle + dirRad
@@ -277,16 +315,25 @@ export default function ExpansiveMenu({
           x: Math.sin(angle) * layerRadius,
           y: -Math.cos(angle) * layerRadius,
         }
-      });
+      })
     }
-
+    
     // default: arch
     return list.map((_, i) => {
-      const arc = Math.PI / 2
+      const n = Math.max(list.length, 1)
+
+      // spacing(px) -> delta angle (radians)
+      const r = Math.max(effectiveRadius, 1)
+      const delta = effectiveSpacing / r // radians between neighbors
+
+      // total arc based on desired spacing
+      // clamp so it doesn't wrap too far around
+      const totalArc = n === 1 ? 0 : Math.min(Math.PI * 1.15, delta * (n - 1))
+
       const base =
-        list.length === 1
+        n === 1
           ? 0
-          : -arc / 2 + (i / Math.max(list.length - 1, 1)) * arc
+          : -totalArc / 2 + (i / Math.max(n - 1, 1)) * totalArc
 
       const dirRad = (effectiveDirectionDeg * Math.PI) / 180
       const angle = base + dirRad
@@ -295,7 +342,7 @@ export default function ExpansiveMenu({
         x: Math.sin(angle) * effectiveRadius,
         y: -Math.cos(angle) * effectiveRadius,
       }
-    });
+    })
   }, [
     displayedItems,
     effectiveExpand,
@@ -438,11 +485,14 @@ export default function ExpansiveMenu({
         (isNested ? (
           displayedItems.map((item, i) => {
             const pos = positions[i] ?? { x: 0, y: 0 }
+            const x = pos.x + offsetX
+            const y = pos.y + offsetY
+
             return (
               <div
                 key={`nest-${item.id ?? i}`}
                 className="absolute z-[9999] pointer-events-auto"
-                style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
+                style={{ transform: `translate(${x}px, ${y}px)` }}
               >
                 {renderButton(item, i)}
               </div>
@@ -451,12 +501,15 @@ export default function ExpansiveMenu({
         ) : (
           <AnimatePresence>
             {displayedItems.map((item, i) => {
-              const pos = positions[i]
+              const pos = positions[i] ?? { x: 0, y: 0 }
+              const x = pos.x + offsetX
+              const y = pos.y + offsetY
+
               return (
                 <motion.div
                   key={`root-${item.id ?? i}`}
                   initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-                  animate={{ opacity: 1, scale: 1, x: pos.x, y: pos.y }}
+                  animate={{ opacity: 1, scale: 1, x, y }}
                   exit={{ opacity: 0, scale: 0 }}
                   transition={{ duration: 0.25, delay: i * 0.05 }}
                   className="absolute z-[9999] pointer-events-auto"

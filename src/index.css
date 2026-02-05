@@ -191,10 +191,6 @@ body {
 }
 
 /* SCROLLBARS */
-
-/* ============================== */
-/* Custom scrollbar (opt-in)      */
-/* ============================== */
 .scrollbar {
   scrollbar-gutter: stable;
   scrollbar-width: thin;
@@ -223,9 +219,6 @@ body {
   background-clip: content-box;
 }
 
-/* ============================== */
-/* Hide native scrollbar (opt-in) */
-/* ============================== */
 .scrollbar-hide {
   -ms-overflow-style: none; /* IE/Edge legacy */
   scrollbar-width: none; /* Firefox */

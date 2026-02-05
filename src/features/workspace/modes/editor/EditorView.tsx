@@ -1,4 +1,4 @@
-// src/features/workspace/views/editor/ProjectEditor.tsx
+// src/features/workspace/modes/editor/EditorView.tsx
 "use client"
 
 import * as React from "react"
@@ -23,7 +23,7 @@ type TableRouteRow = Tables<"table_routes">
 
 type FileTab = { id: string; name: string }
 
-type ProjectEditorProps = {
+type EditorViewProps = {
   programId: number
   fileId: string
   setFileId: (id: string) => void
@@ -35,13 +35,13 @@ type ProjectEditorProps = {
 /* MAIN COMPONENT                                                             */
 /* -------------------------------------------------------------------------- */
 
-export default function ProjectEditor({
+export default function EditorView({
   programId,
   fileId,
   setFileId,
   searchQuery,
   setSearchQuery: _setSearchQuery,
-}: ProjectEditorProps) {
+}: EditorViewProps) {
   const [fileRow, setFileRow] = useState<FileRow | null>(null)
   const [headers, setHeaders] = useState<TableColumnRow[]>([])
   const [entries, setEntries] = useState<TableRowRow[]>([])
@@ -71,7 +71,7 @@ export default function ProjectEditor({
       if (!mounted) return
 
       if (error) {
-        console.error("ProjectEditor: failed to load files:", error)
+        console.error("Editor: failed to load files:", error)
         setAllFiles([])
         return
       }
@@ -113,7 +113,7 @@ export default function ProjectEditor({
       .order("created_at", { ascending: true })
 
     if (error) {
-      console.error("ProjectEditor: failed to load routes:", error)
+      console.error("Editor: failed to load routes:", error)
       setRoutes([])
       return
     }
@@ -147,7 +147,7 @@ export default function ProjectEditor({
 
       if (!mounted) return
 
-      if (fileErr) console.error("ProjectEditor: files lookup failed:", fileErr)
+      if (fileErr) console.error("Editor: files lookup failed:", fileErr)
       setFileRow((fileData as any) ?? null)
 
       // columns (headers)
@@ -160,7 +160,7 @@ export default function ProjectEditor({
       if (!mounted) return
 
       if (headerErr) {
-        console.error("ProjectEditor: failed to load headers:", headerErr)
+        console.error("Editor: failed to load headers:", headerErr)
         setHeaders([])
       } else {
         setHeaders((headerData ?? []) as any)
@@ -176,7 +176,7 @@ export default function ProjectEditor({
       if (!mounted) return
 
       if (entryErr) {
-        console.error("ProjectEditor: failed to load entries:", entryErr)
+        console.error("Editor: failed to load entries:", entryErr)
         setEntries([])
       } else {
         setEntries((entryData ?? []) as any)
@@ -207,7 +207,7 @@ export default function ProjectEditor({
       .order("order_index", { ascending: true })
 
     if (error) {
-      console.error("ProjectEditor: reloadHeaders failed:", error)
+      console.error("Editor: reloadHeaders failed:", error)
       return
     }
 
@@ -224,7 +224,7 @@ export default function ProjectEditor({
       .order("created_at", { ascending: true })
 
     if (error) {
-      console.error("ProjectEditor: reloadEntries failed:", error)
+      console.error("Editor: reloadEntries failed:", error)
       return
     }
 
@@ -241,13 +241,13 @@ export default function ProjectEditor({
       .insert({
         name: newName,
         program_id: programId,
-        type: "table", // matches Database Enums
+        type: "table",
       })
       .select("id, name")
       .maybeSingle()
 
     if (error) {
-      console.error("ProjectEditor: create file failed:", error)
+      console.error("Editor: create file failed:", error)
       return
     }
 
@@ -263,7 +263,7 @@ export default function ProjectEditor({
 
       const { error } = await supabase.from("files").delete().eq("id", id)
       if (error) {
-        console.error("ProjectEditor: delete file failed:", error)
+        console.error("Editor: delete file failed:", error)
         return
       }
 

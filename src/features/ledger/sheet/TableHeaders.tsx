@@ -35,6 +35,8 @@ import {
   ArrowUpNarrowWide,
   ArrowDownWideNarrow,
   Link as LinkIcon,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 
 import {
@@ -44,10 +46,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/overlays/dialog"
-
-// Optional route dialogs (enable if you want)
-// import RouteConnect from "../actions/RouteConnect"
-// import RouteInfo from "../actions/RouteInfo"
 
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
@@ -81,6 +79,10 @@ type HeaderCellProps = {
 
   onSort?: (columnId: string, dir: SortDir) => void
 
+  blurMode: boolean
+  isBlurred: boolean
+  onToggleBlur?: (id: string) => void
+
   onOpenRouteConnect?: (col: any) => void
   onOpenRouteInfo?: (col: any) => void
 }
@@ -105,6 +107,10 @@ function HeaderCell({
   pinMode,
   onSort,
 
+  blurMode,
+  isBlurred,
+  onToggleBlur,
+
   onOpenRouteConnect,
   onOpenRouteInfo,
 }: HeaderCellProps) {
@@ -116,37 +122,44 @@ function HeaderCell({
   const isPrimary = header?.route_class === "primary"
   const isSecondary = header?.route_class === "secondary"
 
-  const routeIconColor =
+  const routeIconClass =
     isPrimary
-      ? "text-blue-500 hover:text-blue-600"
+      ? "text-[var(--fvr-blue)] hover:text-[var(--fvr-blue-md)]"
       : isSecondary
-      ? "text-green-500 hover:text-green-600"
-      : "text-muted-foreground hover:text-primary"
+      ? "text-[var(--fvr-green)] hover:text-[var(--fvr-green-md)]"
+      : "text-[var(--text-lt)] hover:text-[var(--dom-dk)]"
 
   return (
     <>
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 260, damping: 22 }}
-        className={`group relative flex items-center justify-between overflow-hidden rounded-t-[12px] px-2 border-r border-gray-100 ${
-          pinMode ? "ring-2 ring-[hsl(var(--primary))/0.22]" : ""
-        }`}
+        className={[
+          "group relative flex justify-around items-center overflow-hidden",
+          "px-2 pt-[6px] pb-[4px] h-full w-full",
+          pinMode ? "ring-2 ring-[rgba(89,111,126,0.35)]" : "",
+          "bg-transparent",
+        ].join(" ")}
         style={{
-          width: "150px",
-          minWidth: "150px",
-          maxWidth: "150px",
-          background: isPinned ? "#fff" : "transparent",
+          backgroundColor: isPinned ? "var(--gray-20)" : "transparent",
           zIndex: isPinned ? 50 : 1,
         }}
       >
         {/* LEFT */}
-        <div className="flex items-center gap-2 overflow-hidden select-none">
-          <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="flex justify-center items-center gap-2 overflow-hidden select-none min-w-0">
+          <Icon
+            className={[
+              "absolute right-[6px] top-[4px]",
+              "w-2 h-2",
+              "text-[var(--text-dk)]",
+              "pointer-events-none",
+            ].join(" ")}
+          />
 
           {(pinMode || isPinned) && (
             <button
               type="button"
-              className="cursor-pointer"
+              className="cursor-pointer shrink-0"
               title={isPinned ? "Unpin column" : "Pin column"}
               onClick={(e) => {
                 e.stopPropagation()
@@ -154,9 +167,27 @@ function HeaderCell({
               }}
             >
               {isPinned ? (
-                <Pin className="w-3.5 h-3.5 fill-[hsl(var(--primary))] text-[hsl(var(--primary))]" />
+                <Pin className="w-3.5 h-3.5 rotate-45 fill-[var(--acc-md)] text-[var(--acc-md)]" />
               ) : (
-                <Pin className="w-3.5 h-3.5 text-muted-foreground" />
+                <Pin className="w-3.5 h-3.5 text-[var(--text-lt)]" />
+              )}
+            </button>
+          )}
+
+          {(blurMode || isBlurred) && (
+            <button
+              type="button"
+              className="cursor-pointer shrink-0"
+              title={isBlurred ? "Unblur column" : "Blur column"}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleBlur?.(header?.id)
+              }}
+            >
+              {isBlurred ? (
+                <EyeOff className="w-3.5 h-3.5 text-[var(--text-lt)]" />
+              ) : (
+                <Eye className="w-3.5 h-3.5 text-[var(--text-lt)]" />
               )}
             </button>
           )}
@@ -168,12 +199,19 @@ function HeaderCell({
               onChange={(e) => setEditValue(e.target.value)}
               onBlur={() => handleRename(header.id)}
               onKeyDown={(e) => e.key === "Enter" && handleRename(header.id)}
-              className="h-7 text-sm px-1 border-none focus:ring-0 truncate"
-              style={{ width: "120px" }}
+              className={[
+                "h-7 text-sm px-1",
+                "border-none focus:ring-0",
+                "bg-transparent text-[var(--text)]",
+                "truncate w-full min-w-0",
+              ].join(" ")}
             />
           ) : (
             <span
-              className="font-semibold text-sm truncate cursor-pointer max-w-[120px]"
+              className={[
+                "font-semibold text-sm truncate cursor-pointer",
+                "text-[var(--text)] max-w-full",
+              ].join(" ")}
               title={header?.name}
               onDoubleClick={() => {
                 if (pinMode) return
@@ -184,10 +222,122 @@ function HeaderCell({
               {header?.name || `Column ${index + 1}`}
             </span>
           )}
+
+          <div className="absolute right-[0px] bottom-[-2px] flex items-center h-[20px] p-1">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  iconSize="sm"
+                  className={[
+                    "h-3 w-3 p-0",
+                    "text-[var(--text-dk)] hover:text-[var(--text-lt)]",
+                    // "hover:bg-[rgba(255,255,255,0.06)]",
+                  ].join(" ")}
+                >
+                  <ChevronDown />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="end"
+                className={[
+                  "w-56 shadow-md",
+                  "border border-[var(--gray-18)]",
+                  "bg-[var(--gray-20)] text-[var(--text)]",
+                ].join(" ")}
+              >
+                <DropdownMenuItem
+                  onClick={() => setSortDialogOpen(true)}
+                  className="hover:bg-[rgba(255,255,255,0.06)]"
+                >
+                  <Funnel className="w-4 h-4 mr-2" /> Sort
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-[var(--gray-18)]" />
+
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="hover:bg-[rgba(255,255,255,0.06)]">
+                    <Settings2 className="w-4 h-4 mr-2" /> Column type
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="border border-[var(--gray-18)] bg-[var(--gray-20)] text-[var(--text)]">
+                    {Object.keys(typeIcons).map((type) => {
+                      const TypeIcon = typeIcons[type]
+                      return (
+                        <DropdownMenuItem
+                          key={type}
+                          onClick={() => handleChangeType(header.id, type)}
+                          className="hover:bg-[rgba(255,255,255,0.06)]"
+                        >
+                          <TypeIcon className="w-4 h-4 mr-2" /> {type}
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSeparator className="bg-[var(--gray-18)]" />
+
+                {/* {!isPrimary && !isSecondary && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => onOpenRouteConnect?.(header)}
+                      disabled={!onOpenRouteConnect}
+                      className="hover:bg-[rgba(255,255,255,0.06)]"
+                    >
+                      <LinkIcon className="w-4 h-4 mr-2" /> Connect route
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-[var(--gray-18)]" />
+                  </>
+                )} */}
+
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingId(header.id)
+                    setEditValue(header.name ?? "")
+                  }}
+                  className="hover:bg-[rgba(255,255,255,0.06)]"
+                >
+                  <Pencil className="w-4 h-4 mr-2" /> Rename
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => onTogglePin?.(header.id)}
+                  disabled={!onTogglePin}
+                  className="hover:bg-[rgba(255,255,255,0.06)]"
+                >
+                  {isPinned ? (
+                    <PinOff className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Pin className="w-4 h-4 mr-2" />
+                  )}
+                  {isPinned ? "Unpin" : "Pin"}
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => addAt(index + 1)}
+                  className="hover:bg-[rgba(255,255,255,0.06)]"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Add column
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="bg-[var(--gray-18)]" />
+
+                <DropdownMenuItem
+                  onClick={() => handleDelete(header.id, header.name)}
+                  className={[
+                    "text-[var(--danger)]",
+                    "hover:bg-[rgba(255,255,255,0.06)]",
+                  ].join(" ")}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center gap-1 pr-[2px] relative">
+        <div className="flex items-center gap-1 pr-[2px] relative shrink-0">
           {(isPrimary || isSecondary) && (
             <LinkIcon
               size={15}
@@ -196,112 +346,25 @@ function HeaderCell({
                 e.stopPropagation()
                 onOpenRouteInfo?.(header)
               }}
-              className={`cursor-pointer opacity-90 ${routeIconColor}`}
+              className={`cursor-pointer opacity-90 ${routeIconClass}`}
               aria-label={isPrimary ? "Primary Route" : "Secondary Route"}
             />
           )}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
-              >
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              className="w-56 border border-gray-200 shadow-md"
-            >
-              <DropdownMenuItem onClick={() => setSortDialogOpen(true)}>
-                <Funnel className="w-4 h-4 mr-2" /> Sort
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
-                  <Settings2 className="w-4 h-4 mr-2" /> Column type
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {Object.keys(typeIcons).map((type) => {
-                    const TypeIcon = typeIcons[type]
-                    return (
-                      <DropdownMenuItem
-                        key={type}
-                        onClick={() => handleChangeType(header.id, type)}
-                      >
-                        <TypeIcon className="w-4 h-4 mr-2" /> {type}
-                      </DropdownMenuItem>
-                    )
-                  })}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              <DropdownMenuSeparator />
-
-              {!isPrimary && !isSecondary && (
-                <>
-                  <DropdownMenuItem
-                    onClick={() => onOpenRouteConnect?.(header)}
-                    disabled={!onOpenRouteConnect}
-                  >
-                    <LinkIcon className="w-4 h-4 mr-2" /> Connect route
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditingId(header.id)
-                  setEditValue(header.name ?? "")
-                }}
-              >
-                <Pencil className="w-4 h-4 mr-2" /> Rename
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                onClick={() => onTogglePin?.(header.id)}
-                disabled={!onTogglePin}
-              >
-                {isPinned ? (
-                  <PinOff className="w-4 h-4 mr-2" />
-                ) : (
-                  <Pin className="w-4 h-4 mr-2" />
-                )}
-                {isPinned ? "Unpin" : "Pin"}
-              </DropdownMenuItem>
-
-              <DropdownMenuItem onClick={() => addAt(index + 1)}>
-                <Plus className="w-4 h-4 mr-2" /> Add column
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem
-                onClick={() => handleDelete(header.id, header.name)}
-                className="text-red-600 focus:text-red-600"
-              >
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </motion.div>
 
       {/* Sort Dialog */}
       <Dialog open={sortDialogOpen} onOpenChange={setSortDialogOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm bg-[var(--gray-20)] border border-[var(--gray-18)] text-[var(--text)]">
           <DialogHeader>
-            <DialogTitle>Sort</DialogTitle>
+            <DialogTitle className="text-[var(--text)]">Sort</DialogTitle>
           </DialogHeader>
 
           <div className="my-3 text-center">
-            <h3 className="text-base font-semibold">{header?.name}</h3>
-            <p className="text-xs text-muted-foreground mt-1">
+            <h3 className="text-base font-semibold text-[var(--text)]">
+              {header?.name}
+            </h3>
+            <p className="text-xs text-[var(--text-lt)] mt-1">
               Pick a direction.
             </p>
           </div>
@@ -314,6 +377,7 @@ function HeaderCell({
                 setSortDialogOpen(false)
               }}
               disabled={!onSort}
+              className="border border-[var(--gray-18)] bg-[var(--gray-20)] text-[var(--text)] hover:bg-[rgba(255,255,255,0.06)]"
             >
               <ArrowUpNarrowWide className="w-4 h-4 mr-1" /> Asc
             </Button>
@@ -324,13 +388,16 @@ function HeaderCell({
                 setSortDialogOpen(false)
               }}
               disabled={!onSort}
+              className="border border-[var(--gray-18)] bg-[var(--gray-20)] text-[var(--text)] hover:bg-[rgba(255,255,255,0.06)]"
             >
               <ArrowDownWideNarrow className="w-4 h-4 mr-1" /> Desc
             </Button>
           </div>
 
           <DialogFooter className="mt-4">
-            <Button onClick={() => setSortDialogOpen(false)}>Done</Button>
+            <Button className="bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.10)] text-[var(--text)]">
+              Done
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -338,7 +405,9 @@ function HeaderCell({
   )
 }
 
-/* TableHeaders */
+/* -------------------------------------------------------------------------- */
+/* TableHeaders                                                               */
+/* -------------------------------------------------------------------------- */
 
 type TableHeadersProps = {
   tableId?: string
@@ -351,6 +420,9 @@ type TableHeadersProps = {
   onTogglePin?: (id: string) => void
   pinMode?: boolean
   onSort?: (columnId: string, dir: "asc" | "desc") => void
+  blurMode?: boolean
+  blurredColumns?: string[]
+  onToggleBlur?: (id: string) => void
 }
 
 export default function TableHeaders({
@@ -365,18 +437,21 @@ export default function TableHeaders({
 
   onSort,
 
+  blurMode = false,
+  blurredColumns = [],
+  onToggleBlur,
+
   routes = [],
-  // reloadRoutes,
 }: TableHeadersProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
 
-  // Optional route dialogs
+  // Optional route dialogs (stubs kept)
   const [activeColumn, setActiveColumn] = useState<any | null>(null)
   const [routeConnectOpen, setRouteConnectOpen] = useState(false)
   const [routeInfoOpen, setRouteInfoOpen] = useState(false)
 
-  // Map file_id -> file name (if you still need it for RouteInfo/RouteConnect)
+  // Map file_id -> file name (only needed if you later re-enable route dialogs)
   const [fileNames, setFileNames] = useState<Record<string, string>>({})
 
   const typeIcons: Record<string, React.ElementType> = useMemo(
@@ -492,7 +567,6 @@ export default function TableHeaders({
   const handleChangeType = useCallback(
     async (columnId: string, type: string) => {
       try {
-        // Pull current column options so we can keep/normalize them
         const current = headers.find((h: any) => h.id === columnId)
         const nextOptions =
           type === "select"
@@ -527,7 +601,7 @@ export default function TableHeaders({
 
   if (!headers.length) {
     return (
-      <div className="text-sm text-muted-foreground italic p-2">
+      <div className="text-sm text-[var(--text-lt)] italic p-2">
         No columns yet.
       </div>
     )
@@ -535,7 +609,8 @@ export default function TableHeaders({
 
   return (
     <>
-      <div className="flex items-center gap-[1px] overflow-hidden">
+      {/* ~What is the gap for? */}
+      <div className="flex items-center gap-[1px] overflow-hidden w-full h-full">
         {headers.map((header: any, index: number) => (
           <HeaderCell
             key={header.id}
@@ -554,6 +629,9 @@ export default function TableHeaders({
             onTogglePin={onTogglePin}
             pinMode={pinMode}
             onSort={onSort}
+            blurMode={blurMode}
+            isBlurred={blurredColumns.includes(header.id)}
+            onToggleBlur={onToggleBlur}
             onOpenRouteConnect={handleOpenRouteConnect}
             onOpenRouteInfo={handleOpenRouteInfo}
           />

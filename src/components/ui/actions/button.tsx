@@ -32,15 +32,14 @@ const buttonVariants = cva(
         stick: [
           "h-[32px] w-[32px] p-0",
           "rounded-full",
-          "bg-[var(--gray-10)] hover:bg-white/12 text-[var(--text-dk)]",
-          "data-[active=true]:bg-[var(--gray-7)] data-[active=true]:hover:bg-[var(--gray-8)]",
-          "data-[active=true]:text-[var(--text)]",
+          "bg-[var(--acc-dk)] hover:bg-white/12 text-[var(--text)]",
+          "hover:bg-[var(--acc-md)] hover:text-[var(--text-lt)]",
         ].join(" "),
 
         float: [
           "h-[32px] w-[32px] p-0 rounded-full",
           // "bg-[var(--gray-5)] hover:bg-[var(--gray-6)]",
-          "bg-[var(--gray-10)] hover:bg-white/12 text-[var(--text-dk)]",
+          "bg-[var(--gray-16)] hover:bg-white/12 text-[var(--text)]",
           // "text-[var(--text)]",
           "data-[active=true]:text-[var(--acc-dk)]",
           "data-[active=true]:hover:bg-[var(--acc-bg)]",

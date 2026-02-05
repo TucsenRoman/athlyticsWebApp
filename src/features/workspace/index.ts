@@ -4,15 +4,15 @@
 /* VIEWS (PUBLIC WORKSPACE MODES)                                              */
 /* -------------------------------------------------------------------------- */
 
-export { default as ProjectManager } from "./views/manager/ProjectManager";
-export { default as ProjectEditor } from "./views/editor/ProjectEditor";
+export { default as ProjectManager } from "./modes/manager/ManagerView";
+export { default as ProjectEditor } from "./modes/editor/EditorView";
 
 /* -------------------------------------------------------------------------- */
 /* TOOLS (TOOLBAR ADD-ONS)                                                     */
 /* -------------------------------------------------------------------------- */
 
-export { default as ManagerTools } from "./views/manager/ManagerTools";
-export { default as EditorTools } from "./views/editor/EditorTools";
+export { default as ManagerTools } from "./modes/manager/outdated/ManagerTools";
+export { default as EditorTools } from "./modes/editor/EditorTools";
 
 /* -------------------------------------------------------------------------- */
 /* WORKSPACE CHROME                                                           */

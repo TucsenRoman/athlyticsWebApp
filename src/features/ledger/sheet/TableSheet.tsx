@@ -81,6 +81,11 @@ export default function TableSheet({
 
   // MENU STATES
   const [useAlternateRows, setUseAlternateRows] = useState(false)
+  const [showGridLines, setShowGridLines] = useState(true)
+  const [hoverEffects, setHoverEffects] = useState(true)
+  const [blurMode, setBlurMode] = useState(false)
+  const [blurredColumns, setBlurredColumns] = useState<string[]>([])
+  const [hoverTarget, setHoverTarget] = useState<{ rowId: string; colId: string } | null>(null)
 
   const sheetRef = useRef<HTMLDivElement>(null)
 
@@ -191,6 +196,17 @@ export default function TableSheet({
   const pinnedWidth = 50 + leftPinnedHeaders.length * COL_WIDTH;
   const contentHeight = entries.length * ROW_HEIGHT;
 
+  /* ----------------------------- View flags -> styles ----------------------------- */
+
+  const gridBorder = showGridLines ? "1px solid var(--gray-17)" : "1px solid transparent"
+  const gridBorderRow = showGridLines ? "1px solid var(--gray-18)" : "1px solid transparent"
+
+  // If blur is on, you probably don't want hover “sparkle” (optional)
+  const effectiveHover = hoverEffects && !blurMode
+
+  const hoverRowClass = effectiveHover ? "hover:bg-[var(--gray-16)]" : ""
+
+
   /* ---------------------- Load ALL headers across ALL ledgers ---------------------- */
   const loadAllHeaders = useCallback(async () => {
     const { data, error } = await db
@@ -299,13 +315,57 @@ export default function TableSheet({
   /* --------------------------- Pin handlers --------------------------- */
   const handleTogglePin = useCallback((id: string) => {
     setPinnedColumns((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+     prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
   }, []);
 
   const togglePinMode = useCallback(() => {
     setPinMode((prev) => !prev);
   }, []);
+
+  /* ----------------------------- Blur helpers ----------------------------- */
+
+  const toggleBlurColumn = useCallback((colId: string) => {
+    setBlurredColumns((prev) =>
+      prev.includes(colId) ? prev.filter((id) => id !== colId) : [...prev, colId]
+    )
+  }, [])
+
+  const isColBlurred = useCallback(
+    (colId: string) => blurredColumns.includes(colId),
+    [blurredColumns]
+  )
+
+  /* ----------------------------- Hover helpers ----------------------------- */
+
+  const setHover = useCallback(
+    (rowId: string, colId: string) => {
+      if (!hoverEffects) return
+      // console.log("[HOVER]", { rowId, colId })
+      setHoverTarget({ rowId, colId })
+    },
+    [hoverEffects]
+  )
+
+  const clearHover = useCallback(() => {
+    setHoverTarget(null)
+  }, [])
+
+  const isHoveredCell = useCallback(
+    (rowId: string, colId: string) =>
+      !!hoverTarget && hoverTarget.rowId === rowId && hoverTarget.colId === colId,
+    [hoverTarget]
+  )
+
+  const isHoveredRow = useCallback(
+    (rowId: string) => !!hoverTarget && hoverTarget.rowId === rowId,
+    [hoverTarget]
+  )
+
+  const isHoveredCol = useCallback(
+    (colId: string) => !!hoverTarget && hoverTarget.colId === colId,
+    [hoverTarget]
+  )
 
   /* --------------------------- Cell editing --------------------------- */
   const updateValueLocal = useCallback(
@@ -819,7 +879,7 @@ export default function TableSheet({
   // }, [loadRoutes]);
 
   return (
-    <div ref={sheetRef as any} className="relative flex flex-col h-full min-h-0 w-full overflow-hidden text-[var(--text)]">
+    <div ref={sheetRef as any} className="relative flex flex-col h-full min-h-0 w-full overflow-visible text-[var(--text)]">
       {/* TABLE MENU */}
       <div className="absolute left-[7px] top-[2.5px] z-[300] pointer-events-auto">
         <TableMenu
@@ -833,11 +893,17 @@ export default function TableSheet({
           useAlternateRows={useAlternateRows}
           setUseAlternateRows={setUseAlternateRows}
           fullscreenTargetRef={sheetRef as any}
+          showGridLines={showGridLines}
+          setShowGridLines={setShowGridLines}
+          hoverEffects={hoverEffects}
+          setHoverEffects={setHoverEffects}
+          blurMode={blurMode}
+          setBlurMode={setBlurMode}
         />
       </div>
 
       {/* Columns Menu */}
-      <div className="absolute right-3 top-2 z-[300] pointer-events-auto">
+      <div className="absolute right-[6px] top-[6px] z-[300] pointer-events-auto">
         <ExpansiveMenu
           items={headerMenuItems as any}
           variant="rainbow"
@@ -846,13 +912,15 @@ export default function TableSheet({
           radius={64}
           spacing={46}
           autoClose={false}
+          mainRotate={90}
           mainIcon={
             columnBulkMode ? (
               <div
+                // ~Colors need work.
                 className={`h-[14px] w-[14px] rounded-[4px] border-[1.5px] flex items-center justify-center ${
                   allColumnsSelected
-                    ? "border-[hsl(var(--primary))] bg-red-600"
-                    : "border-[hsl(var(--muted-foreground))] bg-transparent"
+                    ? "border-[var(--acc-md)]"
+                    : "border-[var(--border-dk)] bg-[var(--gray-1)]"
                 }`}
               >
                 {allColumnsSelected && (
@@ -866,14 +934,14 @@ export default function TableSheet({
             )
           }
           mainIconSize={18}
-          mainSize={34}
+          mainSize={28}
           open={columnsMenuOpen}
           setOpen={setColumnsMenuOpenWithOldLogic}
         />
       </div>
 
       {/* ====================== HEADER ====================== */}
-      <div className="relative z-30 bg-transparent border-b border-[var(--gray-18)]">
+      <div className="relative z-30 bg-[var(--gray-20)] border-b border-[var(--gray-17)]">
         {/* Pinned headers (fixed left) */}
         <div
           className="absolute left-0 top-0 flex z-30"
@@ -884,28 +952,56 @@ export default function TableSheet({
           }}
         >
           <div
-            className="flex items-center justify-center w-[50px] border-r border-[var(--gray-18)]"
-            style={{ height: "2.5rem" }}
+            className="flex items-center justify-center w-[50px] border-r border-[var(--gray-17)]"
+            style={{ height: "2.5rem"}}
           />
-          {leftPinnedHeaders.map((h) => (
-            <div
-              key={h.id}
-              className="flex items-center justify-center"
-              style={{ width: COL_WIDTH - 1, height: "2.55rem" }}
-            >
-              <TableHeaders
-                fileId={tableId}
-                headers={[h]}
-                allHeaders={allHeaders}
-                routes={allRoutes}
-                // reloadRoutes={refreshRoutes}
-                reloadHeaders={reloadHeaders}
-                pinnedColumns={pinnedColumns}
-                onTogglePin={handleTogglePin}
-                pinMode={pinMode}
-              />
-            </div>
-          ))}
+          {leftPinnedHeaders.map((h) => {
+            const colHover = isHoveredCol(h.id)
+            const colBlurred = blurMode && isColBlurred(h.id)
+
+            return (
+              <div
+                key={h.id}
+                className="relative flex items-center justify-center border-r border-[var(--gray-17)]"
+                style={{
+                  width: COL_WIDTH,
+                  height: "2.5rem",
+                  opacity: blurMode && !colBlurred ? 0.9 : 1,
+                }}
+                onClick={() => {
+                  if (!blurMode) return
+                  toggleBlurColumn(h.id)
+                }}
+              >
+                {/* CONTENT */}
+                <div className="relative z-[1] w-full h-full flex items-center justify-center">
+                  <TableHeaders
+                    fileId={tableId}
+                    headers={[h]}
+                    allHeaders={allHeaders}
+                    routes={allRoutes}
+                    reloadHeaders={reloadHeaders}
+                    pinnedColumns={pinnedColumns}
+                    onTogglePin={handleTogglePin}
+                    pinMode={pinMode}
+                    blurMode={blurMode}
+                    blurredColumns={blurredColumns}
+                    onToggleBlur={toggleBlurColumn}
+                  />
+                </div>
+                {/* HOVER OVERLAY (always visible even if TableHeaders has its own bg) */}
+                {colHover && (
+                  <div
+                    className="absolute inset-0 pointer-events-none z-[10]"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.10)",
+                    }}
+                  />
+                )}
+              </div>
+            )
+          })}
         </div>
 
         {/* Scrollable header group */}
@@ -914,7 +1010,7 @@ export default function TableSheet({
           className="relative overflow-hidden z-20"
           style={{
             marginLeft: `${pinnedWidth}px`,
-            height: "2.5rem",
+            height: "40px",
           }}
         >
           <div
@@ -922,101 +1018,144 @@ export default function TableSheet({
             id="scrollable-header-inner"
             style={{
               minWidth: `${scrollHeaders.length * COL_WIDTH}px`,
-              height: "3rem",
+              height: "40px",
               transform: "translateX(0px)",
               willChange: "transform",
             }}
           >
-            {scrollHeaders.map((h) => (
-              <div
-                key={h.id}
-                className="flex items-center justify-center border-r border-[var(--gray-18)]"
-                style={{ width: COL_WIDTH, height: "3rem" }}
-              >
-                <TableHeaders
-                  fileId={tableId}
-                  headers={[h]}
-                  allHeaders={allHeaders}
-                  routes={allRoutes}
-                  // reloadRoutes={refreshRoutes}
-                  reloadHeaders={reloadHeaders}
-                  pinnedColumns={pinnedColumns}
-                  onTogglePin={handleTogglePin}
-                  pinMode={pinMode}
-                />
-              </div>
-            ))}
+            {scrollHeaders.map((h) => {
+              const colHover = isHoveredCol(h.id)
+              const colBlurred = blurMode && isColBlurred(h.id)
+
+              return (
+                <div
+                  key={h.id}
+                  className="relative flex items-center justify-center border-r border-[var(--gray-17)]"
+                  style={{
+                    width: COL_WIDTH,
+                    cursor: blurMode ? "pointer" : undefined,
+                    opacity: blurMode && !colBlurred ? 0.9 : 1,
+                  }}
+                  onClick={() => {
+                    if (!blurMode) return
+                    toggleBlurColumn(h.id)
+                  }}
+                >
+                  {colHover && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.10)",
+                      }}
+                    />
+                  )}
+
+                  <div className="relative z-[1] w-full h-full flex items-center justify-center">
+                    <TableHeaders
+                      fileId={tableId}
+                      headers={[h]}
+                      allHeaders={allHeaders}
+                      routes={allRoutes}
+                      reloadHeaders={reloadHeaders}
+                      pinnedColumns={pinnedColumns}
+                      onTogglePin={handleTogglePin}
+                      pinMode={pinMode}
+                      blurMode={blurMode}
+                      blurredColumns={blurredColumns}
+                      onToggleBlur={toggleBlurColumn}
+                    />
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
 
       {/* ====================== BODY ====================== */}
-      <div className="relative overflow-hidden max-w-full max-h-full">
+      <div className="relative overflow-hidden max-w-full max-h-full" onMouseLeave={clearHover}>
         {/* Scrollable grid */}
         <div
           ref={scrollRef}
-          className="relative overflow-auto max-w-full max-h-full scrollbar"
+          className="relative overflow-auto pr-[30px] max-w-full max-h-full scrollbar"
         >
           <div
             className="flex min-w-max relative"
             style={{ marginLeft: `${pinnedWidth}px` }}
           >
-            {scrollHeaders.map((h) => (
-              <div
-                key={h.id}
-                className="grid"
-                style={{
-                  width: `${COL_WIDTH}px`,
-                  gridTemplateRows: `repeat(${entries.length}, ${ROW_HEIGHT}px)`,
-                }}
-              >
-                {entries.map((entry, i) => (
-                  <div
-                    key={`${entry.id}-${h.id}`}
-                    className={`flex items-center p-1.5 truncate cursor-pointer transition-colors ${
-                      selectedRows.includes(entry.id)
-                        ? "bg-orange-500"
-                        : useAlternateRows && i % 2 === 1
-                        ? "bg-[var(--gray-19)]"
-                        : "bg-transparent"
-                    }`}
-                    style={{
-                      height: `${ROW_HEIGHT}px`,
-                      borderBottom: "1px solid var(--gray-19)",
-                    }}
-                  >
-                    <TableCell
-                      entryId={entry.id}
-                      header={h}
-                      value={entry.values?.[h.id]}
-                      onChange={(val) => {
-                        console.log(`🧩 [TableSheet] ScrollCell ...`)
-                        updateValueLocal(entry.id, h.id, val);
-                      }}
-                      searchQuery={searchQuery}
-                    />
-                  </div>
-                ))}
-              </div>
-            ))}
+            {scrollHeaders.map((h) => {
+              const colBlurred = blurMode && isColBlurred(h.id)
+
+              return (
+                <div
+                  key={h.id}
+                  className="grid pb-[30px]"
+                  style={{
+                    width: `${COL_WIDTH}px`,
+                    gridTemplateRows: `repeat(${entries.length}, ${ROW_HEIGHT}px)`,
+                  }}
+                >
+                  {entries.map((entry, i) => {
+                    const hoveredCell = isHoveredCell(entry.id, h.id)
+
+                    return (
+                      <div
+                        key={`${entry.id}-${h.id}`}
+                        className={`flex items-center p-1.5 truncate cursor-pointer transition-colors ${
+                          selectedRows.includes(entry.id)
+                            ? "bg-orange-500"
+                            : useAlternateRows && i % 2 === 1
+                            ? "bg-[var(--gray-18)]"
+                            : "bg-[var(--gray-19)]"
+                        }`}
+                        style={{
+                          height: `${ROW_HEIGHT}px`,
+                          borderBottom: gridBorderRow,
+                          borderRight: gridBorder,
+
+                          background: hoveredCell ? "rgba(255,255,255,0.08)" : undefined,
+                          boxShadow: hoveredCell
+                            ? "inset 0 0 0 1px rgba(255,255,255,0.14)"
+                            : undefined,
+
+                          filter: colBlurred ? "blur(6px)" : undefined,
+                          pointerEvents: colBlurred ? "none" : undefined,
+                          opacity: blurMode && !colBlurred ? 0.9 : 1,
+                        }}
+                        onMouseEnter={() => setHover(entry.id, h.id)}
+                      >
+                        <TableCell
+                          entryId={entry.id}
+                          header={h}
+                          value={entry.values?.[h.id]}
+                          onChange={(val) => updateValueLocal(entry.id, h.id, val)}
+                          searchQuery={searchQuery}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
           </div>
         </div>
 
         {/* Floating pinned region */}
         <div
           ref={pinnedRef}
-          className="absolute left-0 top-0 z-30 flex bg-transparent border-r border-[var(--gray-18)]"
+          className="absolute left-0 top-0 z-30 flex bg-[var(--gray-19)]"
           style={{
             width: `${pinnedWidth}px`,
             height: `${contentHeight}px`,
             transform: "translateY(0px)",
             transition: "transform 0s",
-            pointerEvents: "none",
+            pointerEvents: "auto",
           }}
         >
           {/* Numbered / Checkbox column */}
           <div
-            className="pointer-events-auto flex flex-col bg-[var(--gray-20)] border-r border-[var(--gray-18)] overflow-y-hidden"
+            className="pointer-events-auto flex flex-col bg-[var(--gray-19)] border-r border-[var(--gray-17)] overflow-y-hidden"
             style={{
               width: "50px",
               minWidth: "50px",
@@ -1025,25 +1164,28 @@ export default function TableSheet({
             }}
           >
             {entries.map((entry, i) => {
-              const isSelected = selectedRows.includes(entry.id);
+              const isSelected = selectedRows.includes(entry.id)
+              const hoveredRow = isHoveredRow(entry.id)
               return (
                 <div
                   key={entry.id}
                   className={`flex items-center justify-center text-sm font-medium select-none transition-colors ${
                     isSelected
                       ? "bg-orange-100 text-orange-700"
+                      : hoveredRow
+                      ? "bg-[rgba(255,255,255,0.06)]"
                       : bulkMode
                       ? "hover:bg-orange-50"
                       : useAlternateRows && i % 2 === 1
-                      ? "bg-[var(--gray-19)]"
-                      : "bg-transparent"
+                      ? "bg-[var(--gray-18)]"
+                      : "bg-[var(--gray-19)]"
                   }`}
                   style={{
                     height: `${ROW_HEIGHT}px`,
                     minHeight: `${ROW_HEIGHT}px`,
                     maxHeight: `${ROW_HEIGHT}px`,
                     flexShrink: 0,
-                    borderBottom: "1px solid var(--gray-19)",
+                    borderBottom: gridBorderRow,
                   }}
                 >
                   {bulkMode ? (
@@ -1064,51 +1206,66 @@ export default function TableSheet({
           </div>
 
           {/* Pinned columns */}
-          {leftPinnedHeaders.map((h) => (
-            <div
-              key={h.id}
-              className="grid border-r border-[var(--gray-18)] bg-[var(--gray-20)]"
-              style={{
-                width: `${COL_WIDTH}px`,
-                gridTemplateRows: `repeat(${entries.length}, ${ROW_HEIGHT}px)`,
-              }}
-            >
-              {entries.map((entry, i) => (
-                <div
-                  key={`${entry.id}-${h.id}`}
-                  className={`flex items-center p-1.5 truncate transition-colors ${
-                    selectedRows.includes(entry.id)
-                      ? "bg-orange-500"
-                      : useAlternateRows && i % 2 === 1
-                      ? "bg-[var(--gray-19)]"
-                      : "bg-transparent"
-                  }`}
-                  style={{
-                    height: `${ROW_HEIGHT}px`,
-                    borderBottom: "1px solid var(--gray-19)",
-                  }}
-                >
-                  <TableCell
-                    entryId={entry.id}
-                    header={h}
-                    value={entry.values?.[h.id]}
-                    onChange={(val) => {
-                      console.log(
-                        `🧩 [LedgerSheet] PinnedCell ${entry.id}-${h.name} updated`
-                      );
-                      updateValueLocal(entry.id, h.id, val);
-                    }}
-                    searchQuery={searchQuery}
-                  />
-                </div>
-              ))}
-            </div>
-          ))}
+          {leftPinnedHeaders.map((h) => {
+            const colBlurred = blurMode && isColBlurred(h.id)
+
+            return (
+              <div
+                key={h.id}
+                className="grid pointer-events-auto"
+                style={{
+                  width: `${COL_WIDTH}px`,
+                  gridTemplateRows: `repeat(${entries.length}, ${ROW_HEIGHT}px)`,
+                }}
+              >
+                {entries.map((entry, i) => {
+                  const hoveredCell = isHoveredCell(entry.id, h.id)
+
+                  return (
+                    <div
+                      key={`${entry.id}-${h.id}`}
+                      className={`flex items-center p-1.5 truncate cursor-pointer transition-colors ${
+                        selectedRows.includes(entry.id)
+                          ? "bg-orange-500"
+                          : useAlternateRows && i % 2 === 1
+                          ? "bg-[var(--gray-18)]"
+                          : "bg-[var(--gray-19)]"
+                      }`}
+                      style={{
+                        height: `${ROW_HEIGHT}px`,
+                        borderBottom: gridBorderRow,
+                        borderRight: gridBorder,
+
+                        background: hoveredCell ? "rgba(255,255,255,0.08)" : undefined,
+                        boxShadow: hoveredCell
+                          ? "inset 0 0 0 1px rgba(255,255,255,0.14)"
+                          : undefined,
+
+                        filter: colBlurred ? "blur(6px)" : undefined,
+                        pointerEvents: colBlurred ? "none" : undefined,
+                        opacity: blurMode && !colBlurred ? 0.9 : 1,
+                      }}
+                      onMouseEnter={() => setHover(entry.id, h.id)}
+                    >
+                      <TableCell
+                        entryId={entry.id}
+                        header={h}
+                        value={entry.values?.[h.id]}
+                        onChange={(val) => updateValueLocal(entry.id, h.id, val)}
+                        searchQuery={searchQuery}
+                      />
+                    </div>
+                  )
+                })}
+
+              </div>
+            )
+          })}
         </div>
       </div>
 
       {/* ====================== FOOTER ====================== */}
-      <div className="sticky bottom-0 left-0 w-full h-12 z-40 flex items-center justify-between pl-[8px]">
+      <div className="absolute bottom-[-3px] left-[10px] w-full h-12 z-40 flex items-center justify-between">
         {/* ROW MENU */}
         <div className="flex items-center gap-3">
           <ExpansiveMenu
@@ -1131,7 +1288,7 @@ export default function TableSheet({
               )
             }
             mainIconSize={18}
-            mainSize={36}
+            mainSize={28}
             open={rowsMenuOpen}
             setOpen={setRowsMenuOpen}
             mainRotate={90}

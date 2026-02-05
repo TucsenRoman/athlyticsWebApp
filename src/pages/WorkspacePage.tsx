@@ -35,6 +35,7 @@ function modeFromPathname(pathname: string): WorkspaceMode {
   if (pathname.startsWith("/program/manager")) return "manager"
   if (pathname.startsWith("/program/workspace")) return "manager"
   if (pathname.includes("/editor")) return "editor"
+  if (pathname.startsWith("/program/analyzer")) return "analyzer"
   if (pathname.startsWith("/program/attendance")) return "attendance"
   if (pathname.startsWith("/program/calendar")) return "schedule"
   return "manager"
@@ -85,6 +86,12 @@ export default function WorkspacePage() {
     if (next === "manager") {
       if (location.pathname.startsWith("/program/manager")) return
       navigate("/program/manager")
+      return
+    }
+
+    if (next === "analyzer") {
+      if (location.pathname.startsWith("/program/analyzer")) return
+      navigate("/program/analyzer")
       return
     }
 

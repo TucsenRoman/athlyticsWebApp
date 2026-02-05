@@ -7,13 +7,15 @@ import {
   ChevronDown,
   LocateFixed,
   PencilRuler,
-  FolderCog,
   PenLine,
   CalendarDays,
   UsersRound,
   Calendar1,
   Notebook,
   ClipboardList,
+  Activity,
+  FilePen,
+  WandSparkles,
 } from "lucide-react"
 import { cn } from "@/utils/utils"
 import { Divider } from "../ui"
@@ -59,7 +61,7 @@ export const PROGRAM_VIEWS: ProgramNavView[] = [
     label: "Radar",
     route: "/program/radar",
     icon: <LocateFixed className="h-5 w-5" />,
-    enabled: true,
+    enabled: false,
     subLinks: [
       {
         id: "attendance",
@@ -95,14 +97,21 @@ export const PROGRAM_VIEWS: ProgramNavView[] = [
         id: "manager",
         label: "Manager",
         route: "/program/manager",
-        icon: <FolderCog className="h-4 w-4" />,
+        icon: <WandSparkles className="h-4 w-4" />,
         enabled: true,
       },
       {
         id: "editor",
         label: "Editor",
         route: "/program/editor",
-        icon: <PenLine className="h-4 w-4" />,
+        icon: <FilePen className="h-4 w-4" />,
+        enabled: true,
+      },
+      {
+        id: "analyzer",
+        label: "Analyzer",
+        route: "/program/analyzer",
+        icon: <Activity className="h-4 w-4" />,
         enabled: true,
       },
       {
@@ -112,13 +121,13 @@ export const PROGRAM_VIEWS: ProgramNavView[] = [
         icon: <UsersRound className="h-4 w-4" />,
         enabled: false,
       },
-      // {
-      //   id: "calendar",
-      //   label: "Calendar",
-      //   route: "/program/calendar",
-      //   icon: <CalendarDays className="h-4 w-4" />,
-      //   enabled: true,
-      // },
+      {
+        id: "calendar",
+        label: "Calendar",
+        route: "/program/calendar",
+        icon: <CalendarDays className="h-4 w-4" />,
+        enabled: false,
+      },
     ],
   },
 ]
@@ -136,6 +145,7 @@ function isWorkspaceScopedPath(pathname: string) {
     pathname.startsWith("/program/workspace") ||
     pathname.startsWith("/program/manager") ||
     pathname.startsWith("/program/editor") ||
+    pathname.startsWith("/program/analyzer") ||
     pathname.startsWith("/program/attendance") ||
     pathname.startsWith("/program/calendar")
   )
@@ -233,7 +243,7 @@ function DominantViewGroup({
             onClick={() => setOpen((v) => !v)}
             className={cn(
               "shrink-0",
-              "h-10 w-10 rounded-xl",
+              "h-8 w-10 rounded-full",
               "text-[var(--text)] hover:text-white/75 hover:bg-white/5",
               "transition"
             )}

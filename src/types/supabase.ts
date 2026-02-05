@@ -57,6 +57,7 @@ export type Database = {
       }
       files: {
         Row: {
+          color: string
           created_at: string
           data: Json | null
           description: string | null
@@ -65,6 +66,7 @@ export type Database = {
           id: string
           name: string | null
           program_id: number | null
+          pinned: boolean
           status: Database["public"]["Enums"]["file_status"] | null
           template_key: string | null
           type: Database["public"]["Enums"]["file_type"]
@@ -72,6 +74,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          color?: string
           created_at?: string
           data?: Json | null
           description?: string | null
@@ -80,6 +83,7 @@ export type Database = {
           id?: string
           name?: string | null
           program_id?: number | null
+          pinned?: boolean
           status?: Database["public"]["Enums"]["file_status"] | null
           template_key?: string | null
           type?: Database["public"]["Enums"]["file_type"]
@@ -87,6 +91,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          color?: string
           created_at?: string
           data?: Json | null
           description?: string | null
@@ -95,6 +100,7 @@ export type Database = {
           id?: string
           name?: string | null
           program_id?: number | null
+          pinned?: boolean
           status?: Database["public"]["Enums"]["file_status"] | null
           template_key?: string | null
           type?: Database["public"]["Enums"]["file_type"]

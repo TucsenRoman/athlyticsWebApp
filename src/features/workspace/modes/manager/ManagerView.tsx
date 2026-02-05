@@ -14,15 +14,16 @@ import {
   Box,
 } from "lucide-react"
 
-import FilesManager, { FilesManagerHeader } from "./FilesManager"
-import Overview from "./Overview"
-import ProgramManager from "./ProgramManager"
-import RolesManager from "./RolesManager"
+import FilesManager, { FilesManagerHeader } from "./subsections/FilesManager"
+import Overview from "./subsections/Overview"
+import ProgramManager from "./subsections/ProgramManager"
+import RolesManager from "./subsections/RolesManager"
+
 /* -------------------------------------------------------------------------- */
 /* TYPES                                                                      */
 /* -------------------------------------------------------------------------- */
 
-interface ProjectManagerProps {
+interface ManagerViewProps {
   programId: number
 }
 
@@ -47,21 +48,6 @@ function CardShell({
         "bg-[var(--gray-20)] backdrop-blur-xl",
         "shadow-[0_0_0_1px_rgba(255,255,255,0.02)]",
         className
-      )}
-    >
-      {children}
-    </div>
-  )
-}
-
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className={cn(
-        "h-6 px-2 rounded-full",
-        "bg-white/6 border border-white/10",
-        "text-xs text-white/70",
-        "inline-flex items-center"
       )}
     >
       {children}
@@ -191,7 +177,7 @@ function SwitchTile({
 /* MAIN                                                                       */
 /* -------------------------------------------------------------------------- */
 
-export default function ProjectManager({ programId }: ProjectManagerProps) {
+export default function ManagerView({ programId }: ManagerViewProps) {
   void programId
 
   type CardDef = {
@@ -202,17 +188,16 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
   }
 
   const CARDS: CardDef[] = [
-    // { id: "overview", label: "Overview", icon: LayoutDashboard, subtitle: "High-level program snapshot" },
     { id: "files", label: "Files Manager", icon: FileCog, subtitle: "Folders, tables, docs, and PDFs" },
     { id: "program", label: "Program Manager", icon: Box, subtitle: "Seasons, rosters, and structure" },
-    // { id: "roles", label: "Roles Manager", icon: UserRoundCog, subtitle: "Permissions and access" },
   ]
 
   const [activeCard, setActiveCard] = useState<CardId>("files")
   const [cardPickerOpen, setCardPickerOpen] = useState(false)
 
-  // Files search lives in the parent because the search UI is in the header.
+  // Files header controls live in parent because UI is outside the card
   const [filesQuery, setFilesQuery] = useState("")
+  const [filesSortMode, setFilesSortMode] = useState<"recent" | "alpha_asc">("recent")
 
   const activeCardDef = useMemo(
     () => CARDS.find((c) => c.id === activeCard) ?? CARDS[0],
@@ -266,9 +251,14 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
             </button>
           </div>
 
-          {/* UTILITIES */}
+          {/* UTILITIES (OUTSIDE CARD) */}
           {activeCard === "files" ? (
-            <FilesManagerHeader query={filesQuery} onQueryChange={setFilesQuery} />
+            <FilesManagerHeader
+              query={filesQuery}
+              onQueryChange={setFilesQuery}
+              sortMode={filesSortMode}
+              onSortChange={setFilesSortMode}
+            />
           ) : (
             <div className="h-8" />
           )}
@@ -277,7 +267,11 @@ export default function ProjectManager({ programId }: ProjectManagerProps) {
         {/* CONTENT */}
         <CardShell className="flex-1 min-h-0 pb-14 overflow-hidden">
           {activeCard === "files" ? (
-            <FilesManager programId={programId} query={filesQuery} />
+            <FilesManager
+              programId={programId}
+              query={filesQuery}
+              sortMode={filesSortMode}
+            />
           ) : activeCard === "overview" ? (
             <Overview programId={programId} />
           ) : activeCard === "program" ? (

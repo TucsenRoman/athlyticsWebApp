@@ -1,12 +1,14 @@
 // src/features/workspace/components/WorkspaceModeOutlet.tsx
 "use client"
 
-import ProjectManager from "@/features/workspace/views/manager/ProjectManager"
-import ProjectEditor from "@/features/workspace/views/editor/ProjectEditor"
+import type { WorkspaceMode } from "@/features/workspace/types/workspace.types"
+
+import ManagerView from "@/features/workspace/modes/manager/ManagerView"
+import EditorView from "@/features/workspace/modes/editor/EditorView"
+import AnalyzerView from "@/features/workspace/modes/analyzer/AnalyzerView"
+
 import { AttendanceWorkspaceView } from "@/features/attendance"
 import { ScheduleWorkspaceView } from "@/features/schedule"
-
-import type { WorkspaceMode } from "@/features/workspace/types/workspace.types"
 
 interface Props {
   mode: WorkspaceMode
@@ -46,6 +48,7 @@ export default function WorkspaceModeOutlet(props: Props) {
   const {
     mode,
     programId,
+    demoMode,
 
     fileId,
     setFileId,
@@ -67,31 +70,26 @@ export default function WorkspaceModeOutlet(props: Props) {
     attendanceSaveFailed,
     setAttendanceSaveFailed,
     onSubmitAttendance,
+    onResetAttendance,
   } = props
 
   if (!programId) return null
 
-  switch (mode) {
-    case "manager":
-      return (
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <ProjectManager programId={programId} />
-        </div>
-      )
-
-    case "editor":
-      return (
-        <ProjectEditor
+  return (
+    <div className="flex-1 min-h-0 overflow-hidden">
+      {mode === "manager" ? (
+        <ManagerView programId={programId} />
+      ) : mode === "editor" ? (
+        <EditorView
           programId={programId}
           fileId={fileId}
           setFileId={setFileId}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
-      )
-
-    case "attendance":
-      return (
+      ) : mode === "analyzer" ? (
+        <AnalyzerView programId={programId} demoMode={demoMode} />
+      ) : mode === "attendance" ? (
         <AttendanceWorkspaceView
           attendanceDate={attendanceDate}
           attendanceHasSession={attendanceHasSession}
@@ -104,10 +102,7 @@ export default function WorkspaceModeOutlet(props: Props) {
           setAttendanceSaveFailed={setAttendanceSaveFailed}
           onSubmitAttendance={onSubmitAttendance}
         />
-      )
-
-    case "schedule":
-      return (
+      ) : mode === "schedule" ? (
         <ScheduleWorkspaceView
           programId={programId}
           scheduleWeekIndex={scheduleWeekIndex}
@@ -115,9 +110,7 @@ export default function WorkspaceModeOutlet(props: Props) {
           triggerAddSlot={showAddSlot}
           setTriggerAddSlot={setShowAddSlot}
         />
-      )
-
-    default:
-      return null
-  }
+      ) : null}
+    </div>
+  )
 }

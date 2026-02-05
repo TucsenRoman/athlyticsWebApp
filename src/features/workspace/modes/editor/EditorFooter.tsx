@@ -167,7 +167,7 @@ export default function EditorFooter({
     >
       {/* LEFT: OPEN FILE TABS ---------------------------------------------- */}
       <div className="flex gap-4">
-        <div className="flex items-center gap-4 overflow-x-auto flex-1 pr-2">
+        <div className="flex items-center gap-2 overflow-x-auto flex-1 pr-2 max-w-[500px]">
           {tabs.map((tab) => {
             const active = tab.id === activeId
 
@@ -181,12 +181,12 @@ export default function EditorFooter({
                 className={`
                   relative shrink-0 flex justify-between items-center gap-2
                   pl-3 pr-1 py-1 h-6
-                  rounded-full
+                  rounded-full border border-[var(--gray-18)]
                   text-sm whitespace-nowrap transition-all duration-300
                   ${
                     active
-                      ? "bg-[var(--acc-dk)] text-[var(--text-lt)]"
-                      : "hover:bg-[var(--gray-18)] text-[var(--text-dk)] hover:text-[var(--text-lt)]"
+                      ? "bg-[var(--gray-19)] text-[var(--text-lt)]"
+                      : "hover:bg-[var(--gray-20)] text-[var(--text-dk)] hover:text-[var(--text)]"
                   }
                 `}
               >
@@ -201,8 +201,8 @@ export default function EditorFooter({
                     p-1 rounded-full cursor-pointer transition-all duration-300
                     ${
                       active
-                        ? "hover:bg-[var(--acc-md)]"
-                        : "hover:bg-[var(--gray-17)]"
+                        ? "hover:bg-[var(--gray-17)]"
+                        : "hover:bg-[var(--gray-18)]"
                     }
                   `}
                   role="button"

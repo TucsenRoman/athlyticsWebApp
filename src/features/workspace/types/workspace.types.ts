@@ -2,6 +2,7 @@
 export type WorkspaceMode =
   | "manager"
   | "editor"
+  | "analyzer"
   | "attendance"
   | "schedule";
   // | "routes";
