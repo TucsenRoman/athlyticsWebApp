@@ -820,6 +820,7 @@ function ProgramList({
                   radius={48}
                   mainRotate={90}
                   mainSize={32}
+                  mainIconSize={18}
                   mainIcon={<Ellipsis />}
                   items={actions}
                 />

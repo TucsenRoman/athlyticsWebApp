@@ -584,7 +584,7 @@ export default function FilesManager({ programId, query, sortMode }: FilesManage
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const [viewMode, setViewMode] = useState<ViewMode>("grid")
+  const [viewMode, setViewMode] = useState<ViewMode>("list")
 
   const navigate = useNavigate()
 
