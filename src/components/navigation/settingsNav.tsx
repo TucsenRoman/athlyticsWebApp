@@ -16,6 +16,7 @@ import {
   MessageSquareHeart,
   BotMessageSquare,
   MessagesSquare,
+  MessageCircleMore,
 } from "lucide-react";
 
 /* ========================================================================== */
@@ -40,6 +41,7 @@ export const SETTINGS_NAV: SettingsNavItem[] = [
     label: "Profile",
     route: "/settings/profile",
     icon: <UserRound className="h-5 w-5" />,
+    enabled: true,
   },
   {
     id: "appearance",
@@ -80,7 +82,7 @@ export const SETTINGS_NAV: SettingsNavItem[] = [
     label: "Plan & Billing",
     route: "/settings/billing",
     icon: <CreditCard className="h-5 w-5" />,
-    enabled: false,
+    enabled: true,
   },
   {
     id: "support",
@@ -93,8 +95,8 @@ export const SETTINGS_NAV: SettingsNavItem[] = [
     id: "feedback",
     label: "Feedback",
     route: "/settings/feedback",
-    icon: <MessagesSquare className="h-5 w-5" />,
-    enabled: false,
+    icon: <MessageCircleMore className="h-5 w-5" />,
+    enabled: true,
   },
   {
     id: "ai",

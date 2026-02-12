@@ -31,6 +31,8 @@ import {
   UserRound,
   Tags,
   UsersRound,
+  Box,
+  Boxes,
 } from "lucide-react"
 
 import type { ProgramLite } from "../programLite.types"
@@ -409,8 +411,9 @@ export default function ProgramDriveModal({
         {/* HEADER */}
         <div className="flex justify-between gap-2 h-12 py-2 px-4">
           {/* TITLE */}
-          <div className="flex items-center text-xl text-[var(--text-lt)] font-semibold">
-            Drive
+          <div className="flex items-center gap-2 text-xl text-[var(--text-lt)] font-semibold">
+            {/* <Boxes size={18} strokeWidth={1.5} className="mt-0.5" /> */}
+            <span>Drive</span>
           </div>
 
           <div className="flex items-center gap-2 mr-8">

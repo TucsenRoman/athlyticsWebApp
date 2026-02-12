@@ -40,13 +40,13 @@ import StorageSettingsPage from "@/pages/settings/StorageSettingsPage";
 import ExperimentsSettingsPage from "@/pages/settings/ExperimentsSettingsPage";
 import BillingSettingsPage from "@/pages/settings/BillingSettingsPage";
 import SupportSettingsPage from "@/pages/settings/SupportSettingsPage";
+import FeedbackPage from "@/pages/settings/FeedbackPage";
 import AIAssistantSettingsPage from "@/pages/settings/AIAssistantSettingsPage";
 
 // PREVIEW PAGES
 import TrainingPreviewPage from "./pages/public/TrainingPreview";
 import DiscoveryPreviewPage from "./pages/public/DiscoveryPreview";
 import PricingPage from "./pages/public/PricingPage";
-import MobileNav from "./components/navigation/TabBar";
 import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import MarketingPageShell from "./components/layout/MarketingPageShell";
 
@@ -295,6 +295,7 @@ function RouterContent() {
         <Route path="experiments" element={<ExperimentsSettingsPage />} />
         <Route path="billing" element={<BillingSettingsPage />} />
         <Route path="support" element={<SupportSettingsPage />} />
+        <Route path="feedback" element={<FeedbackPage />} />
         <Route path="aiassistant" element={<AIAssistantSettingsPage />} />
       </Route>
 

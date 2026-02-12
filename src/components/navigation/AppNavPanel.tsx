@@ -217,7 +217,7 @@ export default function AppNavPanel({
         {isProgramScoped ? (
           <div className="relative flex flex-col gap-3 h-full min-h-0">
             <ProgramDriveTrigger
-              variant="appNavPanel"
+              variant="drawer"
               programs={programApi.programs}
               loading={programApi.loading}
               archiveProgram={programApi.archiveProgram}
@@ -267,16 +267,16 @@ export default function AppNavPanel({
                 <div
                   className={cn(
                     "flex h-8 w-10 items-center justify-center rounded-full",
-                    active ? "bg-[var(--gray-15)]" : "bg-transparent"
+                    active ? "bg-[var(--acc-dk)]" : "bg-transparent"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4", active ? "text-white/85" : "text-white/45")} />
+                  <Icon className={cn("h-4 w-4", active ? "text-[var(--text-lt)]" : "text-[var(--text-dk)]")} />
                 </div>
 
                 <div
                   className={cn(
                     "text-[10px] leading-none",
-                    active ? "text-white/55" : "text-white/30"
+                    active ? "text-[var(--text-lt)]" : "text-[var(--text-dk)]"
                   )}
                 >
                   {t.label}

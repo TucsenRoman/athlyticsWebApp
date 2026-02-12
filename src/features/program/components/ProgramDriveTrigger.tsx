@@ -1,28 +1,28 @@
+// src/features/program/components/ProgramDriveTrigger.tsx
 "use client"
 
 import React, {
   forwardRef,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
-  useMemo,
-  useEffect,
   useLayoutEffect,
 } from "react"
 
 import { useAuth } from "@/contexts/AuthContext"
-import type { ProgramId } from "@/features/program-cloak/useProgramContext" // ~Still needed?
+import type { ProgramId } from "@/features/program-cloak/useProgramContext"
 import { useProgramContext } from "@/features/program-cloak/useProgramContext"
 import { useProgram } from "@/features/program/useProgram"
 
-import { ChevronDown, Ellipsis, Plus, SquarePen } from "lucide-react"
+import { Box, ChevronDown, ChevronRight, MousePointer2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/actions/button"
+import { cn } from "@/utils/utils"
 
 import ProgramDriveModal from "./ProgramDriveModal"
 import ProgramConfigModal from "./ProgramConfigModal"
 
 import type { ProgramLite } from "../programLite.types"
-import { Divider } from "@/components/ui"
 
 /* ========================================================================== */
 /* TYPES                                                                      */
@@ -32,12 +32,9 @@ export interface ProgramDriveTriggerHandle {
   open: () => void
 }
 
-type TriggerVariant = "header" | "appNavPanel" | "empty"
+export type TriggerVariant = "drawer" | "rail" | "popup"
 
-interface ProgramDriveTriggerProps {
-  variant?: TriggerVariant
-  className?: string
-
+type DriveDeps = {
   programs: ProgramLite[]
   loading: boolean
   archiveProgram: (id: ProgramId) => Promise<void>
@@ -46,6 +43,18 @@ interface ProgramDriveTriggerProps {
   refreshPrograms: () => Promise<void>
 }
 
+interface ProgramDriveTriggerProps {
+  variant?: TriggerVariant
+  className?: string
+
+  // Optional override: if you pass ANY of these, you should pass ALL of them.
+  programs?: ProgramLite[]
+  loading?: boolean
+  archiveProgram?: (id: ProgramId) => Promise<void>
+  restoreProgram?: (id: ProgramId) => Promise<void>
+  deleteProgram?: (id: ProgramId) => Promise<void>
+  refreshPrograms?: () => Promise<void>
+}
 
 /* ========================================================================== */
 /* COMPONENT                                                                  */
@@ -56,7 +65,8 @@ const ProgramDriveTrigger = forwardRef<
   ProgramDriveTriggerProps
 >(function ProgramDriveTrigger(
   {
-    variant = "header",
+    variant = "drawer",
+    className,
     programs,
     loading,
     archiveProgram,
@@ -66,74 +76,110 @@ const ProgramDriveTrigger = forwardRef<
   },
   ref,
 ) {
-  
   /* ---------------------------------------------------------------------- */
-  /* DATA                                                                    */
+  /* HOOKS (MUST RUN IN SAME ORDER EVERY RENDER)                             */
   /* ---------------------------------------------------------------------- */
 
+  const auth = useAuth()
   const { selectedProgramId, setSelectedProgramId } = useProgramContext()
+  const driveFromHook = useProgram()
 
   const [driveOpen, setDriveOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
 
   const triggerRef = useRef<HTMLButtonElement | null>(null)
-  const sportRef = useRef<HTMLSpanElement>(null);
+  const sportRef = useRef<HTMLSpanElement | null>(null)
 
   useImperativeHandle(ref, () => ({
     open: () => setDriveOpen(true),
   }))
 
-  const selectedProgram = programs.find(
-    (p) => p.id === selectedProgramId,
-  )
+  const deps: DriveDeps = useMemo(() => {
+    const hasAnyOverride =
+      programs !== undefined ||
+      loading !== undefined ||
+      archiveProgram !== undefined ||
+      restoreProgram !== undefined ||
+      deleteProgram !== undefined ||
+      refreshPrograms !== undefined
 
+    if (hasAnyOverride) {
+      return {
+        programs: programs ?? [],
+        loading: !!loading,
+        archiveProgram:
+          archiveProgram ??
+          (async () => {
+            throw new Error("ProgramDriveTrigger: archiveProgram missing")
+          }),
+        restoreProgram:
+          restoreProgram ??
+          (async () => {
+            throw new Error("ProgramDriveTrigger: restoreProgram missing")
+          }),
+        deleteProgram:
+          deleteProgram ??
+          (async () => {
+            throw new Error("ProgramDriveTrigger: deleteProgram missing")
+          }),
+        refreshPrograms:
+          refreshPrograms ??
+          (async () => {
+            throw new Error("ProgramDriveTrigger: refreshPrograms missing")
+          }),
+      }
+    }
+
+    return {
+      programs: driveFromHook.programs,
+      loading: driveFromHook.loading,
+      archiveProgram: driveFromHook.archiveProgram,
+      restoreProgram: driveFromHook.restoreProgram,
+      deleteProgram: driveFromHook.deleteProgram,
+      refreshPrograms: driveFromHook.refresh, // ✅ matches your useProgram API
+    }
+  }, [
+    programs,
+    loading,
+    archiveProgram,
+    restoreProgram,
+    deleteProgram,
+    refreshPrograms,
+    driveFromHook.programs,
+    driveFromHook.loading,
+    driveFromHook.archiveProgram,
+    driveFromHook.restoreProgram,
+    driveFromHook.deleteProgram,
+    driveFromHook.refresh,
+  ])
+
+  const selectedProgram = deps.programs.find((p) => p.id === selectedProgramId)
+
+  // Keep this hook unconditional; guard inside.
   useLayoutEffect(() => {
-    if (!sportRef.current) return;
-
-    const el = sportRef.current;
-    const parent = el.parentElement;
-    if (!parent) return;
+    if (!sportRef.current) return
+    const el = sportRef.current
+    const parent = el.parentElement
+    if (!parent) return
 
     const update = () => {
-      parent.style.setProperty("--sport-w", `${el.offsetWidth}px`);
-    };
+      parent.style.setProperty("--sport-w", `${el.offsetWidth}px`)
+    }
 
-    update();
-
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-
-    return () => ro.disconnect();
-  }, [selectedProgram]);
-
-  /* AUTH GATE */
-  const { user, loading: authLoading } = useAuth()
- 
-  if (authLoading) {
-    return null
-  }
-
-  // if (!user) {
-  //   return null
-  // }
-
-  if (loading) {
-    return null
-  }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [selectedProgram])
 
   /* ---------------------------------------------------------------------- */
   /* DERIVED                                                                 */
   /* ---------------------------------------------------------------------- */
 
-  const label = selectedProgram
-    ? `${selectedProgram.sport || "Program"} • ${selectedProgram.year || ""}`
-    : "Select Program"
-
-  const hasPrograms = programs.length > 0
+  const hasPrograms = deps.programs.length > 0
 
   function formatGenderAbbrev(gender: string | null) {
     if (!gender) return ""
-
     switch (gender.toLowerCase()) {
       case "boys":
       case "male":
@@ -149,10 +195,17 @@ const ProgramDriveTrigger = forwardRef<
   }
 
   /* ---------------------------------------------------------------------- */
-  /* EMPTY STATE                                                             */
+  /* RENDER GUARDS (AFTER HOOKS)                                             */
   /* ---------------------------------------------------------------------- */
 
-  if (!loading && !hasPrograms) {
+  if (auth.loading) return null
+  if (deps.loading) return null
+
+  /* ====================================================================== */
+  /* EMPTY STATE (NO PROGRAMS)                                               */
+  /* ====================================================================== */
+
+  if (!hasPrograms) {
     return (
       <div className="flex justify-center items-center p-1 h-12 rounded-lg bg-[var(--gray-7)] shadow-inner">
         <Button
@@ -181,127 +234,106 @@ const ProgramDriveTrigger = forwardRef<
     )
   }
 
-  /* ---------------------------------------------------------------------- */
-  /* TRIGGERS                                                               */
-  /* ---------------------------------------------------------------------- */
-  const HeaderTrigger = (
+  /* ====================================================================== */
+  /* TRIGGERS                                                                */
+  /* ====================================================================== */
+
+  const DrawerTrigger = (
     <button
       ref={triggerRef}
+      type="button"
       onClick={() => setDriveOpen(true)}
-      className="
-        relative flex items-center gap-1
-        pl-3 w-full h-12
-        text-left text-[var(--text)] font-bold 
-        transition-all cursor-pointer
-      "
+      className={cn(
+        "relative flex justify-between items-center gap-1",
+        "px-4 py-2 w-full",
+        "rounded-2xl border border-transparent hover:border-[var(--gray-17)]",
+        "bg-gradient-to-br from-[var(--gray-18)] to-[var(--gray-18)]",
+        "text-[var(--text)] hover:text-[var(--text-lt)] font-medium",
+        "transition-all duration-300",
+        className,
+      )}
     >
       {!selectedProgram ? (
-        <span className="flex items-center opacity-60">Select Program</span>
+        <>
+          <span className="flex items-center">Select Program</span>
+          <div className="flex">
+            <Box size={16} strokeWidth={2.5} className="w-4 h-4" />
+            {/* <ChevronRight size={16} strokeWidth={2.5} className="w-4 h-4" /> */}
+          </div>
+          {/* <ChevronRight size={16} strokeWidth={2.5} className="rotate-[-30deg] absolute top-[7px] right-[7px] w-4 h-4" /> */}
+        </>
       ) : (
         <div className="flex flex-col leading-tight">
-          <div className="absolute top-[25%] left-[3px] w-[3px] h-6 rounded-full bg-gradient-to-b from-[var(--acc-dk)] to-[#6F8AB4]" />
-          <span
-            ref={sportRef}
-            className="
-              flex items-center gap-2
-              max-w-[200px] md:w-fit md:max-w-none
-            "
-          >
+          <span ref={sportRef} className="flex items-center gap-2 max-w-full">
             <span className="truncate text-[21px] font-semibold">
               {selectedProgram.sport}
             </span>
 
-            <span className="text-sm opacity-50 shrink-0">
+            <span className="text-sm font-medium opacity-50 shrink-0">
               {formatGenderAbbrev(selectedProgram.gender)}
             </span>
           </span>
 
-          <span className="max-w-[var(--sport-w)] h-3 text-[9.5px] font-light truncate">
+          <span className="w-full h-4 text-[10px] font-normal truncate">
             {selectedProgram.year} <span className="opacity-50">•</span>{" "}
             {selectedProgram.school}
           </span>
         </div>
       )}
-      <ChevronDown size={16} strokeWidth={2.5} className="w-4 h-4 opacity-60" />
     </button>
   )
 
-  const appNavPanel = (
+  const RailTrigger = (
     <button
       ref={triggerRef}
+      type="button"
+      aria-label="Open Program Drive"
+      title="Program Drive"
       onClick={() => setDriveOpen(true)}
-      className="
-        relative flex justify-between items-center gap-1
-        px-4 py-2 w-full
-        text-left text-[var(--text-lt)] font-bold 
-        transition-all cursor-
-        rounded-2xl border-2 border-[var(--gray-19)] bg-[var(--gray-18)] hover:bg-[var(--gray-17)]
-      "
-    >
-      {!selectedProgram ? (
-        <>
-          <span className="flex items-center opacity-60">Select Program</span>
-          <ChevronDown size={16} strokeWidth={2.5} className="w-4 h-4 opacity-60" />
-        </>
-      ) : (
-        <>
-          <div className="flex flex-col leading-tight">
-            {/* <div className="absolute top-[25%] left-[3px] w-[3px] h-6 rounded-full bg-gradient-to-b from-[var(--acc-dk)] to-[#6F8AB4]" /> */}
-            <span
-              ref={sportRef}
-              className="
-                flex items-center gap-2
-                max-w-full
-              "
-            >
-              <span className="truncate text-[21px] font-semibold">
-                {selectedProgram.sport}
-              </span>
-
-              <span className="text-sm font-medium opacity-50 shrink-0">
-                {formatGenderAbbrev(selectedProgram.gender)}
-              </span>
-            </span>
-
-            <span className="w-full h-4 text-[10px] font-normal truncate">
-              {selectedProgram.year} <span className="opacity-50">•</span>{" "}
-              {selectedProgram.school}
-            </span>
-          </div>
-          {/* <div className="p-1 rounded-full hover:bg-[var(--gray-15)] transition-all duration-300">
-            <Ellipsis size={16} strokeWidth={2.5} className="w-4 h-4 opacity-60" />
-          </div> */}
-        </>
+      className={cn(
+        "flex items-center justify-center",
+        "h-10 w-10 rounded-full",
+        "border border-[var(--gray-18)]",
+        "text-[var(--text)] hover:bg-[var(--gray-18)] hover:text-[var(--text-lt)]",
+        "transition-all duration-300",
+        className,
       )}
+    >
+      <Box className="h-5 w-5" />
     </button>
   )
 
-  const EmptyTrigger = (
-    <Button
+  const PopupTrigger = (
+    <button
       ref={triggerRef}
+      type="button"
       onClick={() => setDriveOpen(true)}
-      className="
-        flex items-center gap-2
-        h-[38px] px-4
-        rounded-full bg-[var(--gray-lt)]
-        border border-[var(--border)]
-        backdrop-blur-sm
-      "
+      className={cn(
+        "flex items-center justify-center",
+        "w-full h-11",
+        "rounded-2xl border border-transparent hover:border-[var(--gray-17)]",
+        "bg-[var(--gray-18)]",
+        "text-[var(--text)] hover:text-[var(--text-lt)] font-medium",
+        "transition-all duration-300",
+        className,
+      )}
+      aria-label="Select Program"
     >
-      <span className="text-sm truncate">{label}</span>
-      <ChevronDown size={16} className="opacity-70" />
-    </Button>
+      <span className="truncate">
+        {selectedProgram ? "Change Program" : "Select Program"}
+      </span>
+    </button>
   )
 
-  /* ---------------------------------------------------------------------- */
-  /* RENDER                                                                  */
-  /* ---------------------------------------------------------------------- */
-
   const TRIGGERS: Record<TriggerVariant, React.ReactNode> = {
-    header: HeaderTrigger,
-    appNavPanel: appNavPanel,
-    empty: EmptyTrigger,
+    drawer: DrawerTrigger,
+    rail: RailTrigger,
+    popup: PopupTrigger,
   }
+
+  /* ====================================================================== */
+  /* RENDER                                                                  */
+  /* ====================================================================== */
 
   return (
     <>
@@ -309,18 +341,18 @@ const ProgramDriveTrigger = forwardRef<
 
       <ProgramDriveModal
         open={driveOpen}
-        programs={programs}
+        programs={deps.programs}
         selectedProgramId={selectedProgramId}
         onSelect={(id) => {
           setSelectedProgramId(id)
           if (id != null) setDriveOpen(false)
         }}
-        onArchive={archiveProgram}
-        onRestore={restoreProgram}
-        onSoftDelete={deleteProgram}
-        refreshPrograms={refreshPrograms}
+        onArchive={deps.archiveProgram}
+        onRestore={deps.restoreProgram}
+        onSoftDelete={deps.deleteProgram}
+        refreshPrograms={deps.refreshPrograms}
         onClose={async () => {
-          await refreshPrograms()
+          await deps.refreshPrograms()
           setDriveOpen(false)
         }}
       />

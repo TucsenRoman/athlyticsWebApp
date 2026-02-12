@@ -16,9 +16,12 @@ import {
   Activity,
   FilePen,
   WandSparkles,
+  Box,
+  Settings,
 } from "lucide-react"
 import { cn } from "@/utils/utils"
 import { Divider } from "../ui"
+import ProgramDriveTrigger from "@/features/program/components/ProgramDriveTrigger"
 
 /* ========================================================================== */
 /* TYPES                                                                      */
@@ -61,7 +64,7 @@ export const PROGRAM_VIEWS: ProgramNavView[] = [
     label: "Radar",
     route: "/program/radar",
     icon: <LocateFixed className="h-5 w-5" />,
-    enabled: false,
+    enabled: true,
     subLinks: [
       {
         id: "attendance",
@@ -97,7 +100,8 @@ export const PROGRAM_VIEWS: ProgramNavView[] = [
         id: "manager",
         label: "Manager",
         route: "/program/manager",
-        icon: <WandSparkles className="h-4 w-4" />,
+        icon: <Settings className="h-4 w-4" />,
+        // icon: <WandSparkles className="h-4 w-4" />,
         enabled: true,
       },
       {
@@ -112,7 +116,7 @@ export const PROGRAM_VIEWS: ProgramNavView[] = [
         label: "Analyzer",
         route: "/program/analyzer",
         icon: <Activity className="h-4 w-4" />,
-        enabled: true,
+        enabled: false,
       },
       {
         id: "attendance",
@@ -217,7 +221,7 @@ function DominantViewGroup({
 
   return (
     <div className={cn("w-full", "overflow-hidden")}>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 text-[var(--text)] transition-colors duration-300">
         <button
           type="button"
           onClick={() => onNavigate(view.route)}
@@ -225,9 +229,6 @@ function DominantViewGroup({
           className={cn(
             "relative flex-1 flex items-center gap-3",
             "px-4 h-8",
-            "rounded-2xl",
-            "transition-colors",
-            "hover:bg-white/5 text-[var(--text)]"
             // active ? "text-[var(--text-lt)]" : "hover:bg-white/5 text-[var(--text)]"
           )}
         >
@@ -255,7 +256,7 @@ function DominantViewGroup({
         ) : null}
       </div>
 
-      <div className={cn("mt-2 px-2", !open && "hidden")}>
+      <div className={cn("mt-2 px-4", !open && "hidden")}>
         <div className="flex flex-col gap-1">
           {subLinks.map((s) => (
             <SubLinkRow
@@ -305,7 +306,7 @@ function SubLinkRow({
       )}
     >
       {active &&
-        <div className="absolute left-[30px] w-[3px] h-[15px] rounded-full bg-[#394650]"></div>
+        <div className="absolute left-[40px] w-[3px] h-[15px] rounded-full bg-[#394650]"></div>
       }
       <span className={cn("shrink-0 text-[var(--text)]", active && "text-[var(--text-lt)]")}>
         {icon}
@@ -323,23 +324,17 @@ function SubLinkRow({
   )
 }
 
-/* ========================================================================== */
-/* RAIL (CLOSED PANEL)                                                        */
-/* ========================================================================== */
-/**
- * Rail matches sketch:
- * - All groups start OPEN
- * - Collapse/expand ONLY by clicking the main icon (no chevron)
- * - Clicking a non-active main icon navigates (does not toggle)
- */
+// RAIL NAVIGATION
 export function RailNav({
   pathname,
   navigate,
   className,
+  onOpenProgramDrive,
 }: {
   pathname: string
   navigate: (to: string) => void
   className?: string
+  onOpenProgramDrive?: () => void
 }) {
   const enabledViews = React.useMemo(
     () => PROGRAM_VIEWS.filter((v) => v.enabled !== false),
@@ -354,8 +349,10 @@ export function RailNav({
   })
 
   return (
-    <div className={cn("flex flex-col items-center gap-2 w-full", className)}>
-      {enabledViews.map((view) => {
+      <div className={cn("flex flex-col items-center gap-2 w-full", className)}>
+        {/* <ProgramDriveTrigger variant="rail"/> */}
+
+        {enabledViews.map((view) => {
         const viewActive =
           view.id === "workspace"
             ? isWorkspaceScopedPath(pathname)
