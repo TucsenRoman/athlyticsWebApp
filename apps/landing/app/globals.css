@@ -1,0 +1,253 @@
+/* @postcss */
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* ========================================================================== */
+/*  COLOR TOKENS (ONLY WHAT YOU REQUESTED)                                    */
+/* ========================================================================== */
+
+@layer base {
+  :root {
+    /* GREY SCALE */
+    --light: #ffffff;
+    --gray-50: #fafafa;
+    --gray-100: #f5f5f5;
+    --gray-200: #ebebeb;
+    --gray-300: #dcdcdc;
+    --gray-400: #b3b3b3;
+    --gray-500: #8c8c8c;
+    --gray-600: #666666;
+    --gray-700: #474747;
+    --gray-800: #262626;
+    --gray-900: #121212;
+    --dark: #000000;
+
+    /* BRAND ACCENT */
+    --accent: rgb(248, 118, 42);
+    --accent-md: rgb(251, 173, 127);  /* ~60% accent */
+    --accent-lt: rgb(252, 200, 170);  /* ~40% accent */
+    --accent-bg: rgb(254, 241, 233);  /* ~10% accent */
+    --accent-glass: rgb(248, 118, 42, 0.1);
+
+    /* TEXT */
+    --text-white: var(--light);
+    --text-light: var(--gray-300);
+    --text: var(--gray-600);
+    --text-dark: var(--gray-800);
+    --text-accent: var(--accent);
+
+    /* BACLGROUND */
+    /* use this to easily toggle light and dark mode */
+    --bg: var(--light);
+    --bg-gray-lt: var(--slot-green);
+    --bg-gray-lt-hv: var(--slot-green);
+    --gray-lt: var(--gray-100);
+    --gray-lt-hv: var(--gray-200);
+    --bg-gray-md: var(--gray-500);
+    --bg-gray-dk: var(--gray-800);
+
+    /* BORDERS */
+    --border-light: var(--gray-50);
+    --border: var(--gray-200);
+    --border-dark: var(--gray-600);
+    /* --border: red; */
+
+    /* FUNCTION COLORS */
+    --debug: red;
+    --success: rgb(87, 136, 64);
+    --success-bg: rgba(87, 136, 64, 0.1);
+    /* --warning: #ffb703; */
+    --edit: rgb(33, 158, 188);
+    --edit-bg: rgb(33, 158, 188, 0.1);
+    --danger: rgb(217, 4, 41);
+    --danger-bg: rgb(217, 4, 41, 0.1);
+    /* --info: #219ebc; */
+    --link-bg: rgba(89, 220, 253, 0.2);
+
+
+    /* SCHEDULE SLOTS */
+    --slot-blue: rgb(59, 130, 246);
+    --subslot-blue:  rgb(59, 130, 246, 0.1);
+    --slot-green: #22c55e;
+    --slot-purple: #a855f7;
+    --slot-red: #ef4444;
+    --slot-gray: #6b7280;
+
+    /* FOCUS */
+    /* --focus: #f0ffb3; */
+    /* --focus-foreground: #6b6b5a; */
+
+    /* OVERLAYS */
+    --black-overlay: rgb(0, 0, 0, 0.5);
+
+    --radius: 0.75rem;
+  }
+}
+
+/* ========================================================================== */
+/*  FLAVORS — SOLID / MEDIUM / LIGHT                                          */
+/* ========================================================================== */
+
+:root {
+  /* TEST */
+  --fvr-test: ;
+
+  /* BLUE */
+  --fvr-blue: rgb(77, 113, 190);
+  --fvr-blue-md: rgb(77 113 190 / 0.40);
+  --fvr-blue-lt: rgb(77 113 190 / 0.10);
+
+  /* SLATE */
+  --fvr-slate: rgb(139, 157, 180);
+  --fvr-slate-md: rgb(139 157 180 / 0.40);
+  --fvr-slate-lt: rgb(139 157 180 / 0.10);
+
+  /* PURPLE */
+  --fvr-purple: rgb(181, 152, 254);
+  --fvr-purple-md: rgb(181 152 254 / 0.40);
+  --fvr-purple-lt: rgb(181 152 254 / 0.10);
+
+  /* YELLOW */
+  --fvr-yellow: rgb(234, 179, 8);
+  --fvr-yellow-md: rgb(234 179 8 / 0.40);
+  --fvr-yellow-lt: rgb(234 179 8 / 0.10);
+
+  /* RED */
+  --fvr-red: rgb(230, 21, 21);
+  --fvr-red-md: rgb(230 21 21 / 0.40);
+  --fvr-red-lt: rgb(230 21 21 / 0.10);
+
+  /* CORAL */
+  --fvr-coral: rgb(232, 159, 150);
+  --fvr-coral-md: rgb(232 159 150 / 0.40);
+  --fvr-coral-lt: rgb(232 159 150 / 0.10);
+
+  /* TEAL */
+  --fvr-teal: rgb(102, 217, 204);
+  --fvr-teal-md: rgb(102 217 204 / 0.40);
+  --fvr-teal-lt: rgb(102 217 204 / 0.10);
+
+  /* GREEN */
+  --fvr-green: rgb(54, 138, 86);
+  --fvr-green-md: rgb(54 138 86 / 0.40);
+  --fvr-green-lt: rgb(54 138 86 / 0.10);
+
+  /* INDIGO */
+  --fvr-indigo: rgb(79, 70, 229);
+  --fvr-indigo-md: rgb(79 70 229 / 0.40);
+  --fvr-indigo-lt: rgb(79 70 229 / 0.10);
+}
+
+/* ========================================================================== */
+/*  GLOBAL SCROLLBAR RULES (HIDDEN ALWAYS)                                    */
+/* ========================================================================== */
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* hide scrollbars ONLY where you opt-in */
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* ========================================================================== */
+/*  FOCUS STATES                                                              */
+/* ========================================================================== */
+
+*:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+*:focus-visible {
+  stroke: hsl(var(--focus-foreground));
+  fill: hsl(var(--focus-foreground));
+  color: hsl(var(--focus-foreground));
+  background: hsl(var(--focus));
+  outline: transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px transparent;
+}
+
+input.no-focus-yellow:focus,
+input.no-focus-yellow:focus-visible,
+.no-focus-yellow input:focus,
+.no-focus-yellow input:focus-visible {
+  background: hsl(var(--white)) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  fill: inherit !important;
+  stroke: inherit !important;
+}
+
+input:focus,
+input:focus-visible,
+input:-webkit-autofill:focus {
+  background-color: hsl(var(--white)) !important;
+  box-shadow: 0 0 0 1000px hsl(var(--white)) inset !important;
+  -webkit-box-shadow: 0 0 0 1000px hsl(var(--white)) inset !important;
+  outline: none !important;
+  border-color: hsl(var(--gray-300)) !important;
+}
+
+/* STOP CHROME'S ORANGE OUTLINE GLOW */
+input:focus-visible {
+  outline: none !important;
+}
+
+input::-webkit-focus-inner {
+  border: 0 !important;
+}
+
+/* NUKE AUTOFILL YELLOW */
+input:-webkit-autofill {
+  background-color: hsl(var(--white)) !important;
+  -webkit-text-fill-color: hsl(var(--gray-800)) !important;
+  box-shadow: 0 0 0px 1000px hsl(var(--white)) inset !important;
+  transition: background-color 9999s ease-out, color 9999s ease-out;
+}
+
+.search-highlight {
+  background: hsl(var(--focus));
+  color: hsl(var(--focus-foreground));
+  border-radius: 3px;
+  padding: 0;
+}
+
+/* FLASHING ANIMATION */
+@layer utilities {
+  .flash-edit {
+    animation: editFlash 1.2s infinite;
+  }
+
+  .flash-delete {
+    animation: deleteFlash 1.2s infinite;
+  }
+
+  @keyframes editFlash {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: color-mix(in srgb, var(--edit) 15%, transparent); }
+  }
+
+  @keyframes deleteFlash {
+    0%, 100% { background-color: transparent; }
+    50% { background-color: color-mix(in srgb, var(--danger) 15%, transparent); }
+  }
+}

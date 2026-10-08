@@ -1,19 +1,12 @@
 # Athlytics
 
-Private web app for managing athletic programs and performance data.
+Platform for managing athletic programs and performance data. Live at [athlyticshq.com](https://athlyticshq.com).
 
-## Stack
-Vite, React, TypeScript, Tailwind, Supabase
+| App | Folder | Stack | Status |
+|---|---|---|---|
+| Web app | `apps/web` | Vite + React + TypeScript, shadcn/ui, Supabase | Live on Vercel |
+| Landing page | `apps/landing` | Next.js | Not deployed |
+| Native app | `apps/native` | — | Planned |
+| Desktop software | `apps/desktop` | — | Planned |
 
-## Dev
-npm install
-npm run dev
-
-## Env
-Requires:
-- VITE_SUPABASE_URL
-- VITE_SUPABASE_ANON_KEY
-
-## Branches
-dev = development  
-main = production
+Each app has its own `package.json` and `node_modules`. Run `npm install` inside the app folder you're working on.
